@@ -1,0 +1,22 @@
+# Dependencies and builds
+/node_modules
+/dist
+/coverage
+
+# Secrets (the npm publishing token lives here, never in git)
+.env
+.env.*
+.npmrc
+
+# Local tool and editor files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# AI and personal working files: never versioned
+/.docs
+/.wolf
+/.claude
+CLAUDE.md
