@@ -78,8 +78,9 @@ number of bars that fit.
 | `animate`        | `true`             | Let the bars grow in when peaks arrive (never with reduced motion).           |
 | `plugins`        | `[]`               | Plugins to start with.                                                        |
 
-Bars: `width` 2, `gap` 1, `radius` 1, `minHeight` 2, `align` `'center'` (or `'bottom'` for a bar meter), `curve` 1
-(below 1 lifts quiet sounds, above 1 leaves only the loud parts standing out).
+Bars: `width` 3, `gap` 2, `radius` 1.5, `minHeight` 2, `align` `'center'` (or `'bottom'` for a bar meter), `curve`
+0.7 (below 1 lifts quiet sounds so speech reads well; 1 draws the peaks as they are; above 1 leaves only the loud parts
+standing out).
 
 Colors take any CSS color or `var(--name, fallback)`:
 
@@ -118,6 +119,41 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `timeupdate` | `time, ratio`             | The media moved, at the media's own pace, never once per frame. |
 | `error`      | `error`                   | Loading peaks or drawing a plugin failed.                       |
 | `destroy`    |                           | The frame was destroyed.                                        |
+
+## Play button
+
+```ts
+import { PlayButton } from 'sonicframe';
+
+const button = PlayButton.create({
+    container: document.getElementById('controls')!,
+    media: document.getElementById('voice') as HTMLAudioElement,
+    shape: 'circle',
+    fill: 'solid',
+    size: 32,
+});
+```
+
+A real `<button>` with an SVG icon, so the keyboard and screen readers work as usual; its accessible name switches
+between `labels.play` and `labels.pause` (`'Play'` and `'Pause'` by default). The play triangle is centered by its
+centroid, so it looks centered.
+
+| Option      | Default    | What it does                                                                    |
+| ----------- | ---------- | ------------------------------------------------------------------------------- |
+| `container` | (required) | The element the button is added to.                                             |
+| `media`     | `null`     | The audio or video element it plays and pauses (without one it is disabled).    |
+| `shape`     | `'circle'` | `'circle'`, `'rounded'` or `'square'`.                                          |
+| `fill`      | `'solid'`  | `'solid'`, `'outline'` (a ring) or `'ghost'` (only the icon).                   |
+| `size`      | `32`       | Width and height in CSS pixels.                                                 |
+| `radius`    | `null`     | Corner radius in CSS pixels, instead of the shape's own.                        |
+| `colors`    | see below  | `{ background, icon }`: any CSS color or `var(--name, fallback)`.               |
+| `labels`    | see above  | `{ play, pause }`, the accessible names.                                        |
+| `exclusive` | `true`     | Starting this media pauses every other media that has an exclusive play button. |
+
+Colors: `background` is `var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))` (the fill, the ring, or the
+icon of outline and ghost buttons) and `icon` is `var(--sonicframe-button-icon, #fff)` (the icon on a solid button).
+`setLook({ shape, fill, size, radius, colors })` changes any of them later, `bind(media)` follows another media,
+`on('error', listener)` hears when the browser refuses to play, and `destroy()` removes the button.
 
 ## Markers
 

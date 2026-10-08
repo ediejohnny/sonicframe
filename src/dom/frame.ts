@@ -71,12 +71,12 @@ export type SonicFrameOptions = {
 };
 
 export const DEFAULT_BAR: Readonly<BarStyle> = Object.freeze({
-    width: 2,
-    gap: 1,
-    radius: 1,
+    width: 3,
+    gap: 2,
+    radius: 1.5,
     minHeight: 2,
     align: 'center',
-    curve: 1,
+    curve: 0.7,
 });
 
 export const DEFAULT_COLORS: Readonly<Colors> = Object.freeze({

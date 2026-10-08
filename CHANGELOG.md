@@ -24,3 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   and one animation loop that runs only while something plays on screen, and `destroy()` gives the element back as
   it was.
 - Plugins, drawn under or over the bars, and the first one: `markers`, lines at moments given in seconds.
+- `PlayButton`: a play / pause `<button>` for an audio or video element, in three shapes (circle, rounded, square)
+  and three fills (solid, outline, ghost), with any size, corner radius and colors from CSS. Its play triangle is
+  centered by its centroid, so it looks centered, and starting one media pauses the others.
+- Bars default to 3 px with a 2 px gap, rounded corners and quiet parts lifted (`curve` 0.7), so speech reads well.

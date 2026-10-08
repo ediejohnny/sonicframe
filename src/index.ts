@@ -10,6 +10,18 @@ export {
     type SonicFrameOptions,
 } from './dom/frame';
 export {
+    DEFAULT_BUTTON_COLORS,
+    PlayButton,
+    type PlayButtonEvents,
+    type PlayButtonOptions,
+} from './controls/play-button';
+export type {
+    ButtonColors,
+    ButtonFill,
+    ButtonLook,
+    ButtonShape,
+} from './core/button';
+export {
     markers,
     markerSpans,
     type MarkersOptions,
