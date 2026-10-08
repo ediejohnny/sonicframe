@@ -20,3 +20,6 @@ Thumbs.db
 /.wolf
 /.claude
 CLAUDE.md
+
+# Local package builds (npm pack)
+*.tgz
