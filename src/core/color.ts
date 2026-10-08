@@ -1,7 +1,11 @@
 /** A color as red, green, blue (0..255) and alpha (0..1). */
 export type Rgba = readonly [number, number, number, number];
 
-const VARIABLE = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]*?))?\s*\)$/;
+/**
+ * `var(--name)` or `var(--name, fallback)`. One greedy group for the fallback (trimmed afterwards):
+ * neighbouring optional spaces around a lazy group would backtrack for ages on a long broken value.
+ */
+const VARIABLE = /^var\(\s*(--[\w-]+)\s*(?:,([\s\S]*))?\)$/;
 
 /**
  * Resolves `var(--name)` and `var(--name, fallback)`, following variables that point to other

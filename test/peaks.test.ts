@@ -19,7 +19,7 @@ function respond(body: unknown, status = 200, length?: number): PeaksFetcher {
                         ? String(length)
                         : null,
             },
-            json: () => Promise.resolve(body),
+            text: () => Promise.resolve(JSON.stringify(body)),
         });
 }
 
@@ -74,6 +74,44 @@ describe('loadPeaks', () => {
         ).rejects.toThrow('503');
         await expect(loadPeaks('/retry.json', respond([0.5]))).resolves.toEqual(
             [0.5],
+        );
+    });
+
+    it('stops reading a file that grows too large, even when its size was not announced', async () => {
+        let pulled = 0;
+        const chunk = new TextEncoder().encode('0,'.repeat(32_768));
+        const endless = new ReadableStream<Uint8Array>({
+            pull(controller) {
+                pulled++;
+                controller.enqueue(pulled === 1 ? Uint8Array.of(91) : chunk);
+            },
+        });
+        const fetcher: PeaksFetcher = () =>
+            Promise.resolve({
+                ok: true,
+                status: 200,
+                body: endless,
+                text: () =>
+                    Promise.reject(new Error('read the stream instead')),
+            });
+
+        await expect(loadPeaks('/endless.json', fetcher)).rejects.toThrow(
+            'too large',
+        );
+        expect(pulled).toBeLessThan(40);
+    });
+
+    it('refuses an oversized file without a stream before parsing it', async () => {
+        const huge = '[' + '0,'.repeat(1_500_000) + '0]';
+        const fetcher: PeaksFetcher = () =>
+            Promise.resolve({
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve(huge),
+            });
+
+        await expect(loadPeaks('/huge-text.json', fetcher)).rejects.toThrow(
+            'too large',
         );
     });
 

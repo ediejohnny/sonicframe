@@ -188,6 +188,21 @@ Each frame keeps its canvas pixels only while it is on or near the screen and lo
 there. All frames share one ResizeObserver, one IntersectionObserver and one animation loop, and only a frame whose
 media is playing on screen animates.
 
+## Security
+
+- No HTML is ever parsed: labels and value texts go into attributes, icons are built element by element, and
+  nothing uses `innerHTML` or `eval`. Styles are set through the CSSOM, so a strict Content-Security-Policy without
+  `'unsafe-inline'` keeps working.
+- Colors only reach properties that accept nothing but a color (the canvas, `background-color`, `color`, `border`),
+  so a color can never make the page fetch an address. CSS variables are resolved in linear time and at most eight
+  levels deep.
+- Peaks files are read up to 2 MB (the download stops there, announced or not) and 20,000 values, and must be a list
+  of finite numbers.
+- No runtime dependencies, no install scripts; the published package holds only `dist`, the readme, the changelog
+  and the license.
+
+Report a vulnerability privately to the author (see the npm page) rather than in a public issue.
+
 ## Browser support
 
 Current Chrome, Edge, Firefox and Safari. Rounded bars fall back to drawn arcs where `roundRect` is missing, and sizes

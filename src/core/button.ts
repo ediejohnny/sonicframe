@@ -99,7 +99,8 @@ export function buttonStyles(look: ButtonLook): [string, string][] {
                 : '0',
         ],
         ['border-radius', cornerRadius(look)],
-        ['background', solid ? look.colors.background : 'transparent'],
+        // Not the `background` shorthand: it would take url(...) from a color and fetch it.
+        ['background-color', solid ? look.colors.background : 'transparent'],
         ['color', solid ? look.colors.icon : look.colors.background],
         ['line-height', '0'],
         ['cursor', 'pointer'],

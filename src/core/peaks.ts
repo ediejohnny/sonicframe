@@ -9,16 +9,65 @@ import { clamp01 } from './math';
 /** The most peaks accepted from a file: plenty for any screen, small enough to read quickly. */
 export const MAX_PEAKS = 20_000;
 
-/** A peaks file larger than this is refused before it is parsed. */
+/** A peaks file larger than this is refused, and reading it stops there (it is never parsed). */
 const MAX_PEAKS_BYTES = 2_000_000;
 
-/** The part of `fetch` that `loadPeaks` uses, so tests and apps can bring their own. */
-export type PeaksFetcher = (url: string) => Promise<{
+/** The part of a `fetch` response that `loadPeaks` reads. */
+export type PeaksResponse = {
     ok: boolean;
     status: number;
     headers?: { get(name: string): string | null };
-    json(): Promise<unknown>;
-}>;
+    /** Read piece by piece, so an oversized file is dropped as soon as it passes the limit. */
+    body?: ReadableStream<Uint8Array> | null;
+    /** Used when there is no body stream. */
+    text(): Promise<string>;
+};
+
+/** The part of `fetch` that `loadPeaks` uses, so tests and apps can bring their own. */
+export type PeaksFetcher = (url: string) => Promise<PeaksResponse>;
+
+function tooLarge(): RangeError {
+    return new RangeError('sonicframe: peaks file is too large');
+}
+
+/** The response as text, refusing it once it passes `MAX_PEAKS_BYTES`. */
+async function readCapped(response: PeaksResponse): Promise<string> {
+    if (Number(response.headers?.get('content-length')) > MAX_PEAKS_BYTES) {
+        throw tooLarge();
+    }
+
+    if (!response.body) {
+        const text = await response.text();
+
+        if (text.length > MAX_PEAKS_BYTES) {
+            throw tooLarge();
+        }
+
+        return text;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let size = 0;
+    let text = '';
+
+    for (;;) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+            return text + decoder.decode();
+        }
+
+        size += value.byteLength;
+
+        if (size > MAX_PEAKS_BYTES) {
+            void reader.cancel();
+            throw tooLarge();
+        }
+
+        text += decoder.decode(value, { stream: true });
+    }
+}
 
 /**
  * Reads peaks out of parsed JSON: either a list of numbers or `{ "peaks": [...] }`. Anything else, a
@@ -71,13 +120,7 @@ export function loadPeaks(
                 );
             }
 
-            const size = Number(response.headers?.get('content-length'));
-
-            if (size > MAX_PEAKS_BYTES) {
-                throw new RangeError('sonicframe: peaks file is too large');
-            }
-
-            return readPeaks(await response.json());
+            return readPeaks(JSON.parse(await readCapped(response)));
         });
         pending.catch(() => loading.delete(url));
         loading.set(url, pending);

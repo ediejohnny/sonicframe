@@ -59,20 +59,43 @@ describe('buttonStyles', () => {
 
     it('fills, rings or leaves only the icon', () => {
         expect(style({ fill: 'solid' })).toMatchObject({
-            background: '#4d6d94',
+            'background-color': '#4d6d94',
             color: '#fff',
             border: '0',
         });
         expect(style({ fill: 'outline' })).toMatchObject({
-            background: 'transparent',
+            'background-color': 'transparent',
             color: '#4d6d94',
             border: '1px solid #4d6d94',
         });
         expect(style({ fill: 'ghost' })).toMatchObject({
-            background: 'transparent',
+            'background-color': 'transparent',
             color: '#4d6d94',
             border: '0',
         });
+    });
+
+    it('puts colors only where a browser accepts nothing but a color', () => {
+        // `background` would accept url(...) and make the page fetch an address taken from a color.
+        for (const fill of ['solid', 'outline', 'ghost'] as const) {
+            const styles = style({
+                fill,
+                colors: {
+                    background: 'url(https://example.test/a)',
+                    icon: 'url(https://example.test/b)',
+                },
+            });
+            const carriers = Object.keys(styles).filter((property) =>
+                styles[property].includes('url('),
+            );
+
+            expect(
+                carriers.every((property) =>
+                    ['background-color', 'color', 'border'].includes(property),
+                ),
+                carriers.join(', '),
+            ).toBe(true);
+        }
     });
 
     it('is exactly as wide as it is tall', () => {

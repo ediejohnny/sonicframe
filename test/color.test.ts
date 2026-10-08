@@ -39,6 +39,15 @@ describe('resolveColor', () => {
     it('gives up on variables that point to each other', () => {
         expect(resolveColor('var(--loop-a)', lookup)).toBe('');
     });
+
+    it('reads a long, broken value in linear time (no catastrophic backtracking)', () => {
+        const started = performance.now();
+
+        resolveColor(`var(--x,${' '.repeat(2_500)}x`, lookup);
+        resolveColor(`var(--x${' '.repeat(40_000)}x`, lookup);
+
+        expect(performance.now() - started).toBeLessThan(250);
+    });
 });
 
 describe('mixing', () => {
