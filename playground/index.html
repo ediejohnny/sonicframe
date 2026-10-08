@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>SonicFrame playground</title>
+        <style>
+            :root {
+                --background: #f5f6f8;
+                --post: #e6e9ee;
+                --post-border: #c2cad6;
+                --voice: #4d6d94;
+                --wave-idle: #c2cad6;
+                --wave-progress: #4d6d94;
+                --record: #b8372c;
+                --muted: #5c6676;
+                --ring: #24406e;
+                color-scheme: light;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                padding: 16px;
+                background: var(--background);
+                color: #1f2530;
+                font:
+                    13px Arial,
+                    Helvetica,
+                    sans-serif;
+            }
+
+            header {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+
+            h1 {
+                margin: 0 12px 0 0;
+                font-size: 16px;
+            }
+
+            h2 {
+                margin: 0 0 6px;
+                font-size: 12px;
+                font-weight: bold;
+                color: var(--muted);
+            }
+
+            .note {
+                color: var(--muted);
+            }
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 28px;
+                padding: 0 8px;
+                border: 1px solid var(--post-border);
+                border-radius: 0.2rem;
+                background: #fff;
+                color: var(--voice);
+                font: inherit;
+                cursor: pointer;
+            }
+
+            #cards {
+                display: grid;
+                grid-template-columns: repeat(
+                    auto-fill,
+                    minmax(min(100%, 470px), 1fr)
+                );
+                gap: 8px;
+            }
+
+            .post {
+                padding: 8px 10px;
+                border: 1px solid var(--post-border);
+                border-radius: 0.2rem;
+                background: var(--post);
+            }
+
+            .player {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                width: 100%;
+                max-width: 448px;
+            }
+
+            .play {
+                width: 28px;
+                padding: 0;
+            }
+
+            .wave {
+                flex: 1;
+                height: 32px;
+                outline: none;
+            }
+
+            .wave:focus-visible {
+                outline: 1px solid var(--ring);
+                outline-offset: 1px;
+            }
+
+            .time {
+                flex-shrink: 0;
+                color: var(--muted);
+                font:
+                    12px 'Courier New',
+                    monospace;
+            }
+
+            .speed {
+                width: 44px;
+                font:
+                    12px 'Courier New',
+                    monospace;
+                cursor: default;
+            }
+
+            #grid {
+                display: grid;
+                grid-template-columns: repeat(
+                    auto-fill,
+                    minmax(min(100%, 300px), 1fr)
+                );
+                gap: 6px;
+                margin-top: 8px;
+                padding: 8px;
+                border: 1px solid var(--post-border);
+                border-radius: 0.2rem;
+                background: var(--post);
+            }
+
+            .cell {
+                flex: none;
+            }
+
+            #fps {
+                position: fixed;
+                right: 12px;
+                bottom: 12px;
+                padding: 4px 8px;
+                border-radius: 0.2rem;
+                background: #1f2530;
+                color: #fff;
+                font:
+                    12px 'Courier New',
+                    monospace;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>SonicFrame playground</h1>
+            <button id="play" class="btn" type="button">Play all</button>
+            <button id="speed" class="btn" type="button">Speed 1×</button>
+            <label class="btn">
+                Use a local file…
+                <input id="file" type="file" accept="audio/*" hidden />
+            </label>
+            <span class="note">Sound: <span id="source"></span></span>
+            <span class="note" id="density"></span>
+        </header>
+        <p class="note">
+            Every card plays the same sound. Click or drag on a waveform to
+            seek; focus one with Tab and use the arrow keys, Page Up / Page
+            Down, Home and End. Try the browser zoom at 100 %, 125 % and 150 %.
+        </p>
+        <section id="cards"></section>
+        <h2 style="margin-top: 16px">60 frames at once (style C)</h2>
+        <section id="grid"></section>
+        <div id="fps">… fps</div>
+        <audio id="audio" preload="auto"></audio>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>
