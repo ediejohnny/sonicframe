@@ -15,6 +15,7 @@ import { Emitter } from '../core/emitter';
 import { barMetrics, layoutBars } from '../core/layout';
 import { clamp01 } from '../core/math';
 import { resample } from '../core/peaks';
+import { applyStyles } from '../core/styles';
 import { overlayOf, ratioAt, sameOverlay, type Overlay } from '../core/scene';
 import { easeOut } from '../core/timing';
 import type {
@@ -121,7 +122,7 @@ export class SonicFrame implements PluginHost {
     private readonly cursorWidth: number;
     private readonly cleanups: (() => void)[] = [];
     private readonly savedAttributes = new Map<string, string | null>();
-    private readonly savedStyles = new Map<string, [string, string]>();
+    private restoreStyles: () => void = () => undefined;
     private bar: BarStyle;
     private colors: Colors;
     private palette: Palette | null = null;
@@ -376,15 +377,8 @@ export class SonicFrame implements PluginHost {
     }
 
     private prepareContainer(label: string): void {
-        const style = this.container.style;
         const computed = getComputedStyle(this.container);
-        const set = (property: string, value: string): void => {
-            this.savedStyles.set(property, [
-                style.getPropertyValue(property),
-                style.getPropertyPriority(property),
-            ]);
-            style.setProperty(property, value);
-        };
+        const styles: [string, string][] = [];
 
         for (const name of ATTRIBUTES) {
             this.savedAttributes.set(name, this.container.getAttribute(name));
@@ -392,22 +386,28 @@ export class SonicFrame implements PluginHost {
 
         // The canvas is placed against the element; a static element would let it escape.
         if (computed.position === 'static') {
-            set('position', 'relative');
+            styles.push(['position', 'relative']);
         }
+
+        if (this.interact) {
+            styles.push(
+                ['touch-action', 'pan-y'],
+                ['user-select', 'none'],
+                ['-webkit-user-select', 'none'],
+            );
+
+            if (computed.cursor === 'auto') {
+                styles.push(['cursor', 'pointer']);
+            }
+        }
+
+        this.restoreStyles = applyStyles(this.container.style, styles);
 
         if (!this.interact) {
             this.container.setAttribute('role', 'img');
             this.container.setAttribute('aria-label', label);
 
             return;
-        }
-
-        set('touch-action', 'pan-y');
-        set('user-select', 'none');
-        set('-webkit-user-select', 'none');
-
-        if (computed.cursor === 'auto') {
-            set('cursor', 'pointer');
         }
 
         this.container.setAttribute('role', 'slider');
@@ -429,13 +429,7 @@ export class SonicFrame implements PluginHost {
             }
         }
 
-        for (const [property, [value, priority]] of this.savedStyles) {
-            if (value === '') {
-                this.container.style.removeProperty(property);
-            } else {
-                this.container.style.setProperty(property, value, priority);
-            }
-        }
+        this.restoreStyles();
     }
 
     private listen(): void {
