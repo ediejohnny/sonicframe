@@ -10,6 +10,7 @@
                 --post: #e6e9ee;
                 --post-border: #c2cad6;
                 --voice: #4d6d94;
+                --button: #4d6d94;
                 --wave-idle: #c2cad6;
                 --wave-progress: #4d6d94;
                 --record: #b8372c;
@@ -38,7 +39,7 @@
                 flex-wrap: wrap;
                 gap: 8px;
                 align-items: center;
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             h1 {
@@ -47,18 +48,28 @@
             }
 
             h2 {
+                margin: 18px 0 8px;
+                font-size: 14px;
+            }
+
+            h3 {
                 margin: 0 0 6px;
                 font-size: 12px;
-                font-weight: bold;
                 color: var(--muted);
             }
 
+            a {
+                color: var(--ring);
+            }
+
             .note {
+                margin: 0 0 8px;
                 color: var(--muted);
             }
 
             .btn {
                 display: inline-flex;
+                gap: 6px;
                 align-items: center;
                 justify-content: center;
                 height: 28px;
@@ -66,12 +77,21 @@
                 border: 1px solid var(--post-border);
                 border-radius: 0.2rem;
                 background: #fff;
-                color: var(--voice);
+                color: var(--ring);
                 font: inherit;
                 cursor: pointer;
             }
 
-            #cards {
+            .btn input[type='color'] {
+                width: 22px;
+                height: 18px;
+                padding: 0;
+                border: 0;
+                background: none;
+                cursor: pointer;
+            }
+
+            .cards {
                 display: grid;
                 grid-template-columns: repeat(
                     auto-fill,
@@ -95,11 +115,6 @@
                 max-width: 448px;
             }
 
-            .play {
-                width: 28px;
-                padding: 0;
-            }
-
             .wave {
                 flex: 1;
                 height: 32px;
@@ -113,18 +128,11 @@
 
             .time {
                 flex-shrink: 0;
+                min-width: 92px;
                 color: var(--muted);
                 font:
                     12px 'Courier New',
                     monospace;
-            }
-
-            .speed {
-                width: 44px;
-                font:
-                    12px 'Courier New',
-                    monospace;
-                cursor: default;
             }
 
             #grid {
@@ -134,15 +142,17 @@
                     minmax(min(100%, 300px), 1fr)
                 );
                 gap: 6px;
-                margin-top: 8px;
                 padding: 8px;
                 border: 1px solid var(--post-border);
                 border-radius: 0.2rem;
                 background: var(--post);
             }
 
-            .cell {
-                flex: none;
+            footer {
+                margin-top: 18px;
+                padding-top: 10px;
+                border-top: 1px solid var(--post-border);
+                color: var(--muted);
             }
 
             #fps {
@@ -168,17 +178,51 @@
                 Use a local file…
                 <input id="file" type="file" accept="audio/*" hidden />
             </label>
-            <span class="note">Sound: <span id="source"></span></span>
-            <span class="note" id="density"></span>
+            <label class="btn">
+                Waveform
+                <input id="color-wave" type="color" value="#c2cad6" />
+            </label>
+            <label class="btn">
+                Played
+                <input id="color-voice" type="color" value="#4d6d94" />
+            </label>
+            <label class="btn">
+                Button
+                <input id="color-button" type="color" value="#4d6d94" />
+            </label>
+            <button id="reset" class="btn" type="button">Reset colors</button>
         </header>
         <p class="note">
-            Every card plays the same sound. Click or drag on a waveform to
+            Playing: <span id="source">…</span> · <span id="density"></span>
+        </p>
+        <p class="note">
+            Every player plays the same sound. Click or drag on a waveform to
             seek; focus one with Tab and use the arrow keys, Page Up / Page
             Down, Home and End. Try the browser zoom at 100 %, 125 % and 150 %.
         </p>
-        <section id="cards"></section>
-        <h2 style="margin-top: 16px">60 frames at once (style C)</h2>
+
+        <h2>Play buttons</h2>
+        <section id="buttons" class="cards"></section>
+
+        <h2>Bar styles</h2>
+        <section id="bars" class="cards"></section>
+
+        <h2>60 players at once (bars D, quiet parts lifted)</h2>
         <section id="grid"></section>
+
+        <footer>
+            Sound: “The Little Elf”, a poem by John Kendrick Bangs, read by
+            <a href="https://librivox.org/reader/1252">Avery</a> for LibriVox’s
+            <a href="https://librivox.org/short-poetry-collection-026/"
+                >Short Poetry Collection 026</a
+            >
+            (<a href="https://archive.org/details/shortpoetry_026_librivox"
+                >archive.org</a
+            >). LibriVox recordings are in the
+            <a href="https://librivox.org/pages/public-domain/">public domain</a
+            >. Thank you, Avery and LibriVox.
+        </footer>
+
         <div id="fps">… fps</div>
         <audio id="audio" preload="auto"></audio>
         <script type="module" src="./main.ts"></script>

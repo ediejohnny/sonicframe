@@ -1,30 +1,61 @@
 /**
- * The playground: the same sound in several bar styles, side by side, at the size voicechan uses, plus
- * 60 frames playing at once with a frame-rate meter. Run `npm run dev` and open /playground/.
+ * The playground: play buttons and bar styles side by side at the size voicechan uses, a real voice
+ * playing in all of them, colors to try, and 60 frames playing at once with a frame-rate meter.
+ * Run `npm run dev` and open /playground/.
  */
 
 import {
     formatTime,
     markers,
     peaksFromChannel,
+    PlayButton,
     SonicFrame,
     type BarStyle,
+    type ButtonFill,
+    type ButtonShape,
     type Colors,
 } from '../src/index';
 import { oldWaveform } from './old-waveform';
-import { speechLike } from './synth';
 
-type Card = {
+type ButtonCard = {
+    title: string;
+    shape: ButtonShape;
+    fill: ButtonFill;
+    size?: number;
+    radius?: number;
+};
+
+type BarCard = {
     letter: string;
     title: string;
-    bar?: Partial<BarStyle>;
+    bar: Partial<BarStyle>;
     colors?: Partial<Colors>;
     marked?: boolean;
 };
 
+/** His pick for voicechan: D bars, quiet parts lifted, hover band. */
+const CHOSEN: Partial<BarStyle> = { width: 3, gap: 2, radius: 1.5, curve: 0.7 };
+
+const BUTTONS: ButtonCard[] = [
+    { title: 'circle, solid', shape: 'circle', fill: 'solid' },
+    { title: 'circle, outline', shape: 'circle', fill: 'outline' },
+    { title: 'rounded, solid', shape: 'rounded', fill: 'solid' },
+    { title: 'rounded, outline', shape: 'rounded', fill: 'outline' },
+    { title: 'square, solid', shape: 'square', fill: 'solid' },
+    { title: 'square, outline', shape: 'square', fill: 'outline' },
+    {
+        title: 'square corners of 0.2rem, solid',
+        shape: 'square',
+        fill: 'solid',
+        radius: 3,
+    },
+    { title: 'ghost (icon only)', shape: 'circle', fill: 'ghost' },
+    { title: 'circle, solid, 28 px', shape: 'circle', fill: 'solid', size: 28 },
+];
+
 const PLAIN: Partial<Colors> = { hover: null, cursor: null };
 
-const CARDS: Card[] = [
+const BARS: BarCard[] = [
     {
         letter: 'B',
         title: 'bars 2 px, gap 1, radius 1',
@@ -39,7 +70,7 @@ const CARDS: Card[] = [
     },
     {
         letter: 'D',
-        title: 'bars 3 px, gap 2, radius 1.5',
+        title: 'bars 3 px, gap 2, radius 1.5 (chosen)',
         bar: { width: 3, gap: 2, radius: 1.5 },
         colors: PLAIN,
     },
@@ -51,49 +82,57 @@ const CARDS: Card[] = [
     },
     {
         letter: 'F',
-        title: 'C growing from the base',
-        bar: { width: 3, gap: 1, radius: 1.5, align: 'bottom' },
+        title: 'D growing from the base',
+        bar: { width: 3, gap: 2, radius: 1.5, align: 'bottom' },
         colors: PLAIN,
     },
     {
         letter: 'G',
-        title: 'C with quiet parts lifted (curve 0.7)',
-        bar: { width: 3, gap: 1, radius: 1.5, curve: 0.7 },
+        title: 'D with quiet parts lifted (curve 0.7)',
+        bar: CHOSEN,
         colors: PLAIN,
     },
     {
         letter: 'H',
-        title: 'C with hover band, cursor line and two markers',
-        bar: { width: 3, gap: 1, radius: 1.5 },
+        title: 'G with hover band, cursor line and two markers',
+        bar: CHOSEN,
         colors: { hover: 'auto', cursor: 'var(--voice)' },
         marked: true,
     },
 ];
 
+const DEFAULT_COLORS = { wave: '#c2cad6', voice: '#4d6d94', button: '#4d6d94' };
 const SPEEDS = [1, 1.25, 1.5, 2];
 
 const audio = document.querySelector<HTMLAudioElement>('#audio')!;
-const cards = document.querySelector<HTMLElement>('#cards')!;
-const grid = document.querySelector<HTMLElement>('#grid')!;
-const playButton = document.querySelector<HTMLButtonElement>('#play')!;
-const speedButton = document.querySelector<HTMLButtonElement>('#speed')!;
-const fileInput = document.querySelector<HTMLInputElement>('#file')!;
-const density = document.querySelector<HTMLElement>('#density')!;
-const fps = document.querySelector<HTMLElement>('#fps')!;
-
+const root = document.documentElement;
 const frames: SonicFrame[] = [];
 const times: HTMLElement[] = [];
 let stopOld: (() => void) | null = null;
 
-function playerRow(): { row: HTMLElement; wave: HTMLElement } {
+function section(id: string): HTMLElement {
+    return document.querySelector<HTMLElement>(id)!;
+}
+
+function card(parent: HTMLElement, title: string): HTMLElement {
+    const box = document.createElement('article');
+    box.className = 'post';
+
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    box.append(heading);
+    parent.append(box);
+
+    return box;
+}
+
+/** A player row like voicechan's: button, waveform, time. */
+function playerRow(
+    box: HTMLElement,
+    button: Omit<ButtonCard, 'title'>,
+): HTMLElement {
     const row = document.createElement('div');
     row.className = 'player';
-
-    const play = document.createElement('button');
-    play.type = 'button';
-    play.className = 'btn play';
-    play.textContent = '▶';
-    play.addEventListener('click', () => toggle());
 
     const wave = document.createElement('div');
     wave.className = 'wave';
@@ -102,111 +141,125 @@ function playerRow(): { row: HTMLElement; wave: HTMLElement } {
     time.className = 'time';
     times.push(time);
 
-    const speed = document.createElement('span');
-    speed.className = 'btn speed';
-    speed.textContent = '1×';
+    box.append(row);
+    PlayButton.create({
+        container: row,
+        media: audio,
+        shape: button.shape,
+        fill: button.fill,
+        size: button.size ?? 32,
+        radius: button.radius ?? null,
+        colors: { background: 'var(--button)', icon: '#fff' },
+    });
+    row.append(wave, time);
 
-    row.append(play, wave, time, speed);
-
-    return { row, wave };
+    return wave;
 }
 
-function card(letter: string, title: string): HTMLElement {
-    const box = document.createElement('article');
-    box.className = 'post';
-
-    const heading = document.createElement('h2');
-    heading.textContent = `${letter} · ${title}`;
-    box.append(heading);
-    cards.append(box);
-
-    return box;
-}
-
-function toggle(): void {
-    if (audio.paused) {
-        void audio.play();
-    } else {
-        audio.pause();
-    }
-}
-
-function load(peaks: number[], source: string, label: string): void {
-    audio.src = source;
-    document.querySelector('#source')!.textContent = label;
-
-    for (const frame of frames) {
-        frame.setPeaks(
-            () =>
-                new Promise((resolve) => setTimeout(() => resolve(peaks), 250)),
-        );
-    }
-
-    stopOld?.();
-    stopOld = oldWaveform(
-        document.querySelector<HTMLElement>('#old')!,
-        audio,
-        peaks,
+function frame(
+    container: HTMLElement,
+    bar: Partial<BarStyle>,
+    colors: Partial<Colors> = {},
+    marked = false,
+): void {
+    frames.push(
+        SonicFrame.create({
+            container,
+            media: audio,
+            bar,
+            colors: {
+                wave: 'var(--wave-idle)',
+                progress: 'var(--voice)',
+                ...colors,
+            },
+            label: 'Playback position',
+            rewindOnEnd: true,
+            plugins: marked
+                ? [markers({ times: [4, 21], color: 'var(--record)' })]
+                : [],
+        }),
     );
 }
 
 function build(): void {
+    BUTTONS.forEach((item, index) => {
+        const box = card(section('#buttons'), `${index + 1} · ${item.title}`);
+        frame(playerRow(box, item), CHOSEN);
+    });
+
     const old = card(
-        'A',
-        'the current voicechan waveform (SVG, 100 stretched bars)',
+        section('#bars'),
+        'A · the current voicechan waveform (SVG, 100 stretched bars)',
     );
-    const oldRow = playerRow();
-    oldRow.wave.id = 'old';
-    old.append(oldRow.row);
+    playerRow(old, { shape: 'circle', fill: 'solid' }).id = 'old';
 
-    for (const item of CARDS) {
-        const box = card(item.letter, item.title);
-        const { row, wave } = playerRow();
-        box.append(row);
-
-        const frame = SonicFrame.create({
-            container: wave,
-            media: audio,
-            bar: item.bar,
-            colors: {
-                wave: 'var(--wave-idle)',
-                progress: 'var(--voice)',
-                ...item.colors,
-            },
-            label: 'Playback position',
-            rewindOnEnd: true,
-            plugins: item.marked
-                ? [markers({ times: [2, 7.5], color: 'var(--record)' })]
-                : [],
-        });
-        frames.push(frame);
+    for (const item of BARS) {
+        const box = card(section('#bars'), `${item.letter} · ${item.title}`);
+        frame(
+            playerRow(box, { shape: 'circle', fill: 'solid' }),
+            item.bar,
+            item.colors,
+            item.marked,
+        );
     }
 
     for (let i = 0; i < 60; i++) {
         const wave = document.createElement('div');
         wave.className = 'wave cell';
-        grid.append(wave);
-        frames.push(
-            SonicFrame.create({
-                container: wave,
-                media: audio,
-                bar: { width: 3, gap: 1, radius: 1.5 },
-                colors: {
-                    wave: 'var(--wave-idle)',
-                    progress: 'var(--voice)',
-                    hover: null,
-                },
-                rewindOnEnd: true,
-            }),
-        );
+        section('#grid').append(wave);
+        frame(wave, CHOSEN, { hover: null });
     }
 }
 
+function load(peaks: number[], source: string, label: string): void {
+    audio.src = source;
+    section('#source').textContent = label;
+
+    for (const each of frames) {
+        each.setPeaks(() => Promise.resolve(peaks));
+    }
+
+    stopOld?.();
+    stopOld = oldWaveform(section('#old'), audio, peaks);
+}
+
+async function decode(data: ArrayBuffer): Promise<number[]> {
+    const context = new AudioContext();
+
+    try {
+        const buffer = await context.decodeAudioData(data);
+
+        return peaksFromChannel(buffer.getChannelData(0), 1000);
+    } finally {
+        void context.close();
+    }
+}
+
+/** Canvas colors are read once; after a CSS variable changes, every frame reads them again. */
+function refreshFrames(): void {
+    for (const each of frames) {
+        each.refresh();
+    }
+}
+
+function setColor(name: string, value: string): void {
+    root.style.setProperty(name, value);
+    refreshFrames();
+}
+
 function watch(): void {
+    const playAll = section('#play') as HTMLButtonElement;
+    const speed = section('#speed') as HTMLButtonElement;
+    const pickers = {
+        wave: section('#color-wave') as HTMLInputElement,
+        voice: section('#color-voice') as HTMLInputElement,
+        button: section('#color-button') as HTMLInputElement,
+    };
+
     const sync = (): void => {
         const text = `${formatTime(audio.ended ? 0 : audio.currentTime)} / ${formatTime(audio.duration)}`;
         times.forEach((time) => (time.textContent = text));
-        playButton.textContent = audio.paused ? 'Play all' : 'Pause all';
+        playAll.textContent = audio.paused ? 'Play all' : 'Pause all';
     };
 
     for (const type of [
@@ -219,29 +272,52 @@ function watch(): void {
         audio.addEventListener(type, sync);
     }
 
-    playButton.addEventListener('click', toggle);
-    speedButton.addEventListener('click', () => {
+    playAll.addEventListener('click', () =>
+        audio.paused ? void audio.play() : audio.pause(),
+    );
+    speed.addEventListener('click', () => {
         const next =
             SPEEDS[(SPEEDS.indexOf(audio.playbackRate) + 1) % SPEEDS.length];
         audio.playbackRate = next;
-        speedButton.textContent = `Speed ${next}×`;
+        speed.textContent = `Speed ${next}×`;
     });
 
-    fileInput.addEventListener('change', async () => {
-        const file = fileInput.files?.[0];
-
-        if (!file) {
-            return;
+    pickers.wave.addEventListener('input', () =>
+        setColor('--wave-idle', pickers.wave.value),
+    );
+    pickers.voice.addEventListener('input', () => {
+        root.style.setProperty('--wave-progress', pickers.voice.value);
+        setColor('--voice', pickers.voice.value);
+    });
+    pickers.button.addEventListener('input', () =>
+        setColor('--button', pickers.button.value),
+    );
+    section('#reset').addEventListener('click', () => {
+        pickers.wave.value = DEFAULT_COLORS.wave;
+        pickers.voice.value = DEFAULT_COLORS.voice;
+        pickers.button.value = DEFAULT_COLORS.button;
+        for (const name of [
+            '--wave-idle',
+            '--voice',
+            '--wave-progress',
+            '--button',
+        ]) {
+            root.style.removeProperty(name);
         }
+        refreshFrames();
+    });
 
-        const context = new AudioContext();
-        const buffer = await context.decodeAudioData(await file.arrayBuffer());
-        void context.close();
-        load(
-            peaksFromChannel(buffer.getChannelData(0), 1000),
-            URL.createObjectURL(file),
-            file.name,
-        );
+    const file = section('#file') as HTMLInputElement;
+    file.addEventListener('change', async () => {
+        const chosen = file.files?.[0];
+
+        if (chosen) {
+            load(
+                await decode(await chosen.arrayBuffer()),
+                URL.createObjectURL(chosen),
+                chosen.name,
+            );
+        }
     });
 
     let count = 0;
@@ -250,8 +326,10 @@ function watch(): void {
         count++;
 
         if (now - since >= 1000) {
-            fps.textContent = `${Math.round((count * 1000) / (now - since))} fps`;
-            density.textContent = `device pixel ratio ${window.devicePixelRatio}`;
+            section('#fps').textContent =
+                `${Math.round((count * 1000) / (now - since))} fps`;
+            section('#density').textContent =
+                `device pixel ratio ${window.devicePixelRatio}`;
             count = 0;
             since = now;
         }
@@ -265,9 +343,10 @@ function watch(): void {
 build();
 watch();
 
-const sound = speechLike();
+// Fetched once: the same bytes give the peaks and play (a hidden tab would not load the address).
+const sound = await (await fetch('./sounds/little-elf.mp3')).blob();
 load(
-    peaksFromChannel(sound.samples, 1000),
-    URL.createObjectURL(sound.blob),
-    'a made-up speech-like sound (14 s)',
+    await decode(await sound.arrayBuffer()),
+    URL.createObjectURL(sound),
+    '“The Little Elf” (see the credits below)',
 );
