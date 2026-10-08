@@ -4,6 +4,18 @@
  */
 
 export {
+    DEFAULT_BAR,
+    DEFAULT_COLORS,
+    SonicFrame,
+    type SonicFrameOptions,
+} from './dom/frame';
+export {
+    markers,
+    markerSpans,
+    type MarkersOptions,
+    type MarkersPlugin,
+} from './plugins/markers';
+export {
     loadPeaks,
     MAX_PEAKS,
     normalize,
@@ -18,7 +30,10 @@ export type {
     BarStyle,
     Colors,
     MediaLike,
+    PaintContext,
     PeaksSource,
+    Plugin,
+    PluginHost,
     SeekEvent,
     SeekSource,
     SonicFrameEvents,
