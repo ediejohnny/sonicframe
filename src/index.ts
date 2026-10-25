@@ -58,6 +58,16 @@ export {
     type Silence,
 } from './core/analysis';
 export {
+    spectrogram,
+    type SpectrogramPluginOptions,
+} from './plugins/spectrogram';
+export {
+    createSpectrogram,
+    type SpectrogramJob,
+    type SpectrogramOptions,
+} from './core/spectrogram';
+export { buildColormap, colormap, type ColormapName } from './core/colormap';
+export {
     loadPeaks,
     MAX_PEAKS,
     normalize,
