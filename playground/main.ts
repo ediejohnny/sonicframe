@@ -100,6 +100,12 @@ const BARS: BarCard[] = [
         colors: { hover: 'auto', cursor: 'var(--voice)' },
         marked: true,
     },
+    {
+        letter: 'I',
+        title: 'the bars recolor under the pointer (hover colors, auto)',
+        bar: CHOSEN,
+        colors: { hover: 'auto', waveHover: 'auto', progressHover: 'auto' },
+    },
 ];
 
 const DEFAULT_COLORS = { wave: '#c2cad6', voice: '#4d6d94', button: '#4d6d94' };

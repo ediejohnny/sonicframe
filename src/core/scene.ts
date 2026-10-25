@@ -10,6 +10,8 @@ export type Overlay = {
     progress: number;
     /** Device-pixel x under the mouse pointer, or null. */
     hover: number | null;
+    /** Whether the pointer is over the frame (used to recolor the bars). */
+    hovered?: boolean;
 };
 
 export type RegionKind = 'progress' | 'hover' | 'wave';
@@ -31,15 +33,22 @@ export function overlayOf(
     progress: number,
     hover: number | null,
     width: number,
+    hovered: boolean = false,
 ): Overlay {
     return {
         progress: xAt(progress, width),
         hover: hover === null ? null : xAt(hover, width),
+        hovered,
     };
 }
 
 export function sameOverlay(a: Overlay | null, b: Overlay): boolean {
-    return a !== null && a.progress === b.progress && a.hover === b.hover;
+    return (
+        a !== null &&
+        a.progress === b.progress &&
+        a.hover === b.hover &&
+        (a.hovered ?? false) === (b.hovered ?? false)
+    );
 }
 
 /**

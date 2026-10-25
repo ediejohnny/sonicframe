@@ -42,6 +42,16 @@ export type Colors = {
     hover: string | null;
     /** A thin line at the playing position; null draws none. */
     cursor: string | null;
+    /**
+     * The unplayed bars while the pointer is over the frame: `'auto'` nudges `wave` toward
+     * `progress`, a color sets it outright, null (the default) leaves `wave` as it is.
+     */
+    waveHover: string | null;
+    /**
+     * The played bars while the pointer is over the frame: `'auto'` lightens or darkens `progress`,
+     * a color sets it outright, null (the default) leaves `progress` as it is.
+     */
+    progressHover: string | null;
 };
 
 /** What started a seek. */
