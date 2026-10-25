@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `regions`: stretches of the sound a listener can mark, play or loop. A band shows over the bars
+  with its edges and an optional label; the pointer makes one by Shift-dragging (a plain drag still
+  scrubs), moves it by its body and resizes it by an edge, and the keyboard — while the frame has
+  focus — selects (`R` / `Shift+R`), plays (`Enter`), loops (`L`), nudges the edges (`[` `]` `{` `}`)
+  and removes (`Delete`). A region never inverts or falls below a minimum length, and its edges have
+  a touch-sized grab zone. The plugin offers `add`, `update`, `remove`, `clear`, `list`, `play`,
+  `stop` and `select`.
+
 ### Changed
 
 - `markers` can now carry a label and a color per mark (`marks: [{ time, label, color, id }]`, still
