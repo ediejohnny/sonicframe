@@ -71,9 +71,35 @@ export type SonicFrameEvents = {
     hover: [ratio: number | null, time: number | null];
     /** The bound media moved, at the media's own pace (a few times a second), never once per frame. */
     timeupdate: [time: number | null, ratio: number];
+    /** The wave area changed size (a lane was added, the element resized). */
+    resize: [geometry: FrameGeometry];
     /** Loading the peaks or drawing a plugin failed. */
     error: [error: unknown];
     destroy: [];
+};
+
+/** The size and state of the wave area a plugin draws in; all sizes are in device pixels. */
+export type FrameGeometry = {
+    /** Width of the wave area, in device pixels. */
+    readonly width: number;
+    /** Height of the wave area (without the lanes), in device pixels. */
+    readonly height: number;
+    /** Device pixels per CSS pixel. */
+    readonly pixelRatio: number;
+    /** In seconds, or null while unknown. */
+    readonly duration: number | null;
+    /** 0..1, the position shown. */
+    readonly progress: number;
+};
+
+/** A strip above or below the bars that a plugin owns (a caption, a timeline). */
+export type Lane = {
+    /** The element to fill; positioned and sized by the frame. */
+    readonly element: HTMLElement;
+    /** Changes the lane's height in CSS pixels (0 hides it). */
+    setSize(cssPixels: number): void;
+    /** Gives the room back to the wave. */
+    remove(): void;
 };
 
 /** What a plugin can read and ask from the frame it belongs to. */
@@ -83,8 +109,16 @@ export type PluginHost = {
     readonly duration: number | null;
     /** 0..1, the position shown. */
     readonly progress: number;
+    /** The peaks the frame drew (0..1), or null while it has none. */
+    readonly peaks: readonly number[] | null;
+    /** The wave area's size and state, or null before the frame has pixels. */
+    readonly geometry: FrameGeometry | null;
     /** Asks for a new picture on the next animation frame. */
     invalidate(): void;
+    /** Takes a strip above or below the bars; the wave shrinks to make room. */
+    addLane(side: 'above' | 'below', cssPixels: number): Lane;
+    /** A layer over the canvas for text and tooltips (created once, shared by plugins). */
+    overlay(): HTMLElement;
     on<Name extends keyof SonicFrameEvents>(
         event: Name,
         listener: (...args: SonicFrameEvents[Name]) => void,
@@ -118,6 +152,8 @@ export type Plugin = {
     setup?(host: PluginHost): void;
     /** Called on every picture. */
     draw?(paint: PaintContext): void;
+    /** Called when the wave area changed size (after `setup`, and on every later change). */
+    resize?(geometry: FrameGeometry): void;
     /** Called when the plugin is removed or the frame is destroyed. */
     destroy?(): void;
 };

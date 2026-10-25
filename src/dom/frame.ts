@@ -21,12 +21,15 @@ import { easeOut } from '../core/timing';
 import type {
     BarStyle,
     Colors,
+    FrameGeometry,
+    Lane,
     PaintContext,
     PeaksSource,
     Plugin,
     PluginHost,
     SonicFrameEvents,
 } from '../types';
+import { LaneManager } from './lanes';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
     barsPath,
@@ -127,7 +130,7 @@ export class SonicFrame implements PluginHost {
     private colors: Colors;
     private palette: Palette | null = null;
     private readonly colorCache = new Map<string, string>();
-    private peaks: number[] | null = null;
+    private peaksData: number[] | null = null;
     private values: number[] | null = null;
     private loader: (() => Promise<readonly number[]>) | null = null;
     private loads = 0;
@@ -145,6 +148,8 @@ export class SonicFrame implements PluginHost {
     private readonly failed = new WeakSet<Plugin>();
     private dragBox: DOMRect | null = null;
     private destroyed = false;
+    private readonly lanes: LaneManager;
+    private overlayEl: HTMLElement | null = null;
 
     static create(options: SonicFrameOptions): SonicFrame {
         return new SonicFrame(options);
@@ -184,6 +189,9 @@ export class SonicFrame implements PluginHost {
         this.canvas.height = 0;
         this.container.append(this.canvas);
         this.context = this.canvas.getContext('2d');
+        this.lanes = new LaneManager(this.container, this.canvas, () =>
+            this.relayoutLanes(),
+        );
 
         this.controller = new Controller(
             {
@@ -247,6 +255,51 @@ export class SonicFrame implements PluginHost {
         listener: (...args: SonicFrameEvents[Name]) => void,
     ): () => void {
         return this.events.on(event, listener);
+    }
+
+    /** The peaks the frame drew (0..1), or null while it has none. */
+    get peaks(): readonly number[] | null {
+        return this.peaksData;
+    }
+
+    /** The wave area's size and state, or null before the frame has pixels. */
+    get geometry(): FrameGeometry | null {
+        if (!this.allocated) {
+            return null;
+        }
+
+        return {
+            width: this.size.width,
+            height: this.size.height,
+            pixelRatio: this.size.pixelRatio,
+            duration: this.controller.duration,
+            progress: this.controller.progress,
+        };
+    }
+
+    /** Takes a strip above or below the bars; the wave shrinks to make room. */
+    addLane(side: 'above' | 'below', cssPixels: number): Lane {
+        return this.lanes.add(side, cssPixels);
+    }
+
+    /** A layer over the canvas for a plugin's text and tooltips, created once and shared. */
+    overlay(): HTMLElement {
+        if (this.overlayEl === null) {
+            const element = document.createElement('div');
+
+            for (const [property, value] of [
+                ['position', 'absolute'],
+                ['inset', '0'],
+                ['pointer-events', 'none'],
+            ]) {
+                element.style.setProperty(property, value);
+            }
+
+            this.container.append(element);
+            this.overlayEl = element;
+        }
+
+        return this.overlayEl;
     }
 
     setPeaks(source: PeaksSource): void {
@@ -345,6 +398,12 @@ export class SonicFrame implements PluginHost {
             this.events.emit('error', error);
         }
 
+        const geometry = this.geometry;
+
+        if (geometry !== null) {
+            this.callResize(plugin, geometry);
+        }
+
         this.invalidate();
 
         return () => this.remove(plugin);
@@ -371,6 +430,9 @@ export class SonicFrame implements PluginHost {
         this.canvas.width = 0;
         this.canvas.height = 0;
         this.canvas.remove();
+        this.lanes.dispose();
+        this.overlayEl?.remove();
+        this.overlayEl = null;
         this.restoreContainer();
         this.events.emit('destroy');
         this.events.clear();
@@ -499,6 +561,11 @@ export class SonicFrame implements PluginHost {
             return;
         }
 
+        // A press on a lane (a caption, a timeline) is the lane's business, never a seek.
+        if (this.lanes.contains(event.target as Node | null)) {
+            return;
+        }
+
         const box = this.canvas.getBoundingClientRect();
 
         if (!this.controller.pointerDown(this.ratioOf(event, box))) {
@@ -565,14 +632,14 @@ export class SonicFrame implements PluginHost {
     }
 
     private receive(peaks: readonly number[] | null): void {
-        this.peaks =
+        this.peaksData =
             peaks === null
                 ? null
                 : peaks.map((value) => clamp01(Math.abs(value)));
         this.values = null;
         this.layoutDirty = true;
         this.appear =
-            this.peaks !== null &&
+            this.peaksData !== null &&
             this.animate &&
             this.allocated &&
             this.near &&
@@ -592,7 +659,44 @@ export class SonicFrame implements PluginHost {
         }
 
         this.size = size;
+        this.relayoutLanes();
         this.allocate();
+        this.notifyResize();
+    }
+
+    /** Re-places the lanes and insets the canvas for the container's current height. */
+    private relayoutLanes(): void {
+        this.lanes.layout(this.container.getBoundingClientRect().height);
+        this.invalidate();
+    }
+
+    /** Tells listeners and plugins the wave area changed size (only once it has pixels). */
+    private notifyResize(): void {
+        const geometry = this.geometry;
+
+        if (geometry === null) {
+            return;
+        }
+
+        this.events.emit('resize', geometry);
+
+        for (const plugin of this.plugins) {
+            this.callResize(plugin, geometry);
+        }
+    }
+
+    private callResize(plugin: Plugin, geometry: FrameGeometry): void {
+        if (plugin.resize === undefined || this.failed.has(plugin)) {
+            return;
+        }
+
+        try {
+            plugin.resize(geometry);
+        } catch (error) {
+            // A broken plugin is skipped from now on instead of failing every resize.
+            this.failed.add(plugin);
+            this.events.emit('error', error);
+        }
     }
 
     private setNear(near: boolean): void {
@@ -668,7 +772,7 @@ export class SonicFrame implements PluginHost {
         const { width, height, pixelRatio } = this.size;
         this.layoutDirty = false;
 
-        if (this.peaks === null) {
+        if (this.peaksData === null) {
             this.path = linePath(width, height, pixelRatio, this.bar.align);
 
             return;
@@ -677,7 +781,7 @@ export class SonicFrame implements PluginHost {
         const count = barMetrics(width, this.bar, pixelRatio).count;
 
         if (this.values === null || this.values.length !== count) {
-            this.values = resample(this.peaks, count);
+            this.values = resample(this.peaksData, count);
         }
 
         let values = this.values;

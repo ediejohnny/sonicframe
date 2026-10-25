@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Plugins can stack a lane above or below the bars (`host.addLane`); the wave shrinks to make room,
+  and a press on a lane is not a seek. They can also draw into a shared layer over the canvas
+  (`host.overlay`), read the peaks and the wave's geometry (`host.peaks`, `host.geometry`), and learn
+  when the wave area changes size (the `resize` event and a `resize` hook on a plugin). All of this is
+  additive: a 0.1.0 plugin keeps working unchanged.
+
 ## [0.1.0] - 2026-10-08
 
 ### Added

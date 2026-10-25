@@ -41,6 +41,8 @@ export type { ValueText } from './core/controller';
 export type {
     BarStyle,
     Colors,
+    FrameGeometry,
+    Lane,
     MediaLike,
     PaintContext,
     PeaksSource,
