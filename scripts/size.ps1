@@ -22,8 +22,9 @@ if ($scripts.Count -eq 0) {
 $problems = @()
 
 # A neutral, dependency-free build inlines everything: there must be no bare import or require, and no
-# trace of a dev-only tool such as happy-dom.
-$externalImport = "(?:from|import|require)\s*\(?\s*['""]([^'""./][^'""]*)['""]"
+# trace of a dev-only tool such as happy-dom. The specifier must look like a real module name (not an
+# English word that merely happens to sit before a closing quote in a string).
+$externalImport = "(?:from|import|require)\s*\(?\s*['""]([a-zA-Z0-9@][\w@.\-/:]*)['""]"
 foreach ($file in $scripts) {
     $text = [IO.File]::ReadAllText($file.FullName)
 

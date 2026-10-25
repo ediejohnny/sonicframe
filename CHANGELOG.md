@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `exportClip` (and `frame.exportClip`): records a short video of the wave playing — the decoded audio
+  plays silently into a MediaStream, the wave is drawn each frame, and a MediaRecorder captures both.
+  It picks a container the browser can record (`pickMimeType`: MP4/H.264 first, then WebM), runs in
+  real time, stops at the end of the range, aborts if the tab is hidden, and is capped (length, size,
+  resolution, bitrate). No user color goes into a gradient; the caption is clipped, not faded through
+  one.
 - `liveFrequency`: while the sound plays, the bars dance to its spectrum (Web Audio). One shared
   `AudioContext` routes each media element through an analyser once, the audio passes through
   unchanged, and the peaks return on pause. Media that cannot be read without muting it (cross-origin
