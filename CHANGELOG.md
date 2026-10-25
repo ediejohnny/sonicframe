@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Sound analysis, pure and on its own entry `sonicframe/analysis` (safe in Node and a worker):
+  `levels` (RMS and peak per window), `findSilences` (with hysteresis), `silencesFromPeaks` (for
+  apps that only have server peaks), `peakLevel` (peak, dBFS and clipping), and `mixdown`. Every one
+  is capped. The `skipSilences` plugin jumps past the quiet stretches during forward playback (never
+  right after a seek) and can dim them.
 - `timeline`: a thin ruler in a lane above or below the bars, with labels on round seconds and
   minutes and optional minor marks. It picks a nice step for the width (`niceTicks`), is
   `aria-hidden`, and rebuilds when the frame resizes or the duration becomes known. `formatTime`
