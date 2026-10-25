@@ -9,11 +9,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `caption`: a line under the bars that fades out on the right, with optional badges (an `auto`
+  mark, a language tag) and a tooltip that opens on hover, on keyboard focus and on a tap, closes on
+  Escape, and stays while the pointer rests on it. Text goes in as text, never HTML; the fade is a
+  fixed mask, never built from a page color; the tooltip's text color is chosen for contrast on its
+  background; and the whole caption reaches screen readers through `aria-describedby`. Clicking it
+  never seeks.
 - Plugins can stack a lane above or below the bars (`host.addLane`); the wave shrinks to make room,
   and a press on a lane is not a seek. They can also draw into a shared layer over the canvas
   (`host.overlay`), read the peaks and the wave's geometry (`host.peaks`, `host.geometry`), and learn
-  when the wave area changes size (the `resize` event and a `resize` hook on a plugin). All of this is
-  additive: a 0.1.0 plugin keeps working unchanged.
+  when the wave area changes size (the `resize` event and a `resize` hook on a plugin), and resolve a
+  CSS color against the frame (`host.color`). All of this is additive: a 0.1.0 plugin keeps working
+  unchanged.
 
 ## [0.1.0] - 2026-10-08
 

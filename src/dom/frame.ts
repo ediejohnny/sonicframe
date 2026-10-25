@@ -870,7 +870,7 @@ export class SonicFrame implements PluginHost {
         }
     }
 
-    private color(value: string): string {
+    color(value: string): string {
         let resolved = this.colorCache.get(value);
 
         if (resolved === undefined) {

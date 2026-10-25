@@ -5,6 +5,7 @@
  */
 
 import {
+    caption,
     formatTime,
     markers,
     peaksFromChannel,
@@ -202,6 +203,34 @@ function build(): void {
             item.marked,
         );
     }
+
+    const captionBox = card(
+        section('#bars'),
+        'Caption · a line that fades out, a badge, and a tooltip on hover or tap',
+    );
+    frames.push(
+        SonicFrame.create({
+            container: playerRow(captionBox, {
+                shape: 'circle',
+                fill: 'solid',
+            }),
+            media: audio,
+            bar: CHOSEN,
+            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
+            label: 'Playback position',
+            rewindOnEnd: true,
+            plugins: [
+                caption({
+                    // "The Little Elf" by John Kendrick Bangs (public domain; see the page credits).
+                    text: 'I met a little Elf-man once, down where the lilies blow.',
+                    badges: ['auto', 'en'],
+                    tooltip:
+                        'I met a little Elf-man once, down where the lilies blow. ' +
+                        "I asked him why he was so small, and why he didn't grow.",
+                }),
+            ],
+        }),
+    );
 
     for (let i = 0; i < 60; i++) {
         const wave = document.createElement('div');

@@ -28,6 +28,13 @@ export {
     type MarkersPlugin,
 } from './plugins/markers';
 export {
+    caption,
+    type CaptionOptions,
+    type CaptionPlugin,
+    type TooltipContent,
+    type TooltipSection,
+} from './plugins/caption';
+export {
     loadPeaks,
     MAX_PEAKS,
     normalize,
