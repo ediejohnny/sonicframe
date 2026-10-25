@@ -113,6 +113,8 @@ export type PluginHost = {
     readonly peaks: readonly number[] | null;
     /** The wave area's size and state, or null before the frame has pixels. */
     readonly geometry: FrameGeometry | null;
+    /** Resolves a CSS color (including `var(--name)`) against the frame's element. */
+    color(value: string): string;
     /** Asks for a new picture on the next animation frame. */
     invalidate(): void;
     /** Takes a strip above or below the bars; the wave shrinks to make room. */
