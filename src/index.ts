@@ -36,6 +36,12 @@ export {
     type TooltipSection,
 } from './plugins/caption';
 export {
+    regions,
+    type Region,
+    type RegionsOptions,
+    type RegionsPlugin,
+} from './plugins/regions';
+export {
     loadPeaks,
     MAX_PEAKS,
     normalize,

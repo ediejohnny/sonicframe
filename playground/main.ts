@@ -10,6 +10,7 @@ import {
     markers,
     peaksFromChannel,
     PlayButton,
+    regions,
     SonicFrame,
     type BarStyle,
     type ButtonFill,
@@ -242,6 +243,24 @@ function build(): void {
                         'I met a little Elf-man once, down where the lilies blow. ' +
                         "I asked him why he was so small, and why he didn't grow.",
                 }),
+            ],
+        }),
+    );
+
+    const regionBox = card(
+        section('#bars'),
+        'Regions · Shift-drag to make one, drag an edge to resize, R selects, Enter plays, L loops',
+    );
+    frames.push(
+        SonicFrame.create({
+            container: playerRow(regionBox, { shape: 'circle', fill: 'solid' }),
+            media: audio,
+            bar: CHOSEN,
+            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
+            label: 'Playback position',
+            rewindOnEnd: true,
+            plugins: [
+                regions({ items: [{ start: 5, end: 12, label: 'chorus' }] }),
             ],
         }),
     );
