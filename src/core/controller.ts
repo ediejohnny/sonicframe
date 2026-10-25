@@ -7,6 +7,7 @@
 import type { MediaLike, SeekSource, SonicFrameEvents } from '../types';
 import { keyAction, type KeyModifiers } from './keys';
 import { clamp01, positive } from './math';
+import { rangeStep, type RangeState } from './range';
 import { defaultValueText, effectiveDuration, stepRatio } from './timing';
 
 /** `HAVE_METADATA`: from here on the media knows its duration and can seek. */
@@ -92,6 +93,7 @@ export class Controller {
     private looping = false;
     private announced: AriaState | null = null;
     private reported: number | null | undefined = undefined;
+    private range: RangeState | null = null;
 
     constructor(options: ControllerOptions, effects: ControllerEffects) {
         this.options = { ...options };
@@ -131,6 +133,7 @@ export class Controller {
         this.dragging = null;
         this.waiting = false;
         this.reported = undefined;
+        this.range = null;
 
         if (media === null) {
             this.position = 0;
@@ -158,6 +161,7 @@ export class Controller {
             case 'emptied':
                 this.pending = null;
                 this.waiting = false;
+                this.range = null;
                 break;
             default:
                 break;
@@ -175,7 +179,54 @@ export class Controller {
             this.sync(false);
         }
 
+        if (this.range !== null && this.playing) {
+            this.applyRange();
+        }
+
         return this.looping;
+    }
+
+    /** Plays `start`..`end` seconds (optionally looping); the frame must have a media element. */
+    playRange(start: number, end: number, loop: boolean = false): void {
+        const duration = this.duration;
+
+        if (this.media === null || duration === null) {
+            return;
+        }
+
+        const from = Math.max(0, Math.min(start, duration));
+        const to = Math.max(from, Math.min(end, duration));
+        this.range = { start: from, end: to, loop };
+        this.seek(from / duration, 'api');
+        void this.media.play?.();
+    }
+
+    /** Forgets any range being played (playback itself carries on). */
+    stopRange(): void {
+        this.range = null;
+    }
+
+    private applyRange(): void {
+        const media = this.media;
+
+        if (media === null || this.range === null) {
+            return;
+        }
+
+        const step = rangeStep(media.currentTime, this.range);
+
+        if (step === 'wrap') {
+            media.currentTime = this.range.start;
+        } else if (step === 'stop') {
+            const reachedEnd = media.currentTime >= this.range.end;
+            this.range = null;
+
+            if (reachedEnd) {
+                media.pause?.();
+            }
+
+            this.effects.emit('rangeend');
+        }
     }
 
     /** Whether the frame is on (or near) the screen; animation only runs where it can be seen. */
@@ -331,6 +382,16 @@ export class Controller {
         this.effects.invalidate();
 
         const duration = this.duration;
+
+        // A seek out of the range being played abandons it (a seek to its start does not).
+        if (this.range !== null && duration !== null) {
+            const at = target * duration;
+
+            if (at < this.range.start - 0.05 || at > this.range.end) {
+                this.range = null;
+            }
+        }
+
         this.effects.emit('seek', {
             ratio: target,
             time: duration !== null ? target * duration : null,
