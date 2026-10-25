@@ -12,6 +12,7 @@ import {
     PlayButton,
     regions,
     SonicFrame,
+    timeline,
     type BarStyle,
     type ButtonFill,
     type ButtonShape,
@@ -262,6 +263,25 @@ function build(): void {
             plugins: [
                 regions({ items: [{ start: 5, end: 12, label: 'chorus' }] }),
             ],
+        }),
+    );
+
+    const timelineBox = card(
+        section('#bars'),
+        'Timeline · a ruler under the bars',
+    );
+    frames.push(
+        SonicFrame.create({
+            container: playerRow(timelineBox, {
+                shape: 'circle',
+                fill: 'solid',
+            }),
+            media: audio,
+            bar: CHOSEN,
+            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
+            label: 'Playback position',
+            rewindOnEnd: true,
+            plugins: [timeline()],
         }),
     );
 

@@ -41,6 +41,7 @@ export {
     type RegionsOptions,
     type RegionsPlugin,
 } from './plugins/regions';
+export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
     loadPeaks,
     MAX_PEAKS,

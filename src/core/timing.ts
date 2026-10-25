@@ -39,15 +39,16 @@ export function easeOut(t: number): number {
     return 1 - (1 - clamp01(t)) ** 3;
 }
 
-/** Seconds as `m:ss`, or `h:mm:ss` from one hour on. */
-export function formatTime(seconds: number): string {
-    const total = Math.max(
-        0,
-        Math.floor(Number.isFinite(seconds) ? seconds : 0),
-    );
-    const hours = Math.floor(total / 3600);
-    const minutes = Math.floor((total % 3600) / 60);
-    const rest = String(total % 60).padStart(2, '0');
+/** Seconds as `m:ss`, or `h:mm:ss` from one hour on; `decimals` adds fractional seconds. */
+export function formatTime(seconds: number, decimals: number = 0): string {
+    const safe = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+    const whole = Math.floor(safe);
+    const hours = Math.floor(whole / 3600);
+    const minutes = Math.floor((whole % 3600) / 60);
+    const rest =
+        decimals > 0
+            ? (safe % 60).toFixed(decimals).padStart(decimals + 3, '0')
+            : String(whole % 60).padStart(2, '0');
 
     return hours > 0
         ? `${hours}:${String(minutes).padStart(2, '0')}:${rest}`

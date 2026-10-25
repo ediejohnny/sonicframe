@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `timeline`: a thin ruler in a lane above or below the bars, with labels on round seconds and
+  minutes and optional minor marks. It picks a nice step for the width (`niceTicks`), is
+  `aria-hidden`, and rebuilds when the frame resizes or the duration becomes known. `formatTime`
+  takes an optional number of decimals.
 - `regions`: stretches of the sound a listener can mark, play or loop. A band shows over the bars
   with its edges and an optional label; the pointer makes one by Shift-dragging (a plain drag still
   scrubs), moves it by its body and resizes it by an edge, and the keyboard — while the frame has
