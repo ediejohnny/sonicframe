@@ -12,6 +12,7 @@ import {
     PlayButton,
     regions,
     SonicFrame,
+    spectrogram,
     timeline,
     type BarStyle,
     type ButtonFill,
@@ -282,6 +283,34 @@ function build(): void {
             label: 'Playback position',
             rewindOnEnd: true,
             plugins: [timeline()],
+        }),
+    );
+
+    const spectrumBox = card(
+        section('#bars'),
+        'Spectrogram · time across, frequency up, computed in the browser',
+    );
+    frames.push(
+        SonicFrame.create({
+            container: playerRow(spectrumBox, {
+                shape: 'circle',
+                fill: 'solid',
+            }),
+            media: audio,
+            bar: { ...CHOSEN },
+            colors: {
+                wave: 'rgba(255,255,255,0.35)',
+                progress: 'rgba(255,255,255,0.7)',
+            },
+            label: 'Playback position',
+            rewindOnEnd: true,
+            plugins: [
+                spectrogram({
+                    source: './sounds/little-elf.mp3',
+                    map: 'magma',
+                    columns: 400,
+                }),
+            ],
         }),
     );
 
