@@ -182,7 +182,15 @@ function frame(
             label: 'Playback position',
             rewindOnEnd: true,
             plugins: marked
-                ? [markers({ times: [4, 21], color: 'var(--record)' })]
+                ? [
+                      markers({
+                          marks: [
+                              { time: 4, label: 'intro' },
+                              { time: 21, label: 'the reply' },
+                          ],
+                          color: 'var(--record)',
+                      }),
+                  ]
                 : [],
         }),
     );

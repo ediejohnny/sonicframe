@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `markers` can now carry a label and a color per mark (`marks: [{ time, label, color, id }]`, still
+  accepting plain `times`). A click on a marker seeks to it, hovering shows a tooltip, `M` and
+  `Shift+M` step through them, and markers that crowd together become one pill with a count.
+
 ### Added
 
 - Plugins can take pointer and keyboard input: `pointerDown` claims a press (`'take'` now, or

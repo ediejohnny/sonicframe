@@ -24,6 +24,7 @@ export type {
 export {
     markers,
     markerSpans,
+    type Mark,
     type MarkersOptions,
     type MarkersPlugin,
 } from './plugins/markers';
