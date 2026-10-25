@@ -38,6 +38,7 @@ import type {
     WavePoint,
 } from '../types';
 import { announce } from './announce';
+import { exportClip, type ClipOptions } from './clip';
 import { LaneManager } from './lanes';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
@@ -400,6 +401,30 @@ export class SonicFrame implements PluginHost {
     /** Says something through the page's shared polite live region, for screen readers. */
     announce(text: string): void {
         announce(text);
+    }
+
+    /** Records a clip of the wave playing, using the frame's own peaks, bars and colors. */
+    exportClip(
+        options: Partial<ClipOptions> = {},
+    ): Promise<{ blob: Blob; mimeType: string; duration: number }> {
+        const audio =
+            options.audio ?? this.mediaEl?.currentSrc ?? this.mediaEl?.src;
+
+        if (audio === undefined || audio === '') {
+            return Promise.reject(
+                new Error('sonicframe: no audio to record a clip from'),
+            );
+        }
+
+        const palette = (this.palette ??= this.resolvePalette());
+
+        return exportClip({
+            audio,
+            peaks: this.peaksData ?? [],
+            bar: this.bar,
+            colors: { wave: palette.wave, progress: palette.progress },
+            ...options,
+        });
     }
 
     setBar(bar: Partial<BarStyle>): void {

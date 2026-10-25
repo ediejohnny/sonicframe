@@ -331,6 +331,44 @@ function build(): void {
         }),
     );
 
+    const clipBox = card(
+        section('#bars'),
+        'Export clip · record the first 5 seconds of the wave as a video',
+    );
+    const clipFrame = SonicFrame.create({
+        container: playerRow(clipBox, { shape: 'circle', fill: 'solid' }),
+        media: audio,
+        bar: CHOSEN,
+        colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
+        label: 'Playback position',
+        rewindOnEnd: true,
+    });
+    frames.push(clipFrame);
+
+    const exportButton = document.createElement('button');
+    exportButton.type = 'button';
+    exportButton.textContent = 'Export 5s clip';
+    exportButton.addEventListener('click', () => {
+        exportButton.disabled = true;
+        exportButton.textContent = 'Recording…';
+        clipFrame
+            .exportClip({ start: 0, end: 5, caption: 'The Little Elf' })
+            .then(({ blob }) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'sonicframe-clip';
+                link.click();
+                URL.revokeObjectURL(url);
+            })
+            .catch((error: unknown) => console.error(error))
+            .finally(() => {
+                exportButton.disabled = false;
+                exportButton.textContent = 'Export 5s clip';
+            });
+    });
+    clipBox.append(exportButton);
+
     for (let i = 0; i < 60; i++) {
         const wave = document.createElement('div');
         wave.className = 'wave cell';
