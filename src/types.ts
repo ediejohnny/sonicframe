@@ -150,8 +150,12 @@ export type PluginHost = {
     readonly progress: number;
     /** The peaks the frame drew (0..1), or null while it has none. */
     readonly peaks: readonly number[] | null;
+    /** The media element the frame follows, or null. */
+    readonly media: HTMLMediaElement | null;
     /** The wave area's size and state, or null before the frame has pixels. */
     readonly geometry: FrameGeometry | null;
+    /** Overrides the bar heights with live values (e.g. a spectrum); null gives the peaks back. */
+    setValues(values: readonly number[] | null): void;
     /** Resolves a CSS color (including `var(--name)`) against the frame's element. */
     color(value: string): string;
     /** Asks for a new picture on the next animation frame. */

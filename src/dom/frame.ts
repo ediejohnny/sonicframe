@@ -163,7 +163,8 @@ export class SonicFrame implements PluginHost {
     private painted: Overlay | null = null;
     /** When the bars started growing in: -1 waits for the next animation frame, null means not growing. */
     private appear: number | null = null;
-    private media: HTMLMediaElement | null = null;
+    private mediaEl: HTMLMediaElement | null = null;
+    private override: number[] | null = null;
     private plugins: Plugin[] = [];
     private readonly failed = new WeakSet<Plugin>();
     private press: Press | null = null;
@@ -283,6 +284,19 @@ export class SonicFrame implements PluginHost {
         return this.peaksData;
     }
 
+    /** The media element the frame follows, or null. */
+    get media(): HTMLMediaElement | null {
+        return this.mediaEl;
+    }
+
+    /** Overrides the bar heights with live values (e.g. a spectrum); null gives the peaks back. */
+    setValues(values: readonly number[] | null): void {
+        this.override = values === null ? null : values.map((v) => clamp01(v));
+        this.values = null;
+        this.layoutDirty = true;
+        this.invalidate();
+    }
+
     /** The wave area's size and state, or null before the frame has pixels. */
     get geometry(): FrameGeometry | null {
         if (!this.allocated) {
@@ -350,7 +364,7 @@ export class SonicFrame implements PluginHost {
         }
 
         this.unbindMedia();
-        this.media = media;
+        this.mediaEl = media;
 
         for (const type of MEDIA_EVENTS) {
             media?.addEventListener(type, this.onMedia);
@@ -587,10 +601,10 @@ export class SonicFrame implements PluginHost {
 
     private unbindMedia(): void {
         for (const type of MEDIA_EVENTS) {
-            this.media?.removeEventListener(type, this.onMedia);
+            this.mediaEl?.removeEventListener(type, this.onMedia);
         }
 
-        this.media = null;
+        this.mediaEl = null;
     }
 
     private wavePoint(event: PointerEvent, box: DOMRect): WavePoint {
@@ -1002,7 +1016,9 @@ export class SonicFrame implements PluginHost {
         const { width, height, pixelRatio } = this.size;
         this.layoutDirty = false;
 
-        if (this.peaksData === null) {
+        const source = this.override ?? this.peaksData;
+
+        if (source === null) {
             this.path = linePath(width, height, pixelRatio, this.bar.align);
 
             return;
@@ -1011,7 +1027,7 @@ export class SonicFrame implements PluginHost {
         const count = barMetrics(width, this.bar, pixelRatio).count;
 
         if (this.values === null || this.values.length !== count) {
-            this.values = resample(this.peaksData, count);
+            this.values = resample(source, count);
         }
 
         let values = this.values;

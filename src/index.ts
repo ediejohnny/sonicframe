@@ -67,6 +67,9 @@ export {
     type SpectrogramOptions,
 } from './core/spectrogram';
 export { buildColormap, colormap, type ColormapName } from './core/colormap';
+export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
+export { frequencyBands } from './core/bands';
+export { canTapMedia } from './core/origin';
 export {
     loadPeaks,
     MAX_PEAKS,
