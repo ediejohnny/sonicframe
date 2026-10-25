@@ -8,6 +8,7 @@ import {
     caption,
     formatTime,
     markers,
+    liveFrequency,
     peaksFromChannel,
     PlayButton,
     regions,
@@ -311,6 +312,22 @@ function build(): void {
                     columns: 400,
                 }),
             ],
+        }),
+    );
+
+    const liveBox = card(
+        section('#bars'),
+        'Live frequency · the bars dance to the sound while it plays (press play)',
+    );
+    frames.push(
+        SonicFrame.create({
+            container: playerRow(liveBox, { shape: 'circle', fill: 'solid' }),
+            media: audio,
+            bar: { ...CHOSEN, align: 'bottom' },
+            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
+            label: 'Playback position',
+            rewindOnEnd: true,
+            plugins: [liveFrequency()],
         }),
     );
 

@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `liveFrequency`: while the sound plays, the bars dance to its spectrum (Web Audio). One shared
+  `AudioContext` routes each media element through an analyser once, the audio passes through
+  unchanged, and the peaks return on pause. Media that cannot be read without muting it (cross-origin
+  without CORS) is refused with an error, never silenced; the context is never closed and the output
+  never disconnected. A plugin can also set the bar heights directly with `host.setValues`.
 - `spectrogram`: a time–frequency image under the bars, computed in the browser with a dependency-free
   radix-2 FFT (`createSpectrogram`, resumable so it never freezes the page; run in slices on the main
   thread, since a strict CSP can block a blob worker). It decodes the audio with no user gesture (the
