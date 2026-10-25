@@ -43,6 +43,21 @@ export {
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
+    skipSilences,
+    type SkipSilencesOptions,
+    type SkipSilencesPlugin,
+} from './plugins/skip-silences';
+export {
+    findSilences,
+    levels,
+    mixdown,
+    nextSkip,
+    peakLevel,
+    silencesFromPeaks,
+    type ChannelSource,
+    type Silence,
+} from './core/analysis';
+export {
     loadPeaks,
     MAX_PEAKS,
     normalize,
