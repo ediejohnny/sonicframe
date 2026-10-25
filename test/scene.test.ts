@@ -61,7 +61,7 @@ describe('overlay and pointer', () => {
         const a = overlayOf(0.5004, null, 1000);
         const b = overlayOf(0.4996, null, 1000);
 
-        expect(a).toEqual({ progress: 500, hover: null });
+        expect(a).toEqual({ progress: 500, hover: null, hovered: false });
         expect(sameOverlay(a, b)).toBe(true);
         expect(sameOverlay(a, overlayOf(0.5004, 0.2, 1000))).toBe(false);
         expect(sameOverlay(null, a)).toBe(false);

@@ -13,6 +13,10 @@ export type Palette = {
     progress: string;
     hover: string | null;
     cursor: string | null;
+    /** The unplayed color while hovered, or null to keep `wave`. */
+    waveHover?: string | null;
+    /** The played color while hovered, or null to keep `progress`. */
+    progressHover?: string | null;
 };
 
 function roundedRect(path: Path2D, bar: Bar): void {
@@ -72,6 +76,13 @@ export function paintBars(
 ): void {
     const shown =
         palette.hover === null ? { ...overlay, hover: null } : overlay;
+    const hovered = overlay.hovered ?? false;
+    const progress =
+        hovered && palette.progressHover != null
+            ? palette.progressHover
+            : palette.progress;
+    const wave =
+        hovered && palette.waveHover != null ? palette.waveHover : palette.wave;
 
     for (const region of regions(shown, width)) {
         ctx.save();
@@ -80,10 +91,10 @@ export function paintBars(
         ctx.clip();
         ctx.fillStyle =
             region.kind === 'progress'
-                ? palette.progress
+                ? progress
                 : region.kind === 'hover'
-                  ? (palette.hover ?? palette.wave)
-                  : palette.wave;
+                  ? (palette.hover ?? wave)
+                  : wave;
         ctx.fill(path);
         ctx.restore();
     }

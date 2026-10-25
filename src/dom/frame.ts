@@ -4,7 +4,12 @@
  * core says something changed. `destroy()` gives the element back as it was.
  */
 
-import { mixColors, resolveColor, rgbaString } from '../core/color';
+import {
+    hoverColors,
+    mixColors,
+    resolveColor,
+    rgbaString,
+} from '../core/color';
 import {
     Controller,
     MEDIA_EVENTS,
@@ -87,6 +92,8 @@ export const DEFAULT_COLORS: Readonly<Colors> = Object.freeze({
     progress: 'var(--sonicframe-progress, #2f6fdb)',
     hover: 'auto',
     cursor: null,
+    waveHover: null,
+    progressHover: null,
 });
 
 /** How long the bars take to grow in, in milliseconds. */
@@ -751,10 +758,15 @@ export class SonicFrame implements PluginHost {
         }
 
         const palette = (this.palette ??= this.resolvePalette());
+        const hoverMatters =
+            palette.hover !== null ||
+            palette.waveHover != null ||
+            palette.progressHover != null;
         const overlay = overlayOf(
             this.controller.progress,
             palette.hover === null ? null : this.controller.hover,
             this.size.width,
+            hoverMatters && this.controller.hover !== null,
         );
 
         if (this.paintDirty || !sameOverlay(this.painted, overlay)) {
@@ -900,6 +912,12 @@ export class SonicFrame implements PluginHost {
             hover = this.color(this.colors.hover) || null;
         }
 
+        const auto =
+            this.colors.waveHover === 'auto' ||
+            this.colors.progressHover === 'auto'
+                ? this.autoHover(wave, progress)
+                : null;
+
         return {
             wave,
             progress,
@@ -908,7 +926,48 @@ export class SonicFrame implements PluginHost {
                 this.colors.cursor === null
                     ? null
                     : this.color(this.colors.cursor) || null,
+            waveHover: this.hoverColor(this.colors.waveHover, auto?.wave),
+            progressHover: this.hoverColor(
+                this.colors.progressHover,
+                auto?.progress,
+            ),
         };
+    }
+
+    /** The `'auto'` hover colors, read back from the resolved wave and progress; null if unreadable. */
+    private autoHover(
+        wave: string,
+        progress: string,
+    ): { wave: string; progress: string } | null {
+        const from = readColor(wave);
+        const to = readColor(progress);
+
+        if (from === null || to === null) {
+            return null;
+        }
+
+        const colors = hoverColors(from, to);
+
+        return {
+            wave: rgbaString(colors.waveHover),
+            progress: rgbaString(colors.progressHover),
+        };
+    }
+
+    /** Resolves one hover color: null stays off, `'auto'` uses the computed one, else a CSS color. */
+    private hoverColor(
+        setting: string | null,
+        automatic: string | undefined,
+    ): string | null {
+        if (setting === null) {
+            return null;
+        }
+
+        if (setting === 'auto') {
+            return automatic ?? null;
+        }
+
+        return this.color(setting) || null;
     }
 
     private remove(plugin: Plugin): void {

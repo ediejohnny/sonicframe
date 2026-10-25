@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Hover colors: `colors.waveHover` and `colors.progressHover` recolor the unplayed and played bars
+  while the pointer is over a frame. Each takes `'auto'` (nudges the wave toward the played color,
+  and lightens or darkens the played color), a CSS color, or null. Off by default, so an upgrade
+  looks the same; only the frame the pointer enters or leaves repaints.
 - `caption`: a line under the bars that fades out on the right, with optional badges (an `auto`
   mark, a language tag) and a tooltip that opens on hover, on keyboard focus and on a tap, closes on
   Escape, and stays while the pointer rests on it. Text goes in as text, never HTML; the fade is a

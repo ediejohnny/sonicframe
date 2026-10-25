@@ -67,6 +67,26 @@ export function rgbaString(color: Rgba): string {
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
 }
 
+/**
+ * The played and unplayed colors to use while the pointer is over the frame: the wave is nudged a
+ * fifth of the way toward the played color, and the played color is lightened or darkened a little
+ * (away from its own luminance), so a hovered frame stands out without a jarring recolor.
+ */
+export function hoverColors(
+    wave: Rgba,
+    progress: Rgba,
+): { waveHover: Rgba; progressHover: Rgba } {
+    const target: Rgba =
+        relativeLuminance(progress) < 0.5
+            ? [255, 255, 255, progress[3]]
+            : [0, 0, 0, progress[3]];
+
+    return {
+        waveHover: mixColors(wave, progress, 0.2),
+        progressHover: mixColors(progress, target, 0.12),
+    };
+}
+
 /** Relative luminance (WCAG), 0 (black) to 1 (white); alpha is ignored. */
 export function relativeLuminance(color: Rgba): number {
     const linear = (value: number): number => {
