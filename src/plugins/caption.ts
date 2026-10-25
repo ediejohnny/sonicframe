@@ -68,14 +68,19 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
     let overCaption = false;
     let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
+    // Listeners for the life of the plugin (cleanups) versus ones for the current lane only
+    // (laneCleanups), so toggling the caption on and off does not pile up handlers.
+    const laneCleanups: (() => void)[] = [];
+
     function listen<K extends keyof HTMLElementEventMap>(
         target: EventTarget,
         type: K,
         handler: (event: HTMLElementEventMap[K]) => void,
+        into: (() => void)[] = cleanups,
     ): void {
         const listener = handler as EventListener;
         target.addEventListener(type, listener);
-        cleanups.push(() => target.removeEventListener(type, listener));
+        into.push(() => target.removeEventListener(type, listener));
     }
 
     function tooltipLines(): string[] {
@@ -100,7 +105,9 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
                 Math.min(MAX_TOOLTIP, section.limit ?? tooltipLimit),
             );
 
-            return section.label ? `${section.label}: ${body}` : body;
+            return section.label === undefined
+                ? body
+                : `${cleanText(section.label, 120)}: ${body}`;
         });
     }
 
@@ -235,39 +242,46 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
         textSpan = span;
         fullSpan = full;
 
-        // The tooltip opens on hover and on a tap; the frame's focus drives the keyboard case.
-        listen(span, 'pointerenter', (event) => {
-            if (event.pointerType === 'mouse') {
-                overCaption = true;
-                dismissed = false;
-                open();
-            }
-        });
-        listen(span, 'pointerleave', (event) => {
-            if (event.pointerType === 'mouse') {
-                overCaption = false;
-                scheduleClose();
-            }
-        });
-        listen(span, 'pointerup', (event) => {
-            if (event.pointerType !== 'mouse') {
-                if (sharedTooltip().open) {
-                    closeNow();
-                } else {
+        // The tooltip opens on hover and on a tap; the frame's focus drives the keyboard case. These
+        // belong to this lane, so they are dropped when the caption is cleared (not piled up).
+        listen(
+            span,
+            'pointerenter',
+            (event) => {
+                if (event.pointerType === 'mouse') {
+                    overCaption = true;
                     dismissed = false;
                     open();
                 }
-            }
-        });
-
-        const tip = sharedTooltip();
-        listen(tip.element, 'pointerenter', () => {
-            if (closeTimer !== null) {
-                clearTimeout(closeTimer);
-                closeTimer = null;
-            }
-        });
-        listen(tip.element, 'pointerleave', () => scheduleClose());
+            },
+            laneCleanups,
+        );
+        listen(
+            span,
+            'pointerleave',
+            (event) => {
+                if (event.pointerType === 'mouse') {
+                    overCaption = false;
+                    scheduleClose();
+                }
+            },
+            laneCleanups,
+        );
+        listen(
+            span,
+            'pointerup',
+            (event) => {
+                if (event.pointerType !== 'mouse') {
+                    if (sharedTooltip().open) {
+                        closeNow();
+                    } else {
+                        dismissed = false;
+                        open();
+                    }
+                }
+            },
+            laneCleanups,
+        );
 
         render();
     }
@@ -284,6 +298,11 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
 
     function removeLane(current: PluginHost): void {
         closeNow();
+
+        for (const cleanup of laneCleanups.splice(0)) {
+            cleanup();
+        }
+
         lane?.remove();
         lane = null;
         textSpan = null;
@@ -335,6 +354,16 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
                     closeNow();
                 }
             });
+
+            // Registered once (the tooltip is shared by the page): let the pointer rest on it.
+            const tip = sharedTooltip();
+            listen(tip.element, 'pointerenter', () => {
+                if (closeTimer !== null) {
+                    clearTimeout(closeTimer);
+                    closeTimer = null;
+                }
+            });
+            listen(tip.element, 'pointerleave', () => scheduleClose());
 
             if (text !== null) {
                 ensureLane(pluginHost);

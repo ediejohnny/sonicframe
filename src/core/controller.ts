@@ -198,7 +198,11 @@ export class Controller {
         const to = Math.max(from, Math.min(end, duration));
         this.range = { start: from, end: to, loop };
         this.seek(from / duration, 'api');
-        void this.media.play?.();
+        const started = this.media.play?.();
+
+        if (started !== undefined && typeof started.then === 'function') {
+            started.then(undefined, () => undefined);
+        }
     }
 
     /** Forgets any range being played (playback itself carries on). */

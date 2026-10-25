@@ -21,10 +21,27 @@ export type LiveFrequencyOptions = {
     bars?: number;
 };
 
+function powerOfTwo(value: number): number {
+    const wanted = Number.isFinite(value) ? value : 512;
+    let size = 32;
+
+    while (size < wanted && size < 2048) {
+        size <<= 1;
+    }
+
+    return size;
+}
+
 export function liveFrequency(options: LiveFrequencyOptions = {}): Plugin {
-    const fftSize = Math.min(2048, Math.max(32, options.fftSize ?? 512));
-    const smoothing = Math.min(0.99, Math.max(0, options.smoothing ?? 0.8));
-    const bars = Math.max(1, options.bars ?? 48);
+    const fftSize = powerOfTwo(options.fftSize ?? 512);
+    const requested = options.smoothing ?? 0.8;
+    const smoothing = Number.isFinite(requested)
+        ? Math.min(0.99, Math.max(0, requested))
+        : 0.8;
+    const bars = Math.max(
+        1,
+        Number.isFinite(options.bars) ? (options.bars ?? 48) : 48,
+    );
 
     let host: PluginHost | null = null;
     let tap: MediaTap | null = null;
@@ -56,6 +73,7 @@ export function liveFrequency(options: LiveFrequencyOptions = {}): Plugin {
             }
 
             spectrum = new Uint8Array(tap.analyser.frequencyBinCount);
+            resumeAudio();
 
             for (const [type, handler] of [
                 ['play', () => resumeAudio()],
@@ -68,12 +86,19 @@ export function liveFrequency(options: LiveFrequencyOptions = {}): Plugin {
         },
 
         draw(_paint): void {
-            if (tap === null || spectrum === null) {
+            // Only while actually playing: otherwise setValues would re-invalidate every frame and
+            // spin a repaint loop even when paused. The pause/ended handlers restore the peaks once.
+            if (
+                tap === null ||
+                spectrum === null ||
+                host === null ||
+                host.media?.paused !== false
+            ) {
                 return;
             }
 
             tap.analyser.getByteFrequencyData(spectrum);
-            host?.setValues(
+            host.setValues(
                 frequencyBands(spectrum, bars, tap.sampleRate, {
                     minHz: options.minHz,
                     maxHz: options.maxHz,

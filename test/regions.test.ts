@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vite-plus/test';
+import { regions } from '../src/index';
 import { hitRegion, normalizeRegion } from '../src/core/regions';
+
+describe('region shortcuts and modifiers', () => {
+    it('ignores a key held with Ctrl, Alt or Meta (so Ctrl+R still reloads)', () => {
+        const plugin = regions({ items: [{ start: 1, end: 2 }] });
+
+        expect(plugin.keyDown?.('r', { ctrlKey: true })).toBe(false);
+        expect(plugin.keyDown?.('r', { metaKey: true })).toBe(false);
+    });
+});
 
 describe('normalizing a region', () => {
     it('orders the ends and clamps to the sound', () => {

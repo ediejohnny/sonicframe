@@ -8,6 +8,7 @@
 
 import { groupMarks } from '../core/clusters';
 import { clamp01, positive } from '../core/math';
+import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
 import type { PaintContext, Plugin, PluginHost, WavePoint } from '../types';
 import { sharedTooltip } from '../dom/tooltip';
@@ -85,7 +86,15 @@ export function markerSpans(
 
 function toMarks(next: readonly number[] | readonly Mark[]): Mark[] {
     return next.map((item) =>
-        typeof item === 'number' ? { time: item } : { ...item },
+        typeof item === 'number'
+            ? { time: item }
+            : {
+                  ...item,
+                  label:
+                      item.label === undefined
+                          ? undefined
+                          : cleanText(item.label, 120),
+              },
     );
 }
 
@@ -93,7 +102,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const groupPx = Math.max(0, options.group ?? 12);
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
-    const max = Math.max(0, options.max ?? MAX_MARKS);
+    const max = Math.min(MAX_MARKS, Math.max(0, options.max ?? MAX_MARKS));
     const defaultColor = options.color ?? 'var(--sonicframe-marker, #e5484d)';
 
     let marks: Mark[] = toMarks(options.marks ?? options.times ?? []).slice(
@@ -297,7 +306,11 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
             closeTooltip();
         },
 
-        keyDown(key): boolean {
+        keyDown(key, modifiers): boolean {
+            if (modifiers.ctrlKey || modifiers.altKey || modifiers.metaKey) {
+                return false;
+            }
+
             if (key !== 'm' && key !== 'M') {
                 return false;
             }

@@ -67,6 +67,17 @@ export function tapMedia(
     let entry = graphs.get(media);
 
     if (entry === undefined) {
+        const analyser = ctx.createAnalyser();
+
+        // Set the analyser up BEFORE routing the element: a bad fftSize or smoothing throws here,
+        // and we must not have rerouted (and possibly silenced) the element by then.
+        try {
+            analyser.fftSize = fftSize;
+            analyser.smoothingTimeConstant = smoothing;
+        } catch {
+            return null;
+        }
+
         let source: MediaElementAudioSourceNode;
 
         try {
@@ -75,15 +86,19 @@ export function tapMedia(
             return null;
         }
 
-        const analyser = ctx.createAnalyser();
         source.connect(analyser);
         analyser.connect(ctx.destination);
         entry = { analyser, refs: 0 };
         graphs.set(media, entry);
+    } else {
+        try {
+            entry.analyser.fftSize = fftSize;
+            entry.analyser.smoothingTimeConstant = smoothing;
+        } catch {
+            // Keep the previous settings if the new ones are invalid.
+        }
     }
 
-    entry.analyser.fftSize = fftSize;
-    entry.analyser.smoothingTimeConstant = smoothing;
     entry.refs++;
     const analyser = entry.analyser;
     let released = false;

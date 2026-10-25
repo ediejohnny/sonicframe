@@ -13,6 +13,7 @@ import {
     type LaidRegion,
     type RegionPart,
 } from '../core/regions';
+import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
 import type { Plugin, PluginHost, WavePoint } from '../types';
 
@@ -64,7 +65,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const minLength = Math.max(0.01, options.minLength ?? 0.25);
     const bandColor = options.color ?? 'rgba(47, 111, 219, 0.18)';
     const keys = options.keys ?? true;
-    const max = Math.max(0, options.max ?? 200);
+    const max = Math.min(200, Math.max(0, options.max ?? 200));
 
     let host: PluginHost | null = null;
     let items: Region[] = [];
@@ -105,7 +106,10 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             id: item.id ?? `region-${++counter}`,
             start: bounds.start,
             end: bounds.end,
-            label: item.label,
+            label:
+                item.label === undefined
+                    ? undefined
+                    : cleanText(item.label, 120),
             color: item.color,
         };
         items = [...items, region].slice(0, max);
@@ -304,7 +308,10 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             region.end = bounds.end;
 
             if ('label' in patch) {
-                region.label = patch.label;
+                region.label =
+                    patch.label === undefined
+                        ? undefined
+                        : cleanText(patch.label, 120);
             }
 
             if ('color' in patch) {
@@ -496,8 +503,13 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             drag = null;
         },
 
-        keyDown(key): boolean {
-            if (!keys) {
+        keyDown(key, modifiers): boolean {
+            if (
+                !keys ||
+                modifiers.ctrlKey ||
+                modifiers.altKey ||
+                modifiers.metaKey
+            ) {
                 return false;
             }
 

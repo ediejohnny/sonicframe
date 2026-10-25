@@ -62,6 +62,18 @@ describe('spectrogram', () => {
         expect(freq).toBeLessThan(1200);
     });
 
+    it('keeps the dimensions finite when given NaN (no infinite loop)', () => {
+        const job = createSpectrogram(samples, rate, {
+            columns: Number.NaN,
+            rows: Number.NaN,
+        });
+        job.step(job.columns);
+
+        expect(Number.isFinite(job.columns)).toBe(true);
+        expect(Number.isFinite(job.rows)).toBe(true);
+        expect(job.done).toBe(true);
+    });
+
     it('caps the dimensions and the window size', () => {
         const job = createSpectrogram(samples, rate, {
             fftSize: 3,

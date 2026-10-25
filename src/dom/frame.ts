@@ -253,13 +253,15 @@ export class SonicFrame implements PluginHost {
             observeVisibility(this.canvas, (near) => this.setNear(near)),
         );
 
+        this.setPeaks(options.peaks ?? null);
+        this.controller.setDuration(options.duration ?? null);
+        this.bind(options.media ?? null);
+
+        // After bind, so a plugin's setup already sees the media (e.g. liveFrequency taps it).
         for (const plugin of options.plugins ?? []) {
             this.use(plugin);
         }
 
-        this.setPeaks(options.peaks ?? null);
-        this.controller.setDuration(options.duration ?? null);
-        this.bind(options.media ?? null);
         this.controller.refresh();
     }
 

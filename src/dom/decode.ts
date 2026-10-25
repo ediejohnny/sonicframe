@@ -9,7 +9,7 @@ import { mixdown } from '../core/analysis';
 const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_SECONDS = 30 * 60;
 
-async function readCapped(
+export async function readCapped(
     response: Response,
     maxBytes: number,
 ): Promise<ArrayBuffer> {

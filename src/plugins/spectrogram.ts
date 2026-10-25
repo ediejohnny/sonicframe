@@ -31,8 +31,13 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
     let host: PluginHost | null = null;
     let image: HTMLCanvasElement | null = null;
     let controller: AbortController | null = null;
+    let destroyed = false;
 
     function paintImage(columns: number, rows: number, data: Uint8Array): void {
+        if (destroyed) {
+            return;
+        }
+
         const canvas = document.createElement('canvas');
         canvas.width = columns;
         canvas.height = rows;
@@ -58,6 +63,10 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
     }
 
     function compute(samples: Float32Array, sampleRate: number): void {
+        if (destroyed) {
+            return;
+        }
+
         const job = createSpectrogram(samples, sampleRate, options);
         controller = new AbortController();
         runChunked(job, { signal: controller.signal })
@@ -97,6 +106,7 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
         },
 
         destroy(): void {
+            destroyed = true;
             controller?.abort();
             controller = null;
             image = null;

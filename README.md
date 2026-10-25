@@ -11,8 +11,9 @@ and keeps pages with hundreds of players light.
 - Click, drag (touch included) and the WAI-ARIA slider keys; one seek per drag; a cancelled drag changes nothing.
 - Colors from your CSS, including custom properties (`var(--name)`), so the waveform follows your theme.
 - Lazy by default: pixels and peaks are taken only near the screen.
-- Plugins drawn under or over the bars; `markers` ships with it.
-- Works under a strict Content-Security-Policy: no inline style attributes, no `eval`.
+- Plugins drawn under or over the bars, with captions, regions, a timeline, markers, a spectrogram, live
+  frequency bars and clip export in the box.
+- Works under a strict Content-Security-Policy: no inline style attributes, no `eval`, no blob workers.
 
 ## Install
 
@@ -89,6 +90,9 @@ Colors take any CSS color or `var(--name, fallback)`:
 - `hover`: the band between the played part and the mouse pointer; `'auto'` (the default) mixes the two colors
   above, `null` shows no hover.
 - `cursor`: a line at the playing position; `null` (the default) draws none.
+- `waveHover` / `progressHover`: recolor the unplayed and played bars while the pointer is over the frame; `'auto'`
+  nudges the wave toward the played color and lightens or darkens the played color, a CSS color sets it outright, and
+  `null` (the default) leaves them alone. Only the frame the pointer enters or leaves repaints.
 
 ## Methods
 
@@ -166,14 +170,51 @@ flags.set([3, 18]);
 ```
 
 Times are in seconds, so they stay in place when the frame changes size; nothing is drawn while the duration is
-unknown.
+unknown. A marker can carry a label and a color (`marks: [{ time, label, color, id }]`, still accepting plain
+`times`); a click seeks to it, hovering shows a tooltip, `M` and `Shift+M` step through them, and markers that crowd
+together become one pill with a count.
+
+## Captions, regions, timelines and more (0.2.0)
+
+Each of these is a plugin; import it and `frame.use(it)`.
+
+- **`caption({ text, badges, tooltip, tooltipLimit })`** — a line under the bars that fades out on the right, with
+  optional badges (an `auto` mark, a language tag) and a tooltip (hover, keyboard focus, or a tap) carrying the fuller
+  text. `set(text)` / `setTooltip(content)` update it; the full text reaches screen readers through `aria-describedby`.
+  Text goes in as text, never HTML.
+- **`regions({ items, create, minLength, keys })`** — stretches to mark, play or loop. Shift-drag makes one (a plain
+  drag still scrubs), the body moves it, an edge resizes it; with focus, `R`/`Shift+R` select, `Enter` plays, `L`
+  loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add`, `update`, `remove`, `clear`, `list`,
+  `play`, `stop`, `select`, with `onChange` / `onSelect`.
+- **`timeline({ side, size, minSpacing })`** — a ruler with labels on round seconds and minutes, in a lane above or
+  below the bars.
+- **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
+  browser with a dependency-free FFT, in slices so it never freezes; color maps `viridis`, `magma`, `gray`.
+- **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
+  Audio). Cross-origin media without CORS is refused with an `error`, never silenced.
+- **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback.
+
+### Analysis and clips
+
+- `sonicframe/analysis` (also on the main entry): `levels`, `findSilences`, `silencesFromPeaks`, `peakLevel` and
+  `mixdown` — pure, safe in Node or a worker.
+- `frame.exportClip({ start, end, caption, width, height, fps })` records a short video of the wave playing (canvas +
+  MediaRecorder), capped in length, size, resolution and bitrate; it resolves with `{ blob, mimeType, duration }`.
 
 ## Writing a plugin
 
-A plugin is an object with a `name` and any of `setup(host)`, `draw(paint)` and `destroy()`. `layer: 'under'` draws it
-before the bars, `'over'` (the default) after them. `draw` gets the canvas context in device pixels with `width`,
-`height`, `pixelRatio`, `progress`, `duration`, `hover`, `xAt(ratio)` and `color(value)`; the host gives `duration`,
-`progress`, `invalidate()` (ask for a new picture) and `on()`.
+A plugin is an object with a `name` and any of `setup(host)`, `draw(paint)`, `resize(geometry)`, `destroy()`, and the
+input hooks `pointerDown` / `pointerMove` / `pointerUp` / `pointerCancel` / `pointerHover` / `keyDown`. `layer:
+'under'` draws it before the bars, `'over'` (the default) after them. `draw` gets the canvas context in device pixels
+with `width`, `height`, `pixelRatio`, `progress`, `duration`, `hover`, `xAt(ratio)` and `color(value)`.
+
+`pointerDown` returns `'take'` to own the press now, or `'drag'` to own it only once it moves past a few pixels (so a
+tap still seeks); `pointerHover` returns a CSS cursor; `keyDown` runs before the slider keys and returns whether it
+used the key. The host gives `container`, `duration`, `progress`, `peaks`, `media`, `geometry`, `invalidate()`,
+`on()`, `color(value)`, `addLane(side, px)` (a strip above or below the bars, so the wave shrinks), `overlay()` (a
+layer over the canvas for text), `seekTo`, `playRange` / `stopRange`, `setValues` (override the bar heights) and
+`announce(text)` (a shared polite live region). A plugin that throws from any hook is parked and an `error` event is
+emitted, so one broken plugin never breaks the frame.
 
 ## Styling and accessibility
 
@@ -197,7 +238,12 @@ media is playing on screen animates.
   so a color can never make the page fetch an address. CSS variables are resolved in linear time and at most eight
   levels deep.
 - Peaks files are read up to 2 MB (the download stops there, announced or not) and 20,000 values, and must be a list
-  of finite numbers.
+  of finite numbers. Captions and tooltips go in through `textContent` with control and bidi characters stripped and
+  a length cap; every other input is bounded too — marks, regions, analysis windows, FFT size, spectrogram columns
+  and rows and audio length, the clip's length, size, resolution and bitrate, and the decode download (streamed and
+  capped).
+- Live frequency never silences playback: media it cannot read without muting (cross-origin without CORS) is refused
+  with an `error`, and the shared audio context is never closed nor its output disconnected.
 - No runtime dependencies, no install scripts; the published package holds only `dist`, the readme, the changelog
   and the license.
 

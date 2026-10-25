@@ -62,9 +62,16 @@ export function createSpectrogram(
     sampleRate: number,
     options: SpectrogramOptions = {},
 ): SpectrogramJob {
-    const fftSize = toPowerOfTwo(options.fftSize ?? 1024);
-    const columns = Math.max(1, Math.min(MAX_COLUMNS, options.columns ?? 512));
-    const rows = Math.max(1, Math.min(MAX_ROWS, options.rows ?? 256));
+    const whole = (value: number | undefined, fallback: number): number =>
+        value !== undefined && Number.isFinite(value)
+            ? Math.floor(value)
+            : fallback;
+    const fftSize = toPowerOfTwo(whole(options.fftSize, 1024));
+    const columns = Math.max(
+        1,
+        Math.min(MAX_COLUMNS, whole(options.columns, 512)),
+    );
+    const rows = Math.max(1, Math.min(MAX_ROWS, whole(options.rows, 256)));
     const minDb = options.minDb ?? -90;
     const maxDb = options.maxDb ?? -20;
     const logScale = options.scale === 'log';

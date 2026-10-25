@@ -30,6 +30,16 @@ describe('caption text', () => {
     it('caps the length, counting whole characters', () => {
         expect(cleanText('abcdef', 4)).toBe('abcd');
     });
+
+    it('strips the Arabic letter mark and other bidi controls', () => {
+        expect(cleanText('a؜b', 10)).toBe('a b');
+    });
+
+    it('caps a huge input without scanning all of it', () => {
+        const clean = cleanText('x'.repeat(5_000_000), 10);
+
+        expect(clean.length).toBeLessThanOrEqual(10);
+    });
 });
 
 describe('readable tooltip color', () => {

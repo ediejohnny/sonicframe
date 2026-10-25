@@ -16,7 +16,12 @@ export function niceTicks(
     width: number,
     minSpacing: number,
 ): { step: number; times: number[] } {
-    if (duration <= 0 || width <= 0) {
+    if (
+        !Number.isFinite(duration) ||
+        !Number.isFinite(width) ||
+        duration <= 0 ||
+        width <= 0
+    ) {
         return { step: 0, times: [] };
     }
 
