@@ -1,3 +1,5 @@
+import type { KeyModifiers } from './core/keys';
+
 /**
  * Where a frame gets its peaks: values from 0 to 1, the loudest point of each slice of the sound.
  * A function is called once, when the frame first comes near the screen (lazy loading).
@@ -72,6 +74,10 @@ export type MediaLike = {
     readonly paused: boolean;
     readonly ended: boolean;
     readonly readyState: number;
+    /** Starts playback (used to play a range); optional, since a frame can follow without it. */
+    play?(): Promise<void> | void;
+    /** Pauses playback (used at the end of a range that does not loop). */
+    pause?(): void;
 };
 
 export type SonicFrameEvents = {
@@ -83,6 +89,8 @@ export type SonicFrameEvents = {
     timeupdate: [time: number | null, ratio: number];
     /** The wave area changed size (a lane was added, the element resized). */
     resize: [geometry: FrameGeometry];
+    /** A range being played reached its end or was abandoned. */
+    rangeend: [];
     /** Loading the peaks or drawing a plugin failed. */
     error: [error: unknown];
     destroy: [];
@@ -101,6 +109,27 @@ export type FrameGeometry = {
     /** 0..1, the position shown. */
     readonly progress: number;
 };
+
+/** A pointer on the wave, for a plugin: position as a ratio and seconds, and in CSS pixels. */
+export type WavePoint = {
+    /** 0..1 along the wave. */
+    ratio: number;
+    /** In seconds, or null while the duration is unknown. */
+    time: number | null;
+    /** CSS pixels within the wave box. */
+    x: number;
+    y: number;
+    /** The wave box size, in CSS pixels. */
+    width: number;
+    height: number;
+    /** `'mouse'`, `'touch'` or `'pen'`. */
+    pointerType: string;
+    /** Whether Shift was held (a modifier for creating a region, say). */
+    shiftKey: boolean;
+};
+
+/** A plugin's answer to a press: take it now, or only if it grows into a drag (a tap still seeks). */
+export type Claim = 'take' | 'drag';
 
 /** A strip above or below the bars that a plugin owns (a caption, a timeline). */
 export type Lane = {
@@ -131,6 +160,14 @@ export type PluginHost = {
     addLane(side: 'above' | 'below', cssPixels: number): Lane;
     /** A layer over the canvas for text and tooltips (created once, shared by plugins). */
     overlay(): HTMLElement;
+    /** Moves to a position from 0 to 1 (the bound media too). */
+    seekTo(ratio: number): void;
+    /** Plays `start`..`end` seconds of the bound media, optionally looping. */
+    playRange(start: number, end: number, options?: { loop?: boolean }): void;
+    /** Forgets any range being played. */
+    stopRange(): void;
+    /** Says something through the page's shared polite live region, for screen readers. */
+    announce(text: string): void;
     on<Name extends keyof SonicFrameEvents>(
         event: Name,
         listener: (...args: SonicFrameEvents[Name]) => void,
@@ -166,6 +203,24 @@ export type Plugin = {
     draw?(paint: PaintContext): void;
     /** Called when the wave area changed size (after `setup`, and on every later change). */
     resize?(geometry: FrameGeometry): void;
+    /**
+     * A press on the wave: return `'take'` to own it now, or `'drag'` to own it only once it moves
+     * past the drag threshold (a tap then still seeks). Plugins are asked last-added first.
+     */
+    pointerDown?(point: WavePoint): Claim | void;
+    /** The owning plugin's pointer moved. */
+    pointerMove?(point: WavePoint): void;
+    /** The owning plugin's pointer was let go. */
+    pointerUp?(point: WavePoint): void;
+    /** The owning plugin's press was cancelled (the browser took the pointer). */
+    pointerCancel?(): void;
+    /** The mouse moved over the wave (null when it left); return a CSS cursor to show. */
+    pointerHover?(point: WavePoint | null): string | void;
+    /** A key on the focused frame, before the slider keys; return true if it was used. */
+    keyDown?(
+        key: string,
+        modifiers: KeyModifiers & { shiftKey?: boolean },
+    ): boolean;
     /** Called when the plugin is removed or the frame is destroyed. */
     destroy?(): void;
 };

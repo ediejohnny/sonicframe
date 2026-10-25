@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Plugins can take pointer and keyboard input: `pointerDown` claims a press (`'take'` now, or
+  `'drag'` only once it moves past a few pixels, so a tap still seeks), with `pointerMove`,
+  `pointerUp`, `pointerCancel` and a `pointerHover` that returns a cursor; `keyDown` runs before the
+  slider keys. Plugins can play a stretch of the sound (`host.playRange` / `host.stopRange`, with a
+  `rangeend` event), seek (`host.seekTo`), and speak to a screen reader through a shared polite live
+  region (`host.announce`). A seek out of a range being played abandons it.
 - Hover colors: `colors.waveHover` and `colors.progressHover` recolor the unplayed and played bars
   while the pointer is over a frame. Each takes `'auto'` (nudges the wave toward the played color,
   and lightens or darkens the played color), a CSS color, or null. Off by default, so an upgrade

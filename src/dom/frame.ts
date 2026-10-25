@@ -10,6 +10,7 @@ import {
     resolveColor,
     rgbaString,
 } from '../core/color';
+import { isDrag } from '../core/gesture';
 import {
     Controller,
     MEDIA_EVENTS,
@@ -25,6 +26,7 @@ import { overlayOf, ratioAt, sameOverlay, type Overlay } from '../core/scene';
 import { easeOut } from '../core/timing';
 import type {
     BarStyle,
+    Claim,
     Colors,
     FrameGeometry,
     Lane,
@@ -33,7 +35,9 @@ import type {
     Plugin,
     PluginHost,
     SonicFrameEvents,
+    WavePoint,
 } from '../types';
+import { announce } from './announce';
 import { LaneManager } from './lanes';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
@@ -96,6 +100,15 @@ export const DEFAULT_COLORS: Readonly<Colors> = Object.freeze({
     progressHover: null,
 });
 
+/** A press being tracked: a plugin may own it (once its claim is active) or it is a plain seek. */
+type Press = {
+    box: DOMRect;
+    plugin: Plugin | null;
+    claim: Claim | null;
+    active: boolean;
+    fromX: number;
+};
+
 /** How long the bars take to grow in, in milliseconds. */
 const APPEAR_MS = 180;
 
@@ -153,7 +166,8 @@ export class SonicFrame implements PluginHost {
     private media: HTMLMediaElement | null = null;
     private plugins: Plugin[] = [];
     private readonly failed = new WeakSet<Plugin>();
-    private dragBox: DOMRect | null = null;
+    private press: Press | null = null;
+    private restoreCursor: () => void = () => undefined;
     private destroyed = false;
     private readonly lanes: LaneManager;
     private overlayEl: HTMLElement | null = null;
@@ -359,6 +373,21 @@ export class SonicFrame implements PluginHost {
         this.controller.seekTo(ratio);
     }
 
+    /** Plays `start`..`end` seconds of the bound media, optionally looping. */
+    playRange(start: number, end: number, options?: { loop?: boolean }): void {
+        this.controller.playRange(start, end, options?.loop ?? false);
+    }
+
+    /** Forgets any range being played (playback itself carries on). */
+    stopRange(): void {
+        this.controller.stopRange();
+    }
+
+    /** Says something through the page's shared polite live region, for screen readers. */
+    announce(text: string): void {
+        announce(text);
+    }
+
     setBar(bar: Partial<BarStyle>): void {
         this.bar = { ...this.bar, ...bar };
         this.layoutDirty = true;
@@ -440,6 +469,7 @@ export class SonicFrame implements PluginHost {
         this.lanes.dispose();
         this.overlayEl?.remove();
         this.overlayEl = null;
+        this.restoreCursor();
         this.restoreContainer();
         this.events.emit('destroy');
         this.events.clear();
@@ -526,12 +556,16 @@ export class SonicFrame implements PluginHost {
                 this.pointerCancel(),
             );
             on(this.container, 'pointerleave', (event) => {
-                if (event.pointerType === 'mouse' && this.dragBox === null) {
+                if (event.pointerType === 'mouse' && this.press === null) {
+                    this.hover(null);
                     this.controller.hoverAt(null);
                 }
             });
             on(this.container, 'keydown', (event) => {
-                if (this.controller.key(event.key, event)) {
+                if (
+                    this.pluginKey(event) ||
+                    this.controller.key(event.key, event)
+                ) {
                     event.preventDefault();
                 }
             });
@@ -559,8 +593,44 @@ export class SonicFrame implements PluginHost {
         this.media = null;
     }
 
-    private ratioOf(event: PointerEvent, box: DOMRect): number {
-        return ratioAt(event.clientX - box.left, box.width);
+    private wavePoint(event: PointerEvent, box: DOMRect): WavePoint {
+        const x = event.clientX - box.left;
+        const ratio = ratioAt(x, box.width);
+        const duration = this.controller.duration;
+
+        return {
+            ratio,
+            time: duration !== null ? ratio * duration : null,
+            x,
+            y: event.clientY - box.top,
+            width: box.width,
+            height: box.height,
+            pointerType: event.pointerType,
+            shiftKey: event.shiftKey,
+        };
+    }
+
+    /** Offers a press to the plugins, last-added first; returns the one that claimed it. */
+    private askPlugins(
+        point: WavePoint,
+    ): { plugin: Plugin; claim: Claim } | null {
+        for (let i = this.plugins.length - 1; i >= 0; i--) {
+            const plugin = this.plugins[i];
+
+            if (plugin.pointerDown === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            const claim = this.safely(plugin, () =>
+                plugin.pointerDown?.(point),
+            );
+
+            if (claim === 'take' || claim === 'drag') {
+                return { plugin, claim };
+            }
+        }
+
+        return null;
     }
 
     private pointerDown(event: PointerEvent): void {
@@ -574,44 +644,192 @@ export class SonicFrame implements PluginHost {
         }
 
         const box = this.canvas.getBoundingClientRect();
+        const point = this.wavePoint(event, box);
+        const claimed = this.askPlugins(point);
 
-        if (!this.controller.pointerDown(this.ratioOf(event, box))) {
-            return;
+        if (claimed !== null) {
+            this.press = {
+                box,
+                plugin: claimed.plugin,
+                claim: claimed.claim,
+                active: claimed.claim === 'take',
+                fromX: point.x,
+            };
+
+            if (this.press.active) {
+                this.safely(claimed.plugin, () =>
+                    claimed.plugin.pointerMove?.(point),
+                );
+            }
+        } else {
+            if (!this.controller.pointerDown(point.ratio)) {
+                return;
+            }
+
+            this.press = {
+                box,
+                plugin: null,
+                claim: null,
+                active: false,
+                fromX: point.x,
+            };
         }
-
-        this.dragBox = box;
 
         try {
             this.container.setPointerCapture(event.pointerId);
         } catch {
-            // The pointer is already gone; the drag ends with the next event.
+            // The pointer is already gone; the press ends with the next event.
         }
     }
 
     private pointerMove(event: PointerEvent): void {
-        if (this.dragBox !== null) {
-            this.controller.pointerMove(this.ratioOf(event, this.dragBox));
-        } else if (event.pointerType === 'mouse') {
-            this.controller.hoverAt(
-                this.ratioOf(event, this.canvas.getBoundingClientRect()),
-            );
+        const press = this.press;
+
+        if (press === null) {
+            if (event.pointerType === 'mouse') {
+                const point = this.wavePoint(
+                    event,
+                    this.canvas.getBoundingClientRect(),
+                );
+                this.hover(point);
+                this.controller.hoverAt(point.ratio);
+            }
+
+            return;
+        }
+
+        const point = this.wavePoint(event, press.box);
+
+        if (press.plugin === null) {
+            this.controller.pointerMove(point.ratio);
+
+            return;
+        }
+
+        if (
+            !press.active &&
+            press.claim === 'drag' &&
+            isDrag(press.fromX, point.x)
+        ) {
+            press.active = true;
+        }
+
+        if (press.active) {
+            const plugin = press.plugin;
+            this.safely(plugin, () => plugin.pointerMove?.(point));
         }
     }
 
     private pointerUp(event: PointerEvent): void {
-        const box = this.dragBox;
+        const press = this.press;
 
-        if (box === null) {
+        if (press === null) {
             return;
         }
 
-        this.dragBox = null;
-        this.controller.pointerUp(this.ratioOf(event, box));
+        this.press = null;
+        const point = this.wavePoint(event, press.box);
+        const plugin = press.plugin;
+
+        if (plugin === null) {
+            this.controller.pointerUp(point.ratio);
+
+            return;
+        }
+
+        if (press.active) {
+            this.safely(plugin, () => plugin.pointerUp?.(point));
+
+            return;
+        }
+
+        // A 'drag' claim that never moved is a tap: the plugin stands down and the press seeks.
+        this.safely(plugin, () => plugin.pointerCancel?.());
+        this.controller.pointerDown(point.ratio);
+        this.controller.pointerUp(point.ratio);
     }
 
     private pointerCancel(): void {
-        this.dragBox = null;
-        this.controller.pointerCancel();
+        const press = this.press;
+        this.press = null;
+
+        if (press === null) {
+            return;
+        }
+
+        if (press.plugin === null) {
+            this.controller.pointerCancel();
+        } else if (press.active) {
+            const plugin = press.plugin;
+            this.safely(plugin, () => plugin.pointerCancel?.());
+        }
+    }
+
+    /** Shows the cursor a plugin asks for while the mouse hovers (restoring the previous one). */
+    private hover(point: WavePoint | null): void {
+        let cursor: string | undefined;
+
+        for (let i = this.plugins.length - 1; i >= 0; i--) {
+            const plugin = this.plugins[i];
+
+            if (plugin.pointerHover === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            const asked = this.safely(plugin, () =>
+                plugin.pointerHover?.(point),
+            );
+
+            if (typeof asked === 'string') {
+                cursor = asked;
+                break;
+            }
+        }
+
+        this.restoreCursor();
+        this.restoreCursor =
+            cursor === undefined
+                ? () => undefined
+                : applyStyles(this.container.style, [['cursor', cursor]]);
+    }
+
+    private pluginKey(event: KeyboardEvent): boolean {
+        const modifiers = {
+            shiftKey: event.shiftKey,
+            ctrlKey: event.ctrlKey,
+            altKey: event.altKey,
+            metaKey: event.metaKey,
+        };
+
+        for (let i = this.plugins.length - 1; i >= 0; i--) {
+            const plugin = this.plugins[i];
+
+            if (plugin.keyDown === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            if (
+                this.safely(plugin, () =>
+                    plugin.keyDown?.(event.key, modifiers),
+                ) === true
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Runs a plugin callback, parking one that throws (as `drawPlugins` does) and returning its value. */
+    private safely<T>(plugin: Plugin, run: () => T): T | undefined {
+        try {
+            return run();
+        } catch (error) {
+            this.failed.add(plugin);
+            this.events.emit('error', error);
+
+            return undefined;
+        }
     }
 
     private load(): void {
