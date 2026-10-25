@@ -1,0 +1,6 @@
+{
+    "comment": "Gzip ceilings in bytes for built bundles. Generous on purpose: a guardrail against accidental bloat (a leaked dependency, duplicated data), not a per-phase target. Bump deliberately, with a reason, at a release. dist/index.js was 15624 gzip at 0.1.0.",
+    "budget": {
+        "index.js": 49152
+    }
+}
