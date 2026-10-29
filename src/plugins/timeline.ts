@@ -1,7 +1,8 @@
 /**
  * A timeline: a thin ruler in a lane above or below the bars, with labels on round seconds and
  * minutes (`niceTicks`) and optional minor marks between them. It is `aria-hidden` (the slider
- * already speaks the position) and rebuilds when the frame resizes or the duration becomes known.
+ * already speaks the position) and rebuilds when the frame resizes or the duration becomes known or
+ * changes.
  */
 
 import { niceTicks } from '../core/ticks';
@@ -33,7 +34,6 @@ export function timeline(options: TimelineOptions = {}): Plugin {
     let host: PluginHost | null = null;
     let lane: { element: HTMLElement; remove(): void } | null = null;
     let unsubscribe: (() => void) | null = null;
-    let lastDuration: number | null = null;
 
     function label(step: number): (seconds: number) => string {
         return (
@@ -118,13 +118,6 @@ export function timeline(options: TimelineOptions = {}): Plugin {
         }
     }
 
-    function refresh(): void {
-        if (host !== null && host.duration !== lastDuration) {
-            lastDuration = host.duration;
-            rebuild();
-        }
-    }
-
     return {
         name: 'timeline',
 
@@ -134,7 +127,7 @@ export function timeline(options: TimelineOptions = {}): Plugin {
             lane.element.setAttribute('aria-hidden', 'true');
             lane.element.style.setProperty('color', color);
             lane.element.style.setProperty('overflow', 'hidden');
-            unsubscribe = frame.on('timeupdate', () => refresh());
+            unsubscribe = frame.on('durationchange', () => rebuild());
             rebuild();
         },
 

@@ -87,6 +87,8 @@ export type SonicFrameEvents = {
     hover: [ratio: number | null, time: number | null];
     /** The bound media moved, at the media's own pace (a few times a second), never once per frame. */
     timeupdate: [time: number | null, ratio: number];
+    /** The duration became known or changed (the media's own, or the one given to the frame); null when unknown. */
+    durationchange: [duration: number | null];
     /** The wave area changed size (a lane was added, the element resized). */
     resize: [geometry: FrameGeometry];
     /** A range being played reached its end or was abandoned. */

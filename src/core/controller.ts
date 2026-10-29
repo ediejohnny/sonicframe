@@ -93,6 +93,8 @@ export class Controller {
     private looping = false;
     private announced: AriaState | null = null;
     private reported: number | null | undefined = undefined;
+    /** The duration last announced; it starts unknown, so a known one is announced as it arrives. */
+    private reportedDuration: number | null = null;
     private range: RangeState | null = null;
 
     constructor(options: ControllerOptions, effects: ControllerEffects) {
@@ -139,6 +141,7 @@ export class Controller {
             this.position = 0;
         }
 
+        this.announceDuration();
         this.sync(true);
         this.updateLoop();
         this.effects.invalidate();
@@ -171,6 +174,7 @@ export class Controller {
         }
 
         this.applyPending();
+        this.announceDuration();
         this.sync(true);
 
         // The animation tick only runs on screen; the media's own pace keeps a range in bounds everywhere.
@@ -284,6 +288,7 @@ export class Controller {
     setDuration(seconds: number | null): void {
         this.hint = positive(seconds);
         this.applyPending();
+        this.announceDuration();
         this.sync(true);
         this.updateAria();
         this.effects.invalidate();
@@ -479,6 +484,19 @@ export class Controller {
         if (report) {
             this.report();
             this.updateAria();
+        }
+    }
+
+    /**
+     * Says when the duration became known or changed, with or without media. Called before the time
+     * is reported, so a listener of either already sees the new duration.
+     */
+    private announceDuration(): void {
+        const duration = this.duration;
+
+        if (duration !== this.reportedDuration) {
+            this.reportedDuration = duration;
+            this.effects.emit('durationchange', duration);
         }
     }
 

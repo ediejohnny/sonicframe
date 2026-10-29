@@ -4,7 +4,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { regions, type RegionsPlugin } from '../../src/index';
+import { regions, type Region, type RegionsPlugin } from '../../src/index';
 import { fakeMedia, mount, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
@@ -89,5 +89,47 @@ describe('regions on the page', () => {
         );
 
         expect(plugin.list()).toHaveLength(0);
+    });
+
+    it('shows a region added after setup right away, and reports it', () => {
+        const changes: (readonly Region[])[] = [];
+        const plugin = regions({ onChange: (list) => changes.push(list) });
+        mounted = mount({
+            media: fakeMedia({ duration: 40 }),
+            plugins: [plugin],
+        });
+
+        plugin.add({ start: 4, end: 8, label: 'intro' });
+
+        expect(changes).toHaveLength(1);
+        expect(mounted.container.textContent).toContain('intro');
+    });
+
+    it('fits regions given up front to the sound once its length is known', () => {
+        const changes: (readonly Region[])[] = [];
+        const plugin = regions({
+            items: [{ start: 20, end: 50 }],
+            onChange: (list) => changes.push(list),
+        });
+        mounted = mount({ plugins: [plugin] });
+
+        expect(plugin.list()[0]).toMatchObject({ start: 20, end: 50 });
+
+        mounted.frame.setDuration(30);
+
+        expect(plugin.list()[0]).toMatchObject({ start: 20, end: 30 });
+        expect(changes.at(-1)?.[0]).toMatchObject({ start: 20, end: 30 });
+    });
+
+    it('returns null, not a region it did not keep, once max is reached', () => {
+        const plugin = regions({ max: 1 });
+        mounted = mount({
+            media: fakeMedia({ duration: 40 }),
+            plugins: [plugin],
+        });
+
+        expect(plugin.add({ start: 1, end: 2 })).not.toBeNull();
+        expect(plugin.add({ start: 3, end: 4 })).toBeNull();
+        expect(plugin.list()).toHaveLength(1);
     });
 });
