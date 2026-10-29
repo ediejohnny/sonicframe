@@ -55,7 +55,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `markers` can now carry a label and a color per mark (`marks: [{ time, label, color, id }]`, still
   accepting plain `times`). A click on a marker seeks to it, hovering shows a tooltip, `M` and
-  `Shift+M` step through them, and markers that crowd together become one pill with a count.
+  `Shift+M` step through them (Shift, not the letter's case, sets the direction), and markers that
+  crowd together become one pill with a count. Within `backGrace` seconds of a marker (1 by
+  default), `Shift+M` goes to the one before it, like a player's "previous track".
 
 ### Added
 
