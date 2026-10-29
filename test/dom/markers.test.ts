@@ -31,6 +31,18 @@ function pointer(target: HTMLElement, type: string, clientX: number): void {
     );
 }
 
+function press(target: HTMLElement, key: string, shiftKey = false): void {
+    target.dispatchEvent(
+        new KeyboardEvent('keydown', { key, shiftKey, bubbles: true }),
+    );
+}
+
+/** Moves the media to `time` the way playback does, with a timeupdate. */
+function at(media: ReturnType<typeof fakeMedia>, time: number): void {
+    media.currentTime = time;
+    media.fire('timeupdate');
+}
+
 describe('markers on the page', () => {
     it('seeks to a marker when it is clicked', () => {
         const media = fakeMedia({ duration: 40 });
@@ -71,6 +83,58 @@ describe('markers on the page', () => {
         );
 
         expect(media.currentTime).toBe(10);
+    });
+
+    it('goes by the Shift key, not the letter case, so Caps Lock changes nothing', () => {
+        const media = fakeMedia({ duration: 40 });
+        mounted = mount({
+            media,
+            plugins: [
+                markers({ marks: [{ time: 10 }, { time: 20 }, { time: 30 }] }),
+            ],
+        });
+
+        press(mounted.container, 'M');
+        press(mounted.container, 'M');
+        expect(media.currentTime).toBe(20);
+
+        press(mounted.container, 'm', true);
+        expect(media.currentTime).toBe(10);
+    });
+
+    it('goes back past a marker left less than a second ago, else to its start', () => {
+        const media = fakeMedia({ duration: 40 });
+        mounted = mount({
+            media,
+            plugins: [
+                markers({ marks: [{ time: 10 }, { time: 20 }, { time: 30 }] }),
+            ],
+        });
+
+        at(media, 20.5);
+        press(mounted.container, 'm', true);
+        expect(media.currentTime).toBe(10);
+
+        at(media, 25);
+        press(mounted.container, 'm', true);
+        expect(media.currentTime).toBe(20);
+    });
+
+    it('lands on the marker just left when backGrace is 0', () => {
+        const media = fakeMedia({ duration: 40 });
+        mounted = mount({
+            media,
+            plugins: [
+                markers({
+                    marks: [{ time: 10 }, { time: 20 }, { time: 30 }],
+                    backGrace: 0,
+                }),
+            ],
+        });
+
+        at(media, 20.5);
+        press(mounted.container, 'm', true);
+        expect(media.currentTime).toBe(20);
     });
 
     it('shows a tooltip for crowded markers on hover', () => {

@@ -574,8 +574,9 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 return false;
             }
 
-            if (key === 'r' || key === 'R') {
-                selectStep(key === 'R');
+            // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
+            if (key.toLowerCase() === 'r') {
+                selectStep(modifiers.shiftKey === true);
 
                 return true;
             }

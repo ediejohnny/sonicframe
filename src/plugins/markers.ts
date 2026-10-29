@@ -38,6 +38,11 @@ export type MarkersOptions = {
     tooltip?: boolean;
     /** The most markers kept. */
     max?: number;
+    /**
+     * Seconds after a marker during which Shift+M skips it and goes to the one before, like a
+     * player's "previous track"; later, Shift+M returns to that marker. 0 always lands on it.
+     */
+    backGrace?: number;
     /** Called when a marker or a group is chosen (click or keyboard). */
     onSelect?: (marks: Mark[]) => void;
 };
@@ -103,6 +108,10 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
     const max = Math.min(MAX_MARKS, Math.max(0, options.max ?? MAX_MARKS));
+    // Never under a hundredth of a second, so a marker just landed on is never chosen again.
+    const backGrace = Number.isFinite(options.backGrace)
+        ? Math.max(0.01, options.backGrace ?? 1)
+        : 1;
     const defaultColor = options.color ?? 'var(--sonicframe-marker, #e5484d)';
 
     let marks: Mark[] = toMarks(options.marks ?? options.times ?? []).slice(
@@ -311,7 +320,8 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 return false;
             }
 
-            if (key !== 'm' && key !== 'M') {
+            // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
+            if (key.toLowerCase() !== 'm') {
                 return false;
             }
 
@@ -324,9 +334,10 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
 
             const order = sorted();
             const now = frame.progress * duration;
-            const back = key === 'M';
-            const next = back
-                ? [...order].reverse().find((mark) => mark.time < now - 0.01)
+            const next = modifiers.shiftKey
+                ? [...order]
+                      .reverse()
+                      .find((mark) => mark.time < now - backGrace)
                 : order.find((mark) => mark.time > now + 0.01);
 
             if (next === undefined) {

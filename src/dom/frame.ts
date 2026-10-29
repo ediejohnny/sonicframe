@@ -977,7 +977,9 @@ export class SonicFrame implements PluginHost {
         }
     }
 
+    /** Coming near gives a lazy frame its pixels, so plugins learn its geometry right then. */
     private setNear(near: boolean): void {
+        const wasAllocated = this.allocated;
         this.near = near;
 
         if (near) {
@@ -986,6 +988,10 @@ export class SonicFrame implements PluginHost {
 
         this.allocate();
         this.controller.setVisible(near);
+
+        if (this.allocated && !wasAllocated) {
+            this.notifyResize();
+        }
     }
 
     /** Gives the canvas its pixels (or takes them back far from the screen, when lazy). */

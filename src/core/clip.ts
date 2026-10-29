@@ -20,7 +20,7 @@ export const MAX_CLIP_SECONDS = 120;
  * whole before the clip is cut, about 23 MB of memory per minute of stereo audio, so 10 minutes stays
  * near 230 MB.
  */
-export const DEFAULT_MAX_SOURCE_SECONDS: number = 10 * 60;
+export const DEFAULT_MAX_SOURCE_SECONDS = 600;
 
 /** The first candidate the browser says it can record, or null. */
 export function pickMimeType(

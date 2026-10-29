@@ -34,6 +34,12 @@ function pointer(
     );
 }
 
+function press(target: HTMLElement, key: string, shiftKey = false): void {
+    target.dispatchEvent(
+        new KeyboardEvent('keydown', { key, shiftKey, bubbles: true }),
+    );
+}
+
 describe('regions on the page', () => {
     it('creates a region on a Shift-drag', () => {
         const plugin: RegionsPlugin = regions();
@@ -74,6 +80,27 @@ describe('regions on the page', () => {
         );
 
         expect(media.currentTime).toBe(8);
+    });
+
+    it('steps by the Shift key, not the letter case, so Caps Lock changes nothing', () => {
+        const selected: (number | undefined)[] = [];
+        const plugin: RegionsPlugin = regions({
+            items: [
+                { start: 2, end: 4 },
+                { start: 8, end: 12 },
+                { start: 20, end: 24 },
+            ],
+            onSelect: (region) => selected.push(region?.start),
+        });
+        const media = fakeMedia({ duration: 40 });
+        mounted = mount({ media, plugins: [plugin] });
+
+        plugin.select(plugin.list()[0].id);
+        press(mounted.container, 'R');
+        expect(selected.at(-1)).toBe(8);
+
+        press(mounted.container, 'r', true);
+        expect(selected.at(-1)).toBe(2);
     });
 
     it('removes the selected region on Delete', () => {

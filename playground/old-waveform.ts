@@ -1,6 +1,6 @@
 /**
- * The waveform voicechan drew before SonicFrame, rebuilt here for comparison: 100 bars stretched over
- * the width by an SVG, the played part clipped on top, moving only when the media reports its time.
+ * A plain SVG waveform for comparison, drawn the common way: 100 bars stretched over the width, the
+ * played part clipped on top, moving only when the media reports its time.
  */
 
 import { resample } from '../src/index';

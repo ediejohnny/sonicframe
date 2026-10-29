@@ -1,5 +1,5 @@
 /**
- * The playground: play buttons and bar styles side by side at the size voicechan uses, a real voice
+ * The playground: play buttons and bar styles side by side in a compact player row, a real voice
  * playing in all of them, colors to try, and 60 frames playing at once with a frame-rate meter.
  * Run `npm run dev` and open /playground/.
  */
@@ -38,7 +38,7 @@ type BarCard = {
     marked?: boolean;
 };
 
-/** His pick for voicechan: D bars, quiet parts lifted, hover band. */
+/** The library's default bars (`DEFAULT_BAR`): style D with the quiet parts lifted. */
 const CHOSEN: Partial<BarStyle> = { width: 3, gap: 2, radius: 1.5, curve: 0.7 };
 
 const BUTTONS: ButtonCard[] = [
@@ -137,7 +137,7 @@ function card(parent: HTMLElement, title: string): HTMLElement {
     return box;
 }
 
-/** A player row like voicechan's: button, waveform, time. */
+/** A compact player row: button, waveform, time. */
 function playerRow(
     box: HTMLElement,
     button: Omit<ButtonCard, 'title'>,
@@ -208,7 +208,7 @@ function build(): void {
 
     const old = card(
         section('#bars'),
-        'A · the current voicechan waveform (SVG, 100 stretched bars)',
+        'A · a plain SVG waveform, for comparison (100 stretched bars)',
     );
     playerRow(old, { shape: 'circle', fill: 'solid' }).id = 'old';
 
@@ -353,13 +353,16 @@ function build(): void {
         exportButton.textContent = 'Recording…';
         clipFrame
             .exportClip({ start: 0, end: 5, caption: 'The Little Elf' })
-            .then(({ blob }) => {
+            .then(({ blob, mimeType }) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = 'sonicframe-clip';
+                link.download = mimeType.startsWith('video/mp4')
+                    ? 'sonicframe-clip.mp4'
+                    : 'sonicframe-clip.webm';
                 link.click();
-                URL.revokeObjectURL(url);
+                // The download reads the blob after the click returns, so the URL outlives it a little.
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             })
             .catch((error: unknown) => console.error(error))
             .finally(() => {

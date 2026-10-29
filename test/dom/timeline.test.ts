@@ -30,6 +30,19 @@ describe('the timeline plugin', () => {
         expect(mounted.container.textContent).toContain('0:10');
     });
 
+    it('fills the ruler of a lazy frame sized far from the screen once it comes near', () => {
+        const media = fakeMedia({ duration: 60 });
+        mounted = mount(
+            { media, plugins: [timeline()] },
+            { left: 0, top: 0, width: 300, height: 40 },
+        );
+
+        triggerResize(mounted.canvas, { width: 300, height: 40 });
+        triggerVisible(mounted.canvas, true);
+
+        expect(mounted.container.textContent).toContain('0:10');
+    });
+
     it('redraws the ruler when the duration changes while the position stays put', () => {
         mounted = mount(
             { duration: 60, lazy: false, plugins: [timeline()] },

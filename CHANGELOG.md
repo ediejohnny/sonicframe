@@ -55,7 +55,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `markers` can now carry a label and a color per mark (`marks: [{ time, label, color, id }]`, still
   accepting plain `times`). A click on a marker seeks to it, hovering shows a tooltip, `M` and
-  `Shift+M` step through them, and markers that crowd together become one pill with a count.
+  `Shift+M` step through them (Shift, not the letter's case, sets the direction), and markers that
+  crowd together become one pill with a count. Within `backGrace` seconds of a marker (1 by
+  default), `Shift+M` goes to the one before it, like a player's "previous track".
 
 ### Added
 
@@ -79,7 +81,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Plugins can stack a lane above or below the bars (`host.addLane`); the wave shrinks to make room,
   and a press on a lane is not a seek. They can also draw into a shared layer over the canvas
   (`host.overlay`), read the peaks and the wave's geometry (`host.peaks`, `host.geometry`), learn
-  when the wave area changes size (the `resize` event and a `resize` hook on a plugin) and when the
+  when the wave area changes size or a lazy frame gets its pixels near the screen (the `resize` event
+  and a `resize` hook on a plugin) and when the
   duration becomes known or changes (the `durationchange` event), and resolve a CSS color against the
   frame (`host.color`). All of this is additive: a 0.1.0 plugin keeps working unchanged.
 

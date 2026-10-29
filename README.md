@@ -122,7 +122,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `hover`          | `ratio, time`             | The mouse moved over the frame (`null` when it left).                            |
 | `timeupdate`     | `time, ratio`             | The media moved, at the media's own pace, never once per frame.                  |
 | `durationchange` | `duration`                | The duration became known or changed (`null` when unknown again).                |
-| `resize`         | `geometry`                | The wave area changed size (a lane was added, the element resized).              |
+| `resize`         | `geometry`                | The wave area changed size or a lazy frame got its pixels near the screen.       |
 | `rangeend`       |                           | A range being played (`host.playRange`) ended or was abandoned.                  |
 | `error`          | `error`                   | Loading peaks, drawing a plugin or a plugin's own work (a download, say) failed. |
 | `destroy`        |                           | The frame was destroyed.                                                         |
@@ -175,7 +175,9 @@ flags.set([3, 18]);
 Times are in seconds, so they stay in place when the frame changes size; nothing is drawn while the duration is
 unknown. A marker can carry a label and a color (`marks: [{ time, label, color, id }]`, still accepting plain
 `times`); a click seeks to it, hovering shows a tooltip, `M` and `Shift+M` step through them, and markers that crowd
-together become one pill with a count.
+together become one pill with a count. Like a player's "previous track", `Shift+M` within `backGrace` seconds of a
+marker (1 by default) goes to the one before it, and later returns to that marker; `backGrace: 0` always lands on it.
+Shift picks the direction, not the letter's case, so Caps Lock changes nothing (the same goes for `R` in regions).
 
 ## Captions, regions, timelines and more (0.2.0)
 

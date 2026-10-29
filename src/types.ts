@@ -89,7 +89,7 @@ export type SonicFrameEvents = {
     timeupdate: [time: number | null, ratio: number];
     /** The duration became known or changed (the media's own, or the one given to the frame); null when unknown. */
     durationchange: [duration: number | null];
-    /** The wave area changed size (a lane was added, the element resized). */
+    /** The wave area changed size (a lane was added, the element resized) or a lazy frame got its pixels near the screen. */
     resize: [geometry: FrameGeometry];
     /** A range being played reached its end or was abandoned. */
     rangeend: [];
@@ -209,7 +209,7 @@ export type Plugin = {
     setup?(host: PluginHost): void;
     /** Called on every picture. */
     draw?(paint: PaintContext): void;
-    /** Called when the wave area changed size (after `setup`, and on every later change). */
+    /** Called when the wave area changed size or a lazy frame got its pixels (after `setup`, and on every later change). */
     resize?(geometry: FrameGeometry): void;
     /**
      * A press on the wave: return `'take'` to own it now, or `'drag'` to own it only once it moves
