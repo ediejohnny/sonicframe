@@ -78,6 +78,8 @@ class FakeRecorder {
 class FakeAudioContext {
     static last: FakeAudioContext | null = null;
     static resumes = true;
+    /** How long, in seconds, every decoded sound turns out to be. */
+    static decoded = 2;
 
     state: 'suspended' | 'running' | 'closed' = 'suspended';
     currentTime = 0;
@@ -117,7 +119,7 @@ class FakeAudioContext {
     }
 
     decodeAudioData(): Promise<AudioBuffer> {
-        return Promise.resolve(sound(2));
+        return Promise.resolve(sound(FakeAudioContext.decoded));
     }
 }
 
@@ -157,6 +159,7 @@ describe('frame.exportClip while recording', () => {
         FakeRecorder.failStart = false;
         FakeAudioContext.resumes = true;
         FakeAudioContext.last = null;
+        FakeAudioContext.decoded = 2;
         Object.assign(globalThis, {
             MediaRecorder: FakeRecorder,
             AudioContext: FakeAudioContext,
@@ -250,5 +253,59 @@ describe('frame.exportClip while recording', () => {
 
         expect((outcome() as Error).name).toBe('AbortError');
         expect(FakeAudioContext.last?.state).toBe('closed');
+    });
+
+    /** Stands in for `fetch` with a small file, counting the downloads. */
+    function smallDownloads(): { count: number } {
+        const downloads = { count: 0 };
+        globalThis.fetch = (() => {
+            downloads.count++;
+
+            return Promise.resolve(new Response(new Uint8Array(16)));
+        }) as typeof fetch;
+
+        return downloads;
+    }
+
+    it("refuses its own media's over-long source before downloading anything", async () => {
+        const downloads = smallDownloads();
+        const media = fakeMedia({ duration: 20 * 60 });
+        Object.assign(media, { currentSrc: '/long.mp3' });
+        mounted = mount({ media, peaks: [0.5, 0.5] });
+
+        const outcome = watch(mounted.frame.exportClip());
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect((outcome() as Error).message).toMatch(/too long/);
+        expect(downloads.count).toBe(0);
+        expect(FakeAudioContext.last).toBeNull();
+    });
+
+    it('refuses an over-long source right after decoding when its length was not known', async () => {
+        smallDownloads();
+        FakeAudioContext.decoded = 20 * 60;
+        mounted = mount({ peaks: [0.5, 0.5] });
+
+        const outcome = watch(mounted.frame.exportClip({ audio: '/long.mp3' }));
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect((outcome() as Error).message).toMatch(/too long/);
+        expect(FakeAudioContext.last?.state).toBe('closed');
+    });
+
+    it('records a longer source when the app raises the limit', async () => {
+        smallDownloads();
+        FakeAudioContext.decoded = 20 * 60;
+        mounted = mount({ peaks: [0.5, 0.5] });
+
+        const outcome = watch(
+            mounted.frame.exportClip({
+                audio: '/long.mp3',
+                maxSourceSeconds: 60 * 60,
+            }),
+        );
+        await vi.advanceTimersByTimeAsync(121_100);
+
+        expect(outcome()).toBe('resolved');
     });
 });

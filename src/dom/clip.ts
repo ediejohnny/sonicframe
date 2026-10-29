@@ -8,7 +8,12 @@
  * cleaned, capped and clipped, not faded through one.
  */
 
-import { clipPlan, DEFAULT_CLIP_TYPES, pickMimeType } from '../core/clip';
+import {
+    clipPlan,
+    DEFAULT_CLIP_TYPES,
+    DEFAULT_MAX_SOURCE_SECONDS,
+    pickMimeType,
+} from '../core/clip';
 import { barMetrics, layoutBars } from '../core/layout';
 import { resample } from '../core/peaks';
 import { overlayOf } from '../core/scene';
@@ -41,6 +46,18 @@ export type ClipOptions = {
     fps?: number;
     /** Container/codec candidates, most wanted first. */
     mimeTypes?: readonly string[];
+    /**
+     * The longest source to decode, in seconds: 10 minutes unless set (`Infinity` lifts it). The whole
+     * source is decoded before the clip is cut, about 23 MB of memory per minute of stereo audio, so a
+     * longer one is refused — before the download when `sourceSeconds` is given, otherwise right after
+     * decoding. An `AudioBuffer` is never refused: its memory is already spent.
+     */
+    maxSourceSeconds?: number;
+    /**
+     * The source's length in seconds, when known (`frame.exportClip` gives its own media's), so an
+     * over-long source is refused before anything is downloaded.
+     */
+    sourceSeconds?: number;
     signal?: AbortSignal;
     onProgress?: (fraction: number) => void;
 };
@@ -57,12 +74,24 @@ function whole(
     return Math.min(hi, Math.max(lo, Math.round(chosen)));
 }
 
+/** Whether the sound is already decoded (and needs neither a download nor a decode). */
+function isDecoded(audio: AudioBuffer | Blob | string): audio is AudioBuffer {
+    return typeof audio !== 'string' && 'getChannelData' in audio;
+}
+
+/** A source past `maxSourceSeconds`; both lengths are named so the app can tell the listener. */
+function tooLong(seconds: number, limit: number): Error {
+    return new Error(
+        `sonicframe: the source is too long to record a clip from (${Math.round(seconds)} s, the limit is ${Math.round(limit)} s)`,
+    );
+}
+
 async function toBuffer(
     context: AudioContext,
     audio: AudioBuffer | Blob | string,
     signal: AbortSignal | undefined,
 ): Promise<AudioBuffer> {
-    if (typeof audio !== 'string' && 'getChannelData' in audio) {
+    if (isDecoded(audio)) {
         return audio;
     }
 
@@ -106,6 +135,20 @@ export async function exportClip(
         throw new Error('sonicframe: this browser cannot record a clip');
     }
 
+    const limit =
+        options.maxSourceSeconds !== undefined && options.maxSourceSeconds > 0
+            ? options.maxSourceSeconds
+            : DEFAULT_MAX_SOURCE_SECONDS;
+    const decodes = !isDecoded(options.audio);
+
+    if (
+        decodes &&
+        options.sourceSeconds !== undefined &&
+        options.sourceSeconds > limit
+    ) {
+        throw tooLong(options.sourceSeconds, limit);
+    }
+
     const width = whole(options.width, 1280, 16, MAX_WIDTH);
     const height = whole(options.height, 720, 16, MAX_HEIGHT);
     const fps = whole(options.fps, 30, 1, MAX_FPS);
@@ -128,6 +171,11 @@ export async function exportClip(
 
     try {
         const buffer = await toBuffer(context, options.audio, options.signal);
+
+        // Its length was unknown until now: an over-long source is refused before any recording.
+        if (decodes && buffer.duration > limit) {
+            throw tooLong(buffer.duration, limit);
+        }
         plan = clipPlan(
             options.start ?? 0,
             options.end ?? buffer.duration,

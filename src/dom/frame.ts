@@ -432,6 +432,11 @@ export class SonicFrame implements PluginHost {
             peaks: this.peaksData ?? [],
             bar: this.bar,
             colors: { wave: palette.wave, progress: palette.progress },
+            // Its own media's length is known, so an over-long source is refused before any download.
+            sourceSeconds:
+                options.audio === undefined
+                    ? (this.duration ?? undefined)
+                    : undefined,
             ...options,
         });
     }

@@ -14,8 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   It picks a container the browser can record (`pickMimeType`: MP4/H.264 first, then WebM), runs in
   real time, stops at the end of the range, aborts if the tab is hidden or its `signal` fires (the
   download included), rejects rather than waits when the audio never starts (call it from a user
-  gesture), always closes the audio it opened, and is capped (length, size, resolution, bitrate). No
-  user color goes into a gradient; the caption is clipped, not faded through one.
+  gesture), always closes the audio it opened, and is capped (length, size, resolution, bitrate). The
+  source is decoded whole, so it is limited to `maxSourceSeconds` (10 minutes by default,
+  `DEFAULT_MAX_SOURCE_SECONDS`; `Infinity` lifts it): refused before the download when its length is
+  known (`sourceSeconds`, which `frame.exportClip` fills in), otherwise right after decoding. No user
+  color goes into a gradient; the caption is clipped, not faded through one.
 - `liveFrequency`: while the sound plays, the bars dance to its spectrum (Web Audio), in up to 512
   bands (`frequencyBands`, capped at `MAX_BANDS`). One shared `AudioContext` routes each media element
   through an analyser once, the audio passes through unchanged, and the peaks return on pause. Media

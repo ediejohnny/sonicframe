@@ -204,10 +204,17 @@ Each of these is a plugin; import it and `frame.use(it)`.
 
 - `sonicframe/analysis` (also on the main entry): `levels`, `findSilences`, `silencesFromPeaks`, `peakLevel` and
   `mixdown` — pure, safe in Node or a worker.
-- `frame.exportClip({ start, end, caption, width, height, fps, signal })` records a short video of the wave playing
-  (canvas + MediaRecorder), capped in length, size, resolution and bitrate; it resolves with `{ blob, mimeType,
-  duration }`. An `AbortSignal` cancels it, download included. Call it from a user gesture (a click): browsers keep
-  audio suspended until one, and a clip whose audio never starts is rejected rather than left waiting.
+- `frame.exportClip({ start, end, caption, width, height, fps, signal, maxSourceSeconds })` records a short video of
+  the wave playing (canvas + MediaRecorder), capped in length, size, resolution and bitrate; it resolves with
+  `{ blob, mimeType, duration }`. An `AbortSignal` cancels it, download included. Call it from a user gesture (a
+  click): browsers keep audio suspended until one, and a clip whose audio never starts is rejected rather than left
+  waiting.
+- The source is decoded whole before the clip is cut — about 23 MB of memory per minute of stereo audio — so it is
+  limited to `maxSourceSeconds` (10 minutes by default, `DEFAULT_MAX_SOURCE_SECONDS`). A longer one is refused before
+  the download when its length is known (`sourceSeconds`; the frame passes its own media's), otherwise right after
+  decoding. Raise the limit where memory allows (`Infinity` lifts it), or pass a `Blob` or `AudioBuffer` holding just
+  the part to clip. Clips are made from recorded sources: an endless live stream cannot be decoded whole, and its
+  download stops at the 100 MB cap.
 
 ## Writing a plugin
 
