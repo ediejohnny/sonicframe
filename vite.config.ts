@@ -33,7 +33,7 @@ export default defineConfig({
         ],
     },
     pack: {
-        entry: ['src/index.ts', 'src/analysis.ts'],
+        entry: ['src/index.ts', 'src/analysis.ts', 'src/player.ts'],
         format: 'esm',
         platform: 'neutral',
         target: 'es2022',

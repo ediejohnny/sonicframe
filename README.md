@@ -207,6 +207,60 @@ Colors: `icon` is `var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))
 `setLook({ slider, size, width, colors })` changes them later, `bind(media)` follows another media, and `destroy()`
 removes the control.
 
+## Player (`sonicframe/player`)
+
+```ts
+import { createPlayer } from 'sonicframe/player';
+
+const player = createPlayer({
+    container,
+    src: '/notes/42.ogg',
+    palette: 'ocean',
+    volume: true,
+});
+```
+
+A ready-made player on its own entry, so an app that only draws waves never loads it. It puts a play button, the wave
+and the time together, plus any of these parts: `speed` (steps through `1×`, `1.5×`, `2×`), `back` and `forward`
+(skip seconds), `volume` (the `VolumeControl`, **off unless `volume: true`**), `slot` (your own element, such as an
+avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
+the browser when it first comes near the screen (`peaks` skips that).
+
+| Option      | Default    | What it does                                                                        |
+| ----------- | ---------- | ----------------------------------------------------------------------------------- |
+| `container` | (required) | The element the player is added to.                                                 |
+| `src`       | none       | The sound's address; the player makes its own `<audio>`.                            |
+| `media`     | none       | Your own audio or video element instead.                                            |
+| `peaks`     | decoded    | Peaks or a loader, as for `SonicFrame`.                                             |
+| `look`      | see below  | How the player is put together.                                                     |
+| `palette`   | `'light'`  | A palette name, `'auto'` (light or dark, following the system), or your own colors. |
+| `wave`      | `'bars'`   | How the sound is drawn (as for `SonicFrame`).                                       |
+| `font`      | the look's | A stack name, a `font-family` list, or a font you bring (see below).                |
+| `volume`    | `false`    | Show the volume control.                                                            |
+| `slot`      | none       | Your element for the `slot` part.                                                   |
+| `frame`     | `{}`       | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                         |
+
+The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
+(`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
+(`{ shape, fill, size }`), `waveHeight`, `corner`, `padding`, `gap` (rem), `border` (CSS pixels), `shadow` (`'none'`,
+`'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`, `'none'`), `font`, `fontSize`, `weight`, `uppercase`,
+`skip` (seconds), `speeds` and `volume` (`'always'` or `'hover'`). Unknown names fall back and numbers are kept in
+range.
+
+Palettes: `light`, `dark`, `ocean`, `forest`, `sunset`, `berry`, `paper` and `contrast`, each checked for readable text
+and visible controls (WCAG contrast). A palette is set as `--sonicframe-*` custom properties on the player, so plain CSS
+can still override one color; shadows and the glass surface are built from colors read back as numbers.
+
+Fonts: SonicFrame ships no font files. The stacks (`system`, `rounded`, `mono`, `serif`, `humanist`, `geometric`,
+`industrial`, `slab`, `handwritten`) name fonts already on the device. To use another font, bring it:
+`font: { family: 'Brand Sans', src: '/fonts/brand.woff2' }` (a file) or `stylesheet:` (a font service's CSS address).
+It loads once per page, the system stack stays behind it, and an address is used only when it is http(s) or a
+relative path; your Content-Security-Policy decides the rest.
+
+`setLook`, `setPalette`, `setWave` and `setFont` change a player later; `on(event, listener)` hears the wave's events;
+`player.frame`, `player.button` and `player.volume` reach the parts; `destroy()` gives the container back (a media
+element the player made is stopped, yours is left alone).
+
 ## Markers
 
 ```ts

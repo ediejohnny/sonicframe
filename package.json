@@ -29,6 +29,10 @@
             "types": "./dist/analysis.d.ts",
             "default": "./dist/analysis.js"
         },
+        "./player": {
+            "types": "./dist/player.d.ts",
+            "default": "./dist/player.js"
+        },
         "./package.json": "./package.json"
     },
     "scripts": {

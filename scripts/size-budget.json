@@ -1,6 +1,7 @@
 {
-    "comment": "Gzip ceilings in bytes for built bundles. Generous on purpose: a guardrail against accidental bloat (a leaked dependency, duplicated data), not a per-phase target. Bump deliberately, with a reason, at a release. dist/index.js was 15624 gzip at 0.1.0.",
+    "comment": "Gzip ceilings in bytes for each entry, measured with every chunk it imports. The dist is not minified (comments count); minified, an entry is about half this. A guardrail against accidental bloat (a leaked dependency, duplicated data), not a per-phase target. Bump deliberately, with a reason, at a release. index.js was 15624 at 0.1.0; raised from 48 KB to 64 KB for 0.2.0, which adds the player, its themes and the volume control (index 48447 and player 41791 when raised).",
     "budget": {
-        "index.js": 49152
+        "index.js": 65536,
+        "player.js": 65536
     }
 }

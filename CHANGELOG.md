@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `sonicframe/player`: a ready-made player on its own entry (`createPlayer`). It lays out a play
+  button, the wave and the time, plus speed, skip, volume (off unless asked), a slot for the app's own
+  element and spacers, by a look (parts, sizes in rem, corners, border, shadow, surface, font), and
+  colors it with a palette (eight built in, `'auto'` following the system, or your own) set as
+  `--sonicframe-*` properties. Given only `src`, it makes its own media element and decodes the peaks
+  near the screen. Fonts come from system stacks or from the app (a file or a stylesheet, loaded once,
+  addresses checked); no font ships with SonicFrame.
 - Ten ways to draw the sound (`wave`): bars, needles, LED blocks, a dot matrix, 8-bit steps, a line, a
   filled area, an oscilloscope trace, a heartbeat monitor, and a plain track that needs no peaks. The
   bar style still sets their density and alignment; played, hover and unplayed colors, live

@@ -101,6 +101,7 @@ export class FakeMedia extends EventTarget {
     currentTime = 0;
     volume = 1;
     muted = false;
+    playbackRate = 1;
     private readonly state: {
         duration: number;
         readyState: number;
