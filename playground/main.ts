@@ -99,12 +99,21 @@ const DRAWINGS: Drawing[] = [
 ];
 
 const THEME_PREVIEW: [ThemeName, string][] = [
-    ['bubble', 'A chat voice note.'],
-    ['card', 'A podcast card with skip buttons.'],
-    ['pulse', 'A heartbeat monitor.'],
-    ['brutal', 'Thick lines and a hard shadow.'],
-    ['glass', 'Frosted glass over the page.'],
-    ['retro', 'Chunky 8-bit steps.'],
+    [
+        'card',
+        'A podcast card: the wave on top, skip buttons around a big play button.',
+    ],
+    [
+        'bubble',
+        'A chat voice note: a round button, slim bars with a dot, the time and speed underneath.',
+    ],
+    ['pulse', 'A heartbeat monitor: a glowing line that beats with the sound.'],
+    ['glass', 'Frosted glass over whatever is behind it.'],
+    ['retro', '8-bit: chunky steps, square corners and a hard shadow.'],
+    [
+        'brutal',
+        'Bold lines: a thick border, a hard offset shadow and heavy capitals.',
+    ],
 ];
 
 const BUTTON_KINDS: [ButtonShape, ButtonFill][] = [

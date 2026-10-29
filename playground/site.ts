@@ -151,14 +151,20 @@ export function copyButton(block: HTMLElement): void {
     const button = block.querySelector('button');
     const code = block.querySelector('code');
 
-    if (button === null || code === null) {
-        return;
+    if (button !== null && code !== null) {
+        copyOnClick(button, () => code.textContent ?? '');
     }
+}
 
+/** Makes a button copy the text `text` gives at the time of the click, and say whether it did. */
+export function copyOnClick(
+    button: HTMLButtonElement,
+    text: () => string,
+): void {
     const label = button.textContent?.trim() ?? 'Copy';
     let timer = 0;
-    const say = (text: string): void => {
-        button.textContent = text;
+    const say = (message: string): void => {
+        button.textContent = message;
         window.clearTimeout(timer);
         timer = window.setTimeout(() => {
             button.textContent = label;
@@ -166,7 +172,7 @@ export function copyButton(block: HTMLElement): void {
     };
 
     button.addEventListener('click', () => {
-        navigator.clipboard.writeText(code.textContent ?? '').then(
+        navigator.clipboard.writeText(text()).then(
             () => say('Copied'),
             () => say('Copy failed'),
         );

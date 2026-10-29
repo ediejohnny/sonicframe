@@ -130,14 +130,12 @@ html {
     scrollbar-color: var(--thumb) var(--page);
 }
 
-.code pre,
-.grid-box {
+.code pre {
     scrollbar-width: thin;
     scrollbar-color: var(--thumb) transparent;
 }
 
-.code pre:hover,
-.grid-box:hover {
+.code pre:hover {
     scrollbar-color: var(--thumb-hover) transparent;
 }
 
@@ -423,10 +421,17 @@ main.wrap {
 
 /* Rows of players with a short name under each. */
 
+/* Two columns at most: the ten drawings fill five whole rows, with no empty place. */
 .shelf {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.75rem 1.25rem;
+}
+
+@media (min-width: 48rem) {
+    .shelf {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .shelf figure {
@@ -446,6 +451,37 @@ main.wrap {
 
 .shelf figcaption code {
     color: var(--ink);
+}
+
+/* Themes one per row: the player at a natural width, what it is beside it. */
+
+.theme-list {
+    display: grid;
+    gap: 1.75rem;
+}
+
+.theme-list figure {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 0.75rem 2.5rem;
+    align-items: center;
+    margin: 0;
+}
+
+.theme-list figure > div {
+    min-width: 0;
+    max-width: 36rem;
+}
+
+.theme-list figcaption {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--muted);
+}
+
+.theme-list figcaption code {
+    color: var(--ink);
+    font-size: 1rem;
 }
 
 .more {
@@ -626,59 +662,58 @@ main.wrap {
     accent-color: var(--brand);
 }
 
-.grid-box {
-    max-height: calc(100vh - 6rem);
-    margin-top: 1.25rem;
-    overflow: auto;
-    border: 0.0625rem solid var(--line);
+/* One theme per row: its name and what it is, then the player in every palette. */
+
+.gallery {
+    display: grid;
+    gap: 3rem;
+    margin-top: 2.5rem;
+}
+
+.gallery-theme {
+    display: grid;
+    gap: 1rem;
+}
+
+.gallery-theme h2 {
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    letter-spacing: 0;
+}
+
+.gallery-theme p {
+    margin-top: 0.25rem;
+    color: var(--muted);
+}
+
+.palettes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
+    gap: 1rem;
+}
+
+/* A palette's own background, border and text, set from the palette itself. */
+.cell {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 0.0625rem solid;
     border-radius: 0.75rem;
-    background: var(--panel);
-    overscroll-behavior: contain;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: 8.5rem repeat(8, minmax(19rem, 1fr));
-    width: max-content;
-    min-width: 100%;
+.cell[aria-current='true'] {
+    outline: 0.1875rem solid var(--brand);
+    outline-offset: 0.1875rem;
 }
 
-.grid .corner,
-.grid .col-head,
-.grid .row-head {
-    position: sticky;
-    background: var(--panel);
-    font-weight: 650;
-}
-
-.grid .corner {
-    z-index: 3;
-    top: 0;
-    left: 0;
-    padding: 0.75rem 1rem;
-}
-
-.grid .col-head {
-    z-index: 2;
-    top: 0;
-    padding: 0.75rem 1rem;
-    border-bottom: 0.0625rem solid var(--line);
-}
-
-.grid .corner {
-    border-right: 0.0625rem solid var(--line);
-    border-bottom: 0.0625rem solid var(--line);
-}
-
-.grid .row-head {
-    z-index: 1;
-    left: 0;
-    display: grid;
-    gap: 0.375rem;
-    align-content: center;
-    padding: 0.75rem 1rem;
-    border-right: 0.0625rem solid var(--line);
-    border-bottom: 0.0625rem solid var(--line);
+.cell-label {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
 
 .swatches {
@@ -687,27 +722,35 @@ main.wrap {
 }
 
 .swatches span {
-    width: 1rem;
-    height: 1rem;
-    border: 0.0625rem solid var(--line);
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0.0625rem solid rgba(127, 127, 127, 0.4);
     border-radius: 50%;
 }
 
-.cell {
-    display: grid;
-    align-content: center;
-    min-width: 0;
-    padding: 1rem;
-    border-bottom: 0.0625rem solid var(--line);
-    outline-offset: -0.1875rem;
+/* The picked player stays in reach while the page scrolls. */
+.pickbar {
+    position: sticky;
+    z-index: 5;
+    bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    margin-top: 2.5rem;
+    padding: 0.75rem 1rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.75rem 0.75rem 0 0;
+    background: var(--panel);
 }
 
-.cell[aria-current='true'] {
-    outline: 0.1875rem solid var(--brand);
+.pickbar p {
+    flex: 1 1 14rem;
+    font-weight: 600;
 }
 
 .picked {
-    margin-top: 1.25rem;
+    margin-top: 2.5rem;
 }
 
 .picked .snippets {

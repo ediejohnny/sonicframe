@@ -44,9 +44,10 @@
             <section class="gallery-head" aria-labelledby="title">
                 <h1 id="title">Themes</h1>
                 <p class="lede">
-                    Twenty-four themes, each in all eight palettes. Every player
-                    here plays the same sound, so they all move together. Touch
-                    one to get its code below the grid.
+                    Twenty-four themes, eight at a time, each in all eight
+                    palettes. Every player here plays the same sound, so they
+                    all move together. Touch one to pick it; the bar at the
+                    bottom copies its code.
                 </p>
 
                 <div class="toolbar">
@@ -81,8 +82,17 @@
                 </p>
             </section>
 
-            <div class="grid-box">
-                <div id="grid" class="grid"></div>
+            <div id="gallery" class="gallery"></div>
+
+            <div class="pickbar">
+                <p id="pickbar-name"></p>
+                <button id="copy-js" class="button small" type="button">
+                    Copy JavaScript
+                </button>
+                <button id="copy-tag" class="button small" type="button">
+                    Copy HTML tag
+                </button>
+                <a class="button small" href="#picked-title">See the code</a>
             </div>
 
             <section class="picked" aria-labelledby="picked-title">
