@@ -23,9 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `'auto'`; given, it also marks the player with it), `labels` for any accessible name or word, the
   wave's value included, and `description` (off by default), the wave in words, with an optional
   `button` that reads it aloud. While it reads, the button wears the play button's colors;
-  `button: { animation: true }` also makes it pulse gently, never with reduced motion.
-  `player.description` and the `description` event. The tag's accessibility attributes start with
-  `a11y-`: `a11y-lang` and `a11y-description="keys pauses speech button animation announce"`.
+  `button: { animation: true }` also moves it, as `animationType` says (`'pulse'`, the default, or
+  `'fade'`), never with reduced motion. `player.description` and the `description` event. The tag's
+  accessibility attributes start with `a11y-`: `a11y-lang` and
+  `a11y-description="keys pauses speech announce button animation fade"`.
 - The frame's `peakschange` event (peaks arrived, changed or went), the plugin hook `valueNote` (a note
   on the wave's value in words) and `host.updateValueText()`.
 

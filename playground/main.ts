@@ -221,7 +221,7 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
                         target: text,
                         keys: true,
                         pauseInValue: true,
-                        button: { animation: true },
+                        button: { animation: true, animationType: 'pulse' },
                     },
                 },
             },

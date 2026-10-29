@@ -287,7 +287,8 @@ createPlayer({
             // the wave in words (see "The wave in words"); off unless given
             keys: true,
             pauseInValue: true,
-            button: { animation: true }, // a button that reads it aloud; animation: it pulses while reading
+            // a button that reads it aloud; while reading it moves, as animationType says
+            button: { animation: true, animationType: 'pulse' },
         },
     },
 });
@@ -301,9 +302,10 @@ createPlayer({
   otherwise (Portuguese is built in); a label you give is cleaned and capped, and its marks are filled with
   SonicFrame's own values only.
 - `a11y.description`: `true`, or the `soundDescription` options plus `button`. While the button reads, its name says
-  "Stop the description" and it wears the play button's colors, so people who see it know it can be pressed to stop;
-  `button: { animation: true }` also makes it pulse gently (off by default, and never for people who asked their
-  system for less motion).
+  "Stop the description" and it wears the play button's colors, so people who see it know it can be pressed to stop.
+  `button: { animation: true }` also moves it, as `animationType` says: `'pulse'` (the default, a type it does not
+  know included: it grows a little and back) or `'fade'` (half transparent and back). Animation is off by default, and
+  never shown to people who asked their system for less motion.
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
@@ -351,8 +353,9 @@ gives the container back (a media element the player made is stopped, yours is l
 Attributes: `src`, `peaks` (the address of a peaks file), `theme`, `palette`, `wave`, `font`, `font-src`,
 `font-stylesheet`, `label`, and the switches `volume` and `spectrogram`. Accessibility attributes start with `a11y-`:
 `a11y-lang` (the language of the player's words, `a11y-lang="pt-BR"`) and `a11y-description`, which turns the wave in
-words on; words in it turn on its extras: `a11y-description="keys pauses"` (also `speech`, `button`, `animation` for
-the button, and `announce`). They are read as untrusted input: an unknown name falls back to the default theme, text
+words on; words in it turn on its extras: `a11y-description="keys pauses"` (also `speech`, `announce`, `button`, and
+`animation` for the button, of the type `pulse`, the default, or `fade`: `a11y-description="button animation fade"`).
+They are read as untrusted input: an unknown name falls back to the default theme, text
 goes in only as text, and a font address is used only when it is safe.
 Changing an attribute updates the player; removing the element destroys it, and putting it back builds it again. The
 player's events reach the element as `sonicframe:seek`, `sonicframe:timeupdate`, `sonicframe:error`… with their

@@ -36,12 +36,15 @@ const ALL_PARTS = {
     line: ['back', 'play', 'forward', 'wave', 'time', 'speed'] as const,
 };
 
+/** An animation started on an element: its keyframes, and whether it was cancelled. */
+type Started = { keyframes: unknown; cancelled: boolean };
+
 /**
- * A browser voice that keeps reading until stopped, and a record of the pulses started on elements
- * (`element.animate`), each marked once cancelled.
+ * A browser voice that keeps reading until stopped, and a record of the animations started on
+ * elements (`element.animate`), each marked once cancelled.
  */
-function readingVoice(): { cancelled: boolean }[] {
-    const pulses: { cancelled: boolean }[] = [];
+function readingVoice(): Started[] {
+    const pulses: Started[] = [];
     vi.stubGlobal('speechSynthesis', {
         getVoices: () => [
             { name: 'David', lang: 'en-US', localService: true, default: true },
@@ -57,18 +60,21 @@ function readingVoice(): { cancelled: boolean }[] {
             constructor(readonly text: string) {}
         },
     );
-    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(() => {
-        const pulse = {
-            cancelled: false,
-            finished: Promise.resolve(),
-            cancel(): void {
-                pulse.cancelled = true;
-            },
-        };
-        pulses.push(pulse);
+    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(
+        (keyframes) => {
+            const pulse = {
+                keyframes,
+                cancelled: false,
+                finished: Promise.resolve(),
+                cancel(): void {
+                    pulse.cancelled = true;
+                },
+            };
+            pulses.push(pulse);
 
-        return pulse as unknown as Animation;
-    });
+            return pulse as unknown as Animation;
+        },
+    );
 
     return pulses;
 }
@@ -293,6 +299,34 @@ describe('the wave in words on the player', () => {
             'transparent',
         );
         expect(pulses[0].cancelled).toBe(true);
+    });
+
+    it('moves only with animation on: the pulse unless another type is asked, fade when it is', () => {
+        const started = readingVoice();
+        const build = (button: Record<string, unknown>): void => {
+            player?.destroy();
+            host?.remove();
+            player = createPlayer({
+                container: container(),
+                media: fakeMedia({ duration: 33 }),
+                peaks: NOTE,
+                a11y: { description: { button } },
+            });
+            within('.sonicframe-listen').click();
+        };
+        const pulse = [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }];
+
+        build({ animation: true });
+        build({ animation: true, animationType: 'fade' });
+        build({ animation: true, animationType: 'spin' });
+        build({ animationType: 'fade' });
+        build({ animation: false, animationType: 'pulse' });
+
+        expect(started.map(({ keyframes }) => keyframes)).toEqual([
+            pulse,
+            [{ opacity: 1 }, { opacity: 0.5 }],
+            pulse,
+        ]);
     });
 
     it('only changes color by default, or where the person asks for less motion', () => {
