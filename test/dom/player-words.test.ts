@@ -132,7 +132,7 @@ describe("the player's words", () => {
             media: fakeMedia({ duration: 33 }),
             look: { line: [...ALL_PARTS.line], speeds: [1.5, 2] },
             volume: true,
-            lang: 'pt-BR',
+            a11y: { lang: 'pt-BR' },
         });
 
         expect(labelOf('.sonicframe-player')).toBe('Player de áudio');
@@ -155,7 +155,7 @@ describe("the player's words", () => {
         player = createPlayer({
             container: container(),
             media: fakeMedia({ duration: 33 }),
-            lang: 'auto',
+            a11y: { lang: 'auto' },
         });
 
         expect(labelOf('.sonicframe-play')).toBe('Reproduzir');
@@ -165,10 +165,12 @@ describe("the player's words", () => {
         player = createPlayer({
             container: container(),
             media: fakeMedia({ duration: 33 }),
-            lang: 'pt',
-            labels: {
-                play: 'Tocar\u0007 a mensagem',
-                value: '{time} até {duration}',
+            a11y: {
+                lang: 'pt',
+                labels: {
+                    play: 'Tocar\u0007 a mensagem',
+                    value: '{time} até {duration}',
+                },
             },
         });
 
@@ -197,8 +199,7 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            lang: 'pt',
-            description: true,
+            a11y: { lang: 'pt', description: true },
         });
         player.on('description', (text) => heard.push(text));
         player.setTheme('bubble');
@@ -248,11 +249,11 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            lang: 'pt',
-            description: { button: true },
+            a11y: { lang: 'pt', description: { button: true } },
         });
 
         expect(labelOf('.sonicframe-listen')).toBe('Ouvir a descrição');
+        expect(within('.sonicframe-player').getAttribute('lang')).toBe('pt');
 
         within('.sonicframe-listen').click();
 
@@ -270,7 +271,7 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            description: { button: true, pulse: true },
+            a11y: { description: { button: { animation: true } } },
         });
         const button = within('.sonicframe-listen');
 
@@ -300,7 +301,7 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            description: { button: true },
+            a11y: { description: { button: true } },
         });
         within('.sonicframe-listen').click();
 
@@ -322,7 +323,7 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            description: { button: true, pulse: true },
+            a11y: { description: { button: { animation: true } } },
         });
         within('.sonicframe-listen').click();
 
@@ -354,8 +355,7 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            lang: 'pt',
-            description: { button: true },
+            a11y: { lang: 'pt', description: { button: true } },
         });
 
         within('.sonicframe-listen').click();
@@ -372,7 +372,7 @@ describe('the wave in words on the player', () => {
             container: container(),
             media: fakeMedia({ duration: 33 }),
             peaks: NOTE,
-            description: { button: true },
+            a11y: { description: { button: true } },
         });
 
         expect(host?.querySelector('.sonicframe-listen')).toBeNull();
@@ -381,12 +381,12 @@ describe('the wave in words on the player', () => {
 });
 
 describe('the <sonic-player> tag', () => {
-    it('takes the language and the description as attributes', () => {
+    it('takes the language and the description as a11y- attributes', () => {
         defineSonicPlayer();
         host = document.createElement('sonic-player');
         host.setAttribute('src', 'note.ogg');
-        host.setAttribute('lang', 'pt-BR');
-        host.setAttribute('description', 'keys pauses <img src=x>');
+        host.setAttribute('a11y-lang', 'pt-BR');
+        host.setAttribute('a11y-description', 'keys pauses <img src=x>');
         document.body.append(host);
 
         expect(labelOf('.sonicframe-play')).toBe('Reproduzir');

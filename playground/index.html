@@ -183,12 +183,13 @@ createPlayer({
                     <pre><code>createPlayer({
     container,
     src: '/voice.mp3',
-    lang: 'pt',
-    description: {
-        keys: true,
-        pauseInValue: true,
-        button: true,
-        pulse: true,
+    a11y: {
+        lang: 'pt',
+        description: {
+            keys: true,
+            pauseInValue: true,
+            button: { animation: true },
+        },
     },
 });</code></pre>
                     <button class="button small" type="button">Copy</button>

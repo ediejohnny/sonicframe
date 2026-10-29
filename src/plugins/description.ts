@@ -30,6 +30,8 @@ export type SoundDescriptionKeys = {
     again?: string | false;
     /** Steps to the next part; with Shift, back to the previous one. `'p'` by default. */
     parts?: string | false;
+    /** How far into a part Shift+P goes back to its own start rather than the one before, in seconds; 1 by default. */
+    backGrace?: number;
 };
 
 export type SoundDescriptionOptions = OutlineOptions & {
@@ -49,8 +51,6 @@ export type SoundDescriptionOptions = OutlineOptions & {
     announceWhenReady?: boolean;
     /** Keys D (again) and P / Shift+P (between the parts): true, your own letters, or false (the default). */
     keys?: boolean | SoundDescriptionKeys;
-    /** How far into a part Shift+P goes back to its own start rather than the one before, in seconds; 1 by default. */
-    backGrace?: number;
     /** Add "pause" to the slider's value inside a silence; off by default. */
     pauseInValue?: boolean;
     /**
@@ -118,7 +118,12 @@ export function soundDescription(
                     parts: letter(options.keys.parts, 'p'),
                 }
               : { again: null, parts: null };
-    const backGrace = Math.max(0, options.backGrace ?? 1);
+    const backGrace = Math.max(
+        0,
+        (typeof options.keys === 'object'
+            ? options.keys.backGrace
+            : undefined) ?? 1,
+    );
     const target = options.target ?? null;
     const saved =
         target === null

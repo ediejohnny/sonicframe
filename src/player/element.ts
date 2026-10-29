@@ -5,9 +5,9 @@
  * the default theme, text only ever goes in as text, and a font address is used only when it is
  * safe. Changing an attribute updates the player; taking the element out of the page destroys it,
  * putting it back builds it again. The player's events are dispatched on the element as
- * `sonicframe:<event>` custom events, with their arguments in `detail`. The element's own `lang`
- * is the language of the player's words; the description is off unless the `description`
- * attribute is there.
+ * `sonicframe:<event>` custom events, with their arguments in `detail`. Accessibility attributes
+ * start with `a11y-`: `a11y-lang` is the language of the player's words, and the description is off
+ * unless `a11y-description` is there.
  */
 
 import type { FontChoice } from '../core/fonts';
@@ -29,8 +29,8 @@ export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
     'label',
     'volume',
     'spectrogram',
-    'lang',
-    'description',
+    'a11y-lang',
+    'a11y-description',
 ]);
 
 /** Attributes that need a new player (a new sound, or parts built once). */
@@ -39,8 +39,8 @@ const REBUILD = new Set([
     'peaks',
     'label',
     'spectrogram',
-    'lang',
-    'description',
+    'a11y-lang',
+    'a11y-description',
 ]);
 
 const EVENTS = [
@@ -56,8 +56,9 @@ const EVENTS = [
 ] as const;
 
 /**
- * The description from the `description` attribute: present turns it on, and its words turn on the
- * extras (`keys`, `pauses`, `speech`, `button`, `pulse`, `announce`); any other word is ignored.
+ * The description from the `a11y-description` attribute: present turns it on, and its words turn on
+ * the extras (`keys`, `pauses`, `speech`, `button`, `animation` for the button, `announce`); any
+ * other word is ignored.
  */
 function descriptionOf(value: string | null): PlayerDescription | undefined {
     if (value === null) {
@@ -70,8 +71,9 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
         keys: words.has('keys'),
         pauseInValue: words.has('pauses'),
         speech: words.has('speech'),
-        button: words.has('button'),
-        pulse: words.has('pulse'),
+        button: words.has('button')
+            ? { animation: words.has('animation') }
+            : false,
         announceWhenReady: words.has('announce'),
     };
 }
@@ -185,10 +187,12 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                     label: this.getAttribute('label') ?? undefined,
                     volume: this.hasAttribute('volume'),
                     spectrogram: this.hasAttribute('spectrogram'),
-                    lang: this.getAttribute('lang') ?? undefined,
-                    description: descriptionOf(
-                        this.getAttribute('description'),
-                    ),
+                    a11y: {
+                        lang: this.getAttribute('a11y-lang') ?? undefined,
+                        description: descriptionOf(
+                            this.getAttribute('a11y-description'),
+                        ),
+                    },
                 });
 
                 this.player = player;

@@ -108,18 +108,8 @@ export type PlayerOptions = {
     slot?: HTMLElement | null;
     /** The player's accessible name (over the `player` label). */
     label?: string;
-    /**
-     * The language of the player's words: `'en'` (the default), `'pt'`, or `'auto'` (the page's
-     * language). The description follows it unless it has its own `lang`.
-     */
-    lang?: string;
-    /** Your own accessible names and words, over the language's. */
-    labels?: Partial<PlayerLabels>;
-    /**
-     * Describe the sound in words for screen readers (see `soundDescription`): true, or its options
-     * plus `button`, a button that reads it with the browser's voice. Off by default.
-     */
-    description?: boolean | PlayerDescription;
+    /** Accessibility: the language of the player's words, its labels and the sound in words. */
+    a11y?: PlayerA11y;
     plugins?: readonly Plugin[];
     /** Any other option of the wave (`label`, `lazy`, `colors`…). */
     frame?: Partial<
@@ -136,16 +126,36 @@ export type PlayerOptions = {
     >;
 };
 
+/** The player's accessibility options, grouped by place; everything that adds behaviour is off by default. */
+export type PlayerA11y = {
+    /**
+     * The language of the accessible names, the wave's value in words and the description: `'en'` (the
+     * default), `'pt'`, or `'auto'` (the page's language). Given, it also marks the player with it.
+     */
+    lang?: string;
+    /** Your own accessible names and words, over the language's. */
+    labels?: Partial<PlayerLabels>;
+    /**
+     * The sound in words for screen readers (see `soundDescription`): true, or its options plus
+     * `button`, a button that reads it with the browser's voice. Off by default.
+     */
+    description?: boolean | PlayerDescription;
+};
+
 /** The description on a player: the plugin's options, plus a button that reads it aloud. */
 export type PlayerDescription = SoundDescriptionOptions & {
     /** A button that reads the description with the browser's voice (where it has one); off by default. */
-    button?: boolean;
+    button?: boolean | PlayerListenButton;
+};
+
+/** The button that reads the description aloud. */
+export type PlayerListenButton = {
     /**
-     * While it reads, the button is filled in the play button's colors, so people who see it know it
-     * is reading and can be pressed to stop; true also makes it pulse gently. Off by default (only the
-     * colors), and never for people who asked their system for less motion.
+     * While it reads, the button wears the play button's colors, so people who see it know it is
+     * reading and can be pressed to stop; `animation: true` also makes it pulse gently. Off by default
+     * (only the colors), and never for people who asked their system for less motion.
      */
-    pulse?: boolean;
+    animation?: boolean;
 };
 
 /** One beat of the reading button's pulse, in milliseconds (it grows, then shrinks back). */
@@ -290,11 +300,10 @@ export class Player {
         this.theme = this.pickTheme(options.theme);
         this.combine();
         this.font = options.font;
+        const a11y = options.a11y ?? {};
         this.words = playerWords(
-            options.lang === 'auto'
-                ? pageLanguage(options.container)
-                : options.lang,
-            options.labels,
+            a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
+            a11y.labels,
         );
 
         this.element = document.createElement('div');
@@ -304,6 +313,11 @@ export class Player {
             'aria-label',
             cleanText(options.label ?? this.words.labels.player, 120),
         );
+
+        // A language the app chose marks the player, so a screen reader says its words in that voice.
+        if (a11y.lang !== undefined) {
+            this.element.setAttribute('lang', this.words.locale);
+        }
 
         this.ownMedia = !options.media && typeof options.src === 'string';
         this.media = options.media ?? (this.ownMedia ? this.makeMedia() : null);
@@ -549,6 +563,28 @@ export class Player {
         return this.decoding;
     }
 
+    /** The description's settings, or null while it is off. */
+    private descriptionSettings(): PlayerDescription | null {
+        const asked = this.options.a11y?.description;
+
+        if (!asked) {
+            return null;
+        }
+
+        return asked === true ? {} : asked;
+    }
+
+    /** The reading button's settings, or null while there is none. */
+    private listenButton(): PlayerListenButton | null {
+        const button = this.descriptionSettings()?.button;
+
+        if (!button) {
+            return null;
+        }
+
+        return button === true ? {} : button;
+    }
+
     /**
      * The app's plugins, with a spectrogram in the palette's colors first and the description last,
      * each only when asked.
@@ -562,15 +598,14 @@ export class Player {
             );
         }
 
-        const asked = this.options.description;
+        const settings = this.descriptionSettings();
 
-        if (asked) {
-            const settings = asked === true ? {} : asked;
+        if (settings !== null) {
             const description = soundDescription({
                 ...settings,
-                lang: settings.lang ?? this.options.lang,
+                lang: settings.lang ?? this.options.a11y?.lang,
                 // The button reads aloud, so asking for it asks for the voice.
-                speech: settings.speech ?? settings.button === true,
+                speech: settings.speech ?? this.listenButton() !== null,
                 onChange: (text) => {
                     settings.onChange?.(text);
                     this.events.emit('description', text);
@@ -651,14 +686,10 @@ export class Player {
             this.addPart(part, line, column);
         }
 
-        const description = this.options.description;
+        const listen = this.listenButton();
 
-        if (
-            typeof description === 'object' &&
-            description.button === true &&
-            canSpeak()
-        ) {
-            line.append(this.listenPart());
+        if (listen !== null && canSpeak()) {
+            line.append(this.listenPart(listen));
         }
 
         const meta = this.visibleMeta();
@@ -950,12 +981,11 @@ export class Player {
 
     /**
      * Reads the description with the browser's voice; pressed again (or Escape on the wave), it stops.
-     * While it reads, its name says so and it is filled (and pulses, when asked).
+     * While it reads, its name says so and it is filled (and pulses, with `animation`).
      */
-    private listenPart(): HTMLButtonElement {
+    private listenPart(settings: PlayerListenButton): HTMLButtonElement {
         const labels = this.words.labels;
-        const asked = this.options.description;
-        const pulse = typeof asked === 'object' && asked.pulse === true;
+        const pulse = settings.animation === true;
         const button = this.iconButton(
             'sonicframe-listen',
             LISTEN_ICON,

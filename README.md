@@ -256,30 +256,54 @@ and the time together, plus any of these parts: `speed` (steps through `1×`, `1
 avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
 the browser when it first comes near the screen (`peaks` skips that).
 
-| Option        | Default     | What it does                                                                         |
-| ------------- | ----------- | ------------------------------------------------------------------------------------ |
-| `container`   | (required)  | The element the player is added to.                                                  |
-| `src`         | none        | The sound's address; the player makes its own `<audio>`.                             |
-| `media`       | none        | Your own audio or video element instead.                                             |
-| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                              |
-| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.                |
-| `look`        | see below   | How the player is put together.                                                      |
-| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).               |
-| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                        |
-| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).                 |
-| `volume`      | `false`     | Show the volume control.                                                             |
-| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once).   |
-| `slot`        | none        | Your element for the `slot` part.                                                    |
-| `lang`        | `'en'`      | The language of the player's words: `'pt'`, `'pt-BR'`…, or `'auto'` (the page's).    |
-| `labels`      | the lang's  | Your own accessible names and words, over the language's (see below).                |
-| `description` | `false`     | The wave in words for screen readers (see below); `{ button: true }` reads it aloud. |
-| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                          |
+| Option        | Default     | What it does                                                                       |
+| ------------- | ----------- | ---------------------------------------------------------------------------------- |
+| `container`   | (required)  | The element the player is added to.                                                |
+| `src`         | none        | The sound's address; the player makes its own `<audio>`.                           |
+| `media`       | none        | Your own audio or video element instead.                                           |
+| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                            |
+| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.              |
+| `look`        | see below   | How the player is put together.                                                    |
+| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).             |
+| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                      |
+| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).               |
+| `volume`      | `false`     | Show the volume control.                                                           |
+| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once). |
+| `slot`        | none        | Your element for the `slot` part.                                                  |
+| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description }` (see below).                        |
+| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                        |
 
-Labels: `player`, `position`, `value` (`'{time} / {duration}'`), `play`, `pause`, `back` and `forward`
-(`'{seconds}'`), `speed` (`'{speed}'`), `mute`, `unmute`, `volume`, `listen`, `stopListening` and `speechFailed`
-(said through the live region when the browser cannot read the description aloud). They are English unless `lang`
-says otherwise (Portuguese is built in); a label you give is cleaned and capped, and its marks are filled with
-SonicFrame's own values only.
+Accessibility options live in one group, `a11y`, arranged by place, and whatever adds behaviour is off until you turn
+it on:
+
+```ts
+createPlayer({
+    container,
+    src,
+    a11y: {
+        lang: 'pt', // 'en' (the default), 'pt', 'pt-BR'…, or 'auto' (the page's language)
+        labels: { play: 'Tocar' }, // your own accessible names, over the language's
+        description: {
+            // the wave in words (see "The wave in words"); off unless given
+            keys: true,
+            pauseInValue: true,
+            button: { animation: true }, // a button that reads it aloud; animation: it pulses while reading
+        },
+    },
+});
+```
+
+- `a11y.lang`: the language of the accessible names, the wave's value in words and the description; given, it also
+  marks the player with its `lang` attribute, so a screen reader says the words in that voice.
+- `a11y.labels`: `player`, `position`, `value` (`'{time} / {duration}'`), `play`, `pause`, `back` and `forward`
+  (`'{seconds}'`), `speed` (`'{speed}'`), `mute`, `unmute`, `volume`, `listen`, `stopListening` and `speechFailed`
+  (said through the live region when the browser cannot read the description aloud). English unless `lang` says
+  otherwise (Portuguese is built in); a label you give is cleaned and capped, and its marks are filled with
+  SonicFrame's own values only.
+- `a11y.description`: `true`, or the `soundDescription` options plus `button`. While the button reads, its name says
+  "Stop the description" and it wears the play button's colors, so people who see it know it can be pressed to stop;
+  `button: { animation: true }` also makes it pulse gently (off by default, and never for people who asked their
+  system for less motion).
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
@@ -325,11 +349,11 @@ gives the container back (a media element the player made is stopped, yours is l
 ```
 
 Attributes: `src`, `peaks` (the address of a peaks file), `theme`, `palette`, `wave`, `font`, `font-src`,
-`font-stylesheet`, `label`, `lang` (the language of the player's words, `lang="pt-BR"`), the switches `volume` and
-`spectrogram`, and `description`, which turns the wave in words on; words in it turn on its extras:
-`description="keys pauses"` (also `speech`, `button`, `pulse` and `announce`). They are read as untrusted input: an
-unknown
-name falls back to the default theme, text goes in only as text, and a font address is used only when it is safe.
+`font-stylesheet`, `label`, and the switches `volume` and `spectrogram`. Accessibility attributes start with `a11y-`:
+`a11y-lang` (the language of the player's words, `a11y-lang="pt-BR"`) and `a11y-description`, which turns the wave in
+words on; words in it turn on its extras: `a11y-description="keys pauses"` (also `speech`, `button`, `animation` for
+the button, and `announce`). They are read as untrusted input: an unknown name falls back to the default theme, text
+goes in only as text, and a font address is used only when it is safe.
 Changing an attribute updates the player; removing the element destroys it, and putting it back builds it again. The
 player's events reach the element as `sonicframe:seek`, `sonicframe:timeupdate`, `sonicframe:error`… with their
 arguments in `event.detail`. `defineSonicPlayer('my-player')` registers it under another name.
@@ -426,14 +450,14 @@ them apart, and they are relative, so it describes the shape, never how loud the
 | `target`            | none           | An element of yours that shows the text (given back as it was on destroy).                        |
 | `announceWhenReady` | `false`        | Say it once if it arrives while the wave has focus (a lazy frame loads peaks near the screen).    |
 | `keys`              | `false`        | `true`: `D` says it again, `P` / `Shift+P` go to the next / previous part.                        |
-| `backGrace`         | `1`            | Seconds into a part after which `Shift+P` goes back to its own start.                             |
 | `pauseInValue`      | `false`        | Add "pause" (between parts) or "silence" (at the ends) to the wave's value: "0:22 / 0:33, pause". |
 | `speech`            | `false`        | Let `speak()` read it with the browser's own voice; `{ voices, rate }`.                           |
 | `onChange`          | none           | Called with the new text (or `null`).                                                             |
 
 With `keys`, a step between the parts lands at the start of the next sound and says where: "Part 2 of 3, 24
-seconds." `{ again: 'i', parts: false }` picks other letters or turns one off; the direction comes from Shift, never
-from the letter's case. The plugin also gives `text`, `outline`, `locale`, `set(text)` (`null` goes back to the
+seconds." `{ again: 'i', parts: false }` picks other letters or turns one off, and `backGrace` (1 by default) is how
+many seconds into a part `Shift+P` goes back to its own start rather than the one before; the direction comes from
+Shift, never from the letter's case. The plugin also gives `text`, `outline`, `locale`, `set(text)` (`null` goes back to the
 peaks), `refresh()`, `say()` (through the live region), `speak()`, `stopSpeaking()` and `speaking`.
 
 **Who narrates.** The screen reader: nothing is ever spoken on its own. For people without one, `speech` lets
@@ -447,11 +471,9 @@ rejects where no voice fits.
 `sonicframe/analysis`, so a server can write the description when a file is uploaded and pass it as `text`, ready at
 the first focus.
 
-On the player, `description: true` turns it on in the player's `lang`; `description: { button: true, keys: true }`
-adds a button that reads it aloud (where the browser has a voice) and the keys. While it reads, the button's name says
-"Stop the description" and it wears the play button's colors, so people who see it know it can be pressed to stop;
-`pulse: true` also makes it pulse gently (off by default, and never for people who asked their system for less
-motion).
+On the player it is `a11y.description` (see the player's accessibility options), in the player's `a11y.lang`;
+`a11y: { description: { button: true, keys: true } }` adds a button that reads it aloud (where the browser has a
+voice) and the keys.
 
 ## Writing a plugin
 

@@ -7,8 +7,10 @@
 export {
     createPlayer,
     Player,
+    type PlayerA11y,
     type PlayerDescription,
     type PlayerEvents,
+    type PlayerListenButton,
     type PlayerOptions,
 } from './player/player';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';

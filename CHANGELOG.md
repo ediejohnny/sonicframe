@@ -19,18 +19,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   (voices on the device only, unless `voices: 'any'`; never on its own).
 - `outlineSound` and `describeSound`, pure, also on `sonicframe/analysis`, so a server can write the
   description ahead of time.
-- The player speaks a chosen language: `lang` (`'en'`, the default, `'pt'` or `'auto'`) and `labels`
-  for any accessible name or word, the wave's value included; `description` (off by default) adds the
-  wave in words, with an optional button that reads it aloud (while it reads, it wears the play
-  button's colors; `pulse: true` also makes it pulse gently, never with reduced motion);
-  `player.description` and the `description` event. The tag takes `lang` and
-  `description="keys pauses speech button pulse announce"`.
+- The player's accessibility options, in one group, `a11y`: `lang` (`'en'`, the default, `'pt'` or
+  `'auto'`; given, it also marks the player with it), `labels` for any accessible name or word, the
+  wave's value included, and `description` (off by default), the wave in words, with an optional
+  `button` that reads it aloud. While it reads, the button wears the play button's colors;
+  `button: { animation: true }` also makes it pulse gently, never with reduced motion.
+  `player.description` and the `description` event. The tag's accessibility attributes start with
+  `a11y-`: `a11y-lang` and `a11y-description="keys pauses speech button animation announce"`.
+- The frame's `peakschange` event (peaks arrived, changed or went), the plugin hook `valueNote` (a note
+  on the wave's value in words) and `host.updateValueText()`.
 
 ### Changed
 
 - The size ceiling of each entry rises from 64 KB to 96 KB (gzip, unminified, chunks included).
-- The frame's `peakschange` event (peaks arrived, changed or went), the plugin hook `valueNote` (a note
-  on the wave's value in words) and `host.updateValueText()`.
 
 ## [0.2.0] - 2026-10-29
 

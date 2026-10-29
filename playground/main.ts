@@ -215,13 +215,14 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
             {
                 label:
                     lang === 'pt' ? 'A onda em palavras' : 'The wave in words',
-                lang,
-                description: {
-                    target: text,
-                    keys: true,
-                    pauseInValue: true,
-                    button: true,
-                    pulse: true,
+                a11y: {
+                    lang,
+                    description: {
+                        target: text,
+                        keys: true,
+                        pauseInValue: true,
+                        button: { animation: true },
+                    },
                 },
             },
             (error) => {
