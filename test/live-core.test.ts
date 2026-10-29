@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { frequencyBands } from '../src/core/bands';
+import { frequencyBands, MAX_BANDS } from '../src/core/bands';
 import { canTapMedia } from '../src/core/origin';
 
 describe('frequency bands', () => {
@@ -18,6 +18,15 @@ describe('frequency bands', () => {
     it('returns zeros for an empty spectrum', () => {
         expect(frequencyBands(new Uint8Array(0), 8, 44100)).toEqual(
             Array.from({ length: 8 }, () => 0),
+        );
+    });
+
+    it('never makes more than MAX_BANDS bands, however many are asked for', () => {
+        expect(
+            frequencyBands(new Uint8Array(256), 100_000, 44100),
+        ).toHaveLength(MAX_BANDS);
+        expect(frequencyBands(new Uint8Array(0), 100_000, 44100)).toHaveLength(
+            MAX_BANDS,
         );
     });
 });

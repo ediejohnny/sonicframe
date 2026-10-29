@@ -68,7 +68,7 @@ export {
 } from './core/spectrogram';
 export { buildColormap, colormap, type ColormapName } from './core/colormap';
 export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
-export { frequencyBands } from './core/bands';
+export { frequencyBands, MAX_BANDS } from './core/bands';
 export { canTapMedia } from './core/origin';
 export { exportClip, type ClipOptions } from './dom/clip';
 export { clipPlan, DEFAULT_CLIP_TYPES, pickMimeType } from './core/clip';

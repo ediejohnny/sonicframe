@@ -191,7 +191,7 @@ Each of these is a plugin; import it and `frame.use(it)`.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
   browser with a dependency-free FFT, in slices so it never freezes; color maps `viridis`, `magma`, `gray`.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
-  Audio). Cross-origin media without CORS is refused with an `error`, never silenced.
+  Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
 - **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback.
 
 ### Analysis and clips
@@ -239,9 +239,9 @@ media is playing on screen animates.
   levels deep.
 - Peaks files are read up to 2 MB (the download stops there, announced or not) and 20,000 values, and must be a list
   of finite numbers. Captions and tooltips go in through `textContent` with control and bidi characters stripped and
-  a length cap; every other input is bounded too — marks, regions, analysis windows, FFT size, spectrogram columns
-  and rows and audio length, the clip's length, size, resolution and bitrate, and the decode download (streamed and
-  capped).
+  a length cap; every other input is bounded too — marks, regions, analysis windows, FFT size, live frequency bands,
+  spectrogram columns and rows and audio length, the clip's length, size, resolution and bitrate, and the decode
+  download (streamed and capped).
 - Live frequency never silences playback: media it cannot read without muting (cross-origin without CORS) is refused
   with an `error`, and the shared audio context is never closed nor its output disconnected.
 - No runtime dependencies, no install scripts; the published package holds only `dist`, the readme, the changelog
