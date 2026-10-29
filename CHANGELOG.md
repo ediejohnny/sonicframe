@@ -7,6 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- The wave in words: `soundDescription()` describes a sound's shape for people who cannot see the
+  wave (its length, where the sound and the pauses are, where it is loudest), through the wave's
+  `aria-describedby`, so their own screen reader reads it. English and Portuguese are built in (`lang`,
+  or `'auto'` for the page's language), your own `words` cover any other, and numbers and units come
+  from `Intl`. Off until asked, each with its own option: an element of yours that shows the text,
+  saying it when it arrives while the wave has focus, keys `D` (again) and `P` / `Shift+P` (between the
+  parts), "pause" on the wave's value inside a silence, and the browser's own voice through `speak()`
+  (voices on the device only, unless `voices: 'any'`; never on its own).
+- `outlineSound` and `describeSound`, pure, also on `sonicframe/analysis`, so a server can write the
+  description ahead of time.
+- The player speaks a chosen language: `lang` (`'en'`, the default, `'pt'` or `'auto'`) and `labels`
+  for any accessible name or word, the wave's value included; `description` (off by default) adds the
+  wave in words, with an optional button that reads it aloud; `player.description` and the
+  `description` event. The tag takes `lang` and `description="keys pauses speech button announce"`.
+- The frame's `peakschange` event (peaks arrived, changed or went), the plugin hook `valueNote` (a note
+  on the wave's value in words) and `host.updateValueText()`.
+
 ## [0.2.0] - 2026-10-29
 
 ### Added

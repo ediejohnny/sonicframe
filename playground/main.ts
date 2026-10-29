@@ -182,6 +182,56 @@ function figure(shelf: HTMLElement, option: string, text: string): HTMLElement {
     return host;
 }
 
+/**
+ * The wave in words: a player with every extra of the description on, its text shown under it, and
+ * buttons that build it again in another language.
+ */
+function wordsDemo(host: HTMLElement, sound: Sound): () => void {
+    const text = byId('words-text');
+    const choices = Array.from(
+        document.querySelectorAll<HTMLButtonElement>('[data-words-lang]'),
+    );
+    let stop = (): void => undefined;
+
+    const build = (lang: string): void => {
+        stop();
+
+        for (const choice of choices) {
+            choice.setAttribute(
+                'aria-pressed',
+                String(choice.dataset.wordsLang === lang),
+            );
+        }
+
+        stop = player(host, sound, {
+            label: lang === 'pt' ? 'A onda em palavras' : 'The wave in words',
+            lang,
+            description: {
+                target: text,
+                keys: true,
+                pauseInValue: true,
+                button: true,
+            },
+        });
+    };
+
+    const listeners = choices.map((choice) => {
+        const pick = (): void => build(choice.dataset.wordsLang ?? 'en');
+        choice.addEventListener('click', pick);
+
+        return () => choice.removeEventListener('click', pick);
+    });
+    const pressed = choices.find(
+        (choice) => choice.getAttribute('aria-pressed') === 'true',
+    );
+    build(pressed?.dataset.wordsLang ?? 'en');
+
+    return () => {
+        listeners.forEach((remove) => remove());
+        stop();
+    };
+}
+
 function clipCard(): PluginCard {
     return {
         title: 'Export a clip',
@@ -459,6 +509,8 @@ function setupPage(): void {
             player(box, sound, { label: `The ${name} theme`, theme: name }),
         );
     }
+
+    mount(byId('words-player'), wordsDemo);
 
     const cards = byId('plugin-cards');
 
