@@ -173,6 +173,40 @@ icon of outline and ghost buttons) and `icon` is `var(--sonicframe-button-icon, 
 `setLook({ shape, fill, size, radius, colors })` changes any of them later, `bind(media)` follows another media,
 `on('error', listener)` hears when the browser refuses to play, and `destroy()` removes the button.
 
+## Volume control
+
+```ts
+import { VolumeControl } from 'sonicframe';
+
+const volume = VolumeControl.create({
+    container: controls,
+    media: audio,
+    slider: 'hover',
+});
+```
+
+A speaker button that mutes and unmutes (its icon shows one or two sound waves, or a cross when muted) and a bar to set
+the level. The bar is a keyboard slider (`role="slider"`; arrows move by `step`, Page Up / Page Down by a tenth, Home
+and End to the ends) that speaks the level in percent, and a press or drag sets the level under the pointer. Unmuting
+brings the level back (half volume if it was at zero). The control follows the media's own `volume` and `muted`, so
+other controls stay in step. Where the browser does not let a page set the volume (iOS), only the mute button shows.
+
+| Option      | Default    | What it does                                                                       |
+| ----------- | ---------- | ---------------------------------------------------------------------------------- |
+| `container` | (required) | The element the control is added to.                                               |
+| `media`     | `null`     | The audio or video element it controls (without one it is disabled).               |
+| `slider`    | `'always'` | `'always'` shows the bar beside the speaker; `'hover'` opens it on hover or focus. |
+| `size`      | `32`       | The speaker button (and the bar's height) in CSS pixels.                           |
+| `width`     | `80`       | The bar's width in CSS pixels.                                                     |
+| `step`      | `0.05`     | How far an arrow key moves the level (0..1).                                       |
+| `colors`    | see below  | `{ icon, track, fill }`: any CSS color or `var(--name, fallback)`.                 |
+| `labels`    | see above  | `{ mute, unmute, volume }`, the accessible names.                                  |
+
+Colors: `icon` is `var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))`, `track` is
+`var(--sonicframe-wave, #c4cad4)` and `fill` (the level and its handle) is `var(--sonicframe-progress, #2f6fdb)`.
+`setLook({ slider, size, width, colors })` changes them later, `bind(media)` follows another media, and `destroy()`
+removes the control.
+
 ## Markers
 
 ```ts
