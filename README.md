@@ -202,8 +202,10 @@ Each of these is a plugin; import it and `frame.use(it)`.
 
 - `sonicframe/analysis` (also on the main entry): `levels`, `findSilences`, `silencesFromPeaks`, `peakLevel` and
   `mixdown` — pure, safe in Node or a worker.
-- `frame.exportClip({ start, end, caption, width, height, fps })` records a short video of the wave playing (canvas +
-  MediaRecorder), capped in length, size, resolution and bitrate; it resolves with `{ blob, mimeType, duration }`.
+- `frame.exportClip({ start, end, caption, width, height, fps, signal })` records a short video of the wave playing
+  (canvas + MediaRecorder), capped in length, size, resolution and bitrate; it resolves with `{ blob, mimeType,
+  duration }`. An `AbortSignal` cancels it, download included. Call it from a user gesture (a click): browsers keep
+  audio suspended until one, and a clip whose audio never starts is rejected rather than left waiting.
 
 ## Writing a plugin
 

@@ -29,16 +29,22 @@ export function pickMimeType(
     return null;
 }
 
-/** Orders and clamps the range to the sound and to `maxSeconds`. */
+/**
+ * Orders and clamps the range to the sound and to `maxSeconds`. A start or end that is not a finite
+ * number means the sound's own start or end, so the plan is always made of finite numbers.
+ */
 export function clipPlan(
     start: number,
     end: number,
     duration: number,
     maxSeconds: number = MAX_CLIP_SECONDS,
 ): { start: number; end: number; seconds: number } {
-    const from = Math.max(0, Math.min(Math.min(start, end), duration));
-    const limit = Math.min(duration, from + Math.max(0, maxSeconds));
-    const to = Math.max(from, Math.min(Math.max(start, end), limit));
+    const length = Number.isFinite(duration) ? Math.max(0, duration) : 0;
+    const first = Number.isFinite(start) ? start : 0;
+    const last = Number.isFinite(end) ? end : length;
+    const from = Math.max(0, Math.min(Math.min(first, last), length));
+    const limit = Math.min(length, from + Math.max(0, maxSeconds));
+    const to = Math.max(from, Math.min(Math.max(first, last), limit));
 
     return { start: from, end: to, seconds: to - from };
 }
