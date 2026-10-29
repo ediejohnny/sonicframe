@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SonicFrame">
+    <rect width="64" height="64" rx="15" fill="#1f4fbf"/>
+    <path d="M32 32C49 43 34 55 20 47" fill="none" stroke="#8fb6ff" stroke-width="8" stroke-linecap="round"/>
+    <path d="M44 17C30 9 15 21 32 32" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="6.5" fill="#ffffff" stroke="#1f4fbf" stroke-width="2"/>
+</svg>
