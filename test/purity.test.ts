@@ -90,6 +90,16 @@ describe('package boundaries', () => {
         }
     });
 
+    it('keeps the player entry to the player and the core', () => {
+        // src/player.ts is the `sonicframe/player` subpath: it re-exports the player and the pure pieces
+        // it is described by (looks, palettes, fonts), so the main entry never has to carry them.
+        for (const target of imports(join(root, 'src/player.ts'))) {
+            expect(target, 'src/player.ts').toMatch(
+                /^\.\/(player|core)\/[\w-]+$/,
+            );
+        }
+    });
+
     it('reports the version of the package', () => {
         const manifest = JSON.parse(
             readFileSync(join(root, 'package.json'), 'utf8'),

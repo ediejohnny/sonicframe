@@ -187,7 +187,10 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
                 ['flex', '0 0 auto'],
                 ['padding', '0 4px'],
                 ['border-radius', '2px'],
-                ['background-color', 'rgba(0, 0, 0, 0.08)'],
+                [
+                    'background-color',
+                    'var(--sonicframe-badge, rgba(0, 0, 0, 0.08))',
+                ],
                 ['font-size', '10px'],
                 ['text-transform', 'uppercase'],
                 ['letter-spacing', '0.04em'],

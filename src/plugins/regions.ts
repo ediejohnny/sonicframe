@@ -64,7 +64,8 @@ let counter = 0;
 export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const create = options.create ?? 'shift-drag';
     const minLength = Math.max(0.01, options.minLength ?? 0.25);
-    const bandColor = options.color ?? 'rgba(47, 111, 219, 0.18)';
+    const bandColor =
+        options.color ?? 'var(--sonicframe-region, rgba(47, 111, 219, 0.18))';
     const keys = options.keys ?? true;
     const max = Math.min(200, Math.max(0, options.max ?? 200));
 
@@ -416,9 +417,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             for (const region of items) {
                 const from = clamp01(region.start / span) * paint.width;
                 const to = clamp01(region.end / span) * paint.width;
-                paint.ctx.fillStyle = region.color
-                    ? paint.color(region.color)
-                    : bandColor;
+                paint.ctx.fillStyle = paint.color(region.color || bandColor);
                 paint.ctx.fillRect(
                     from,
                     0,

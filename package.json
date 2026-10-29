@@ -11,8 +11,16 @@
         "visualization",
         "waveform"
     ],
+    "homepage": "https://github.com/ediejohnny/sonicframe#readme",
+    "bugs": {
+        "url": "https://github.com/ediejohnny/sonicframe/issues"
+    },
     "license": "MIT",
     "author": "Edie Johnny",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ediejohnny/sonicframe.git"
+    },
     "files": [
         "dist",
         "CHANGELOG.md"
@@ -28,6 +36,10 @@
         "./analysis": {
             "types": "./dist/analysis.d.ts",
             "default": "./dist/analysis.js"
+        },
+        "./player": {
+            "types": "./dist/player.d.ts",
+            "default": "./dist/player.js"
         },
         "./package.json": "./package.json"
     },

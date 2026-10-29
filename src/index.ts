@@ -66,6 +66,8 @@ export {
 } from './core/analysis';
 export {
     spectrogram,
+    type ColorStops,
+    type DecodedAudio,
     type SpectrogramPluginOptions,
 } from './plugins/spectrogram';
 export {
@@ -93,6 +95,7 @@ export {
     resample,
     type PeaksFetcher,
 } from './core/peaks';
+export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
 export { formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
 export type {
@@ -108,6 +111,8 @@ export type {
     SeekEvent,
     SeekSource,
     SonicFrameEvents,
+    WaveName,
+    WaveStyle,
 } from './types';
 
 /** The version of this build of SonicFrame. */

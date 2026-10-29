@@ -9,6 +9,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `sonicframe/player`: a ready-made player on its own entry (`createPlayer`). It lays out a play
+  button, the wave and the time, plus speed, skip, volume (off unless asked), a slot for the app's own
+  element and spacers, by a look (parts, sizes in rem, corners, border, shadow, surface, font), and
+  colors it with a palette (eight built in, `'auto'` following the system, or your own) set as
+  `--sonicframe-*` properties. Given only `src`, it makes its own media element and decodes the peaks
+  near the screen. Fonts come from system stacks or from the app (a file or a stylesheet, loaded once,
+  addresses checked); no font ships with SonicFrame.
+- Twenty-four player themes, each a whole look, palette and drawing in one option
+  (`theme: 'bubble'`): a chat voice note, a podcast card, a heartbeat monitor, an oscilloscope, a
+  level meter, 8-bit, editorial, glass, brutalist and more. The player's own options win over its
+  theme; `defineTheme` extends one, `registerTheme` names your own (built-in names are kept), and
+  `setTheme` switches later. Bar numbers from a theme are kept in range. Everything builds on the
+  `default` theme, SonicFrame as it always looked: no theme, an unknown name or a theme that extends
+  nothing ends up on it, and its `'default'` palette sets no variable, leaving the colors to SonicFrame
+  and to the page.
+- `<sonic-player>`: the player as an HTML tag, registered by `defineSonicPlayer()` (never on
+  import). Attributes (`src`, `peaks`, `theme`, `palette`, `wave`, `font`, `font-src`,
+  `font-stylesheet`, `label`, `volume`, `spectrogram`) are read as untrusted input, a changed
+  attribute updates the player, removing the element destroys it, and the player's events reach the
+  element as `sonicframe:<event>`. A player's own choices, at creation or through `setPalette`,
+  `setWave`, `setLook` and the new `setVolume`, now keep winning over a later `setTheme`.
+- The spectrogram takes its colors from your own stops (`map: { from, via, to }`, CSS colors or
+  variables, read back as numbers) and repaints its image when they change, without computing again;
+  new named maps `ice`, `fire` and `ocean`. `source` also takes a function that gives decoded audio,
+  and the player's `spectrogram: true` draws one in the palette's colors from the same decode as its
+  peaks.
+- Ten ways to draw the sound (`wave`): bars, needles, LED blocks, a dot matrix, 8-bit steps, a line, a
+  filled area, an oscilloscope trace, a heartbeat monitor, and a plain track that needs no peaks. The
+  bar style still sets their density and alignment; played, hover and unplayed colors, live
+  frequency and exported clips work with every drawing. A `knob` dot can ride the playing position
+  (`colors.knob`), lines can glow, and `setWave` changes the drawing later. Every piece stays inside
+  the frame and the number of pieces is capped.
+- Every color a plugin draws can be themed with a custom property: `--sonicframe-region` (region
+  bands), `--sonicframe-dim` (dimmed silences), `--sonicframe-badge` (caption badges) and
+  `--sonicframe-on-progress` (the marker count and tooltip text), each defaulting to the color it
+  had before.
 - `VolumeControl`: a speaker button that mutes and unmutes (the icon follows the level) beside a
   bar that sets the level. The bar is a keyboard slider that speaks the level in percent and follows
   a press or a drag; unmuting brings the level back. It follows the media's own `volume` and `muted`,

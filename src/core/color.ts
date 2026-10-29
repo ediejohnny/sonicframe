@@ -63,6 +63,31 @@ export function rgbaFromBytes(bytes: ArrayLike<number>): Rgba {
     ];
 }
 
+/** `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa` as numbers; anything else is null. */
+export function parseHex(value: string): Rgba | null {
+    const match = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(
+        value.trim(),
+    );
+
+    if (match === null) {
+        return null;
+    }
+
+    const digits = match[1];
+    const full =
+        digits.length <= 4
+            ? digits.replace(/./g, (digit) => digit + digit)
+            : digits;
+    const byte = (at: number): number => parseInt(full.slice(at, at + 2), 16);
+
+    return [
+        byte(0),
+        byte(2),
+        byte(4),
+        full.length === 8 ? Math.round((byte(6) / 255) * 1000) / 1000 : 1,
+    ];
+}
+
 export function rgbaString(color: Rgba): string {
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
 }

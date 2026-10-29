@@ -14,13 +14,20 @@ import {
     DEFAULT_MAX_SOURCE_SECONDS,
     pickMimeType,
 } from '../core/clip';
-import { barMetrics, layoutBars } from '../core/layout';
+import { barMetrics } from '../core/layout';
 import { resample } from '../core/peaks';
 import { overlayOf } from '../core/scene';
+import { DEFAULT_WAVE, knobSpot, waveShape } from '../core/shapes';
 import { cleanText } from '../core/text';
-import type { BarStyle } from '../types';
+import type { BarStyle, WaveStyle } from '../types';
 import { readCapped } from './decode';
-import { barsPath, paintBars, type Palette } from './paint';
+import {
+    drawingOf,
+    paintKnob,
+    paintWave,
+    type Drawing,
+    type Palette,
+} from './paint';
 
 const MAX_WIDTH = 1920;
 const MAX_HEIGHT = 1080;
@@ -35,8 +42,10 @@ export type ClipOptions = {
     /** Peaks to draw (0..1). */
     peaks: readonly number[];
     bar: BarStyle;
-    /** Resolved colors (no `var()`). */
-    colors: { wave: string; progress: string };
+    /** How the sound is drawn (the bars unless given). */
+    wave?: WaveStyle;
+    /** Resolved colors (no `var()`); the knob takes `progress` unless given. */
+    colors: { wave: string; progress: string; knob?: string };
     /** A caption drawn under the wave. */
     caption?: string;
     start?: number;
@@ -167,7 +176,8 @@ export async function exportClip(
     let source: AudioBufferSourceNode;
     let recorder: MediaRecorder;
     let plan: { start: number; end: number; seconds: number };
-    let path: Path2D;
+    let drawing: Drawing;
+    const wave = options.wave ?? DEFAULT_WAVE;
 
     try {
         const buffer = await toBuffer(context, options.audio, options.signal);
@@ -209,8 +219,16 @@ export async function exportClip(
             barCount,
         );
         const captionHeight = options.caption === undefined ? 0 : 28;
-        path = barsPath(
-            layoutBars(values, width, height - captionHeight, options.bar, 1),
+        drawing = drawingOf(
+            waveShape(
+                values,
+                width,
+                height - captionHeight,
+                options.bar,
+                wave,
+                1,
+            ),
+            Math.round(wave.glow),
         );
 
         // Decoding cannot be cancelled midway: a signal that fired meanwhile ends it here.
@@ -364,14 +382,21 @@ export async function exportClip(
             options.onProgress?.(Math.min(1, Math.max(0, fraction)));
 
             ctx.clearRect(0, 0, width, height);
-            paintBars(
-                ctx,
-                path,
-                overlayOf(Math.min(1, fraction), null, width),
+            const overlay = overlayOf(Math.min(1, fraction), null, width);
+            paintWave(ctx, drawing, overlay, width, waveHeight, palette);
+
+            const spot = knobSpot(
+                overlay.progress,
                 width,
                 waveHeight,
-                palette,
+                wave,
+                options.bar.align,
+                1,
             );
+
+            if (spot !== null) {
+                paintKnob(ctx, spot, options.colors.knob ?? palette.progress);
+            }
 
             if (caption !== undefined) {
                 ctx.fillStyle = palette.progress;

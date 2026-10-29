@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/logo.svg" alt="SonicFrame logo" width="72" height="72">
+
 # SonicFrame.js
 
 Audio visualization and interaction framework for the web.
@@ -67,7 +69,8 @@ number of bars that fit.
 | `peaks`          | `null`             | Peaks, or a function that loads them.                                         |
 | `duration`       | `null`             | Seconds, used until the media knows its own (or without media).               |
 | `bar`            | see below          | `{ width, gap, radius, minHeight, align, curve }` in CSS pixels.              |
-| `colors`         | see below          | `{ wave, progress, hover, cursor }`.                                          |
+| `wave`           | `'bars'`           | How the sound is drawn: a name or `{ style, lineWidth, glow, mirror, … }`.    |
+| `colors`         | see below          | `{ wave, progress, hover, cursor, knob }`.                                    |
 | `cursorWidth`    | `2`                | Width of the cursor line in CSS pixels.                                       |
 | `interact`       | `true`             | Click, drag and keys seek; `false` makes a picture only (`role="img"`).       |
 | `label`          | `'Audio position'` | The accessible name.                                                          |
@@ -83,6 +86,14 @@ Bars: `width` 3, `gap` 2, `radius` 1.5, `minHeight` 2, `align` `'center'` (or `'
 0.7 (below 1 lifts quiet sounds so speech reads well; 1 draws the peaks as they are; above 1 leaves only the loud parts
 standing out).
 
+Drawings (`wave`): `'bars'`, `'needles'` (thin lines), `'blocks'` (square LED cells), `'dots'` (a dot matrix),
+`'steps'` (an 8-bit staircase), `'line'`, `'area'`, `'scope'` (an oscilloscope trace), `'pulse'` (a heartbeat monitor)
+and `'track'` (only a track, which needs no peaks). The bar style still sets their density, curve and alignment, and the
+played, hover and unplayed colors work for all of them; live frequency and exported clips use the same drawing. Details:
+`lineWidth` 2 (line drawings and the track), `glow` 0, `mirror` `true` (the line also traces the lower edge), `smooth`
+`true` (curves instead of corners) and `knob` 0, the diameter of a dot that rides the playing position over any
+drawing. `{ style: 'track', knob: 12 }` is a plain track with a moving dot.
+
 Colors take any CSS color or `var(--name, fallback)`:
 
 - `wave`: bars not yet played, `var(--sonicframe-wave, #c4cad4)`.
@@ -93,6 +104,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 - `waveHover` / `progressHover`: recolor the unplayed and played bars while the pointer is over the frame; `'auto'`
   nudges the wave toward the played color and lightens or darkens the played color, a CSS color sets it outright, and
   `null` (the default) leaves them alone. Only the frame the pointer enters or leaves repaints.
+- `knob`: the dot riding the playing position (`wave.knob`); `null` (the default) takes `progress`.
 
 ## Methods
 
@@ -105,6 +117,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `setProgress(ratio)`   | The position shown (0..1) while no media is bound.                   |
 | `seekTo(ratio)`        | Move to a position (the media too) and emit `seek`.                  |
 | `setBar(bar)`          | Change part of the bar style.                                        |
+| `setWave(wave)`        | Change the drawing (a name) or some of its details.                  |
 | `setColors(colors)`    | Change some colors.                                                  |
 | `setLabel(label)`      | Change the accessible name.                                          |
 | `refresh()`            | Read the colors again after a theme change (dark mode is automatic). |
@@ -196,6 +209,104 @@ Colors: `icon` is `var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))
 `setLook({ slider, size, width, colors })` changes them later, `bind(media)` follows another media, and `destroy()`
 removes the control.
 
+## Player (`sonicframe/player`)
+
+```ts
+import { createPlayer } from 'sonicframe/player';
+
+const player = createPlayer({
+    container,
+    src: '/notes/42.ogg',
+    palette: 'ocean',
+    volume: true,
+});
+```
+
+One option picks a whole look, palette and drawing — a theme:
+
+```ts
+createPlayer({ container, src, theme: 'bubble' });
+createPlayer({ container, src, theme: 'pulse', palette: 'ocean' }); // your own options win over the theme
+```
+
+Themes: `default` (SonicFrame as it always looked; no theme, or a name that does not exist, gives this one),
+`bubble` (a chat voice note), `pill`, `blocky`, `card` (a podcast card), `minimal`, `terminal`, `pulse` (a
+heartbeat monitor), `scope` (an oscilloscope), `neon`, `glass`, `soft`, `brutal`, `studio`, `retro` (8-bit), `dots`,
+`paper` (editorial), `bold`, `stream`, `led` (a level meter), `smooth`, `compact`, `bubbly`, `mono` and `classic`. Each
+has its own palette and wears any other. Make your own from one with
+`defineTheme({ extends: 'bubble', palette: 'dark', look: { corner: 0 } })`, or give it a name every player can use
+with `registerTheme('brand-note', { extends: 'pill', wave: { knob: 14 } })` (built-in names cannot be replaced).
+`player.setTheme(name)` switches later; the options the player was created with still win.
+
+A ready-made player on its own entry, so an app that only draws waves never loads it. It puts a play button, the wave
+and the time together, plus any of these parts: `speed` (steps through `1×`, `1.5×`, `2×`), `back` and `forward`
+(skip seconds), `volume` (the `VolumeControl`, **off unless `volume: true`**), `slot` (your own element, such as an
+avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
+the browser when it first comes near the screen (`peaks` skips that).
+
+| Option        | Default     | What it does                                                                       |
+| ------------- | ----------- | ---------------------------------------------------------------------------------- |
+| `container`   | (required)  | The element the player is added to.                                                |
+| `src`         | none        | The sound's address; the player makes its own `<audio>`.                           |
+| `media`       | none        | Your own audio or video element instead.                                           |
+| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                            |
+| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.              |
+| `look`        | see below   | How the player is put together.                                                    |
+| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).             |
+| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                      |
+| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).               |
+| `volume`      | `false`     | Show the volume control.                                                           |
+| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once). |
+| `slot`        | none        | Your element for the `slot` part.                                                  |
+| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                        |
+
+The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
+(`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
+(`{ shape, fill, size }`), `waveHeight`, `corner`, `padding`, `gap` (rem), `border` (CSS pixels), `shadow` (`'none'`,
+`'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`, `'none'`), `font`, `fontSize`, `weight`, `uppercase`,
+`skip` (seconds), `speeds` and `volume` (`'always'` or `'hover'`). Unknown names fall back and numbers are kept in
+range.
+
+Palettes: `light`, `dark`, `ocean`, `forest`, `sunset`, `berry`, `paper` and `contrast`, each checked for readable text
+and visible controls (WCAG contrast). A palette is set as `--sonicframe-*` custom properties on the player, so plain CSS
+can still override one color; shadows and the glass surface are built from colors read back as numbers. `'auto'` is
+`light` or `dark`, following the system; `'default'` (the default theme's) sets no variable at all, so SonicFrame's
+own colors and any `--sonicframe-*` your page sets show, as without a player. An unknown name falls back to it.
+
+Fonts: SonicFrame ships no font files. The stacks (`system`, `rounded`, `mono`, `serif`, `humanist`, `geometric`,
+`industrial`, `slab`, `handwritten`) name fonts already on the device. To use another font, bring it:
+`font: { family: 'Brand Sans', src: '/fonts/brand.woff2' }` (a file) or `stylesheet:` (a font service's CSS address).
+It loads once per page, the system stack stays behind it, and an address is used only when it is http(s) or a
+relative path; your Content-Security-Policy decides the rest.
+
+`setTheme`, `setLook`, `setPalette`, `setWave`, `setFont` and `setVolume` change a player later (your own choices keep
+winning over the theme; `setPalette()`, `setWave()` or `setFont()` with nothing brings the theme's back);
+`on(event, listener)` hears the wave's events; `player.frame`, `player.button` and `player.volume` reach the parts;
+`destroy()` gives the container back (a media element the player made is stopped, yours is left alone).
+
+### As an HTML tag
+
+```html
+<sonic-player
+    src="/notes/42.ogg"
+    theme="bubble"
+    palette="ocean"
+    volume
+></sonic-player>
+
+<script type="module">
+    import { defineSonicPlayer } from 'sonicframe/player';
+    defineSonicPlayer(); // once; nothing is registered just by importing
+</script>
+```
+
+Attributes: `src`, `peaks` (the address of a peaks file), `theme`, `palette`, `wave`, `font`, `font-src`,
+`font-stylesheet`, `label`, and the switches `volume` and `spectrogram`. They are read as untrusted input: an unknown
+name falls back to the default theme, text goes in only as text, and a font address is used only when it is safe.
+Changing an attribute updates the player; removing the element destroys it, and putting it back builds it again. The
+player's events reach the element as `sonicframe:seek`, `sonicframe:timeupdate`, `sonicframe:error`… with their
+arguments in `event.detail`. `defineSonicPlayer('my-player')` registers it under another name.
+
 ## Markers
 
 ```ts
@@ -230,7 +341,10 @@ Each of these is a plugin; import it and `frame.use(it)`.
   below the bars.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
   browser with a dependency-free FFT, in slices so it never freezes, and only once the frame is near the screen
-  (like the peaks); color maps `viridis`, `magma`, `gray`.
+  (like the peaks). Color maps: `viridis`, `magma` (the default), `gray`, `ice`, `fire`, `ocean`, or your own colors
+  from quiet to loud, `{ from, via, to }` (any CSS color or `var(--name, fallback)`, so a theme's palette works); when
+  those colors change after `refresh()`, the image is repainted without computing again. `source` also takes a function
+  that gives decoded audio, so the app can share one decode.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
   Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
 - **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback, landing
@@ -274,6 +388,22 @@ The container becomes a slider (`role="slider"`, focusable, `aria-valuenow` from
 words) and gets `touch-action: pan-y`, so a vertical swipe still scrolls the page. Style its focus ring with
 `:focus-visible`. Keys: arrows step by `stepSeconds`, Page Up / Page Down by `largeStepRatio`, Home and End jump to
 the ends; keys held with Ctrl, Alt or Meta are left to the page.
+
+Every color SonicFrame draws can come from a custom property, so plain CSS on any ancestor themes the frame, the
+button and all plugins:
+
+| Property                   | Default                    | Used for                                |
+| -------------------------- | -------------------------- | --------------------------------------- |
+| `--sonicframe-wave`        | `#c4cad4`                  | Bars not yet played.                    |
+| `--sonicframe-progress`    | `#2f6fdb`                  | Bars played; tooltips of the plugins.   |
+| `--sonicframe-button`      | the progress color         | The play button.                        |
+| `--sonicframe-button-icon` | `#fff`                     | The icon on the play button.            |
+| `--sonicframe-on-progress` | `#ffffff`                  | Text over the played color and markers. |
+| `--sonicframe-marker`      | `#e5484d`                  | Markers.                                |
+| `--sonicframe-timeline`    | `#8a94a6`                  | The timeline ruler.                     |
+| `--sonicframe-region`      | `rgba(47, 111, 219, 0.18)` | The band of a region.                   |
+| `--sonicframe-dim`         | `rgba(0, 0, 0, 0.12)`      | Dimmed silences (`skipSilences`).       |
+| `--sonicframe-badge`       | `rgba(0, 0, 0, 0.08)`      | The badges of a caption.                |
 
 ## Many players on one page
 

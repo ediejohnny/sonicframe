@@ -3,228 +3,202 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>SonicFrame playground</title>
-        <style>
-            :root {
-                --background: #f5f6f8;
-                --post: #e6e9ee;
-                --post-border: #c2cad6;
-                --voice: #4d6d94;
-                --button: #4d6d94;
-                --wave-idle: #c2cad6;
-                --wave-progress: #4d6d94;
-                --record: #b8372c;
-                --muted: #5c6676;
-                --ring: #24406e;
-                color-scheme: light;
-            }
-
-            * {
-                box-sizing: border-box;
-            }
-
-            body {
-                margin: 0;
-                padding: 16px;
-                background: var(--background);
-                color: #1f2530;
-                font:
-                    13px Arial,
-                    Helvetica,
-                    sans-serif;
-            }
-
-            header {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                align-items: center;
-                margin-bottom: 8px;
-            }
-
-            h1 {
-                margin: 0 12px 0 0;
-                font-size: 16px;
-            }
-
-            h2 {
-                margin: 18px 0 8px;
-                font-size: 14px;
-            }
-
-            h3 {
-                margin: 0 0 6px;
-                font-size: 12px;
-                color: var(--muted);
-            }
-
-            a {
-                color: var(--ring);
-            }
-
-            .note {
-                margin: 0 0 8px;
-                color: var(--muted);
-            }
-
-            .btn {
-                display: inline-flex;
-                gap: 6px;
-                align-items: center;
-                justify-content: center;
-                height: 28px;
-                padding: 0 8px;
-                border: 1px solid var(--post-border);
-                border-radius: 0.2rem;
-                background: #fff;
-                color: var(--ring);
-                font: inherit;
-                cursor: pointer;
-            }
-
-            .btn input[type='color'] {
-                width: 22px;
-                height: 18px;
-                padding: 0;
-                border: 0;
-                background: none;
-                cursor: pointer;
-            }
-
-            .cards {
-                display: grid;
-                grid-template-columns: repeat(
-                    auto-fill,
-                    minmax(min(100%, 470px), 1fr)
-                );
-                gap: 8px;
-            }
-
-            .post {
-                padding: 8px 10px;
-                border: 1px solid var(--post-border);
-                border-radius: 0.2rem;
-                background: var(--post);
-            }
-
-            .player {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                width: 100%;
-                max-width: 448px;
-            }
-
-            .wave {
-                flex: 1;
-                height: 32px;
-                outline: none;
-            }
-
-            .wave:focus-visible {
-                outline: 1px solid var(--ring);
-                outline-offset: 1px;
-            }
-
-            .time {
-                flex-shrink: 0;
-                min-width: 92px;
-                color: var(--muted);
-                font:
-                    12px 'Courier New',
-                    monospace;
-            }
-
-            #grid {
-                display: grid;
-                grid-template-columns: repeat(
-                    auto-fill,
-                    minmax(min(100%, 300px), 1fr)
-                );
-                gap: 6px;
-                padding: 8px;
-                border: 1px solid var(--post-border);
-                border-radius: 0.2rem;
-                background: var(--post);
-            }
-
-            footer {
-                margin-top: 18px;
-                padding-top: 10px;
-                border-top: 1px solid var(--post-border);
-                color: var(--muted);
-            }
-
-            #fps {
-                position: fixed;
-                right: 12px;
-                bottom: 12px;
-                padding: 4px 8px;
-                border-radius: 0.2rem;
-                background: #1f2530;
-                color: #fff;
-                font:
-                    12px 'Courier New',
-                    monospace;
-            }
-        </style>
+        <title>SonicFrame</title>
+        <meta
+            name="description"
+            content="SonicFrame draws sound on the web: waveforms, ready-made players, spectrograms and more, with no dependencies."
+        />
+        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
+        <link rel="stylesheet" href="./site.css" />
     </head>
     <body>
-        <header>
-            <h1>SonicFrame playground</h1>
-            <button id="play" class="btn" type="button">Play all</button>
-            <button id="speed" class="btn" type="button">Speed 1×</button>
-            <label class="btn">
-                Use a local file…
-                <input id="file" type="file" accept="audio/*" hidden />
-            </label>
-            <label class="btn">
-                Waveform
-                <input id="color-wave" type="color" value="#c2cad6" />
-            </label>
-            <label class="btn">
-                Played
-                <input id="color-voice" type="color" value="#4d6d94" />
-            </label>
-            <label class="btn">
-                Button
-                <input id="color-button" type="color" value="#4d6d94" />
-            </label>
-            <button id="reset" class="btn" type="button">Reset colors</button>
+        <header class="top">
+            <div class="wrap">
+                <a class="brand" href="./">
+                    <img src="../assets/logo.svg" alt="" />
+                    SonicFrame
+                    <span class="version" data-version></span>
+                </a>
+                <nav class="nav" aria-label="Main">
+                    <a href="#use">Install</a>
+                    <a href="#drawings">Drawings</a>
+                    <a href="./themes.html">Themes</a>
+                    <a href="#plugins">Plugins</a>
+                    <a href="https://github.com/ediejohnny/sonicframe"
+                        >GitHub</a
+                    >
+                    <a href="https://www.npmjs.com/package/sonicframe">npm</a>
+                    <button
+                        id="scheme"
+                        class="button small"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Dark
+                    </button>
+                </nav>
+            </div>
         </header>
-        <p class="note">
-            Playing: <span id="source">…</span> · <span id="density"></span>
-        </p>
-        <p class="note">
-            Every player plays the same sound. Click or drag on a waveform to
-            seek; focus one with Tab and use the arrow keys, Page Up / Page
-            Down, Home and End. Try the browser zoom at 100 %, 125 % and 150 %.
-        </p>
 
-        <h2>Play buttons</h2>
-        <section id="buttons" class="cards"></section>
+        <main class="wrap">
+            <section class="hero" aria-labelledby="title">
+                <h1 id="title">Draw sound on the web.</h1>
+                <p class="lede">
+                    SonicFrame draws a sound on a canvas, follows it while it
+                    plays, and lets people seek with a click, a drag or the
+                    keyboard. No dependencies, any framework, a strict
+                    Content-Security-Policy.
+                </p>
+                <div class="stage" id="hero-player"></div>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
+                    </button>
+                    <input id="file" type="file" accept="audio/*" hidden />
+                </div>
+            </section>
 
-        <h2>Bar styles</h2>
-        <section id="bars" class="cards"></section>
+            <section class="section" id="use" aria-labelledby="use-title">
+                <h2 id="use-title">Install</h2>
+                <p class="lede">
+                    One package, nothing else to install. Use the player from
+                    JavaScript, or write it as a tag.
+                </p>
+                <div class="code install">
+                    <pre><code>npm install sonicframe</code></pre>
+                    <button class="button small" type="button">Copy</button>
+                </div>
+                <div class="snippets more">
+                    <div class="snippet">
+                        <h3>In JavaScript</h3>
+                        <div class="code">
+                            <pre><code>import { createPlayer } from 'sonicframe/player';
 
-        <h2>60 players at once (bars D, quiet parts lifted)</h2>
-        <section id="grid"></section>
+createPlayer({
+    container: document.querySelector('#voice'),
+    src: '/voice.mp3',
+    theme: 'bubble',
+});</code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="snippet">
+                        <h3>As an HTML tag</h3>
+                        <div class="code">
+                            <pre><code>&lt;sonic-player src="/voice.mp3" theme="bubble"&gt;
+&lt;/sonic-player&gt;
 
-        <footer>
-            Sound: “The Little Elf”, a poem by John Kendrick Bangs, read by
-            <a href="https://librivox.org/reader/1252">Avery</a> for LibriVox’s
-            <a href="https://librivox.org/short-poetry-collection-026/"
-                >Short Poetry Collection 026</a
+&lt;script type="module"&gt;
+    import { defineSonicPlayer } from 'sonicframe/player';
+    defineSonicPlayer();
+&lt;/script&gt;</code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                        <sonic-player
+                            id="tag-player"
+                            class="live-tag"
+                            theme="bubble"
+                            label="The tag, live"
+                        ></sonic-player>
+                        <p class="note">
+                            This player is the tag above, on this page.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="section"
+                id="drawings"
+                aria-labelledby="drawings-title"
             >
-            (<a href="https://archive.org/details/shortpoetry_026_librivox"
-                >archive.org</a
-            >). LibriVox recordings are in the
-            <a href="https://librivox.org/pages/public-domain/">public domain</a
-            >. Thank you, Avery and LibriVox.
+                <h2 id="drawings-title">Ten ways to draw the sound</h2>
+                <p class="lede">
+                    Every drawing takes the played, hover and unplayed colors,
+                    and any of them can carry a knob at the playhead.
+                </p>
+                <div class="shelf" id="drawing-shelf"></div>
+            </section>
+
+            <section class="section" id="themes" aria-labelledby="themes-title">
+                <h2 id="themes-title">Themes</h2>
+                <p class="lede">
+                    A whole player in one word: the layout, the button, the
+                    drawing, the font and a palette. Any theme wears any of the
+                    eight palettes.
+                </p>
+                <div class="shelf" id="theme-shelf"></div>
+                <p class="more">
+                    <a class="button main" href="./themes.html"
+                        >See all 24 themes in 8 palettes</a
+                    >
+                </p>
+            </section>
+
+            <section
+                class="section"
+                id="plugins"
+                aria-labelledby="plugins-title"
+            >
+                <h2 id="plugins-title">Plugins and controls</h2>
+                <p class="lede">
+                    Plugins draw under or over the wave and can take the pointer
+                    and the keyboard. Each one below is on its own player; press
+                    play on any of them.
+                </p>
+                <div class="plugins" id="plugin-cards"></div>
+            </section>
+
+            <section class="section" id="load" aria-labelledby="load-title">
+                <h2 id="load-title">Sixty at once</h2>
+                <p class="lede">
+                    Pages with long lists of recordings stay smooth: frames draw
+                    only near the screen, and one shared loop moves every
+                    playhead. Draw sixty waves on one sound and watch the frame
+                    rate.
+                </p>
+                <div class="load">
+                    <button id="crowd-toggle" class="button" type="button">
+                        Draw 60 waves
+                    </button>
+                    <span id="crowd-play"></span>
+                    <span id="fps" class="fps" aria-live="off"></span>
+                </div>
+                <div id="crowd" class="crowd"></div>
+            </section>
+        </main>
+
+        <footer class="foot" id="credits">
+            <div class="wrap">
+                <p>
+                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
+                    by <a href="https://librivox.org/reader/1252">Avery</a> for
+                    LibriVox’s
+                    <a href="https://librivox.org/short-poetry-collection-026/"
+                        >Short Poetry Collection 026</a
+                    >
+                    (<a
+                        href="https://archive.org/details/shortpoetry_026_librivox"
+                        >archive.org</a
+                    >). LibriVox recordings are in the
+                    <a href="https://librivox.org/pages/public-domain/"
+                        >public domain</a
+                    >. Thank you, Avery and LibriVox.
+                </p>
+                <p>
+                    SonicFrame is free software under the MIT license.
+                    <a href="https://github.com/ediejohnny/sonicframe"
+                        >Source on GitHub</a
+                    >.
+                </p>
+            </div>
         </footer>
 
-        <div id="fps">… fps</div>
-        <audio id="audio" preload="auto"></audio>
         <script type="module" src="./main.ts"></script>
     </body>
 </html>

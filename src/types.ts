@@ -29,6 +29,37 @@ export type BarStyle = {
 };
 
 /**
+ * How the sound is drawn: bars, thin needles, square LED blocks, a dot matrix, 8-bit steps, a line,
+ * a filled area, an oscilloscope trace, a heartbeat monitor, or only a track (no peaks needed).
+ */
+export type WaveName =
+    | 'bars'
+    | 'needles'
+    | 'blocks'
+    | 'dots'
+    | 'steps'
+    | 'line'
+    | 'area'
+    | 'scope'
+    | 'pulse'
+    | 'track';
+
+/** The drawing and its details. Sizes are in CSS pixels; `bar` still sets the density and the ends. */
+export type WaveStyle = {
+    style: WaveName;
+    /** Thickness of the line drawings (line, scope, pulse) and of the track. */
+    lineWidth: number;
+    /** A soft glow around the drawing; 0 draws none. */
+    glow: number;
+    /** The line drawing also traces the lower edge of the sound. */
+    mirror: boolean;
+    /** Curves instead of corners for the line, the area and the scope. */
+    smooth: boolean;
+    /** Diameter of a dot riding the playing position; 0 draws none. */
+    knob: number;
+};
+
+/**
  * Colors take any CSS color, or `var(--name)` / `var(--name, fallback)` to follow the page's theme
  * (read again by `refresh()`).
  */
@@ -54,6 +85,8 @@ export type Colors = {
      * a color sets it outright, null (the default) leaves `progress` as it is.
      */
     progressHover: string | null;
+    /** The dot riding the playing position (`wave.knob`); null takes `progress`. */
+    knob: string | null;
 };
 
 /** What started a seek. */

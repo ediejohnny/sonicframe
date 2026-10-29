@@ -57,6 +57,9 @@ export type MarkersPlugin = Plugin & {
 const MAX_MARKS = 2000;
 const TOOLTIP_LINES = 5;
 
+/** Text over the played color and the markers: the pill's count and the tooltip. */
+const ON_PROGRESS = 'var(--sonicframe-on-progress, #ffffff)';
+
 /**
  * Where each marker line goes, in device pixels: centered on its moment and never outside the frame.
  * Moments that are not finite numbers are skipped.
@@ -291,7 +294,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                     '#2f6fdb';
                 sharedTooltip().show(frame.container, lines, {
                     background,
-                    text: '#ffffff',
+                    text: frame.color(ON_PROGRESS) || '#ffffff',
                 });
                 openedTooltip = true;
             }
@@ -376,6 +379,6 @@ function paintPill(
     );
     ctx.fillStyle = color;
     ctx.fillRect(x, 0, width, height);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = paint.color(ON_PROGRESS) || '#ffffff';
     ctx.fillText(text, x + width / 2, height / 2);
 }

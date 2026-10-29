@@ -14,6 +14,15 @@ describe('colormap', () => {
         expect([gray[765], gray[766], gray[767]]).toEqual([255, 255, 255]);
     });
 
+    it('has ice, fire and ocean maps, each its own', () => {
+        const tables = (['ice', 'fire', 'ocean', 'magma'] as const).map(
+            (name) => Array.from(colormap(name)).join(','),
+        );
+
+        expect(new Set(tables).size).toBe(4);
+        expect(colormap('fire')).toHaveLength(768);
+    });
+
     it('interpolates between anchors', () => {
         const table = buildColormap([
             [0, 0, 0],

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>SonicFrame themes</title>
+        <meta
+            name="description"
+            content="Every SonicFrame player theme in every palette, with the code for each."
+        />
+        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
+        <link rel="stylesheet" href="./site.css" />
+    </head>
+    <body>
+        <header class="top">
+            <div class="wrap">
+                <a class="brand" href="./">
+                    <img src="../assets/logo.svg" alt="" />
+                    SonicFrame
+                    <span class="version" data-version></span>
+                </a>
+                <nav class="nav" aria-label="Main">
+                    <a href="./#use">Install</a>
+                    <a href="./#drawings">Drawings</a>
+                    <a href="./themes.html" aria-current="page">Themes</a>
+                    <a href="./#plugins">Plugins</a>
+                    <a href="https://github.com/ediejohnny/sonicframe"
+                        >GitHub</a
+                    >
+                    <a href="https://www.npmjs.com/package/sonicframe">npm</a>
+                    <button
+                        id="scheme"
+                        class="button small"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Dark
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="wrap">
+            <section class="gallery-head" aria-labelledby="title">
+                <h1 id="title">Themes</h1>
+                <p class="lede">
+                    Twenty-four themes, each in all eight palettes. Every player
+                    here plays the same sound, so they all move together. Touch
+                    one to get its code below the grid.
+                </p>
+
+                <div class="toolbar">
+                    <div class="field">
+                        <span id="sets-label">Themes</span>
+                        <div
+                            id="sets"
+                            class="tabs"
+                            role="group"
+                            aria-labelledby="sets-label"
+                        ></div>
+                    </div>
+                    <label class="field">
+                        Drawing
+                        <select id="wave"></select>
+                    </label>
+                    <label class="field">
+                        Font
+                        <select id="font"></select>
+                    </label>
+                    <label class="check">
+                        <input id="volume" type="checkbox" />
+                        Volume
+                    </label>
+                    <button id="pick" class="button" type="button">
+                        Use your own sound
+                    </button>
+                    <input id="file" type="file" accept="audio/*" hidden />
+                </div>
+                <p id="source" class="note" aria-live="polite">
+                    Loading the sound…
+                </p>
+            </section>
+
+            <div class="grid-box">
+                <div id="grid" class="grid"></div>
+            </div>
+
+            <section class="picked" aria-labelledby="picked-title">
+                <h2 id="picked-title">The player you picked</h2>
+                <p id="picked-name" class="note"></p>
+                <div class="snippets">
+                    <div class="snippet">
+                        <h3>In JavaScript</h3>
+                        <div class="code">
+                            <pre><code id="picked-js"></code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="snippet">
+                        <h3>As an HTML tag</h3>
+                        <div class="code">
+                            <pre><code id="picked-tag"></code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="foot">
+            <div class="wrap">
+                <p>
+                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
+                    by <a href="https://librivox.org/reader/1252">Avery</a> for
+                    LibriVox (public domain).
+                    <a href="./#credits">Full credits on the main page</a>.
+                </p>
+            </div>
+        </footer>
+
+        <script type="module" src="./themes.ts"></script>
+    </body>
+</html>
