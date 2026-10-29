@@ -32,6 +32,13 @@ import {
 import { peaksFromChannel } from '../core/peaks';
 import { DEFAULT_WAVE, resolveWave } from '../core/shapes';
 import { cleanText } from '../core/text';
+import {
+    defineTheme,
+    findTheme,
+    themeParts,
+    type Theme,
+    type ThemeInput,
+} from '../core/theme';
 import type {
     BarStyle,
     PeaksSource,
@@ -56,7 +63,12 @@ export type PlayerOptions = {
     peaks?: PeaksSource;
     /** Duration in seconds, used until the media knows its own. */
     duration?: number | null;
-    /** How the player is put together (parts, sizes, finish); laid over the default look. */
+    /**
+     * A whole player in one name (`'bubble'`, `'pulse'`, a name you registered) or one made with
+     * `defineTheme`. The options below win over it.
+     */
+    theme?: string | ThemeInput;
+    /** How the player is put together (parts, sizes, finish); laid over the theme's look. */
     look?: Partial<PlayerLook>;
     /** A palette by name, `'auto'` (light or dark, following the system), or your own colors. */
     palette?: PaletteName | 'auto' | Palette;
@@ -157,10 +169,11 @@ export class Player {
     private readonly options: PlayerOptions;
     private readonly events = new Emitter<PlayerEvents>();
     private readonly abort = new AbortController();
-    private look: PlayerLook;
-    private palette: PaletteName | 'auto' | Palette;
+    private look: PlayerLook = DEFAULT_LOOK;
+    private palette: PaletteName | 'auto' | Palette = 'light';
     private colors: Palette = PALETTES.light;
-    private wave: WaveName | Partial<WaveStyle> | undefined;
+    private wave: Partial<WaveStyle> = {};
+    private bar: Partial<BarStyle> = {};
     private font: FontChoice | undefined;
     private frameRef: SonicFrame | null = null;
     private buttonRef: PlayButton | null = null;
@@ -177,9 +190,7 @@ export class Player {
         }
 
         this.options = options;
-        this.look = resolveLook(DEFAULT_LOOK, options.look);
-        this.palette = options.palette ?? 'light';
-        this.wave = options.wave;
+        this.applyTheme(this.pickTheme(options.theme));
         this.font = options.font;
 
         this.element = document.createElement('div');
@@ -226,6 +237,19 @@ export class Player {
         return this.events.on(event, listener);
     }
 
+    /**
+     * Switches to another theme (a name, or one made with `defineTheme`). The options the player was
+     * created with still win over it.
+     */
+    setTheme(theme: string | ThemeInput): void {
+        if (!this.destroyed) {
+            this.applyTheme(this.pickTheme(theme));
+            this.build();
+            this.applyPalette();
+            this.applyFont();
+        }
+    }
+
     /** Changes how the player is put together (and rebuilds it). */
     setLook(look: Partial<PlayerLook>): void {
         if (!this.destroyed) {
@@ -247,8 +271,8 @@ export class Player {
     setWave(wave: WaveName | Partial<WaveStyle>): void {
         if (!this.destroyed) {
             this.wave =
-                typeof wave === 'string' || typeof this.wave === 'string'
-                    ? wave
+                typeof wave === 'string'
+                    ? { ...this.wave, style: wave }
                     : { ...this.wave, ...wave };
             this.frameRef?.setWave(wave);
         }
@@ -281,6 +305,53 @@ export class Player {
         this.element.remove();
         this.events.emit('destroy');
         this.events.clear();
+    }
+
+    /** A theme by name or definition; an unknown name gives none, and is reported once listeners can hear it. */
+    private pickTheme(choice: string | ThemeInput | undefined): Theme | null {
+        if (choice === undefined) {
+            return null;
+        }
+
+        if (typeof choice !== 'string') {
+            return defineTheme(choice);
+        }
+
+        const theme = findTheme(choice);
+
+        if (theme === null) {
+            this.later(
+                new Error(
+                    `sonicframe: unknown theme "${cleanText(choice, 40)}"`,
+                ),
+            );
+        }
+
+        return theme;
+    }
+
+    /** The theme under the player's own options. */
+    private applyTheme(theme: Theme | null): void {
+        const parts = themeParts(theme, {
+            look: this.options.look,
+            palette: this.options.palette,
+            wave: this.options.wave,
+            bar: this.options.bar,
+        });
+
+        this.look = parts.look;
+        this.palette = parts.palette;
+        this.wave = parts.wave;
+        this.bar = parts.bar;
+    }
+
+    /** Reports an error after the current task, so a listener added right after creation hears it. */
+    private later(error: Error): void {
+        queueMicrotask(() => {
+            if (!this.destroyed) {
+                this.frameRef?.reportError(error);
+            }
+        });
     }
 
     private makeMedia(): HTMLMediaElement {
@@ -371,7 +442,7 @@ export class Player {
             peaks,
             duration: this.options.duration ?? null,
             wave: this.wave,
-            bar: this.options.bar,
+            bar: this.bar,
             plugins: this.options.plugins,
             colors: { knob: KNOB, ...this.options.frame?.colors },
         });
@@ -710,7 +781,7 @@ export class Player {
         const palette = pickPalette(choice, false);
 
         if (palette === null) {
-            this.frameRef?.reportError(
+            this.later(
                 new Error(
                     `sonicframe: unknown palette "${cleanText(choice, 40)}"`,
                 ),

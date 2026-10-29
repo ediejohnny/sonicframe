@@ -220,6 +220,21 @@ const player = createPlayer({
 });
 ```
 
+One option picks a whole look, palette and drawing — a theme:
+
+```ts
+createPlayer({ container, src, theme: 'bubble' });
+createPlayer({ container, src, theme: 'pulse', palette: 'ocean' }); // your own options win over the theme
+```
+
+Themes: `bubble` (a chat voice note), `pill`, `blocky`, `card` (a podcast card), `minimal`, `terminal`, `pulse` (a
+heartbeat monitor), `scope` (an oscilloscope), `neon`, `glass`, `soft`, `brutal`, `studio`, `retro` (8-bit), `dots`,
+`paper` (editorial), `bold`, `stream`, `led` (a level meter), `smooth`, `compact`, `bubbly`, `mono` and `classic`. Each
+has its own palette and wears any other. Make your own from one with
+`defineTheme({ extends: 'bubble', palette: 'dark', look: { corner: 0 } })`, or give it a name every player can use
+with `registerTheme('brand-note', { extends: 'pill', wave: { knob: 14 } })` (built-in names cannot be replaced).
+`player.setTheme(name)` switches later; the options the player was created with still win.
+
 A ready-made player on its own entry, so an app that only draws waves never loads it. It puts a play button, the wave
 and the time together, plus any of these parts: `speed` (steps through `1×`, `1.5×`, `2×`), `back` and `forward`
 (skip seconds), `volume` (the `VolumeControl`, **off unless `volume: true`**), `slot` (your own element, such as an
@@ -232,6 +247,7 @@ the browser when it first comes near the screen (`peaks` skips that).
 | `src`       | none       | The sound's address; the player makes its own `<audio>`.                            |
 | `media`     | none       | Your own audio or video element instead.                                            |
 | `peaks`     | decoded    | Peaks or a loader, as for `SonicFrame`.                                             |
+| `theme`     | none       | A theme name (built-in or registered) or one made with `defineTheme`.               |
 | `look`      | see below  | How the player is put together.                                                     |
 | `palette`   | `'light'`  | A palette name, `'auto'` (light or dark, following the system), or your own colors. |
 | `wave`      | `'bars'`   | How the sound is drawn (as for `SonicFrame`).                                       |

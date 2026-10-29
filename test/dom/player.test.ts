@@ -7,7 +7,12 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { createPlayer, PALETTES, type Player } from '../../src/player';
+import {
+    createPlayer,
+    PALETTES,
+    registerTheme,
+    type Player,
+} from '../../src/player';
 import { boxOf, fakeMedia, nextFrame } from './helpers';
 import { triggerResize, triggerVisible } from './fakes';
 
@@ -42,6 +47,88 @@ function root(): HTMLElement {
 
     return element;
 }
+
+/** The palette the player wears, read back from its surface color. */
+function surface(): string {
+    return root().style.getPropertyValue('--sonicframe-surface');
+}
+
+/** Whether the wave sits on its own line above the controls (the first line then has no button). */
+function waveOnTop(): boolean {
+    const first = root().firstElementChild;
+
+    return (
+        first?.querySelector('canvas') != null &&
+        first.querySelector('.sonicframe-play') === null
+    );
+}
+
+describe('themes on the player', () => {
+    it('wears a theme by name: its palette, font and layout', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            theme: 'studio',
+        });
+
+        expect(surface()).toBe(PALETTES.dark.surface);
+        expect(root().style.getPropertyValue('font-family')).toContain(
+            'ui-monospace',
+        );
+        expect(waveOnTop()).toBe(true);
+    });
+
+    it('lets its own options win over the theme', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            theme: 'studio',
+            palette: 'ocean',
+            look: { wavePlace: 'inline' },
+        });
+
+        expect(surface()).toBe(PALETTES.ocean.surface);
+        expect(waveOnTop()).toBe(false);
+    });
+
+    it('reports an unknown theme and keeps the defaults', async () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            theme: 'lava',
+        });
+        const errors: unknown[] = [];
+        player.on('error', (error) => errors.push(error));
+        await Promise.resolve();
+
+        expect(String(errors[0])).toContain('unknown theme');
+        expect(surface()).toBe(PALETTES.light.surface);
+    });
+
+    it('switches to another theme later', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            theme: 'bubble',
+        });
+        expect(waveOnTop()).toBe(false);
+
+        player.setTheme('card');
+
+        expect(waveOnTop()).toBe(true);
+    });
+
+    it('wears a theme the app registered', () => {
+        registerTheme('brand-test', { extends: 'pulse', palette: 'berry' });
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            theme: 'brand-test',
+        });
+
+        expect(surface()).toBe(PALETTES.berry.surface);
+    });
+});
 
 describe('the player', () => {
     it('builds its own media, a play button, the wave and the time', () => {

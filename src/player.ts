@@ -13,6 +13,14 @@ export {
     type PlayerLook,
 } from './core/look';
 export {
+    defineTheme,
+    findTheme,
+    registerTheme,
+    type Theme,
+    type ThemeInput,
+} from './core/theme';
+export { THEME_NAMES, THEMES, type ThemeName } from './core/themes';
+export {
     PALETTE_NAMES,
     PALETTES,
     paletteVariables,
