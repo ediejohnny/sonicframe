@@ -61,6 +61,20 @@ describe('the spectrogram plugin', () => {
         );
     });
 
+    it('downloads nothing until the frame comes near the screen', async () => {
+        const downloads = endlessDownloads();
+        mounted = mount({ plugins: [spectrogram({ source: '/voice.mp3' })] });
+        triggerResize(mounted.canvas, { width: 200, height: 40 });
+        await nextFrame();
+
+        expect(downloads).toHaveLength(0);
+
+        triggerVisible(mounted.canvas, true);
+        await nextFrame();
+
+        expect(downloads).toHaveLength(1);
+    });
+
     it('stops downloading the audio when the frame is destroyed', async () => {
         const downloads = endlessDownloads();
         mounted = mount({

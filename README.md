@@ -193,7 +193,8 @@ Each of these is a plugin; import it and `frame.use(it)`.
 - **`timeline({ side, size, minSpacing })`** — a ruler with labels on round seconds and minutes, in a lane above or
   below the bars.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
-  browser with a dependency-free FFT, in slices so it never freezes; color maps `viridis`, `magma`, `gray`.
+  browser with a dependency-free FFT, in slices so it never freezes, and only once the frame is near the screen
+  (like the peaks); color maps `viridis`, `magma`, `gray`.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
   Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
 - **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback.
