@@ -9,7 +9,7 @@
 import { silencesFromPeaks, type Silence } from './analysis';
 import { localeFor, resolveLanguage, type Language } from './language';
 import { normalize, resample } from './peaks';
-import { cleanText } from './text';
+import { cleanText, fillTemplate } from './text';
 import { formatTime } from './timing';
 
 /** A stretch with sound, in seconds. */
@@ -459,13 +459,6 @@ function spoken(seconds: number, locale: string, length: boolean): string {
         : both(said, amount(rest, 'minute', locale), locale);
 }
 
-function fill(template: string, values: Record<string, string>): string {
-    return template.replace(
-        /\{(\w+)\}/g,
-        (_, name: string) => values[name] ?? '',
-    );
-}
-
 /** The built-in phrases with the app's own laid over them, each cleaned and capped. */
 function mergeWords(
     base: Readonly<DescriptionWords>,
@@ -509,12 +502,14 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
 
             if (leading > 0) {
                 sentences.push(
-                    fill(words.startsAfter, { duration: length(leading) }),
+                    fillTemplate(words.startsAfter, {
+                        duration: length(leading),
+                    }),
                 );
             }
 
             sentences.push(
-                fill(words.pauses, {
+                fillTemplate(words.pauses, {
                     count: count(pauses.length),
                     duration: length(longest.end - longest.start),
                     at: at(longest.start),
@@ -523,7 +518,9 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
 
             if (trailing > 0) {
                 sentences.push(
-                    fill(words.endsWith, { duration: length(trailing) }),
+                    fillTemplate(words.endsWith, {
+                        duration: length(trailing),
+                    }),
                 );
             }
 
@@ -537,7 +534,9 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
         const steps: string[] = [];
 
         if (leading > 0) {
-            steps.push(fill(words.silenceFor, { duration: length(leading) }));
+            steps.push(
+                fillTemplate(words.silenceFor, { duration: length(leading) }),
+            );
         }
 
         parts.forEach((part, index) => {
@@ -545,7 +544,7 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
 
             if (pause !== undefined) {
                 steps.push(
-                    fill(words.pause, {
+                    fillTemplate(words.pause, {
                         duration: length(pause.end - pause.start),
                     }),
                 );
@@ -554,11 +553,15 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
             const toEnd = index === parts.length - 1 && trailing === 0;
 
             if (steps.length === 0) {
-                steps.push(fill(words.soundUntil, { at: at(part.end) }));
+                steps.push(
+                    fillTemplate(words.soundUntil, { at: at(part.end) }),
+                );
             } else if (toEnd) {
                 steps.push(words.thenSoundToEnd);
             } else {
-                steps.push(fill(words.thenSoundUntil, { at: at(part.end) }));
+                steps.push(
+                    fillTemplate(words.thenSoundUntil, { at: at(part.end) }),
+                );
             }
         });
 
@@ -579,7 +582,9 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
         }
 
         if (outline.loudest !== null) {
-            sentences.push(fill(words.loudest, { at: at(outline.loudest) }));
+            sentences.push(
+                fillTemplate(words.loudest, { at: at(outline.loudest) }),
+            );
         } else if (outline.level === 'steady') {
             sentences.push(words.even);
         }
@@ -593,9 +598,9 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
         describe(outline): string {
             const total = length(outline.duration);
             const sentences = outline.silent
-                ? [fill(words.silence, { duration: total })]
+                ? [fillTemplate(words.silence, { duration: total })]
                 : [
-                      fill(words.length, { duration: total }),
+                      fillTemplate(words.length, { duration: total }),
                       ...shape(outline),
                       ...level(outline),
                   ];
@@ -608,7 +613,7 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
             const template = time < 0.5 ? words.partStart : words.part;
 
             return cleanText(
-                fill(template, {
+                fillTemplate(template, {
                     part: count(index + 1),
                     count: count(total),
                     at: at(time),

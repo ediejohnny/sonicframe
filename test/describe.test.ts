@@ -278,6 +278,17 @@ describe('the wave in words', () => {
         expect(text).toMatch(/^33 seconds\. Sound until/);
     });
 
+    it('fills only its own marks, never a name from the object prototype', () => {
+        const outline = outlineSound(NOTE, 33);
+        const text =
+            outline &&
+            describeSound(outline, {
+                words: { length: '{duration}{constructor}{toString}.' },
+            });
+
+        expect(text).toMatch(/^33 seconds\. Sound until/);
+    });
+
     it('caps the text however many words come in', () => {
         const outline = outlineSound(NOTE, 33);
         const text =
