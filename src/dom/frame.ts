@@ -44,6 +44,7 @@ import type {
 import { announce } from './announce';
 import { exportClip, type ClipOptions } from './clip';
 import { LaneManager } from './lanes';
+import { prefersReducedMotion } from './motion';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
     drawingOf,
@@ -137,13 +138,6 @@ const ATTRIBUTES = [
     'aria-valuenow',
     'aria-valuetext',
 ];
-
-function prefersReducedMotion(): boolean {
-    return (
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    );
-}
 
 export class SonicFrame implements PluginHost {
     readonly container: HTMLElement;

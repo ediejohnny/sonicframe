@@ -221,6 +221,7 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
                     keys: true,
                     pauseInValue: true,
                     button: true,
+                    pulse: true,
                 },
             },
             (error) => {

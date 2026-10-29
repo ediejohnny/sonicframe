@@ -36,6 +36,43 @@ const ALL_PARTS = {
     line: ['back', 'play', 'forward', 'wave', 'time', 'speed'] as const,
 };
 
+/**
+ * A browser voice that keeps reading until stopped, and a record of the pulses started on elements
+ * (`element.animate`), each marked once cancelled.
+ */
+function readingVoice(): { cancelled: boolean }[] {
+    const pulses: { cancelled: boolean }[] = [];
+    vi.stubGlobal('speechSynthesis', {
+        getVoices: () => [
+            { name: 'David', lang: 'en-US', localService: true, default: true },
+        ],
+        speak: () => undefined,
+        cancel: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+    });
+    vi.stubGlobal(
+        'SpeechSynthesisUtterance',
+        class {
+            constructor(readonly text: string) {}
+        },
+    );
+    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(() => {
+        const pulse = {
+            cancelled: false,
+            finished: Promise.resolve(),
+            cancel(): void {
+                pulse.cancelled = true;
+            },
+        };
+        pulses.push(pulse);
+
+        return pulse as unknown as Animation;
+    });
+
+    return pulses;
+}
+
 function container(): HTMLElement {
     host = document.createElement('div');
     document.body.append(host);
@@ -225,6 +262,76 @@ describe('the wave in words on the player', () => {
 
         expect(spoken[0]).toBe('33 segundos.');
         expect(labelOf('.sonicframe-listen')).toBe('Ouvir a descrição');
+    });
+
+    it('shows while it reads: filled, pulsing when asked, and back to rest when stopped', async () => {
+        const pulses = readingVoice();
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            peaks: NOTE,
+            description: { button: true, pulse: true },
+        });
+        const button = within('.sonicframe-listen');
+
+        expect(button.style.getPropertyValue('background-color')).toBe(
+            'transparent',
+        );
+
+        button.click();
+
+        expect(button.style.getPropertyValue('background-color')).toContain(
+            '--sonicframe-button',
+        );
+        expect(pulses).toHaveLength(1);
+
+        button.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(button.style.getPropertyValue('background-color')).toBe(
+            'transparent',
+        );
+        expect(pulses[0].cancelled).toBe(true);
+    });
+
+    it('only changes color by default, or where the person asks for less motion', () => {
+        const pulses = readingVoice();
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            peaks: NOTE,
+            description: { button: true },
+        });
+        within('.sonicframe-listen').click();
+
+        expect(pulses).toHaveLength(0);
+        expect(
+            within('.sonicframe-listen').style.getPropertyValue(
+                'background-color',
+            ),
+        ).toContain('--sonicframe-button');
+
+        player.destroy();
+        host?.remove();
+        vi.stubGlobal('matchMedia', (query: string) => ({
+            matches: query.includes('reduce'),
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+        }));
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            peaks: NOTE,
+            description: { button: true, pulse: true },
+        });
+        within('.sonicframe-listen').click();
+
+        expect(pulses).toHaveLength(0);
+        expect(
+            within('.sonicframe-listen').style.getPropertyValue(
+                'background-color',
+            ),
+        ).toContain('--sonicframe-button');
     });
 
     it('says so when there is no voice on the device for the language', async () => {

@@ -21,8 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   description ahead of time.
 - The player speaks a chosen language: `lang` (`'en'`, the default, `'pt'` or `'auto'`) and `labels`
   for any accessible name or word, the wave's value included; `description` (off by default) adds the
-  wave in words, with an optional button that reads it aloud; `player.description` and the
-  `description` event. The tag takes `lang` and `description="keys pauses speech button announce"`.
+  wave in words, with an optional button that reads it aloud (while it reads, it wears the play
+  button's colors; `pulse: true` also makes it pulse gently, never with reduced motion);
+  `player.description` and the `description` event. The tag takes `lang` and
+  `description="keys pauses speech button pulse announce"`.
+
+### Changed
+
+- The size ceiling of each entry rises from 64 KB to 96 KB (gzip, unminified, chunks included).
 - The frame's `peakschange` event (peaks arrived, changed or went), the plugin hook `valueNote` (a note
   on the wave's value in words) and `host.updateValueText()`.
 

@@ -57,7 +57,7 @@ const EVENTS = [
 
 /**
  * The description from the `description` attribute: present turns it on, and its words turn on the
- * extras (`keys`, `pauses`, `speech`, `button`, `announce`); any other word is ignored.
+ * extras (`keys`, `pauses`, `speech`, `button`, `pulse`, `announce`); any other word is ignored.
  */
 function descriptionOf(value: string | null): PlayerDescription | undefined {
     if (value === null) {
@@ -71,6 +71,7 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
         pauseInValue: words.has('pauses'),
         speech: words.has('speech'),
         button: words.has('button'),
+        pulse: words.has('pulse'),
         announceWhenReady: words.has('announce'),
     };
 }

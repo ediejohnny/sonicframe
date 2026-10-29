@@ -56,6 +56,7 @@ import type {
 } from '../types';
 import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
+import { prefersReducedMotion } from '../dom/motion';
 import { pageLanguage } from '../dom/page-language';
 import { canSpeak } from '../dom/speak';
 import {
@@ -139,7 +140,16 @@ export type PlayerOptions = {
 export type PlayerDescription = SoundDescriptionOptions & {
     /** A button that reads the description with the browser's voice (where it has one); off by default. */
     button?: boolean;
+    /**
+     * While it reads, the button is filled in the play button's colors, so people who see it know it
+     * is reading and can be pressed to stop; true also makes it pulse gently. Off by default (only the
+     * colors), and never for people who asked their system for less motion.
+     */
+    pulse?: boolean;
 };
+
+/** One beat of the reading button's pulse, in milliseconds (it grows, then shrinks back). */
+const PULSE_MS = 700;
 
 /** How many peaks are decoded from a sound. */
 const PEAKS = 1000;
@@ -156,6 +166,11 @@ const SPECTRUM: ColorStops = {
 
 /** The knob takes its own variable, so it can differ from the played color. */
 const KNOB = 'var(--sonicframe-knob, var(--sonicframe-progress, #2f6fdb))';
+
+/** The play button's colors, which the reading button wears while it reads. */
+const BUTTON_FILL =
+    'var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))';
+const BUTTON_ICON = 'var(--sonicframe-button-icon, #fff)';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -933,22 +948,55 @@ export class Player {
         return button;
     }
 
-    /** Reads the description with the browser's voice; pressed again (or Escape on the wave), it stops. */
+    /**
+     * Reads the description with the browser's voice; pressed again (or Escape on the wave), it stops.
+     * While it reads, its name says so and it is filled (and pulses, when asked).
+     */
     private listenPart(): HTMLButtonElement {
         const labels = this.words.labels;
+        const asked = this.options.description;
+        const pulse = typeof asked === 'object' && asked.pulse === true;
         const button = this.iconButton(
             'sonicframe-listen',
             LISTEN_ICON,
             labels.listen,
         );
+        let beating: Animation | null = null;
         const show = (): void => {
-            nameButton(
-                button,
-                this.descriptionRef?.speaking === true
-                    ? labels.stopListening
-                    : labels.listen,
-            );
+            const reading = this.descriptionRef?.speaking === true;
+            nameButton(button, reading ? labels.stopListening : labels.listen);
+            css(button, [
+                ['background-color', reading ? BUTTON_FILL : 'transparent'],
+                ['color', reading ? BUTTON_ICON : 'inherit'],
+            ]);
+
+            if (
+                reading &&
+                beating === null &&
+                pulse &&
+                typeof button.animate === 'function' &&
+                !prefersReducedMotion()
+            ) {
+                beating = button.animate(
+                    [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }],
+                    {
+                        duration: PULSE_MS,
+                        direction: 'alternate',
+                        iterations: Number.POSITIVE_INFINITY,
+                        easing: 'ease-in-out',
+                    },
+                );
+                // Cancelling the pulse rejects `finished`; that is how it ends, never an error.
+                beating.finished.catch(() => undefined);
+            } else if (!reading) {
+                beating?.cancel();
+                beating = null;
+            }
         };
+        this.partCleanups.push(() => {
+            beating?.cancel();
+            beating = null;
+        });
 
         button.addEventListener('click', () => {
             const description = this.descriptionRef;

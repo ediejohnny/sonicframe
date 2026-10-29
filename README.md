@@ -327,7 +327,8 @@ gives the container back (a media element the player made is stopped, yours is l
 Attributes: `src`, `peaks` (the address of a peaks file), `theme`, `palette`, `wave`, `font`, `font-src`,
 `font-stylesheet`, `label`, `lang` (the language of the player's words, `lang="pt-BR"`), the switches `volume` and
 `spectrogram`, and `description`, which turns the wave in words on; words in it turn on its extras:
-`description="keys pauses"` (also `speech`, `button` and `announce`). They are read as untrusted input: an unknown
+`description="keys pauses"` (also `speech`, `button`, `pulse` and `announce`). They are read as untrusted input: an
+unknown
 name falls back to the default theme, text goes in only as text, and a font address is used only when it is safe.
 Changing an attribute updates the player; removing the element destroys it, and putting it back builds it again. The
 player's events reach the element as `sonicframe:seek`, `sonicframe:timeupdate`, `sonicframe:error`… with their
@@ -447,7 +448,10 @@ rejects where no voice fits.
 the first focus.
 
 On the player, `description: true` turns it on in the player's `lang`; `description: { button: true, keys: true }`
-adds a button that reads it aloud (where the browser has a voice) and the keys.
+adds a button that reads it aloud (where the browser has a voice) and the keys. While it reads, the button's name says
+"Stop the description" and it wears the play button's colors, so people who see it know it can be pressed to stop;
+`pulse: true` also makes it pulse gently (off by default, and never for people who asked their system for less
+motion).
 
 ## Writing a plugin
 
