@@ -57,8 +57,8 @@ const EVENTS = [
 
 /**
  * The description from the `a11y-description` attribute: present turns it on, and its words turn on
- * the extras (`keys`, `pauses`, `speech`, `button`, `animation` for the button, `announce`); any
- * other word is ignored.
+ * the extras (`keys`, `pauses`, `speech`, `button`, `announce`) and the button's `animation`, of the
+ * type `pulse` (the default) or `fade`; any other word is ignored.
  */
 function descriptionOf(value: string | null): PlayerDescription | undefined {
     if (value === null) {
@@ -72,7 +72,10 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
         pauseInValue: words.has('pauses'),
         speech: words.has('speech'),
         button: words.has('button')
-            ? { animation: words.has('animation') }
+            ? {
+                  animation: words.has('animation'),
+                  animationType: words.has('fade') ? 'fade' : 'pulse',
+              }
             : false,
         announceWhenReady: words.has('announce'),
     };

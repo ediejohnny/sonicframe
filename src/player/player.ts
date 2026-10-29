@@ -148,18 +148,40 @@ export type PlayerDescription = SoundDescriptionOptions & {
     button?: boolean | PlayerListenButton;
 };
 
+/** How the reading button moves while it reads: it grows and shrinks back, or fades and comes back. */
+export type ButtonAnimation = 'pulse' | 'fade';
+
 /** The button that reads the description aloud. */
 export type PlayerListenButton = {
     /**
      * While it reads, the button wears the play button's colors, so people who see it know it is
-     * reading and can be pressed to stop; `animation: true` also makes it pulse gently. Off by default
-     * (only the colors), and never for people who asked their system for less motion.
+     * reading and can be pressed to stop; `animation: true` also moves it, as `animationType` says. Off
+     * by default (only the colors), and never for people who asked their system for less motion.
      */
     animation?: boolean;
+    /** `'pulse'` (the default: it grows a little and back) or `'fade'` (half transparent and back). */
+    animationType?: ButtonAnimation;
 };
 
-/** One beat of the reading button's pulse, in milliseconds (it grows, then shrinks back). */
-const PULSE_MS = 700;
+/** One beat of the reading button's animation, in milliseconds (there, then back). */
+const BEAT_MS = 700;
+
+/** The keyframes of each animation of the reading button. */
+const BUTTON_ANIMATIONS: Readonly<Record<ButtonAnimation, Keyframe[]>> = {
+    pulse: [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }],
+    fade: [{ opacity: 1 }, { opacity: 0.5 }],
+};
+
+/** The animation the button asks for: none unless it is on; the pulse unless a known type is named. */
+function animationOf(settings: PlayerListenButton): ButtonAnimation | null {
+    if (settings.animation !== true) {
+        return null;
+    }
+
+    const type: unknown = settings.animationType;
+
+    return type === 'fade' ? 'fade' : 'pulse';
+}
 
 /** How many peaks are decoded from a sound. */
 const PEAKS = 1000;
@@ -981,11 +1003,11 @@ export class Player {
 
     /**
      * Reads the description with the browser's voice; pressed again (or Escape on the wave), it stops.
-     * While it reads, its name says so and it is filled (and pulses, with `animation`).
+     * While it reads, its name says so and it is filled (and moves, with `animation`).
      */
     private listenPart(settings: PlayerListenButton): HTMLButtonElement {
         const labels = this.words.labels;
-        const pulse = settings.animation === true;
+        const animation = animationOf(settings);
         const button = this.iconButton(
             'sonicframe-listen',
             LISTEN_ICON,
@@ -1003,20 +1025,17 @@ export class Player {
             if (
                 reading &&
                 beating === null &&
-                pulse &&
+                animation !== null &&
                 typeof button.animate === 'function' &&
                 !prefersReducedMotion()
             ) {
-                beating = button.animate(
-                    [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }],
-                    {
-                        duration: PULSE_MS,
-                        direction: 'alternate',
-                        iterations: Number.POSITIVE_INFINITY,
-                        easing: 'ease-in-out',
-                    },
-                );
-                // Cancelling the pulse rejects `finished`; that is how it ends, never an error.
+                beating = button.animate(BUTTON_ANIMATIONS[animation], {
+                    duration: BEAT_MS,
+                    direction: 'alternate',
+                    iterations: Number.POSITIVE_INFINITY,
+                    easing: 'ease-in-out',
+                });
+                // Cancelling the animation rejects `finished`; that is how it ends, never an error.
                 beating.finished.catch(() => undefined);
             } else if (!reading) {
                 beating?.cancel();

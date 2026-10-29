@@ -7,6 +7,7 @@
 export {
     createPlayer,
     Player,
+    type ButtonAnimation,
     type PlayerA11y,
     type PlayerDescription,
     type PlayerEvents,
