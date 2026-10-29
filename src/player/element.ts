@@ -5,14 +5,16 @@
  * the default theme, text only ever goes in as text, and a font address is used only when it is
  * safe. Changing an attribute updates the player; taking the element out of the page destroys it,
  * putting it back builds it again. The player's events are dispatched on the element as
- * `sonicframe:<event>` custom events, with their arguments in `detail`.
+ * `sonicframe:<event>` custom events, with their arguments in `detail`. Accessibility attributes
+ * start with `a11y-`: `a11y-lang` is the language of the player's words, and the description is off
+ * unless `a11y-description` is there.
  */
 
 import type { FontChoice } from '../core/fonts';
 import type { PaletteChoice } from '../core/palettes';
 import { loadPeaks } from '../core/peaks';
 import type { WaveName } from '../types';
-import { Player } from './player';
+import { Player, type PlayerDescription } from './player';
 
 /** The attributes the tag reads. */
 export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
@@ -27,20 +29,57 @@ export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
     'label',
     'volume',
     'spectrogram',
+    'a11y-lang',
+    'a11y-description',
 ]);
 
 /** Attributes that need a new player (a new sound, or parts built once). */
-const REBUILD = new Set(['src', 'peaks', 'label', 'spectrogram']);
+const REBUILD = new Set([
+    'src',
+    'peaks',
+    'label',
+    'spectrogram',
+    'a11y-lang',
+    'a11y-description',
+]);
 
 const EVENTS = [
     'seek',
     'hover',
     'timeupdate',
     'durationchange',
+    'peakschange',
     'resize',
     'rangeend',
     'error',
+    'description',
 ] as const;
+
+/**
+ * The description from the `a11y-description` attribute: present turns it on, and its words turn on
+ * the extras (`keys`, `pauses`, `speech`, `button`, `announce`) and the button's `animation`, of the
+ * type `pulse` (the default) or `fade`; any other word is ignored.
+ */
+function descriptionOf(value: string | null): PlayerDescription | undefined {
+    if (value === null) {
+        return undefined;
+    }
+
+    const words = new Set(value.toLowerCase().split(/\s+/));
+
+    return {
+        keys: words.has('keys'),
+        pauseInValue: words.has('pauses'),
+        speech: words.has('speech'),
+        button: words.has('button')
+            ? {
+                  animation: words.has('animation'),
+                  animationType: words.has('fade') ? 'fade' : 'pulse',
+              }
+            : false,
+        announceWhenReady: words.has('announce'),
+    };
+}
 
 /** A custom element name: lowercase, starting with a letter, with at least one dash. */
 const ELEMENT_NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
@@ -151,6 +190,12 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                     label: this.getAttribute('label') ?? undefined,
                     volume: this.hasAttribute('volume'),
                     spectrogram: this.hasAttribute('spectrogram'),
+                    a11y: {
+                        lang: this.getAttribute('a11y-lang') ?? undefined,
+                        description: descriptionOf(
+                            this.getAttribute('a11y-description'),
+                        ),
+                    },
                 });
 
                 this.player = player;

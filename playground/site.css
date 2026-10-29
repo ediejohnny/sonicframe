@@ -419,6 +419,30 @@ main.wrap {
     font-size: 0.875rem;
 }
 
+/* The wave in words: the player, then its description as a quote. */
+
+.words {
+    max-width: 42rem;
+}
+
+.words-text {
+    margin-top: 1rem;
+    padding: 0.875rem 1rem;
+    border-left: 0.25rem solid var(--brand);
+    border-radius: 0.5rem;
+    background: var(--sunken);
+    font-size: 1.0625rem;
+}
+
+.words-text:empty {
+    display: none;
+}
+
+.words-code {
+    max-width: 42rem;
+    margin-top: 1.25rem;
+}
+
 /* Rows of players with a short name under each. */
 
 /* Two columns at most: the ten drawings fill five whole rows, with no empty place. */

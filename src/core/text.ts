@@ -58,6 +58,19 @@ export function cleanText(text: string, max: number): string {
 }
 
 /**
+ * `template` with each `{name}` mark replaced by its value. Only the values' own names count (never
+ * one inherited from the object prototype, such as `constructor`); any other mark is dropped.
+ */
+export function fillTemplate(
+    template: string,
+    values: Readonly<Record<string, string>>,
+): string {
+    return template.replace(/\{(\w+)\}/g, (_, name: string) =>
+        Object.hasOwn(values, name) ? values[name] : '',
+    );
+}
+
+/**
  * Shortens `text` to at most `limit` characters, cutting at the last word boundary that fits and
  * adding `ellipsis`. Text without spaces (as in many scripts) is cut at a character boundary.
  */

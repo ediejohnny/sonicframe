@@ -10,6 +10,7 @@
 import { readableText } from '../core/color';
 import { cleanText, truncateWords } from '../core/text';
 import type { Lane, Plugin, PluginHost } from '../types';
+import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
 import { readColor } from '../dom/paint';
 import { sharedTooltip } from '../dom/tooltip';
 
@@ -309,43 +310,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
         lane = null;
         textSpan = null;
         fullSpan = null;
-        removeDescribedBy(current);
-    }
-
-    /** The ids in the frame's `aria-describedby`, whoever put them there. */
-    function describedIds(current: PluginHost): string[] {
-        return (current.container.getAttribute('aria-describedby') ?? '')
-            .split(/\s+/)
-            .filter((id) => id !== '');
-    }
-
-    /** Adds this caption's id after the ids already there (the page's own, or another plugin's). */
-    function addDescribedBy(current: PluginHost): void {
-        const ids = describedIds(current);
-
-        if (!ids.includes(describedId)) {
-            current.container.setAttribute(
-                'aria-describedby',
-                [...ids, describedId].join(' '),
-            );
-        }
-    }
-
-    /** Takes only this caption's id out: every other id stays, even one the page added meanwhile. */
-    function removeDescribedBy(current: PluginHost): void {
-        const ids = describedIds(current);
-
-        if (!ids.includes(describedId)) {
-            return;
-        }
-
-        const rest = ids.filter((id) => id !== describedId);
-
-        if (rest.length === 0) {
-            current.container.removeAttribute('aria-describedby');
-        } else {
-            current.container.setAttribute('aria-describedby', rest.join(' '));
-        }
+        removeDescribedBy(current.container, describedId);
     }
 
     return {
@@ -382,7 +347,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
 
             if (text !== null) {
                 ensureLane(pluginHost);
-                addDescribedBy(pluginHost);
+                addDescribedBy(pluginHost.container, describedId);
             }
         },
 
@@ -402,7 +367,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
 
             if (lane === null) {
                 ensureLane(current);
-                addDescribedBy(current);
+                addDescribedBy(current.container, describedId);
             } else {
                 render();
             }
@@ -420,7 +385,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
             }
 
             if (host !== null) {
-                removeDescribedBy(host);
+                removeDescribedBy(host.container, describedId);
             }
 
             lane?.remove();

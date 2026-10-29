@@ -24,7 +24,8 @@ import { resample } from '../core/peaks';
 import { applyStyles } from '../core/styles';
 import { overlayOf, ratioAt, sameOverlay, type Overlay } from '../core/scene';
 import { DEFAULT_WAVE, knobSpot, resolveWave, waveShape } from '../core/shapes';
-import { easeOut } from '../core/timing';
+import { cleanText } from '../core/text';
+import { defaultValueText, easeOut } from '../core/timing';
 import type {
     BarStyle,
     Claim,
@@ -43,6 +44,7 @@ import type {
 import { announce } from './announce';
 import { exportClip, type ClipOptions } from './clip';
 import { LaneManager } from './lanes';
+import { prefersReducedMotion } from './motion';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
     drawingOf,
@@ -124,6 +126,9 @@ const APPEAR_MS = 180;
 /** How much of the way from the played color to the wave color an `'auto'` hover sits. */
 const HOVER_MIX = 0.5;
 
+/** The longest note a plugin adds to the slider's value, in characters. */
+const MAX_NOTE = 120;
+
 const ATTRIBUTES = [
     'role',
     'tabindex',
@@ -133,13 +138,6 @@ const ATTRIBUTES = [
     'aria-valuenow',
     'aria-valuetext',
 ];
-
-function prefersReducedMotion(): boolean {
-    return (
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    );
-}
 
 export class SonicFrame implements PluginHost {
     readonly container: HTMLElement;
@@ -152,6 +150,7 @@ export class SonicFrame implements PluginHost {
     private readonly lazy: boolean;
     private readonly animate: boolean;
     private readonly cursorWidth: number;
+    private readonly valueText: ValueText;
     private readonly cleanups: (() => void)[] = [];
     private readonly savedAttributes = new Map<string, string | null>();
     private restoreStyles: () => void = () => undefined;
@@ -197,6 +196,7 @@ export class SonicFrame implements PluginHost {
         this.lazy = options.lazy ?? true;
         this.animate = options.animate ?? true;
         this.cursorWidth = options.cursorWidth ?? 2;
+        this.valueText = options.valueText ?? defaultValueText;
         this.bar = { ...DEFAULT_BAR, ...options.bar };
         this.wave = resolveWave(DEFAULT_WAVE, options.wave);
         this.colors = { ...DEFAULT_COLORS, ...options.colors };
@@ -232,7 +232,8 @@ export class SonicFrame implements PluginHost {
                 stepSeconds: options.stepSeconds ?? 5,
                 largeStepRatio: options.largeStepRatio ?? 0.1,
                 rewindOnEnd: options.rewindOnEnd ?? false,
-                valueText: options.valueText,
+                valueText: (time, ratio, duration) =>
+                    this.valueWords(time, ratio, duration),
             },
             {
                 invalidate: () => this.invalidate(),
@@ -422,6 +423,13 @@ export class SonicFrame implements PluginHost {
         }
     }
 
+    /** Says the slider's value in words again, after a plugin's `valueNote` changed. */
+    updateValueText(): void {
+        if (!this.destroyed) {
+            this.controller.refresh();
+        }
+    }
+
     /** Records a clip of the wave playing, using the frame's own peaks, bars and colors. */
     exportClip(
         options: Partial<ClipOptions> = {},
@@ -513,6 +521,10 @@ export class SonicFrame implements PluginHost {
 
         if (geometry !== null) {
             this.callResize(plugin, geometry);
+        }
+
+        if (plugin.valueNote !== undefined) {
+            this.controller.refresh();
         }
 
         this.invalidate();
@@ -895,6 +907,35 @@ export class SonicFrame implements PluginHost {
         return false;
     }
 
+    /** The slider's value in words, followed by the notes plugins add for that position. */
+    private valueWords(
+        time: number | null,
+        ratio: number,
+        duration: number | null,
+    ): string {
+        const words = [this.valueText(time, ratio, duration)];
+
+        for (const plugin of this.plugins) {
+            if (plugin.valueNote === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            const note = this.safely(plugin, () =>
+                plugin.valueNote?.(time, ratio),
+            );
+
+            if (typeof note === 'string') {
+                const clean = cleanText(note, MAX_NOTE);
+
+                if (clean !== '') {
+                    words.push(clean);
+                }
+            }
+        }
+
+        return words.join(', ');
+    }
+
     /** Runs a plugin callback, parking one that throws (as `drawPlugins` does) and returning its value. */
     private safely<T>(plugin: Plugin, run: () => T): T | undefined {
         try {
@@ -947,6 +988,7 @@ export class SonicFrame implements PluginHost {
                 ? -1
                 : null;
         this.invalidate();
+        this.events.emit('peakschange', this.peaksData);
     }
 
     private resize(size: Size): void {
@@ -1304,6 +1346,11 @@ export class SonicFrame implements PluginHost {
         if (index >= 0) {
             this.plugins.splice(index, 1);
             this.destroyPlugin(plugin);
+
+            if (plugin.valueNote !== undefined) {
+                this.controller.refresh();
+            }
+
             this.invalidate();
         }
     }
