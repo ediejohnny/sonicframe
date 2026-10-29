@@ -252,6 +252,22 @@ words) and gets `touch-action: pan-y`, so a vertical swipe still scrolls the pag
 `:focus-visible`. Keys: arrows step by `stepSeconds`, Page Up / Page Down by `largeStepRatio`, Home and End jump to
 the ends; keys held with Ctrl, Alt or Meta are left to the page.
 
+Every color SonicFrame draws can come from a custom property, so plain CSS on any ancestor themes the frame, the
+button and all plugins:
+
+| Property                   | Default                    | Used for                                |
+| -------------------------- | -------------------------- | --------------------------------------- |
+| `--sonicframe-wave`        | `#c4cad4`                  | Bars not yet played.                    |
+| `--sonicframe-progress`    | `#2f6fdb`                  | Bars played; tooltips of the plugins.   |
+| `--sonicframe-button`      | the progress color         | The play button.                        |
+| `--sonicframe-button-icon` | `#fff`                     | The icon on the play button.            |
+| `--sonicframe-on-progress` | `#ffffff`                  | Text over the played color and markers. |
+| `--sonicframe-marker`      | `#e5484d`                  | Markers.                                |
+| `--sonicframe-timeline`    | `#8a94a6`                  | The timeline ruler.                     |
+| `--sonicframe-region`      | `rgba(47, 111, 219, 0.18)` | The band of a region.                   |
+| `--sonicframe-dim`         | `rgba(0, 0, 0, 0.12)`      | Dimmed silences (`skipSilences`).       |
+| `--sonicframe-badge`       | `rgba(0, 0, 0, 0.08)`      | The badges of a caption.                |
+
 ## Many players on one page
 
 Each frame keeps its canvas pixels only while it is on or near the screen and loads its peaks the first time it gets

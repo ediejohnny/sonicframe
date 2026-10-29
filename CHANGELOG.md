@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   frequency and exported clips work with every drawing. A `knob` dot can ride the playing position
   (`colors.knob`), lines can glow, and `setWave` changes the drawing later. Every piece stays inside
   the frame and the number of pieces is capped.
+- Every color a plugin draws can be themed with a custom property: `--sonicframe-region` (region
+  bands), `--sonicframe-dim` (dimmed silences), `--sonicframe-badge` (caption badges) and
+  `--sonicframe-on-progress` (the marker count and tooltip text), each defaulting to the color it
+  had before.
 
 - `exportClip` (and `frame.exportClip`): records a short video of the wave playing — the decoded audio
   plays silently into a MediaStream, the wave is drawn each frame, and a MediaRecorder captures both.

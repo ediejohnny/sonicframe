@@ -28,7 +28,8 @@ export function skipSilences(
     options: SkipSilencesOptions = {},
 ): SkipSilencesPlugin {
     const lead = Math.max(0, options.lead ?? 0.1);
-    const dimColor = options.dimColor ?? 'rgba(0, 0, 0, 0.12)';
+    const dimColor =
+        options.dimColor ?? 'var(--sonicframe-dim, rgba(0, 0, 0, 0.12))';
 
     let host: PluginHost | null = null;
     let silences: Silence[] = [...(options.silences ?? [])];
