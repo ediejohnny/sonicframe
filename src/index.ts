@@ -50,6 +50,13 @@ export {
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
+    soundDescription,
+    type SoundDescriptionKeys,
+    type SoundDescriptionOptions,
+    type SoundDescriptionPlugin,
+} from './plugins/description';
+export type { SpeechOptions } from './dom/speak';
+export {
     skipSilences,
     type SkipSilencesOptions,
     type SkipSilencesPlugin,
@@ -64,6 +71,22 @@ export {
     type ChannelSource,
     type Silence,
 } from './core/analysis';
+export {
+    DESCRIPTION_WORDS,
+    describeSound,
+    nextPart,
+    outlineSound,
+    partAt,
+    silenceAt,
+    soundWords,
+    type DescribeOptions,
+    type DescriptionWords,
+    type OutlineOptions,
+    type SoundLevel,
+    type SoundOutline,
+    type SoundPart,
+    type SoundWords,
+} from './core/describe';
 export {
     spectrogram,
     type ColorStops,

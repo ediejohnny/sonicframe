@@ -23,6 +23,7 @@
                     <a href="#use">Install</a>
                     <a href="#drawings">Drawings</a>
                     <a href="./themes.html">Themes</a>
+                    <a href="#words">In words</a>
                     <a href="#plugins">Plugins</a>
                     <a href="https://github.com/ediejohnny/sonicframe"
                         >GitHub</a
@@ -138,6 +139,61 @@ createPlayer({
                         >See all 24 themes in 8 palettes</a
                     >
                 </p>
+            </section>
+
+            <section class="section" id="words" aria-labelledby="words-title">
+                <h2 id="words-title">The wave in words</h2>
+                <p class="lede">
+                    For people who cannot see the wave: a short description of
+                    the sound, read by their own screen reader when they reach
+                    the player. It is shown here as text too. Off until you turn
+                    it on.
+                </p>
+                <div class="words">
+                    <div class="buttons" role="group" aria-label="Language">
+                        <button
+                            class="button small"
+                            type="button"
+                            data-words-lang="en"
+                            aria-pressed="true"
+                        >
+                            English
+                        </button>
+                        <button
+                            class="button small"
+                            type="button"
+                            data-words-lang="pt"
+                            aria-pressed="false"
+                            lang="pt"
+                        >
+                            Português
+                        </button>
+                    </div>
+                    <div id="words-player"></div>
+                    <p class="words-text" id="words-text"></p>
+                    <!-- Seen, not spoken: the player says the same through the live region. -->
+                    <p class="note" id="words-status" aria-hidden="true"></p>
+                    <p class="note">
+                        With the wave focused, D says the description again and
+                        P or Shift+P steps between the parts. The speech bubble
+                        reads it with your browser’s own voice.
+                    </p>
+                </div>
+                <div class="code words-code">
+                    <pre><code>createPlayer({
+    container,
+    src: '/voice.mp3',
+    a11y: {
+        lang: 'pt',
+        description: {
+            keys: true,
+            pauseInValue: true,
+            button: { animation: true },
+        },
+    },
+});</code></pre>
+                    <button class="button small" type="button">Copy</button>
+                </div>
             </section>
 
             <section

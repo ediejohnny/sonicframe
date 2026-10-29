@@ -141,11 +141,12 @@ function mount(host: HTMLElement, build: Build): void {
     mounts.push({ host, build });
 }
 
-/** A player on its own `<audio>`, with the sound's peaks and duration. */
+/** A player on its own `<audio>`, with the sound's peaks and duration; errors go to the console and `failed`. */
 function player(
     host: HTMLElement,
     sound: Sound,
     options: Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
+    failed?: (error: unknown) => void,
 ): () => void {
     const made = createPlayer({
         container: host,
@@ -155,7 +156,10 @@ function player(
         ...options,
     });
     const repaint = (): void => made.frame.refresh();
-    const stopErrors = made.on('error', (error) => console.error(error));
+    const stopErrors = made.on('error', (error) => {
+        console.error(error);
+        failed?.(error);
+    });
     painted.add(repaint);
 
     return () => {
@@ -180,6 +184,71 @@ function figure(shelf: HTMLElement, option: string, text: string): HTMLElement {
     shelf.append(box);
 
     return host;
+}
+
+/**
+ * The wave in words: a player with every extra of the description on, its text shown under it, and
+ * buttons that build it again in another language.
+ */
+function wordsDemo(host: HTMLElement, sound: Sound): () => void {
+    const text = byId('words-text');
+    const status = byId('words-status');
+    const choices = Array.from(
+        document.querySelectorAll<HTMLButtonElement>('[data-words-lang]'),
+    );
+    let stop = (): void => undefined;
+
+    const build = (lang: string): void => {
+        stop();
+
+        for (const choice of choices) {
+            choice.setAttribute(
+                'aria-pressed',
+                String(choice.dataset.wordsLang === lang),
+            );
+        }
+
+        status.textContent = '';
+        stop = player(
+            host,
+            sound,
+            {
+                label:
+                    lang === 'pt' ? 'A onda em palavras' : 'The wave in words',
+                a11y: {
+                    lang,
+                    description: {
+                        target: text,
+                        keys: true,
+                        pauseInValue: true,
+                        button: { animation: true },
+                    },
+                },
+            },
+            (error) => {
+                if (error instanceof Error && /voice/.test(error.message)) {
+                    status.textContent =
+                        'Your browser has no voice on this device for this language. Online voices are left out on purpose: they would send the text to a server.';
+                }
+            },
+        );
+    };
+
+    const listeners = choices.map((choice) => {
+        const pick = (): void => build(choice.dataset.wordsLang ?? 'en');
+        choice.addEventListener('click', pick);
+
+        return () => choice.removeEventListener('click', pick);
+    });
+    const pressed = choices.find(
+        (choice) => choice.getAttribute('aria-pressed') === 'true',
+    );
+    build(pressed?.dataset.wordsLang ?? 'en');
+
+    return () => {
+        listeners.forEach((remove) => remove());
+        stop();
+    };
 }
 
 function clipCard(): PluginCard {
@@ -459,6 +528,8 @@ function setupPage(): void {
             player(box, sound, { label: `The ${name} theme`, theme: name }),
         );
     }
+
+    mount(byId('words-player'), wordsDemo);
 
     const cards = byId('plugin-cards');
 

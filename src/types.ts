@@ -122,6 +122,8 @@ export type SonicFrameEvents = {
     timeupdate: [time: number | null, ratio: number];
     /** The duration became known or changed (the media's own, or the one given to the frame); null when unknown. */
     durationchange: [duration: number | null];
+    /** The peaks arrived, were replaced or went (null); never for live values (`setValues`). */
+    peakschange: [peaks: readonly number[] | null];
     /** The wave area changed size (a lane was added, the element resized) or a lazy frame got its pixels near the screen. */
     resize: [geometry: FrameGeometry];
     /** A range being played reached its end or was abandoned. */
@@ -209,6 +211,8 @@ export type PluginHost = {
     announce(text: string): void;
     /** Reports a failure the plugin met outside its hooks (a download, a decode) as the frame's `error` event. */
     reportError(error: unknown): void;
+    /** Says the slider's value in words again, after the plugin's `valueNote` changed. */
+    updateValueText(): void;
     on<Name extends keyof SonicFrameEvents>(
         event: Name,
         listener: (...args: SonicFrameEvents[Name]) => void,
@@ -262,6 +266,12 @@ export type Plugin = {
         key: string,
         modifiers: KeyModifiers & { shiftKey?: boolean },
     ): boolean;
+    /**
+     * A short note added to the slider's value in words for a position (`"pause"` makes
+     * `"0:22 / 0:33, pause"`); nothing, or an empty string, adds none. Asked again on every new value
+     * and after `host.updateValueText()`.
+     */
+    valueNote?(time: number | null, ratio: number): string | void;
     /** Called when the plugin is removed or the frame is destroyed. */
     destroy?(): void;
 };

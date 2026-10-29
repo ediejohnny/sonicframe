@@ -4,7 +4,9 @@
  * palette reaches every part through `--sonicframe-*` custom properties set on the player, so plain
  * CSS can still override one color; sizes are in rem. Shadows and the glass surface are built only
  * from colors read back as numbers, never from a raw page value. Given only a sound address, the
- * player makes its own media element and decodes the peaks when it first comes near the screen.
+ * player makes its own media element and decodes the peaks when it first comes near the screen. Its
+ * words are English unless the app picks another language or its own labels; the description of the
+ * sound in words is off until the app asks for it.
  */
 
 import { hideFocusRing, showFocusRing } from '../controls/focus';
@@ -13,6 +15,11 @@ import { VolumeControl } from '../controls/volume';
 import { rgbaString, type Rgba } from '../core/color';
 import { Emitter } from '../core/emitter';
 import { resolveFont, type FontChoice } from '../core/fonts';
+import {
+    playerWords,
+    type PlayerLabels,
+    type PlayerWords,
+} from '../core/labels';
 import {
     DEFAULT_LOOK,
     nextSpeed,
@@ -49,6 +56,14 @@ import type {
 } from '../types';
 import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
+import { prefersReducedMotion } from '../dom/motion';
+import { pageLanguage } from '../dom/page-language';
+import { canSpeak } from '../dom/speak';
+import {
+    soundDescription,
+    type SoundDescriptionOptions,
+    type SoundDescriptionPlugin,
+} from '../plugins/description';
 import {
     spectrogram,
     type ColorStops,
@@ -91,8 +106,10 @@ export type PlayerOptions = {
     spectrogram?: boolean;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
     slot?: HTMLElement | null;
-    /** The player's accessible name. */
+    /** The player's accessible name (over the `player` label). */
     label?: string;
+    /** Accessibility: the language of the player's words, its labels and the sound in words. */
+    a11y?: PlayerA11y;
     plugins?: readonly Plugin[];
     /** Any other option of the wave (`label`, `lazy`, `colors`…). */
     frame?: Partial<
@@ -108,6 +125,41 @@ export type PlayerOptions = {
         >
     >;
 };
+
+/** The player's accessibility options, grouped by place; everything that adds behaviour is off by default. */
+export type PlayerA11y = {
+    /**
+     * The language of the accessible names, the wave's value in words and the description: `'en'` (the
+     * default), `'pt'`, or `'auto'` (the page's language). Given, it also marks the player with it.
+     */
+    lang?: string;
+    /** Your own accessible names and words, over the language's. */
+    labels?: Partial<PlayerLabels>;
+    /**
+     * The sound in words for screen readers (see `soundDescription`): true, or its options plus
+     * `button`, a button that reads it with the browser's voice. Off by default.
+     */
+    description?: boolean | PlayerDescription;
+};
+
+/** The description on a player: the plugin's options, plus a button that reads it aloud. */
+export type PlayerDescription = SoundDescriptionOptions & {
+    /** A button that reads the description with the browser's voice (where it has one); off by default. */
+    button?: boolean | PlayerListenButton;
+};
+
+/** The button that reads the description aloud. */
+export type PlayerListenButton = {
+    /**
+     * While it reads, the button wears the play button's colors, so people who see it know it is
+     * reading and can be pressed to stop; `animation: true` also makes it pulse gently. Off by default
+     * (only the colors), and never for people who asked their system for less motion.
+     */
+    animation?: boolean;
+};
+
+/** One beat of the reading button's pulse, in milliseconds (it grows, then shrinks back). */
+const PULSE_MS = 700;
 
 /** How many peaks are decoded from a sound. */
 const PEAKS = 1000;
@@ -125,6 +177,11 @@ const SPECTRUM: ColorStops = {
 /** The knob takes its own variable, so it can differ from the played color. */
 const KNOB = 'var(--sonicframe-knob, var(--sonicframe-progress, #2f6fdb))';
 
+/** The play button's colors, which the reading button wears while it reads. */
+const BUTTON_FILL =
+    'var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))';
+const BUTTON_ICON = 'var(--sonicframe-button-icon, #fff)';
+
 const SVG = 'http://www.w3.org/2000/svg';
 
 /** Back and forward: two triangles each, on the 24 × 24 grid of the play icon. */
@@ -133,18 +190,26 @@ const SKIP_ICONS = {
     forward: 'M3.5 6v12l8-6zM12.5 6v12l8-6z',
 } as const;
 
+/** A speech bubble, for the button that reads the description aloud. */
+const LISTEN_ICON =
+    'M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z';
+
 /** Every frame event but `destroy`, which belongs to the player itself. */
 const FORWARDED = [
     'seek',
     'hover',
     'timeupdate',
     'durationchange',
+    'peakschange',
     'resize',
     'rangeend',
     'error',
 ] as const;
 
-type PlayerEvents = SonicFrameEvents;
+/** The frame's events, plus the description's new text (or null) when it is on. */
+export type PlayerEvents = SonicFrameEvents & {
+    description: [text: string | null];
+};
 
 function css(
     element: HTMLElement | SVGElement,
@@ -153,6 +218,12 @@ function css(
     for (const [name, value] of pairs) {
         element.style.setProperty(name, value);
     }
+}
+
+/** Names a button for screen readers, with the same words as a tooltip. */
+function nameButton(button: HTMLButtonElement, label: string): void {
+    button.setAttribute('aria-label', label);
+    button.title = label;
 }
 
 function withAlpha(color: Rgba | null, alpha: number): string {
@@ -204,6 +275,8 @@ export class Player {
     private frameRef: SonicFrame | null = null;
     private buttonRef: PlayButton | null = null;
     private volumeRef: VolumeControl | null = null;
+    private descriptionRef: SoundDescriptionPlugin | null = null;
+    private readonly words: PlayerWords;
     private times: [HTMLElement, PlayerLook['time']][] = [];
     private partCleanups: (() => void)[] = [];
     private peaks: readonly number[] | null = null;
@@ -227,14 +300,24 @@ export class Player {
         this.theme = this.pickTheme(options.theme);
         this.combine();
         this.font = options.font;
+        const a11y = options.a11y ?? {};
+        this.words = playerWords(
+            a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
+            a11y.labels,
+        );
 
         this.element = document.createElement('div');
         this.element.className = 'sonicframe-player';
         this.element.setAttribute('role', 'group');
         this.element.setAttribute(
             'aria-label',
-            cleanText(options.label ?? 'Audio player', 120),
+            cleanText(options.label ?? this.words.labels.player, 120),
         );
+
+        // A language the app chose marks the player, so a screen reader says its words in that voice.
+        if (a11y.lang !== undefined) {
+            this.element.setAttribute('lang', this.words.locale);
+        }
 
         this.ownMedia = !options.media && typeof options.src === 'string';
         this.media = options.media ?? (this.ownMedia ? this.makeMedia() : null);
@@ -262,6 +345,11 @@ export class Player {
     /** The volume control, or null when it is off. */
     get volume(): VolumeControl | null {
         return this.volumeRef;
+    }
+
+    /** The sound in words, or null while it is off or not known yet. */
+    get description(): string | null {
+        return this.descriptionRef?.text ?? null;
     }
 
     /** Listens to the wave's events; returns the function that stops listening. */
@@ -475,7 +563,32 @@ export class Player {
         return this.decoding;
     }
 
-    /** The app's plugins, with a spectrogram in the palette's colors first when asked. */
+    /** The description's settings, or null while it is off. */
+    private descriptionSettings(): PlayerDescription | null {
+        const asked = this.options.a11y?.description;
+
+        if (!asked) {
+            return null;
+        }
+
+        return asked === true ? {} : asked;
+    }
+
+    /** The reading button's settings, or null while there is none. */
+    private listenButton(): PlayerListenButton | null {
+        const button = this.descriptionSettings()?.button;
+
+        if (!button) {
+            return null;
+        }
+
+        return button === true ? {} : button;
+    }
+
+    /**
+     * The app's plugins, with a spectrogram in the palette's colors first and the description last,
+     * each only when asked.
+     */
     private plugins(): Plugin[] {
         const plugins = [...(this.options.plugins ?? [])];
 
@@ -483,6 +596,23 @@ export class Player {
             plugins.unshift(
                 spectrogram({ source: () => this.decoded(), map: SPECTRUM }),
             );
+        }
+
+        const settings = this.descriptionSettings();
+
+        if (settings !== null) {
+            const description = soundDescription({
+                ...settings,
+                lang: settings.lang ?? this.options.a11y?.lang,
+                // The button reads aloud, so asking for it asks for the voice.
+                speech: settings.speech ?? this.listenButton() !== null,
+                onChange: (text) => {
+                    settings.onChange?.(text);
+                    this.events.emit('description', text);
+                },
+            });
+            this.descriptionRef = description;
+            plugins.push(description);
         }
 
         return plugins;
@@ -510,7 +640,8 @@ export class Player {
         ]);
 
         const frame = new SonicFrame({
-            label: 'Playback position',
+            label: this.words.labels.position,
+            valueText: this.words.valueText,
             ...this.options.frame,
             container: box,
             media: this.media,
@@ -555,6 +686,12 @@ export class Player {
             this.addPart(part, line, column);
         }
 
+        const listen = this.listenButton();
+
+        if (listen !== null && canSpeak()) {
+            line.append(this.listenPart(listen));
+        }
+
         const meta = this.visibleMeta();
 
         if (meta.length > 0) {
@@ -596,6 +733,7 @@ export class Player {
         this.buttonRef = null;
         this.volumeRef = null;
         this.frameRef = null;
+        this.descriptionRef = null;
         this.options.slot?.remove();
 
         // A copy: removing children while walking the live collection would skip some.
@@ -621,6 +759,10 @@ export class Player {
                     shape: look.button.shape,
                     fill: look.button.fill,
                     size: look.button.size,
+                    labels: {
+                        play: this.words.labels.play,
+                        pause: this.words.labels.pause,
+                    },
                 });
                 break;
             case 'wave':
@@ -647,6 +789,11 @@ export class Player {
                     media: this.media,
                     slider: look.volume,
                     size: Math.round(look.button.size * 0.875),
+                    labels: {
+                        mute: this.words.labels.mute,
+                        unmute: this.words.labels.unmute,
+                        volume: this.words.labels.volume,
+                    },
                 });
                 break;
             case 'slot':
@@ -732,7 +879,9 @@ export class Player {
             button.textContent = speedText(rate);
             button.setAttribute(
                 'aria-label',
-                `Playback speed ${speedText(rate)}`,
+                this.words.say('speed', {
+                    speed: `${this.words.number(rate)}×`,
+                }),
             );
         };
 
@@ -758,25 +907,24 @@ export class Player {
         return button;
     }
 
-    private skipPart(direction: 'back' | 'forward'): HTMLButtonElement {
+    /** A round button with an SVG icon (`d` on the 24 × 24 grid), named by `label`. */
+    private iconButton(
+        className: string,
+        d: string,
+        label: string,
+    ): HTMLButtonElement {
         const button = document.createElement('button');
         const size = `${Math.round(this.look.button.size * 0.75)}px`;
-        const seconds = this.look.skip;
         const icon = document.createElementNS(SVG, 'svg');
         const path = document.createElementNS(SVG, 'path');
 
         button.type = 'button';
-        button.className = `sonicframe-${direction}`;
-        button.disabled = this.media === null;
-        button.setAttribute(
-            'aria-label',
-            `${direction === 'back' ? 'Back' : 'Forward'} ${seconds} seconds`,
-        );
-        button.title = button.getAttribute('aria-label') ?? '';
+        button.className = className;
+        nameButton(button, label);
         icon.setAttribute('viewBox', '0 0 24 24');
         icon.setAttribute('aria-hidden', 'true');
         icon.setAttribute('focusable', 'false');
-        path.setAttribute('d', SKIP_ICONS[direction]);
+        path.setAttribute('d', d);
         path.setAttribute('fill', 'currentColor');
         icon.append(path);
         button.append(icon);
@@ -803,6 +951,18 @@ export class Player {
         ]);
         this.ring(button);
 
+        return button;
+    }
+
+    private skipPart(direction: 'back' | 'forward'): HTMLButtonElement {
+        const seconds = this.look.skip;
+        const button = this.iconButton(
+            `sonicframe-${direction}`,
+            SKIP_ICONS[direction],
+            this.words.say(direction, { seconds: this.words.number(seconds) }),
+        );
+        button.disabled = this.media === null;
+
         button.addEventListener('click', () => {
             const frame = this.frameRef;
             const duration = frame?.duration ?? null;
@@ -814,6 +974,82 @@ export class Player {
             const now = this.media?.currentTime ?? frame.progress * duration;
             const target = now + (direction === 'back' ? -seconds : seconds);
             frame.seekTo(Math.min(1, Math.max(0, target / duration)));
+        });
+
+        return button;
+    }
+
+    /**
+     * Reads the description with the browser's voice; pressed again (or Escape on the wave), it stops.
+     * While it reads, its name says so and it is filled (and pulses, with `animation`).
+     */
+    private listenPart(settings: PlayerListenButton): HTMLButtonElement {
+        const labels = this.words.labels;
+        const pulse = settings.animation === true;
+        const button = this.iconButton(
+            'sonicframe-listen',
+            LISTEN_ICON,
+            labels.listen,
+        );
+        let beating: Animation | null = null;
+        const show = (): void => {
+            const reading = this.descriptionRef?.speaking === true;
+            nameButton(button, reading ? labels.stopListening : labels.listen);
+            css(button, [
+                ['background-color', reading ? BUTTON_FILL : 'transparent'],
+                ['color', reading ? BUTTON_ICON : 'inherit'],
+            ]);
+
+            if (
+                reading &&
+                beating === null &&
+                pulse &&
+                typeof button.animate === 'function' &&
+                !prefersReducedMotion()
+            ) {
+                beating = button.animate(
+                    [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }],
+                    {
+                        duration: PULSE_MS,
+                        direction: 'alternate',
+                        iterations: Number.POSITIVE_INFINITY,
+                        easing: 'ease-in-out',
+                    },
+                );
+                // Cancelling the pulse rejects `finished`; that is how it ends, never an error.
+                beating.finished.catch(() => undefined);
+            } else if (!reading) {
+                beating?.cancel();
+                beating = null;
+            }
+        };
+        this.partCleanups.push(() => {
+            beating?.cancel();
+            beating = null;
+        });
+
+        button.addEventListener('click', () => {
+            const description = this.descriptionRef;
+
+            if (description === null) {
+                return;
+            }
+
+            if (description.speaking) {
+                description.stopSpeaking();
+                show();
+
+                return;
+            }
+
+            const reading = description.speak();
+            show();
+            reading.then(show, (error: unknown) => {
+                // Said aloud too: a person pressing the button may not see the page.
+                this.frameRef?.announce(labels.speechFailed);
+                this.frameRef?.reportError(error);
+                show();
+            });
         });
 
         return button;
