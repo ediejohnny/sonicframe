@@ -30,6 +30,7 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
 
     let host: PluginHost | null = null;
     let image: HTMLCanvasElement | null = null;
+    // One signal for the download, the decode and the slices: destroy() stops whichever is running.
     let controller: AbortController | null = null;
     let destroyed = false;
 
@@ -63,12 +64,11 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
     }
 
     function compute(samples: Float32Array, sampleRate: number): void {
-        if (destroyed) {
+        if (destroyed || controller === null) {
             return;
         }
 
         const job = createSpectrogram(samples, sampleRate, options);
-        controller = new AbortController();
         runChunked(job, { signal: controller.signal })
             .then(() => paintImage(job.columns, job.rows, job.data))
             .catch((error: unknown) => {
@@ -80,10 +80,12 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
     }
 
     function start(): void {
+        controller = new AbortController();
+
         if (options.samples !== undefined) {
             compute(options.samples, options.sampleRate ?? 44100);
         } else if (options.source !== undefined) {
-            decodeAudio(options.source).then(
+            decodeAudio(options.source, { signal: controller.signal }).then(
                 ({ samples, sampleRate }) => compute(samples, sampleRate),
                 () => undefined,
             );
