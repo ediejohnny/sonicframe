@@ -2,7 +2,8 @@
  * A spectrogram under the bars. The heavy maths are pure and resumable (`createSpectrogram`); here
  * the samples are decoded (from the page's audio, with no user gesture) or taken ready-made, the job
  * runs in short slices so the page never freezes, and the result is drawn once into a small canvas
- * and scaled onto the frame. Colors only ever land in an `ImageData`.
+ * and scaled onto the frame. Nothing is downloaded or computed before the frame's first picture,
+ * which a lazy frame only paints near the screen. Colors only ever land in an `ImageData`.
  */
 
 import { colormap, type ColormapName } from '../core/colormap';
@@ -98,10 +99,14 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
 
         setup(frame): void {
             host = frame;
-            start();
         },
 
         draw(paint): void {
+            // A frame paints only once it has pixels, so the first picture is the moment to begin.
+            if (controller === null && !destroyed) {
+                start();
+            }
+
             if (image !== null) {
                 paint.ctx.drawImage(image, 0, 0, paint.width, paint.height);
             }

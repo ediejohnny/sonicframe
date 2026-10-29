@@ -24,10 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   bar heights directly with `host.setValues`.
 - `spectrogram`: a time–frequency image under the bars, computed in the browser with a dependency-free
   radix-2 FFT (`createSpectrogram`, resumable so it never freezes the page; run in slices on the main
-  thread, since a strict CSP can block a blob worker). It decodes the audio with no user gesture (the
-  download capped, streamed, and stopped if the frame is destroyed) or takes ready-made samples; color
-  maps `viridis`, `magma` and `gray`, and colors only ever land in an `ImageData`. Window size,
-  columns, rows and duration are all capped.
+  thread, since a strict CSP can block a blob worker). Like the peaks, it waits until the frame is near
+  the screen, then decodes the audio with no user gesture (the download capped, streamed, and stopped
+  if the frame is destroyed) or takes ready-made samples; color maps `viridis`, `magma` and `gray`,
+  and colors only ever land in an `ImageData`. Window size, columns, rows and duration are all capped.
 - Sound analysis, pure and on its own entry `sonicframe/analysis` (safe in Node and a worker):
   `levels` (RMS and peak per window), `findSilences` (with hysteresis), `silencesFromPeaks` (for
   apps that only have server peaks), `peakLevel` (peak, dBFS and clipping), and `mixdown`. Every one
