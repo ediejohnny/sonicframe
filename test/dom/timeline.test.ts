@@ -29,4 +29,18 @@ describe('the timeline plugin', () => {
 
         expect(mounted.container.textContent).toContain('0:10');
     });
+
+    it('redraws the ruler when the duration changes while the position stays put', () => {
+        mounted = mount(
+            { duration: 60, lazy: false, plugins: [timeline()] },
+            { left: 0, top: 0, width: 300, height: 40 },
+        );
+        triggerResize(mounted.canvas, { width: 300, height: 40 });
+        triggerVisible(mounted.canvas, true);
+
+        mounted.frame.setDuration(600);
+
+        expect(mounted.container.textContent).toContain('10:00');
+        expect(mounted.container.textContent).not.toContain('0:50');
+    });
 });

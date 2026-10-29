@@ -33,15 +33,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   right after a seek) and can dim them.
 - `timeline`: a thin ruler in a lane above or below the bars, with labels on round seconds and
   minutes and optional minor marks. It picks a nice step for the width (`niceTicks`), is
-  `aria-hidden`, and rebuilds when the frame resizes or the duration becomes known. `formatTime`
-  takes an optional number of decimals.
+  `aria-hidden`, and rebuilds when the frame resizes or the duration becomes known or changes.
+  `formatTime` takes an optional number of decimals.
 - `regions`: stretches of the sound a listener can mark, play or loop. A band shows over the bars
   with its edges and an optional label; the pointer makes one by Shift-dragging (a plain drag still
   scrubs), moves it by its body and resizes it by an edge, and the keyboard — while the frame has
   focus — selects (`R` / `Shift+R`), plays (`Enter`), loops (`L`), nudges the edges (`[` `]` `{` `}`)
   and removes (`Delete`). A region never inverts or falls below a minimum length, and its edges have
-  a touch-sized grab zone. The plugin offers `add`, `update`, `remove`, `clear`, `list`, `play`,
-  `stop` and `select`.
+  a touch-sized grab zone, and regions given before the sound's length is known are fitted to it once
+  it is. The plugin offers `add` (a copy of the region, or `null` once `max` regions exist), `update`,
+  `remove`, `clear`, `list`, `play`, `stop` and `select`.
 
 ### Changed
 
@@ -69,10 +70,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   ids the page put there (only the caption's own id is ever taken out). Clicking it never seeks.
 - Plugins can stack a lane above or below the bars (`host.addLane`); the wave shrinks to make room,
   and a press on a lane is not a seek. They can also draw into a shared layer over the canvas
-  (`host.overlay`), read the peaks and the wave's geometry (`host.peaks`, `host.geometry`), and learn
-  when the wave area changes size (the `resize` event and a `resize` hook on a plugin), and resolve a
-  CSS color against the frame (`host.color`). All of this is additive: a 0.1.0 plugin keeps working
-  unchanged.
+  (`host.overlay`), read the peaks and the wave's geometry (`host.peaks`, `host.geometry`), learn
+  when the wave area changes size (the `resize` event and a `resize` hook on a plugin) and when the
+  duration becomes known or changes (the `durationchange` event), and resolve a CSS color against the
+  frame (`host.color`). All of this is additive: a 0.1.0 plugin keeps working unchanged.
 
 ## [0.1.0] - 2026-10-08
 

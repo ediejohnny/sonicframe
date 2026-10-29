@@ -269,7 +269,30 @@ describe('keyboard', () => {
         controller.hoverAt(0.5);
 
         expect(media.seeks).toEqual([]);
-        expect(events.filter(([name]) => name !== 'timeupdate')).toEqual([]);
+        expect(
+            events.filter(
+                ([name]) => name !== 'timeupdate' && name !== 'durationchange',
+            ),
+        ).toEqual([]);
+    });
+});
+
+describe('duration', () => {
+    it('says when the duration becomes known and when it changes, once each', () => {
+        const { controller, media, fire, events } = setup();
+        controller.bind(media);
+
+        media.duration = 30;
+        media.readyState = 1;
+        fire('loadedmetadata', 'durationchange');
+        fire('timeupdate');
+        media.duration = 31.5;
+        fire('durationchange');
+
+        expect(events.filter(([name]) => name === 'durationchange')).toEqual([
+            ['durationchange', [30]],
+            ['durationchange', [31.5]],
+        ]);
     });
 });
 

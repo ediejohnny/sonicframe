@@ -46,7 +46,8 @@ export type RegionsOptions = {
 };
 
 export type RegionsPlugin = Plugin & {
-    add(region: Omit<Region, 'id'> & { id?: string }): Region;
+    /** Adds a region and returns a copy of it, or null when `max` regions already exist. */
+    add(region: Omit<Region, 'id'> & { id?: string }): Region | null;
     update(id: string, patch: Partial<Omit<Region, 'id'>>): void;
     remove(id: string): void;
     clear(): void;
@@ -68,6 +69,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const max = Math.min(200, Math.max(0, options.max ?? 200));
 
     let host: PluginHost | null = null;
+    let stopFitting: (() => void) | null = null;
     let items: Region[] = [];
     let selectedId: string | null = null;
     let loop = false;
@@ -99,8 +101,18 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         return normalizeRegion(start, end, span, minLength);
     }
 
-    function addRegion(item: Omit<Region, 'id'> & { id?: string }): Region {
-        const span = duration() ?? Math.max(item.end, minLength);
+    /**
+     * Stores a region, or nothing (null) once `max` regions exist. Until the sound's length is known
+     * it is only ordered and kept to the minimum length; `fitToSound` fits it in later.
+     */
+    function addRegion(
+        item: Omit<Region, 'id'> & { id?: string },
+    ): Region | null {
+        if (items.length >= max) {
+            return null;
+        }
+
+        const span = duration() ?? Math.max(item.start, item.end, minLength);
         const bounds = normalized(item.start, item.end, span);
         const region: Region = {
             id: item.id ?? `region-${++counter}`,
@@ -112,7 +124,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                     : cleanText(item.label, 120),
             color: item.color,
         };
-        items = [...items, region].slice(0, max);
+        items = [...items, region];
 
         return region;
     }
@@ -125,6 +137,36 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         host?.invalidate();
         layoutLabels();
         options.onChange?.(list());
+    }
+
+    /**
+     * Fits every region inside the sound once its length is known, and again whenever it changes. The
+     * app hears about it (`onChange`) only when a region actually moved.
+     */
+    function fitToSound(): void {
+        const span = duration();
+
+        if (span === null) {
+            return;
+        }
+
+        let moved = false;
+
+        for (const region of items) {
+            const bounds = normalized(region.start, region.end, span);
+
+            if (bounds.start !== region.start || bounds.end !== region.end) {
+                region.start = bounds.start;
+                region.end = bounds.end;
+                moved = true;
+            }
+        }
+
+        if (moved) {
+            changed();
+        } else {
+            layoutLabels();
+        }
     }
 
     function list(): readonly Region[] {
@@ -289,7 +331,17 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         name: 'regions',
         layer: 'over',
 
-        add: addRegion,
+        add(region): Region | null {
+            const added = addRegion(region);
+
+            if (added === null) {
+                return null;
+            }
+
+            changed();
+
+            return { ...added };
+        },
 
         update(id, patch): void {
             const region = byId(id);
@@ -344,7 +396,8 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
         setup(frame): void {
             host = frame;
-            layoutLabels();
+            stopFitting = frame.on('durationchange', fitToSound);
+            fitToSound();
         },
 
         resize(): void {
@@ -444,7 +497,15 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
             if (drag.mode === 'create') {
                 if (drag.id === '') {
-                    drag.id = addRegion({ start: drag.grab, end: at }).id;
+                    const created = addRegion({ start: drag.grab, end: at });
+
+                    if (created === null) {
+                        drag = null;
+
+                        return;
+                    }
+
+                    drag.id = created.id;
                     select(drag.id);
                 } else {
                     const region = byId(drag.id);
@@ -566,6 +627,9 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         destroy(): void {
+            stopFitting?.();
+            stopFitting = null;
+
             for (const node of labelSpans.values()) {
                 node.remove();
             }

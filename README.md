@@ -116,13 +116,16 @@ Colors take any CSS color or `var(--name, fallback)`:
 
 ## Events
 
-| Event        | Arguments                 | When                                                            |
-| ------------ | ------------------------- | --------------------------------------------------------------- |
-| `seek`       | `{ ratio, time, source }` | Click, drag, keyboard or `seekTo` (`source` says which).        |
-| `hover`      | `ratio, time`             | The mouse moved over the frame (`null` when it left).           |
-| `timeupdate` | `time, ratio`             | The media moved, at the media's own pace, never once per frame. |
-| `error`      | `error`                   | Loading peaks or drawing a plugin failed.                       |
-| `destroy`    |                           | The frame was destroyed.                                        |
+| Event            | Arguments                 | When                                                                |
+| ---------------- | ------------------------- | ------------------------------------------------------------------- |
+| `seek`           | `{ ratio, time, source }` | Click, drag, keyboard or `seekTo` (`source` says which).            |
+| `hover`          | `ratio, time`             | The mouse moved over the frame (`null` when it left).               |
+| `timeupdate`     | `time, ratio`             | The media moved, at the media's own pace, never once per frame.     |
+| `durationchange` | `duration`                | The duration became known or changed (`null` when unknown again).   |
+| `resize`         | `geometry`                | The wave area changed size (a lane was added, the element resized). |
+| `rangeend`       |                           | A range being played (`host.playRange`) ended or was abandoned.     |
+| `error`          | `error`                   | Loading peaks or drawing a plugin failed.                           |
+| `destroy`        |                           | The frame was destroyed.                                            |
 
 ## Play button
 
@@ -184,8 +187,9 @@ Each of these is a plugin; import it and `frame.use(it)`.
   (next to any ids the page put there, which it never removes). Text goes in as text, never HTML.
 - **`regions({ items, create, minLength, keys })`** — stretches to mark, play or loop. Shift-drag makes one (a plain
   drag still scrubs), the body moves it, an edge resizes it; with focus, `R`/`Shift+R` select, `Enter` plays, `L`
-  loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add`, `update`, `remove`, `clear`, `list`,
-  `play`, `stop`, `select`, with `onChange` / `onSelect`.
+  loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add` (returns a copy, or `null` once `max`
+  regions exist), `update`, `remove`, `clear`, `list`, `play`, `stop`, `select`, with `onChange` / `onSelect`.
+  Regions are fitted to the sound once its length is known.
 - **`timeline({ side, size, minSpacing })`** — a ruler with labels on round seconds and minutes, in a lane above or
   below the bars.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
