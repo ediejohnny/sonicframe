@@ -22,6 +22,13 @@ export type {
     ButtonShape,
 } from './core/button';
 export {
+    DEFAULT_VOLUME_COLORS,
+    VolumeControl,
+    type VolumeColors,
+    type VolumeControlEvents,
+    type VolumeControlOptions,
+} from './controls/volume';
+export {
     markers,
     markerSpans,
     type Mark,
