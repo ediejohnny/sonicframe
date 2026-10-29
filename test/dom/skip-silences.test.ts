@@ -21,7 +21,7 @@ function advance(media: FakeMedia, time: number): void {
 }
 
 describe('skipSilences', () => {
-    it('jumps to the end of a silence while playing forward', () => {
+    it('jumps to just before the end of a silence while playing forward', () => {
         const media = fakeMedia({ duration: 40, paused: false });
         mounted = mount({
             media,
@@ -32,7 +32,8 @@ describe('skipSilences', () => {
         advance(media, 4.5); // playing, before the silence
         advance(media, 5.4); // runs into the silence
 
-        expect(media.currentTime).toBe(10);
+        // The default lead (0.1 s) keeps the start of the next word.
+        expect(media.currentTime).toBeCloseTo(9.9);
     });
 
     it('does not jump right after a seek into a silence', () => {

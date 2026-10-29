@@ -217,17 +217,22 @@ export function mixdown(source: ChannelSource, max: number): Float32Array {
 }
 
 /**
- * The end of the silence the playhead has run into, or null. Only when moving forward into a silence
- * (never right after a seek), and it stops `lead` seconds before the end so a word is not clipped.
+ * Where to land once the playhead has run into a silence: `lead` seconds before its end, so the next
+ * word is not clipped (and never past the end). Null outside every silence, or already within `lead`
+ * of its end. The caller decides that it is ordinary forward playback, never right after a seek.
  */
 export function nextSkip(
     time: number,
     silences: readonly Silence[],
     lead: number = 0.1,
 ): number | null {
+    const before = Math.max(0, lead);
+
     for (const silence of silences) {
-        if (time >= silence.start && time < silence.end - lead) {
-            return silence.end;
+        const landing = silence.end - before;
+
+        if (time >= silence.start && time < landing) {
+            return landing;
         }
     }
 
