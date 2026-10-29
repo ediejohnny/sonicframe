@@ -17,7 +17,7 @@ export type LiveFrequencyOptions = {
     /** Frequency range mapped across the bars. */
     minHz?: number;
     maxHz?: number;
-    /** How many bands to feed the bars. */
+    /** How many bands to feed the bars (at most 512). */
     bars?: number;
 };
 

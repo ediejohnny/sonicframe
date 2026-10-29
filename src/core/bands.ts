@@ -4,17 +4,24 @@
  * into one bar. Pure, so it is tested without Web Audio.
  */
 
+/** The most bands a spectrum is split into; more would cost every frame and add nothing visible. */
+export const MAX_BANDS = 512;
+
+/** `count` log-spaced bands (0..1) from an analyser's bytes; never more than `MAX_BANDS`. */
 export function frequencyBands(
     spectrum: ArrayLike<number>,
     count: number,
     sampleRate: number,
     options: { minHz?: number; maxHz?: number } = {},
 ): number[] {
+    const total = Number.isFinite(count)
+        ? Math.min(MAX_BANDS, Math.max(0, Math.floor(count)))
+        : 0;
     const bins = spectrum.length;
     const nyquist = sampleRate / 2;
 
-    if (bins === 0 || count <= 0 || nyquist <= 0) {
-        return Array.from({ length: Math.max(0, count) }, () => 0);
+    if (bins === 0 || total === 0 || nyquist <= 0) {
+        return Array.from({ length: total }, () => 0);
     }
 
     const minHz = Math.max(1, options.minHz ?? 40);
@@ -22,9 +29,9 @@ export function frequencyBands(
     const ratio = maxHz / minHz;
     const bands: number[] = [];
 
-    for (let b = 0; b < count; b++) {
-        const from = minHz * ratio ** (b / count);
-        const to = minHz * ratio ** ((b + 1) / count);
+    for (let b = 0; b < total; b++) {
+        const from = minHz * ratio ** (b / total);
+        const to = minHz * ratio ** ((b + 1) / total);
         const lo = Math.max(0, Math.floor((from / nyquist) * bins));
         const hi = Math.min(bins - 1, Math.ceil((to / nyquist) * bins));
         let peak = 0;
