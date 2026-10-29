@@ -163,12 +163,21 @@ export class Controller {
                 this.waiting = false;
                 this.range = null;
                 break;
+            case 'ended':
+                this.rangeAtEnd();
+                break;
             default:
                 break;
         }
 
         this.applyPending();
         this.sync(true);
+
+        // The animation tick only runs on screen; the media's own pace keeps a range in bounds everywhere.
+        if (type === 'timeupdate' && this.range !== null && this.playing) {
+            this.applyRange();
+        }
+
         this.updateLoop();
         this.effects.invalidate();
     }
@@ -198,11 +207,7 @@ export class Controller {
         const to = Math.max(from, Math.min(end, duration));
         this.range = { start: from, end: to, loop };
         this.seek(from / duration, 'api');
-        const started = this.media.play?.();
-
-        if (started !== undefined && typeof started.then === 'function') {
-            started.then(undefined, () => undefined);
-        }
+        this.play(this.media);
     }
 
     /** Forgets any range being played (playback itself carries on). */
@@ -230,6 +235,36 @@ export class Controller {
             }
 
             this.effects.emit('rangeend');
+        }
+    }
+
+    /**
+     * The media ended while a range was open: a looping range starts again, any other one is over.
+     * The animation tick never sees this moment, since an ended media no longer plays.
+     */
+    private rangeAtEnd(): void {
+        const media = this.media;
+        const range = this.range;
+
+        if (media === null || range === null) {
+            return;
+        }
+
+        if (range.loop) {
+            media.currentTime = range.start;
+            this.play(media);
+        } else {
+            this.range = null;
+            this.effects.emit('rangeend');
+        }
+    }
+
+    /** Starts playback; a refused start (an autoplay rule, say) leaves the media paused and is no error here. */
+    private play(media: MediaLike): void {
+        const started = media.play?.();
+
+        if (started !== undefined && typeof started.then === 'function') {
+            started.then(undefined, () => undefined);
         }
     }
 
