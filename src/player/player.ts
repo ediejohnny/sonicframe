@@ -534,9 +534,12 @@ export class Player {
             );
         }
 
+        // Beside an inline wave the wave gives up the room; controls on their own line wrap instead
+        // of spilling out of a narrow player.
         const line = document.createElement('div');
         css(line, [
             ['display', 'flex'],
+            ['flex-wrap', look.wavePlace === 'top' ? 'wrap' : 'nowrap'],
             ['align-items', 'center'],
             ['gap', `${look.gap}rem`],
             ['min-width', '0'],

@@ -132,6 +132,24 @@ describe('themes on the player', () => {
         expect(waveOnTop()).toBe(true);
     });
 
+    it('lets the controls under a wave on top wrap in a narrow space, never the line around an inline wave', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            theme: 'card',
+        });
+        const controls = root().children[1] as HTMLElement;
+
+        expect(waveOnTop()).toBe(true);
+        expect(controls.style.getPropertyValue('flex-wrap')).toBe('wrap');
+
+        player.setTheme('bubble');
+        const line = root().firstElementChild as HTMLElement;
+
+        expect(waveOnTop()).toBe(false);
+        expect(line.style.getPropertyValue('flex-wrap')).toBe('nowrap');
+    });
+
     it('wears a theme the app registered', () => {
         registerTheme('brand-test', { extends: 'pulse', palette: 'berry' });
         player = createPlayer({
