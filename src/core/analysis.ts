@@ -112,7 +112,7 @@ export function findSilences(
     return silences;
 }
 
-/** Silences from server peaks (0..1), for an app that has no raw samples (e.g. voicechan). */
+/** Silences from server peaks (0..1), for an app that has those and no raw samples. */
 export function silencesFromPeaks(
     peaks: ArrayLike<number>,
     duration: number,
