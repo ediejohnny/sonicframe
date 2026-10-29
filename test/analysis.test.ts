@@ -74,11 +74,15 @@ describe('mixdown', () => {
 });
 
 describe('next skip', () => {
-    it('jumps to the end of a silence it runs into', () => {
-        expect(nextSkip(1.2, [{ start: 1, end: 2 }], 0.1)).toBe(2);
+    it('lands lead seconds before the end of a silence it runs into', () => {
+        expect(nextSkip(1.2, [{ start: 1, end: 2 }], 0.1)).toBeCloseTo(1.9);
     });
 
     it('does not jump once inside the lead at the end', () => {
         expect(nextSkip(1.95, [{ start: 1, end: 2 }], 0.1)).toBeNull();
+    });
+
+    it('never lands past the end of the silence, even with a negative lead', () => {
+        expect(nextSkip(1.2, [{ start: 1, end: 2 }], -0.5)).toBe(2);
     });
 });

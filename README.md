@@ -197,7 +197,8 @@ Each of these is a plugin; import it and `frame.use(it)`.
   (like the peaks); color maps `viridis`, `magma`, `gray`.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
   Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
-- **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback.
+- **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback, landing
+  `lead` seconds (0.1 by default) before each one ends, so the next word is not clipped.
 
 ### Analysis and clips
 
