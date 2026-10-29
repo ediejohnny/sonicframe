@@ -26,8 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   radix-2 FFT (`createSpectrogram`, resumable so it never freezes the page; run in slices on the main
   thread, since a strict CSP can block a blob worker). Like the peaks, it waits until the frame is near
   the screen, then decodes the audio with no user gesture (the download capped, streamed, and stopped
-  if the frame is destroyed) or takes ready-made samples; color maps `viridis`, `magma` and `gray`,
-  and colors only ever land in an `ImageData`. Window size, columns, rows and duration are all capped.
+  if the frame is destroyed) or takes ready-made samples, and a failed download or decode reaches the
+  frame's `error` event; color maps `viridis`, `magma` and `gray`, and colors only ever land in an
+  `ImageData`. Window size, columns, rows and duration are all capped.
 - Sound analysis, pure and on its own entry `sonicframe/analysis` (safe in Node and a worker):
   `levels` (RMS and peak per window), `findSilences` (with hysteresis), `silencesFromPeaks` (for
   apps that only have server peaks), `peakLevel` (peak, dBFS and clipping), and `mixdown`. Every one
@@ -58,8 +59,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `'drag'` only once it moves past a few pixels, so a tap still seeks), with `pointerMove`,
   `pointerUp`, `pointerCancel` and a `pointerHover` that returns a cursor; `keyDown` runs before the
   slider keys. Plugins can play a stretch of the sound (`host.playRange` / `host.stopRange`, with a
-  `rangeend` event), seek (`host.seekTo`), and speak to a screen reader through a shared polite live
-  region (`host.announce`). A seek out of a range being played abandons it.
+  `rangeend` event), seek (`host.seekTo`), speak to a screen reader through a shared polite live
+  region (`host.announce`), and report a failure met outside their hooks, such as a download, as the
+  frame's `error` event (`host.reportError`). A seek out of a range being played abandons it.
 - Hover colors: `colors.waveHover` and `colors.progressHover` recolor the unplayed and played bars
   while the pointer is over a frame. Each takes `'auto'` (nudges the wave toward the played color,
   and lightens or darkens the played color), a CSS color, or null. Off by default, so an upgrade

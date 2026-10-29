@@ -75,6 +75,27 @@ describe('the spectrogram plugin', () => {
         expect(downloads).toHaveLength(1);
     });
 
+    it('reports a failed download through the frame error event', async () => {
+        globalThis.fetch = (() =>
+            Promise.resolve(
+                new Response(null, { status: 404 }),
+            )) as typeof fetch;
+        mounted = mount({
+            lazy: false,
+            plugins: [spectrogram({ source: '/missing.mp3' })],
+        });
+        const errors: unknown[] = [];
+        mounted.frame.on('error', (error) => errors.push(error));
+        triggerResize(mounted.canvas, { width: 200, height: 40 });
+        triggerVisible(mounted.canvas, true);
+
+        await vi.waitFor(() => expect(errors).toHaveLength(1), {
+            timeout: 3_000,
+            interval: 20,
+        });
+        expect(String(errors[0])).toMatch(/could not fetch audio \(404\)/);
+    });
+
     it('stops downloading the audio when the frame is destroyed', async () => {
         const downloads = endlessDownloads();
         mounted = mount({

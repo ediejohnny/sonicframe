@@ -116,16 +116,16 @@ Colors take any CSS color or `var(--name, fallback)`:
 
 ## Events
 
-| Event            | Arguments                 | When                                                                |
-| ---------------- | ------------------------- | ------------------------------------------------------------------- |
-| `seek`           | `{ ratio, time, source }` | Click, drag, keyboard or `seekTo` (`source` says which).            |
-| `hover`          | `ratio, time`             | The mouse moved over the frame (`null` when it left).               |
-| `timeupdate`     | `time, ratio`             | The media moved, at the media's own pace, never once per frame.     |
-| `durationchange` | `duration`                | The duration became known or changed (`null` when unknown again).   |
-| `resize`         | `geometry`                | The wave area changed size (a lane was added, the element resized). |
-| `rangeend`       |                           | A range being played (`host.playRange`) ended or was abandoned.     |
-| `error`          | `error`                   | Loading peaks or drawing a plugin failed.                           |
-| `destroy`        |                           | The frame was destroyed.                                            |
+| Event            | Arguments                 | When                                                                             |
+| ---------------- | ------------------------- | -------------------------------------------------------------------------------- |
+| `seek`           | `{ ratio, time, source }` | Click, drag, keyboard or `seekTo` (`source` says which).                         |
+| `hover`          | `ratio, time`             | The mouse moved over the frame (`null` when it left).                            |
+| `timeupdate`     | `time, ratio`             | The media moved, at the media's own pace, never once per frame.                  |
+| `durationchange` | `duration`                | The duration became known or changed (`null` when unknown again).                |
+| `resize`         | `geometry`                | The wave area changed size (a lane was added, the element resized).              |
+| `rangeend`       |                           | A range being played (`host.playRange`) ended or was abandoned.                  |
+| `error`          | `error`                   | Loading peaks, drawing a plugin or a plugin's own work (a download, say) failed. |
+| `destroy`        |                           | The frame was destroyed.                                                         |
 
 ## Play button
 
@@ -220,8 +220,9 @@ tap still seeks); `pointerHover` returns a CSS cursor; `keyDown` runs before the
 used the key. The host gives `container`, `duration`, `progress`, `peaks`, `media`, `geometry`, `invalidate()`,
 `on()`, `color(value)`, `addLane(side, px)` (a strip above or below the bars, so the wave shrinks), `overlay()` (a
 layer over the canvas for text), `seekTo`, `playRange` / `stopRange`, `setValues` (override the bar heights) and
-`announce(text)` (a shared polite live region). A plugin that throws from any hook is parked and an `error` event is
-emitted, so one broken plugin never breaks the frame.
+`announce(text)` (a shared polite live region) and `reportError(error)` (a failure met outside its hooks, such as a
+download, heard as the `error` event). A plugin that throws from any hook is parked and an `error` event is emitted,
+so one broken plugin never breaks the frame.
 
 ## Styling and accessibility
 

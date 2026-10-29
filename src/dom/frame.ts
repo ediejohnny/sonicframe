@@ -405,6 +405,13 @@ export class SonicFrame implements PluginHost {
         announce(text);
     }
 
+    /** Reports a plugin's failure outside its hooks (a download, a decode) as the `error` event. */
+    reportError(error: unknown): void {
+        if (!this.destroyed) {
+            this.events.emit('error', error);
+        }
+    }
+
     /** Records a clip of the wave playing, using the frame's own peaks, bars and colors. */
     exportClip(
         options: Partial<ClipOptions> = {},

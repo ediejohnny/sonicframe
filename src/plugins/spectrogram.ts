@@ -64,6 +64,13 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
         host?.invalidate();
     }
 
+    /** Tells the app through the frame's `error` event, unless it is the cancellation `destroy()` asked for. */
+    function fail(error: unknown): void {
+        if (!destroyed) {
+            host?.reportError(error);
+        }
+    }
+
     function compute(samples: Float32Array, sampleRate: number): void {
         if (destroyed || controller === null) {
             return;
@@ -72,12 +79,7 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
         const job = createSpectrogram(samples, sampleRate, options);
         runChunked(job, { signal: controller.signal })
             .then(() => paintImage(job.columns, job.rows, job.data))
-            .catch((error: unknown) => {
-                if (!(error instanceof DOMException)) {
-                    host?.invalidate();
-                    throw error;
-                }
-            });
+            .catch(fail);
     }
 
     function start(): void {
@@ -86,10 +88,9 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
         if (options.samples !== undefined) {
             compute(options.samples, options.sampleRate ?? 44100);
         } else if (options.source !== undefined) {
-            decodeAudio(options.source, { signal: controller.signal }).then(
-                ({ samples, sampleRate }) => compute(samples, sampleRate),
-                () => undefined,
-            );
+            decodeAudio(options.source, { signal: controller.signal })
+                .then(({ samples, sampleRate }) => compute(samples, sampleRate))
+                .catch(fail);
         }
     }
 

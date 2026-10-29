@@ -174,6 +174,8 @@ export type PluginHost = {
     stopRange(): void;
     /** Says something through the page's shared polite live region, for screen readers. */
     announce(text: string): void;
+    /** Reports a failure the plugin met outside its hooks (a download, a decode) as the frame's `error` event. */
+    reportError(error: unknown): void;
     on<Name extends keyof SonicFrameEvents>(
         event: Name,
         listener: (...args: SonicFrameEvents[Name]) => void,
