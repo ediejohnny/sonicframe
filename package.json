@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "sonicframe",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Audio visualization and interaction framework for the web.",
     "keywords": [
         "audio",
@@ -11,8 +11,16 @@
         "visualization",
         "waveform"
     ],
+    "homepage": "https://github.com/ediejohnny/sonicframe#readme",
+    "bugs": {
+        "url": "https://github.com/ediejohnny/sonicframe/issues"
+    },
     "license": "MIT",
     "author": "Edie Johnny",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ediejohnny/sonicframe.git"
+    },
     "files": [
         "dist",
         "CHANGELOG.md"
@@ -24,6 +32,14 @@
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
+        },
+        "./analysis": {
+            "types": "./dist/analysis.d.ts",
+            "default": "./dist/analysis.js"
+        },
+        "./player": {
+            "types": "./dist/player.d.ts",
+            "default": "./dist/player.js"
         },
         "./package.json": "./package.json"
     },
@@ -38,6 +54,7 @@
     },
     "devDependencies": {
         "@types/node": "^26.6.4",
+        "happy-dom": "^21.0.4",
         "typescript": "^7.0.2",
         "vite-plus": "1.1.0"
     }

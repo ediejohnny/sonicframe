@@ -3,7 +3,7 @@
  * tested here, in Node), and nothing is imported from outside the package (no runtime dependency).
  */
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vite-plus/test';
 import { VERSION } from '../src/index';
@@ -35,8 +35,11 @@ function imports(file: string): string[] {
     ].map((match) => match[1]);
 }
 
+// The core must not reach for anything only the page has. This grew in 0.2.0 with the Web Audio,
+// media-recording, worker, timer and blob names the new features use in the DOM layer only.
+// `URL`, `Intl` and `queueMicrotask` stay allowed: they are standard in Node as well.
 const DOM_NAMES =
-    /\b(window|document|navigator|globalThis|HTMLElement|HTMLMediaElement|HTMLCanvasElement|CanvasRenderingContext2D|Path2D|requestAnimationFrame|cancelAnimationFrame|ResizeObserver|IntersectionObserver|matchMedia|getComputedStyle|devicePixelRatio|addEventListener|Event)\b/;
+    /\b(window|document|navigator|globalThis|location|HTMLElement|HTMLMediaElement|HTMLCanvasElement|CanvasRenderingContext2D|OffscreenCanvas|Path2D|ImageData|requestAnimationFrame|cancelAnimationFrame|setTimeout|setInterval|ResizeObserver|IntersectionObserver|matchMedia|getComputedStyle|devicePixelRatio|addEventListener|Event|AudioContext|OfflineAudioContext|AnalyserNode|MediaRecorder|MediaStream|Worker|Blob)\b/;
 
 describe('package boundaries', () => {
     it('keeps the core free of the page', () => {
@@ -69,6 +72,32 @@ describe('package boundaries', () => {
             readFileSync(join(root, 'package.json'), 'utf8'),
         );
         expect(manifest.dependencies ?? {}).toEqual({});
+        expect(manifest.peerDependencies ?? {}).toEqual({});
+        expect(manifest.optionalDependencies ?? {}).toEqual({});
+    });
+
+    it('keeps the analysis entry importing only the core', () => {
+        // src/analysis.ts is the `sonicframe/analysis` subpath: pure functions, safe in Node and in a
+        // worker, so its import graph must stay inside the core. It arrives in a later phase.
+        const file = join(root, 'src/analysis.ts');
+
+        if (!existsSync(file)) {
+            return;
+        }
+
+        for (const target of imports(file)) {
+            expect(target, 'src/analysis.ts').toMatch(/^\.\/core\/[\w-]+$/);
+        }
+    });
+
+    it('keeps the player entry to the player and the core', () => {
+        // src/player.ts is the `sonicframe/player` subpath: it re-exports the player and the pure pieces
+        // it is described by (looks, palettes, fonts), so the main entry never has to carry them.
+        for (const target of imports(join(root, 'src/player.ts'))) {
+            expect(target, 'src/player.ts').toMatch(
+                /^\.\/(player|core)\/[\w-]+$/,
+            );
+        }
     });
 
     it('reports the version of the package', () => {

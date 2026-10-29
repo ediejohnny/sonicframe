@@ -8,12 +8,32 @@ export default defineConfig({
         port: 5174,
         strictPort: true,
     },
+    // Two test projects: the pure core runs in Node (fast, no DOM), and the page layer runs under
+    // happy-dom with the stand-ins from test/dom/setup.ts. Core tests stay flat in test/; page tests
+    // live under test/dom/, so the globs keep them apart without fighting Vitest's default excludes.
     test: {
-        include: ['test/**/*.test.ts'],
-        environment: 'node',
+        projects: [
+            {
+                extends: true,
+                test: {
+                    name: 'core',
+                    environment: 'node',
+                    include: ['test/*.test.ts'],
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: 'dom',
+                    environment: 'happy-dom',
+                    include: ['test/dom/**/*.test.ts'],
+                    setupFiles: ['./test/dom/setup.ts'],
+                },
+            },
+        ],
     },
     pack: {
-        entry: ['src/index.ts'],
+        entry: ['src/index.ts', 'src/analysis.ts', 'src/player.ts'],
         format: 'esm',
         platform: 'neutral',
         target: 'es2022',

@@ -4,7 +4,13 @@
  * core says something changed. `destroy()` gives the element back as it was.
  */
 
-import { mixColors, resolveColor, rgbaString } from '../core/color';
+import {
+    hoverColors,
+    mixColors,
+    resolveColor,
+    rgbaString,
+} from '../core/color';
+import { isDrag } from '../core/gesture';
 import {
     Controller,
     MEDIA_EVENTS,
@@ -12,28 +18,40 @@ import {
     type ValueText,
 } from '../core/controller';
 import { Emitter } from '../core/emitter';
-import { barMetrics, layoutBars } from '../core/layout';
+import { barMetrics } from '../core/layout';
 import { clamp01 } from '../core/math';
 import { resample } from '../core/peaks';
 import { applyStyles } from '../core/styles';
 import { overlayOf, ratioAt, sameOverlay, type Overlay } from '../core/scene';
+import { DEFAULT_WAVE, knobSpot, resolveWave, waveShape } from '../core/shapes';
 import { easeOut } from '../core/timing';
 import type {
     BarStyle,
+    Claim,
     Colors,
+    FrameGeometry,
+    Lane,
     PaintContext,
     PeaksSource,
     Plugin,
     PluginHost,
     SonicFrameEvents,
+    WaveName,
+    WavePoint,
+    WaveStyle,
 } from '../types';
+import { announce } from './announce';
+import { exportClip, type ClipOptions } from './clip';
+import { LaneManager } from './lanes';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
-    barsPath,
+    drawingOf,
     linePath,
-    paintBars,
     paintCursor,
+    paintKnob,
+    paintWave,
     readColor,
+    type Drawing,
     type Palette,
 } from './paint';
 import { schedule, setLooping, unschedule, type FrameTask } from './scheduler';
@@ -48,6 +66,8 @@ export type SonicFrameOptions = {
     /** Duration in seconds, used until the media knows its own (or without media). */
     duration?: number | null;
     bar?: Partial<BarStyle>;
+    /** How the sound is drawn: a name (`'line'`, `'pulse'`, `'track'`…) or its details. Bars by default. */
+    wave?: WaveName | Partial<WaveStyle>;
     colors?: Partial<Colors>;
     /** Width of the cursor line in CSS pixels (drawn only with a cursor color). */
     cursorWidth?: number;
@@ -84,7 +104,19 @@ export const DEFAULT_COLORS: Readonly<Colors> = Object.freeze({
     progress: 'var(--sonicframe-progress, #2f6fdb)',
     hover: 'auto',
     cursor: null,
+    waveHover: null,
+    progressHover: null,
+    knob: null,
 });
+
+/** A press being tracked: a plugin may own it (once its claim is active) or it is a plain seek. */
+type Press = {
+    box: DOMRect;
+    plugin: Plugin | null;
+    claim: Claim | null;
+    active: boolean;
+    fromX: number;
+};
 
 /** How long the bars take to grow in, in milliseconds. */
 const APPEAR_MS = 180;
@@ -124,27 +156,32 @@ export class SonicFrame implements PluginHost {
     private readonly savedAttributes = new Map<string, string | null>();
     private restoreStyles: () => void = () => undefined;
     private bar: BarStyle;
+    private wave: WaveStyle;
     private colors: Colors;
     private palette: Palette | null = null;
     private readonly colorCache = new Map<string, string>();
-    private peaks: number[] | null = null;
+    private peaksData: number[] | null = null;
     private values: number[] | null = null;
     private loader: (() => Promise<readonly number[]>) | null = null;
     private loads = 0;
     private size: Size = { width: 0, height: 0, pixelRatio: 1 };
     private near = false;
     private allocated = false;
-    private path: Path2D | null = null;
+    private drawing: Drawing | null = null;
     private layoutDirty = true;
     private paintDirty = true;
     private painted: Overlay | null = null;
     /** When the bars started growing in: -1 waits for the next animation frame, null means not growing. */
     private appear: number | null = null;
-    private media: HTMLMediaElement | null = null;
+    private mediaEl: HTMLMediaElement | null = null;
+    private override: number[] | null = null;
     private plugins: Plugin[] = [];
     private readonly failed = new WeakSet<Plugin>();
-    private dragBox: DOMRect | null = null;
+    private press: Press | null = null;
+    private restoreCursor: () => void = () => undefined;
     private destroyed = false;
+    private readonly lanes: LaneManager;
+    private overlayEl: HTMLElement | null = null;
 
     static create(options: SonicFrameOptions): SonicFrame {
         return new SonicFrame(options);
@@ -161,6 +198,7 @@ export class SonicFrame implements PluginHost {
         this.animate = options.animate ?? true;
         this.cursorWidth = options.cursorWidth ?? 2;
         this.bar = { ...DEFAULT_BAR, ...options.bar };
+        this.wave = resolveWave(DEFAULT_WAVE, options.wave);
         this.colors = { ...DEFAULT_COLORS, ...options.colors };
         this.task = { render: (now) => this.render(now) };
 
@@ -184,6 +222,9 @@ export class SonicFrame implements PluginHost {
         this.canvas.height = 0;
         this.container.append(this.canvas);
         this.context = this.canvas.getContext('2d');
+        this.lanes = new LaneManager(this.container, this.canvas, () =>
+            this.relayoutLanes(),
+        );
 
         this.controller = new Controller(
             {
@@ -222,13 +263,15 @@ export class SonicFrame implements PluginHost {
             observeVisibility(this.canvas, (near) => this.setNear(near)),
         );
 
+        this.setPeaks(options.peaks ?? null);
+        this.controller.setDuration(options.duration ?? null);
+        this.bind(options.media ?? null);
+
+        // After bind, so a plugin's setup already sees the media (e.g. liveFrequency taps it).
         for (const plugin of options.plugins ?? []) {
             this.use(plugin);
         }
 
-        this.setPeaks(options.peaks ?? null);
-        this.controller.setDuration(options.duration ?? null);
-        this.bind(options.media ?? null);
         this.controller.refresh();
     }
 
@@ -247,6 +290,64 @@ export class SonicFrame implements PluginHost {
         listener: (...args: SonicFrameEvents[Name]) => void,
     ): () => void {
         return this.events.on(event, listener);
+    }
+
+    /** The peaks the frame drew (0..1), or null while it has none. */
+    get peaks(): readonly number[] | null {
+        return this.peaksData;
+    }
+
+    /** The media element the frame follows, or null. */
+    get media(): HTMLMediaElement | null {
+        return this.mediaEl;
+    }
+
+    /** Overrides the bar heights with live values (e.g. a spectrum); null gives the peaks back. */
+    setValues(values: readonly number[] | null): void {
+        this.override = values === null ? null : values.map((v) => clamp01(v));
+        this.values = null;
+        this.layoutDirty = true;
+        this.invalidate();
+    }
+
+    /** The wave area's size and state, or null before the frame has pixels. */
+    get geometry(): FrameGeometry | null {
+        if (!this.allocated) {
+            return null;
+        }
+
+        return {
+            width: this.size.width,
+            height: this.size.height,
+            pixelRatio: this.size.pixelRatio,
+            duration: this.controller.duration,
+            progress: this.controller.progress,
+        };
+    }
+
+    /** Takes a strip above or below the bars; the wave shrinks to make room. */
+    addLane(side: 'above' | 'below', cssPixels: number): Lane {
+        return this.lanes.add(side, cssPixels);
+    }
+
+    /** A layer over the canvas for a plugin's text and tooltips, created once and shared. */
+    overlay(): HTMLElement {
+        if (this.overlayEl === null) {
+            const element = document.createElement('div');
+
+            for (const [property, value] of [
+                ['position', 'absolute'],
+                ['inset', '0'],
+                ['pointer-events', 'none'],
+            ]) {
+                element.style.setProperty(property, value);
+            }
+
+            this.container.append(element);
+            this.overlayEl = element;
+        }
+
+        return this.overlayEl;
     }
 
     setPeaks(source: PeaksSource): void {
@@ -276,7 +377,7 @@ export class SonicFrame implements PluginHost {
         }
 
         this.unbindMedia();
-        this.media = media;
+        this.mediaEl = media;
 
         for (const type of MEDIA_EVENTS) {
             media?.addEventListener(type, this.onMedia);
@@ -299,8 +400,71 @@ export class SonicFrame implements PluginHost {
         this.controller.seekTo(ratio);
     }
 
+    /** Plays `start`..`end` seconds of the bound media, optionally looping. */
+    playRange(start: number, end: number, options?: { loop?: boolean }): void {
+        this.controller.playRange(start, end, options?.loop ?? false);
+    }
+
+    /** Forgets any range being played (playback itself carries on). */
+    stopRange(): void {
+        this.controller.stopRange();
+    }
+
+    /** Says something through the page's shared polite live region, for screen readers. */
+    announce(text: string): void {
+        announce(text);
+    }
+
+    /** Reports a plugin's failure outside its hooks (a download, a decode) as the `error` event. */
+    reportError(error: unknown): void {
+        if (!this.destroyed) {
+            this.events.emit('error', error);
+        }
+    }
+
+    /** Records a clip of the wave playing, using the frame's own peaks, bars and colors. */
+    exportClip(
+        options: Partial<ClipOptions> = {},
+    ): Promise<{ blob: Blob; mimeType: string; duration: number }> {
+        const audio =
+            options.audio ?? this.mediaEl?.currentSrc ?? this.mediaEl?.src;
+
+        if (audio === undefined || audio === '') {
+            return Promise.reject(
+                new Error('sonicframe: no audio to record a clip from'),
+            );
+        }
+
+        const palette = (this.palette ??= this.resolvePalette());
+
+        return exportClip({
+            audio,
+            peaks: this.peaksData ?? [],
+            bar: this.bar,
+            wave: this.wave,
+            colors: {
+                wave: palette.wave,
+                progress: palette.progress,
+                knob: palette.knob ?? undefined,
+            },
+            // Its own media's length is known, so an over-long source is refused before any download.
+            sourceSeconds:
+                options.audio === undefined
+                    ? (this.duration ?? undefined)
+                    : undefined,
+            ...options,
+        });
+    }
+
     setBar(bar: Partial<BarStyle>): void {
         this.bar = { ...this.bar, ...bar };
+        this.layoutDirty = true;
+        this.invalidate();
+    }
+
+    /** Changes how the sound is drawn: a name, or details over the current drawing. */
+    setWave(wave: WaveName | Partial<WaveStyle>): void {
+        this.wave = resolveWave(this.wave, wave);
         this.layoutDirty = true;
         this.invalidate();
     }
@@ -345,6 +509,12 @@ export class SonicFrame implements PluginHost {
             this.events.emit('error', error);
         }
 
+        const geometry = this.geometry;
+
+        if (geometry !== null) {
+            this.callResize(plugin, geometry);
+        }
+
         this.invalidate();
 
         return () => this.remove(plugin);
@@ -371,6 +541,10 @@ export class SonicFrame implements PluginHost {
         this.canvas.width = 0;
         this.canvas.height = 0;
         this.canvas.remove();
+        this.lanes.dispose();
+        this.overlayEl?.remove();
+        this.overlayEl = null;
+        this.restoreCursor();
         this.restoreContainer();
         this.events.emit('destroy');
         this.events.clear();
@@ -457,12 +631,16 @@ export class SonicFrame implements PluginHost {
                 this.pointerCancel(),
             );
             on(this.container, 'pointerleave', (event) => {
-                if (event.pointerType === 'mouse' && this.dragBox === null) {
+                if (event.pointerType === 'mouse' && this.press === null) {
+                    this.hover(null);
                     this.controller.hoverAt(null);
                 }
             });
             on(this.container, 'keydown', (event) => {
-                if (this.controller.key(event.key, event)) {
+                if (
+                    this.pluginKey(event) ||
+                    this.controller.key(event.key, event)
+                ) {
                     event.preventDefault();
                 }
             });
@@ -484,14 +662,50 @@ export class SonicFrame implements PluginHost {
 
     private unbindMedia(): void {
         for (const type of MEDIA_EVENTS) {
-            this.media?.removeEventListener(type, this.onMedia);
+            this.mediaEl?.removeEventListener(type, this.onMedia);
         }
 
-        this.media = null;
+        this.mediaEl = null;
     }
 
-    private ratioOf(event: PointerEvent, box: DOMRect): number {
-        return ratioAt(event.clientX - box.left, box.width);
+    private wavePoint(event: PointerEvent, box: DOMRect): WavePoint {
+        const x = event.clientX - box.left;
+        const ratio = ratioAt(x, box.width);
+        const duration = this.controller.duration;
+
+        return {
+            ratio,
+            time: duration !== null ? ratio * duration : null,
+            x,
+            y: event.clientY - box.top,
+            width: box.width,
+            height: box.height,
+            pointerType: event.pointerType,
+            shiftKey: event.shiftKey,
+        };
+    }
+
+    /** Offers a press to the plugins, last-added first; returns the one that claimed it. */
+    private askPlugins(
+        point: WavePoint,
+    ): { plugin: Plugin; claim: Claim } | null {
+        for (let i = this.plugins.length - 1; i >= 0; i--) {
+            const plugin = this.plugins[i];
+
+            if (plugin.pointerDown === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            const claim = this.safely(plugin, () =>
+                plugin.pointerDown?.(point),
+            );
+
+            if (claim === 'take' || claim === 'drag') {
+                return { plugin, claim };
+            }
+        }
+
+        return null;
     }
 
     private pointerDown(event: PointerEvent): void {
@@ -499,45 +713,198 @@ export class SonicFrame implements PluginHost {
             return;
         }
 
-        const box = this.canvas.getBoundingClientRect();
-
-        if (!this.controller.pointerDown(this.ratioOf(event, box))) {
+        // A press on a lane (a caption, a timeline) is the lane's business, never a seek.
+        if (this.lanes.contains(event.target as Node | null)) {
             return;
         }
 
-        this.dragBox = box;
+        const box = this.canvas.getBoundingClientRect();
+        const point = this.wavePoint(event, box);
+        const claimed = this.askPlugins(point);
+
+        if (claimed !== null) {
+            this.press = {
+                box,
+                plugin: claimed.plugin,
+                claim: claimed.claim,
+                active: claimed.claim === 'take',
+                fromX: point.x,
+            };
+
+            if (this.press.active) {
+                this.safely(claimed.plugin, () =>
+                    claimed.plugin.pointerMove?.(point),
+                );
+            }
+        } else {
+            if (!this.controller.pointerDown(point.ratio)) {
+                return;
+            }
+
+            this.press = {
+                box,
+                plugin: null,
+                claim: null,
+                active: false,
+                fromX: point.x,
+            };
+        }
 
         try {
             this.container.setPointerCapture(event.pointerId);
         } catch {
-            // The pointer is already gone; the drag ends with the next event.
+            // The pointer is already gone; the press ends with the next event.
         }
     }
 
     private pointerMove(event: PointerEvent): void {
-        if (this.dragBox !== null) {
-            this.controller.pointerMove(this.ratioOf(event, this.dragBox));
-        } else if (event.pointerType === 'mouse') {
-            this.controller.hoverAt(
-                this.ratioOf(event, this.canvas.getBoundingClientRect()),
-            );
+        const press = this.press;
+
+        if (press === null) {
+            if (event.pointerType === 'mouse') {
+                const point = this.wavePoint(
+                    event,
+                    this.canvas.getBoundingClientRect(),
+                );
+                this.hover(point);
+                this.controller.hoverAt(point.ratio);
+            }
+
+            return;
+        }
+
+        const point = this.wavePoint(event, press.box);
+
+        if (press.plugin === null) {
+            this.controller.pointerMove(point.ratio);
+
+            return;
+        }
+
+        if (
+            !press.active &&
+            press.claim === 'drag' &&
+            isDrag(press.fromX, point.x)
+        ) {
+            press.active = true;
+        }
+
+        if (press.active) {
+            const plugin = press.plugin;
+            this.safely(plugin, () => plugin.pointerMove?.(point));
         }
     }
 
     private pointerUp(event: PointerEvent): void {
-        const box = this.dragBox;
+        const press = this.press;
 
-        if (box === null) {
+        if (press === null) {
             return;
         }
 
-        this.dragBox = null;
-        this.controller.pointerUp(this.ratioOf(event, box));
+        this.press = null;
+        const point = this.wavePoint(event, press.box);
+        const plugin = press.plugin;
+
+        if (plugin === null) {
+            this.controller.pointerUp(point.ratio);
+
+            return;
+        }
+
+        if (press.active) {
+            this.safely(plugin, () => plugin.pointerUp?.(point));
+
+            return;
+        }
+
+        // A 'drag' claim that never moved is a tap: the plugin stands down and the press seeks.
+        this.safely(plugin, () => plugin.pointerCancel?.());
+        this.controller.pointerDown(point.ratio);
+        this.controller.pointerUp(point.ratio);
     }
 
     private pointerCancel(): void {
-        this.dragBox = null;
-        this.controller.pointerCancel();
+        const press = this.press;
+        this.press = null;
+
+        if (press === null) {
+            return;
+        }
+
+        if (press.plugin === null) {
+            this.controller.pointerCancel();
+        } else if (press.active) {
+            const plugin = press.plugin;
+            this.safely(plugin, () => plugin.pointerCancel?.());
+        }
+    }
+
+    /** Shows the cursor a plugin asks for while the mouse hovers (restoring the previous one). */
+    private hover(point: WavePoint | null): void {
+        let cursor: string | undefined;
+
+        for (let i = this.plugins.length - 1; i >= 0; i--) {
+            const plugin = this.plugins[i];
+
+            if (plugin.pointerHover === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            const asked = this.safely(plugin, () =>
+                plugin.pointerHover?.(point),
+            );
+
+            if (typeof asked === 'string') {
+                cursor = asked;
+                break;
+            }
+        }
+
+        this.restoreCursor();
+        this.restoreCursor =
+            cursor === undefined
+                ? () => undefined
+                : applyStyles(this.container.style, [['cursor', cursor]]);
+    }
+
+    private pluginKey(event: KeyboardEvent): boolean {
+        const modifiers = {
+            shiftKey: event.shiftKey,
+            ctrlKey: event.ctrlKey,
+            altKey: event.altKey,
+            metaKey: event.metaKey,
+        };
+
+        for (let i = this.plugins.length - 1; i >= 0; i--) {
+            const plugin = this.plugins[i];
+
+            if (plugin.keyDown === undefined || this.failed.has(plugin)) {
+                continue;
+            }
+
+            if (
+                this.safely(plugin, () =>
+                    plugin.keyDown?.(event.key, modifiers),
+                ) === true
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Runs a plugin callback, parking one that throws (as `drawPlugins` does) and returning its value. */
+    private safely<T>(plugin: Plugin, run: () => T): T | undefined {
+        try {
+            return run();
+        } catch (error) {
+            this.failed.add(plugin);
+            this.events.emit('error', error);
+
+            return undefined;
+        }
     }
 
     private load(): void {
@@ -565,14 +932,14 @@ export class SonicFrame implements PluginHost {
     }
 
     private receive(peaks: readonly number[] | null): void {
-        this.peaks =
+        this.peaksData =
             peaks === null
                 ? null
                 : peaks.map((value) => clamp01(Math.abs(value)));
         this.values = null;
         this.layoutDirty = true;
         this.appear =
-            this.peaks !== null &&
+            this.peaksData !== null &&
             this.animate &&
             this.allocated &&
             this.near &&
@@ -592,10 +959,49 @@ export class SonicFrame implements PluginHost {
         }
 
         this.size = size;
+        this.relayoutLanes();
         this.allocate();
+        this.notifyResize();
     }
 
+    /** Re-places the lanes and insets the canvas for the container's current height. */
+    private relayoutLanes(): void {
+        this.lanes.layout(this.container.getBoundingClientRect().height);
+        this.invalidate();
+    }
+
+    /** Tells listeners and plugins the wave area changed size (only once it has pixels). */
+    private notifyResize(): void {
+        const geometry = this.geometry;
+
+        if (geometry === null) {
+            return;
+        }
+
+        this.events.emit('resize', geometry);
+
+        for (const plugin of this.plugins) {
+            this.callResize(plugin, geometry);
+        }
+    }
+
+    private callResize(plugin: Plugin, geometry: FrameGeometry): void {
+        if (plugin.resize === undefined || this.failed.has(plugin)) {
+            return;
+        }
+
+        try {
+            plugin.resize(geometry);
+        } catch (error) {
+            // A broken plugin is skipped from now on instead of failing every resize.
+            this.failed.add(plugin);
+            this.events.emit('error', error);
+        }
+    }
+
+    /** Coming near gives a lazy frame its pixels, so plugins learn its geometry right then. */
     private setNear(near: boolean): void {
+        const wasAllocated = this.allocated;
         this.near = near;
 
         if (near) {
@@ -604,6 +1010,10 @@ export class SonicFrame implements PluginHost {
 
         this.allocate();
         this.controller.setVisible(near);
+
+        if (this.allocated && !wasAllocated) {
+            this.notifyResize();
+        }
     }
 
     /** Gives the canvas its pixels (or takes them back far from the screen, when lazy). */
@@ -647,10 +1057,15 @@ export class SonicFrame implements PluginHost {
         }
 
         const palette = (this.palette ??= this.resolvePalette());
+        const hoverMatters =
+            palette.hover !== null ||
+            palette.waveHover != null ||
+            palette.progressHover != null;
         const overlay = overlayOf(
             this.controller.progress,
             palette.hover === null ? null : this.controller.hover,
             this.size.width,
+            hoverMatters && this.controller.hover !== null,
         );
 
         if (this.paintDirty || !sameOverlay(this.painted, overlay)) {
@@ -668,19 +1083,30 @@ export class SonicFrame implements PluginHost {
         const { width, height, pixelRatio } = this.size;
         this.layoutDirty = false;
 
-        if (this.peaks === null) {
-            this.path = linePath(width, height, pixelRatio, this.bar.align);
+        const source = this.override ?? this.peaksData;
+
+        // The track needs no peaks; every other drawing shows a thin line until they arrive.
+        if (source === null && this.wave.style !== 'track') {
+            this.drawing = {
+                path: linePath(width, height, pixelRatio, this.bar.align),
+                mode: 'fill',
+                lineWidth: 1,
+                glow: 0,
+            };
 
             return;
         }
 
         const count = barMetrics(width, this.bar, pixelRatio).count;
 
-        if (this.values === null || this.values.length !== count) {
-            this.values = resample(this.peaks, count);
+        if (
+            source !== null &&
+            (this.values === null || this.values.length !== count)
+        ) {
+            this.values = resample(source, count);
         }
 
-        let values = this.values;
+        let values = source === null ? [] : (this.values ?? []);
 
         if (this.appear !== null) {
             if (this.appear < 0) {
@@ -697,8 +1123,9 @@ export class SonicFrame implements PluginHost {
             }
         }
 
-        this.path = barsPath(
-            layoutBars(values, width, height, this.bar, pixelRatio),
+        this.drawing = drawingOf(
+            waveShape(values, width, height, this.bar, this.wave, pixelRatio),
+            Math.round(this.wave.glow * pixelRatio),
         );
     }
 
@@ -724,8 +1151,8 @@ export class SonicFrame implements PluginHost {
         ctx.clearRect(0, 0, width, height);
         this.drawPlugins('under', paint);
 
-        if (this.path !== null) {
-            paintBars(ctx, this.path, overlay, width, height, palette);
+        if (this.drawing !== null) {
+            paintWave(ctx, this.drawing, overlay, width, height, palette);
         }
 
         this.drawPlugins('over', paint);
@@ -739,6 +1166,19 @@ export class SonicFrame implements PluginHost {
                 height,
                 palette.cursor,
             );
+        }
+
+        const spot = knobSpot(
+            overlay.progress,
+            width,
+            height,
+            this.wave,
+            this.bar.align,
+            pixelRatio,
+        );
+
+        if (spot !== null) {
+            paintKnob(ctx, spot, palette.knob ?? palette.progress);
         }
     }
 
@@ -766,7 +1206,7 @@ export class SonicFrame implements PluginHost {
         }
     }
 
-    private color(value: string): string {
+    color(value: string): string {
         let resolved = this.colorCache.get(value);
 
         if (resolved === undefined) {
@@ -796,6 +1236,12 @@ export class SonicFrame implements PluginHost {
             hover = this.color(this.colors.hover) || null;
         }
 
+        const auto =
+            this.colors.waveHover === 'auto' ||
+            this.colors.progressHover === 'auto'
+                ? this.autoHover(wave, progress)
+                : null;
+
         return {
             wave,
             progress,
@@ -804,7 +1250,52 @@ export class SonicFrame implements PluginHost {
                 this.colors.cursor === null
                     ? null
                     : this.color(this.colors.cursor) || null,
+            waveHover: this.hoverColor(this.colors.waveHover, auto?.wave),
+            progressHover: this.hoverColor(
+                this.colors.progressHover,
+                auto?.progress,
+            ),
+            knob:
+                this.colors.knob == null
+                    ? null
+                    : this.color(this.colors.knob) || null,
         };
+    }
+
+    /** The `'auto'` hover colors, read back from the resolved wave and progress; null if unreadable. */
+    private autoHover(
+        wave: string,
+        progress: string,
+    ): { wave: string; progress: string } | null {
+        const from = readColor(wave);
+        const to = readColor(progress);
+
+        if (from === null || to === null) {
+            return null;
+        }
+
+        const colors = hoverColors(from, to);
+
+        return {
+            wave: rgbaString(colors.waveHover),
+            progress: rgbaString(colors.progressHover),
+        };
+    }
+
+    /** Resolves one hover color: null stays off, `'auto'` uses the computed one, else a CSS color. */
+    private hoverColor(
+        setting: string | null,
+        automatic: string | undefined,
+    ): string | null {
+        if (setting === null) {
+            return null;
+        }
+
+        if (setting === 'auto') {
+            return automatic ?? null;
+        }
+
+        return this.color(setting) || null;
     }
 
     private remove(plugin: Plugin): void {

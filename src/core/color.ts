@@ -63,6 +63,97 @@ export function rgbaFromBytes(bytes: ArrayLike<number>): Rgba {
     ];
 }
 
+/** `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa` as numbers; anything else is null. */
+export function parseHex(value: string): Rgba | null {
+    const match = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(
+        value.trim(),
+    );
+
+    if (match === null) {
+        return null;
+    }
+
+    const digits = match[1];
+    const full =
+        digits.length <= 4
+            ? digits.replace(/./g, (digit) => digit + digit)
+            : digits;
+    const byte = (at: number): number => parseInt(full.slice(at, at + 2), 16);
+
+    return [
+        byte(0),
+        byte(2),
+        byte(4),
+        full.length === 8 ? Math.round((byte(6) / 255) * 1000) / 1000 : 1,
+    ];
+}
+
 export function rgbaString(color: Rgba): string {
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`;
+}
+
+/**
+ * The played and unplayed colors to use while the pointer is over the frame: the wave is nudged a
+ * fifth of the way toward the played color, and the played color is lightened or darkened a little
+ * (away from its own luminance), so a hovered frame stands out without a jarring recolor.
+ */
+export function hoverColors(
+    wave: Rgba,
+    progress: Rgba,
+): { waveHover: Rgba; progressHover: Rgba } {
+    const target: Rgba =
+        relativeLuminance(progress) < 0.5
+            ? [255, 255, 255, progress[3]]
+            : [0, 0, 0, progress[3]];
+
+    return {
+        waveHover: mixColors(wave, progress, 0.2),
+        progressHover: mixColors(progress, target, 0.12),
+    };
+}
+
+/** Relative luminance (WCAG), 0 (black) to 1 (white); alpha is ignored. */
+export function relativeLuminance(color: Rgba): number {
+    const linear = (value: number): number => {
+        const channel = value / 255;
+
+        return channel <= 0.03928
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4;
+    };
+
+    return (
+        0.2126 * linear(color[0]) +
+        0.7152 * linear(color[1]) +
+        0.0722 * linear(color[2])
+    );
+}
+
+/** Contrast ratio (WCAG) between two colors, from 1 (same) to 21 (black on white). */
+export function contrastRatio(a: Rgba, b: Rgba): number {
+    const la = relativeLuminance(a);
+    const lb = relativeLuminance(b);
+    const lighter = Math.max(la, lb);
+    const darker = Math.min(la, lb);
+
+    return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * A text color readable on `background`: the `preferred` color when it clears the 4.5:1 AA threshold,
+ * otherwise black or white, whichever has more contrast. Returns a CSS color string.
+ */
+export function readableText(background: Rgba, preferred: Rgba): string {
+    if (contrastRatio(background, preferred) >= 4.5) {
+        return rgbaString(preferred);
+    }
+
+    const white: Rgba = [255, 255, 255, 1];
+    const black: Rgba = [0, 0, 0, 1];
+
+    return rgbaString(
+        contrastRatio(background, white) >= contrastRatio(background, black)
+            ? white
+            : black,
+    );
 }

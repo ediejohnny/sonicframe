@@ -22,11 +22,70 @@ export type {
     ButtonShape,
 } from './core/button';
 export {
+    DEFAULT_VOLUME_COLORS,
+    VolumeControl,
+    type VolumeColors,
+    type VolumeControlEvents,
+    type VolumeControlOptions,
+} from './controls/volume';
+export {
     markers,
     markerSpans,
+    type Mark,
     type MarkersOptions,
     type MarkersPlugin,
 } from './plugins/markers';
+export {
+    caption,
+    type CaptionOptions,
+    type CaptionPlugin,
+    type TooltipContent,
+    type TooltipSection,
+} from './plugins/caption';
+export {
+    regions,
+    type Region,
+    type RegionsOptions,
+    type RegionsPlugin,
+} from './plugins/regions';
+export { timeline, type TimelineOptions } from './plugins/timeline';
+export {
+    skipSilences,
+    type SkipSilencesOptions,
+    type SkipSilencesPlugin,
+} from './plugins/skip-silences';
+export {
+    findSilences,
+    levels,
+    mixdown,
+    nextSkip,
+    peakLevel,
+    silencesFromPeaks,
+    type ChannelSource,
+    type Silence,
+} from './core/analysis';
+export {
+    spectrogram,
+    type ColorStops,
+    type DecodedAudio,
+    type SpectrogramPluginOptions,
+} from './plugins/spectrogram';
+export {
+    createSpectrogram,
+    type SpectrogramJob,
+    type SpectrogramOptions,
+} from './core/spectrogram';
+export { buildColormap, colormap, type ColormapName } from './core/colormap';
+export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
+export { frequencyBands, MAX_BANDS } from './core/bands';
+export { canTapMedia } from './core/origin';
+export { exportClip, type ClipOptions } from './dom/clip';
+export {
+    clipPlan,
+    DEFAULT_CLIP_TYPES,
+    DEFAULT_MAX_SOURCE_SECONDS,
+    pickMimeType,
+} from './core/clip';
 export {
     loadPeaks,
     MAX_PEAKS,
@@ -36,11 +95,14 @@ export {
     resample,
     type PeaksFetcher,
 } from './core/peaks';
+export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
 export { formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
 export type {
     BarStyle,
     Colors,
+    FrameGeometry,
+    Lane,
     MediaLike,
     PaintContext,
     PeaksSource,
@@ -49,7 +111,9 @@ export type {
     SeekEvent,
     SeekSource,
     SonicFrameEvents,
+    WaveName,
+    WaveStyle,
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '0.1.0';
+export const VERSION: string = '0.2.0';
