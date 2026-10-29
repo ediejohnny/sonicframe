@@ -24,6 +24,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `default` theme, SonicFrame as it always looked: no theme, an unknown name or a theme that extends
   nothing ends up on it, and its `'default'` palette sets no variable, leaving the colors to SonicFrame
   and to the page.
+- `<sonic-player>`: the player as an HTML tag, registered by `defineSonicPlayer()` (never on
+  import). Attributes (`src`, `peaks`, `theme`, `palette`, `wave`, `font`, `font-src`,
+  `font-stylesheet`, `label`, `volume`, `spectrogram`) are read as untrusted input, a changed
+  attribute updates the player, removing the element destroys it, and the player's events reach the
+  element as `sonicframe:<event>`. A player's own choices, at creation or through `setPalette`,
+  `setWave`, `setLook` and the new `setVolume`, now keep winning over a later `setTheme`.
 - The spectrogram takes its colors from your own stops (`map: { from, via, to }`, CSS colors or
   variables, read back as numbers) and repaints its image when they change, without computing again;
   new named maps `ice`, `fire` and `ocean`. `source` also takes a function that gives decoded audio,

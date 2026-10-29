@@ -16,7 +16,6 @@ import { resolveFont, type FontChoice } from '../core/fonts';
 import {
     DEFAULT_LOOK,
     nextSpeed,
-    resolveLook,
     speedText,
     timeText,
     type Part,
@@ -187,6 +186,15 @@ export class Player {
     private readonly options: PlayerOptions;
     private readonly events = new Emitter<PlayerEvents>();
     private readonly abort = new AbortController();
+    /** The player's own choices, at creation or through a setter: they always win over the theme. */
+    private readonly own: {
+        look?: Partial<PlayerLook>;
+        palette?: PaletteChoice;
+        wave?: WaveName | Partial<WaveStyle>;
+        bar?: Partial<BarStyle>;
+    };
+    private theme: Theme | null = null;
+    private showVolume: boolean;
     private look: PlayerLook = DEFAULT_LOOK;
     private palette: PaletteChoice = 'default';
     private colors: Palette = DEFAULT_PALETTE;
@@ -209,7 +217,15 @@ export class Player {
         }
 
         this.options = options;
-        this.applyTheme(this.pickTheme(options.theme));
+        this.own = {
+            look: options.look,
+            palette: options.palette,
+            wave: options.wave,
+            bar: options.bar,
+        };
+        this.showVolume = options.volume === true;
+        this.theme = this.pickTheme(options.theme);
+        this.combine();
         this.font = options.font;
 
         this.element = document.createElement('div');
@@ -257,12 +273,13 @@ export class Player {
     }
 
     /**
-     * Switches to another theme (a name, or one made with `defineTheme`). The options the player was
-     * created with still win over it.
+     * Switches to another theme (a name, or one made with `defineTheme`). The player's own choices
+     * (at creation or through the setters below) still win over it.
      */
     setTheme(theme: string | ThemeInput): void {
         if (!this.destroyed) {
-            this.applyTheme(this.pickTheme(theme));
+            this.theme = this.pickTheme(theme);
+            this.combine();
             this.build();
             this.applyPalette();
             this.applyFont();
@@ -272,36 +289,54 @@ export class Player {
     /** Changes how the player is put together (and rebuilds it). */
     setLook(look: Partial<PlayerLook>): void {
         if (!this.destroyed) {
-            this.look = resolveLook(this.look, look);
+            this.own.look = { ...this.own.look, ...look };
+            this.combine();
             this.build();
-            this.finish();
         }
     }
 
-    /** Changes the colors. */
-    setPalette(palette: PaletteChoice): void {
+    /** Changes the colors; with no palette, the theme's comes back. */
+    setPalette(palette?: PaletteChoice): void {
         if (!this.destroyed) {
-            this.palette = palette;
+            this.own.palette = palette;
+            this.combine();
             this.applyPalette();
         }
     }
 
-    /** Changes how the sound is drawn. */
-    setWave(wave: WaveName | Partial<WaveStyle>): void {
-        if (!this.destroyed) {
-            this.wave =
-                typeof wave === 'string'
-                    ? { ...this.wave, style: wave }
-                    : { ...this.wave, ...wave };
-            this.frameRef?.setWave(wave);
+    /** Changes how the sound is drawn; with no drawing, the theme's comes back. */
+    setWave(wave?: WaveName | Partial<WaveStyle>): void {
+        if (this.destroyed) {
+            return;
         }
+
+        const current =
+            typeof this.own.wave === 'string'
+                ? { style: this.own.wave }
+                : this.own.wave;
+        this.own.wave =
+            wave === undefined
+                ? undefined
+                : typeof wave === 'string'
+                  ? { ...current, style: wave }
+                  : { ...current, ...wave };
+        this.combine();
+        this.frameRef?.setWave({ ...DEFAULT_WAVE, ...this.wave });
     }
 
-    /** Changes the font. */
-    setFont(font: FontChoice): void {
+    /** Changes the font; with no font, the look's comes back. */
+    setFont(font?: FontChoice): void {
         if (!this.destroyed) {
             this.font = font;
             this.applyFont();
+        }
+    }
+
+    /** Shows or hides the volume control. */
+    setVolume(show: boolean): void {
+        if (!this.destroyed && show !== this.showVolume) {
+            this.showVolume = show;
+            this.build();
         }
     }
 
@@ -349,14 +384,9 @@ export class Player {
         return theme;
     }
 
-    /** The theme under the player's own options. */
-    private applyTheme(theme: Theme | null): void {
-        const parts = themeParts(theme, {
-            look: this.options.look,
-            palette: this.options.palette,
-            wave: this.options.wave,
-            bar: this.options.bar,
-        });
+    /** The theme under the player's own choices. */
+    private combine(): void {
+        const parts = themeParts(this.theme, this.own);
 
         this.look = parts.look;
         this.palette = parts.palette;
@@ -385,7 +415,7 @@ export class Player {
     private visibleLine(): Part[] {
         const line = this.look.line;
 
-        if (!this.options.volume) {
+        if (!this.showVolume) {
             return line.filter((part) => part !== 'volume');
         }
 
@@ -395,7 +425,7 @@ export class Player {
     }
 
     private visibleMeta(): Part[] {
-        return this.options.volume
+        return this.showVolume
             ? this.look.meta
             : this.look.meta.filter((part) => part !== 'volume');
     }

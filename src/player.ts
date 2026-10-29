@@ -5,6 +5,7 @@
  */
 
 export { createPlayer, Player, type PlayerOptions } from './player/player';
+export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
 export {
     DEFAULT_LOOK,
     PART_NAMES,

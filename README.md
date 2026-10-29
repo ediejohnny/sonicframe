@@ -277,9 +277,33 @@ Fonts: SonicFrame ships no font files. The stacks (`system`, `rounded`, `mono`, 
 It loads once per page, the system stack stays behind it, and an address is used only when it is http(s) or a
 relative path; your Content-Security-Policy decides the rest.
 
-`setLook`, `setPalette`, `setWave` and `setFont` change a player later; `on(event, listener)` hears the wave's events;
-`player.frame`, `player.button` and `player.volume` reach the parts; `destroy()` gives the container back (a media
-element the player made is stopped, yours is left alone).
+`setTheme`, `setLook`, `setPalette`, `setWave`, `setFont` and `setVolume` change a player later (your own choices keep
+winning over the theme; `setPalette()`, `setWave()` or `setFont()` with nothing brings the theme's back);
+`on(event, listener)` hears the wave's events; `player.frame`, `player.button` and `player.volume` reach the parts;
+`destroy()` gives the container back (a media element the player made is stopped, yours is left alone).
+
+### As an HTML tag
+
+```html
+<sonic-player
+    src="/notes/42.ogg"
+    theme="bubble"
+    palette="midnight"
+    volume
+></sonic-player>
+
+<script type="module">
+    import { defineSonicPlayer } from 'sonicframe/player';
+    defineSonicPlayer(); // once; nothing is registered just by importing
+</script>
+```
+
+Attributes: `src`, `peaks` (the address of a peaks file), `theme`, `palette`, `wave`, `font`, `font-src`,
+`font-stylesheet`, `label`, and the switches `volume` and `spectrogram`. They are read as untrusted input: an unknown
+name falls back to the default theme, text goes in only as text, and a font address is used only when it is safe.
+Changing an attribute updates the player; removing the element destroys it, and putting it back builds it again. The
+player's events reach the element as `sonicframe:seek`, `sonicframe:timeupdate`, `sonicframe:error`… with their
+arguments in `event.detail`. `defineSonicPlayer('my-player')` registers it under another name.
 
 ## Markers
 
