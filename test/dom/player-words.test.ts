@@ -227,6 +227,39 @@ describe('the wave in words on the player', () => {
         expect(labelOf('.sonicframe-listen')).toBe('Ouvir a descrição');
     });
 
+    it('says so when there is no voice on the device for the language', async () => {
+        vi.stubGlobal('speechSynthesis', {
+            getVoices: () => [
+                {
+                    name: 'Online',
+                    lang: 'pt-BR',
+                    localService: false,
+                    default: true,
+                },
+            ],
+            speak: () => undefined,
+            cancel: () => undefined,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+        });
+        vi.stubGlobal('SpeechSynthesisUtterance', class {});
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            peaks: NOTE,
+            lang: 'pt',
+            description: { button: true },
+        });
+
+        within('.sonicframe-listen').click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(document.querySelector('[role="status"]')?.textContent).toBe(
+            'Não foi possível ler a descrição em voz alta aqui.',
+        );
+        expect(labelOf('.sonicframe-listen')).toBe('Ouvir a descrição');
+    });
+
     it('brings no button where the browser cannot speak', () => {
         player = createPlayer({
             container: container(),

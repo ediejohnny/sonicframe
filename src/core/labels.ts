@@ -33,6 +33,8 @@ export type PlayerLabels = {
     listen: string;
     /** The same button while the voice reads. */
     stopListening: string;
+    /** Said when the browser cannot read the description aloud (no voice for the language, say). */
+    speechFailed: string;
 };
 
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
@@ -51,6 +53,7 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             volume: 'Volume',
             listen: 'Hear the description',
             stopListening: 'Stop the description',
+            speechFailed: 'The description could not be read aloud here.',
         }),
         pt: Object.freeze({
             player: 'Player de áudio',
@@ -66,6 +69,7 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             volume: 'Volume',
             listen: 'Ouvir a descrição',
             stopListening: 'Parar a descrição',
+            speechFailed: 'Não foi possível ler a descrição em voz alta aqui.',
         }),
     });
 

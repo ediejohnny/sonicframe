@@ -967,6 +967,8 @@ export class Player {
             const reading = description.speak();
             show();
             reading.then(show, (error: unknown) => {
+                // Said aloud too: a person pressing the button may not see the page.
+                this.frameRef?.announce(labels.speechFailed);
                 this.frameRef?.reportError(error);
                 show();
             });

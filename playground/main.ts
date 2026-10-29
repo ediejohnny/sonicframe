@@ -141,11 +141,12 @@ function mount(host: HTMLElement, build: Build): void {
     mounts.push({ host, build });
 }
 
-/** A player on its own `<audio>`, with the sound's peaks and duration. */
+/** A player on its own `<audio>`, with the sound's peaks and duration; errors go to the console and `failed`. */
 function player(
     host: HTMLElement,
     sound: Sound,
     options: Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
+    failed?: (error: unknown) => void,
 ): () => void {
     const made = createPlayer({
         container: host,
@@ -155,7 +156,10 @@ function player(
         ...options,
     });
     const repaint = (): void => made.frame.refresh();
-    const stopErrors = made.on('error', (error) => console.error(error));
+    const stopErrors = made.on('error', (error) => {
+        console.error(error);
+        failed?.(error);
+    });
     painted.add(repaint);
 
     return () => {
@@ -188,6 +192,7 @@ function figure(shelf: HTMLElement, option: string, text: string): HTMLElement {
  */
 function wordsDemo(host: HTMLElement, sound: Sound): () => void {
     const text = byId('words-text');
+    const status = byId('words-status');
     const choices = Array.from(
         document.querySelectorAll<HTMLButtonElement>('[data-words-lang]'),
     );
@@ -203,16 +208,28 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
             );
         }
 
-        stop = player(host, sound, {
-            label: lang === 'pt' ? 'A onda em palavras' : 'The wave in words',
-            lang,
-            description: {
-                target: text,
-                keys: true,
-                pauseInValue: true,
-                button: true,
+        status.textContent = '';
+        stop = player(
+            host,
+            sound,
+            {
+                label:
+                    lang === 'pt' ? 'A onda em palavras' : 'The wave in words',
+                lang,
+                description: {
+                    target: text,
+                    keys: true,
+                    pauseInValue: true,
+                    button: true,
+                },
             },
-        });
+            (error) => {
+                if (error instanceof Error && /voice/.test(error.message)) {
+                    status.textContent =
+                        'Your browser has no voice on this device for this language. Online voices are left out on purpose: they would send the text to a server.';
+                }
+            },
+        );
     };
 
     const listeners = choices.map((choice) => {

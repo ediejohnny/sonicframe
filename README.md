@@ -276,9 +276,10 @@ the browser when it first comes near the screen (`peaks` skips that).
 | `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                          |
 
 Labels: `player`, `position`, `value` (`'{time} / {duration}'`), `play`, `pause`, `back` and `forward`
-(`'{seconds}'`), `speed` (`'{speed}'`), `mute`, `unmute`, `volume`, `listen` and `stopListening`. They are English
-unless `lang` says otherwise (Portuguese is built in); a label you give is cleaned and capped, and its marks are filled
-with SonicFrame's own values only.
+(`'{seconds}'`), `speed` (`'{speed}'`), `mute`, `unmute`, `volume`, `listen`, `stopListening` and `speechFailed`
+(said through the live region when the browser cannot read the description aloud). They are English unless `lang`
+says otherwise (Portuguese is built in); a label you give is cleaned and capped, and its marks are filled with
+SonicFrame's own values only.
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
@@ -412,22 +413,22 @@ It is written from the peaks once the duration is known; a sound with many pause
 and the silence at the start and at the end is told apart. It says "sound", never "speech" or "music": peaks cannot tell
 them apart, and they are relative, so it describes the shape, never how loud the recording is.
 
-| Option              | Default        | What it does                                                                                   |
-| ------------------- | -------------- | ---------------------------------------------------------------------------------------------- |
-| `lang`              | `'en'`         | `'pt'`, `'pt-BR'`…, `'auto'` (the page's language), or any tag with your own `words`.          |
-| `words`             | built in       | Your own phrases, templates with `{duration}`, `{at}`, `{count}`…; numbers come from `Intl`.   |
-| `times`             | `'words'`      | `'clock'` says positions as `0:12`.                                                            |
-| `text`              | from the peaks | Your own description (written ahead, say), used instead.                                       |
-| `minPause`          | automatic      | The shortest pause in seconds: 3 % of the sound, from 0.75 to 5.                               |
-| `threshold`         | `0.06`         | Below this share of the loudest peak counts as quiet.                                          |
-| `describedBy`       | `true`         | Put the text in the wave's `aria-describedby`.                                                 |
-| `target`            | none           | An element of yours that shows the text (given back as it was on destroy).                     |
-| `announceWhenReady` | `false`        | Say it once if it arrives while the wave has focus (a lazy frame loads peaks near the screen). |
-| `keys`              | `false`        | `true`: `D` says it again, `P` / `Shift+P` go to the next / previous part.                     |
-| `backGrace`         | `1`            | Seconds into a part after which `Shift+P` goes back to its own start.                          |
-| `pauseInValue`      | `false`        | Add "pause" to the wave's value inside a silence: "0:22 / 0:33, pause".                        |
-| `speech`            | `false`        | Let `speak()` read it with the browser's own voice; `{ voices, rate }`.                        |
-| `onChange`          | none           | Called with the new text (or `null`).                                                          |
+| Option              | Default        | What it does                                                                                      |
+| ------------------- | -------------- | ------------------------------------------------------------------------------------------------- |
+| `lang`              | `'en'`         | `'pt'`, `'pt-BR'`…, `'auto'` (the page's language), or any tag with your own `words`.             |
+| `words`             | built in       | Your own phrases, templates with `{duration}`, `{at}`, `{count}`…; numbers come from `Intl`.      |
+| `times`             | `'words'`      | `'clock'` says positions as `0:12`.                                                               |
+| `text`              | from the peaks | Your own description (written ahead, say), used instead.                                          |
+| `minPause`          | automatic      | The shortest pause in seconds: 3 % of the sound, from 0.75 to 5.                                  |
+| `threshold`         | `0.06`         | Below this share of the loudest peak counts as quiet.                                             |
+| `describedBy`       | `true`         | Put the text in the wave's `aria-describedby`.                                                    |
+| `target`            | none           | An element of yours that shows the text (given back as it was on destroy).                        |
+| `announceWhenReady` | `false`        | Say it once if it arrives while the wave has focus (a lazy frame loads peaks near the screen).    |
+| `keys`              | `false`        | `true`: `D` says it again, `P` / `Shift+P` go to the next / previous part.                        |
+| `backGrace`         | `1`            | Seconds into a part after which `Shift+P` goes back to its own start.                             |
+| `pauseInValue`      | `false`        | Add "pause" (between parts) or "silence" (at the ends) to the wave's value: "0:22 / 0:33, pause". |
+| `speech`            | `false`        | Let `speak()` read it with the browser's own voice; `{ voices, rate }`.                           |
+| `onChange`          | none           | Called with the new text (or `null`).                                                             |
 
 With `keys`, a step between the parts lands at the start of the next sound and says where: "Part 2 of 3, 24
 seconds." `{ again: 'i', parts: false }` picks other letters or turns one off; the direction comes from Shift, never
