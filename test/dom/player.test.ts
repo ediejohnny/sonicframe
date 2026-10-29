@@ -297,6 +297,27 @@ describe('the player', () => {
         expect(String(fetch.mock.calls[0]?.[0])).toContain('note.ogg');
     });
 
+    it('decodes the sound once for both the wave and the spectrogram', async () => {
+        const fetch = vi.fn(
+            (_address: string) => new Promise<never>(() => undefined),
+        );
+        vi.stubGlobal('fetch', fetch);
+
+        player = createPlayer({
+            container: container(),
+            src: 'note.ogg',
+            spectrogram: true,
+        });
+        player.on('error', () => undefined);
+        const canvas = root().querySelector('canvas') as HTMLCanvasElement;
+        triggerResize(canvas, { width: 200, height: 40 });
+        triggerVisible(canvas, true);
+        await nextFrame();
+        await nextFrame();
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
     it('builds a hard shadow from numbers, never from a raw color', () => {
         player = createPlayer({
             container: container(),

@@ -66,6 +66,8 @@ export {
 } from './core/analysis';
 export {
     spectrogram,
+    type ColorStops,
+    type DecodedAudio,
     type SpectrogramPluginOptions,
 } from './plugins/spectrogram';
 export {

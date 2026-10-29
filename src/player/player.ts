@@ -49,6 +49,11 @@ import type {
 } from '../types';
 import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
+import {
+    spectrogram,
+    type ColorStops,
+    type DecodedAudio,
+} from '../plugins/spectrogram';
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -79,6 +84,8 @@ export type PlayerOptions = {
     font?: FontChoice;
     /** Show the volume control (where the look places it, or at the end of the line). Off by default. */
     volume?: boolean;
+    /** Draw a spectrogram under the wave, in the palette's colors (one decode serves both). Off by default. */
+    spectrogram?: boolean;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
     slot?: HTMLElement | null;
     /** The player's accessible name. */
@@ -104,6 +111,13 @@ const PEAKS = 1000;
 
 /** The longest a palette color may be. */
 const MAX_COLOR = 64;
+
+/** The spectrogram's colors: from the player's surface, through the wave, to the played color. */
+const SPECTRUM: ColorStops = {
+    from: 'var(--sonicframe-surface, #ffffff)',
+    via: 'var(--sonicframe-wave, #c4cad4)',
+    to: 'var(--sonicframe-progress, #2f6fdb)',
+};
 
 /** The knob takes its own variable, so it can differ from the played color. */
 const KNOB = 'var(--sonicframe-knob, var(--sonicframe-progress, #2f6fdb))';
@@ -181,6 +195,7 @@ export class Player {
     private times: [HTMLElement, PlayerLook['time']][] = [];
     private partCleanups: (() => void)[] = [];
     private peaks: readonly number[] | null = null;
+    private decoding: Promise<DecodedAudio> | null = null;
     private stopScheme: (() => void) | null = null;
     private destroyed = false;
 
@@ -398,19 +413,45 @@ export class Player {
         }
 
         return async () => {
-            const address = this.options.src ?? (media.currentSrc || media.src);
-
-            if (!address) {
-                throw new Error('sonicframe: no sound to read peaks from');
-            }
-
-            const { samples } = await decodeAudio(address, {
-                signal: this.abort.signal,
-            });
+            const { samples } = await this.decoded();
             this.peaks = peaksFromChannel(samples, PEAKS);
 
             return this.peaks;
         };
+    }
+
+    /**
+     * The sound decoded once, shared by the peaks and the spectrogram. A failure is kept too, so both
+     * hear the same one instead of downloading again.
+     */
+    private decoded(): Promise<DecodedAudio> {
+        if (this.decoding === null) {
+            const media = this.media;
+            const address =
+                this.options.src ??
+                (media ? media.currentSrc || media.src : '');
+
+            this.decoding = address
+                ? decodeAudio(address, { signal: this.abort.signal })
+                : Promise.reject(
+                      new Error('sonicframe: no sound to read peaks from'),
+                  );
+        }
+
+        return this.decoding;
+    }
+
+    /** The app's plugins, with a spectrogram in the palette's colors first when asked. */
+    private plugins(): Plugin[] {
+        const plugins = [...(this.options.plugins ?? [])];
+
+        if (this.options.spectrogram && this.media !== null) {
+            plugins.unshift(
+                spectrogram({ source: () => this.decoded(), map: SPECTRUM }),
+            );
+        }
+
+        return plugins;
     }
 
     private build(): void {
@@ -443,7 +484,7 @@ export class Player {
             duration: this.options.duration ?? null,
             wave: this.wave,
             bar: this.bar,
-            plugins: this.options.plugins,
+            plugins: this.plugins(),
             colors: { knob: KNOB, ...this.options.frame?.colors },
         });
         this.frameRef = frame;

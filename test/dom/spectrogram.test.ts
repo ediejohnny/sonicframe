@@ -61,6 +61,63 @@ describe('the spectrogram plugin', () => {
         );
     });
 
+    it('takes its colors from the page and repaints only when they change', async () => {
+        const rate = 8000;
+        const samples = Float32Array.from({ length: rate }, (_, i) =>
+            Math.sin((2 * Math.PI * 500 * i) / rate),
+        );
+        mounted = mount({
+            lazy: false,
+            plugins: [
+                spectrogram({
+                    samples,
+                    sampleRate: rate,
+                    columns: 8,
+                    rows: 16,
+                    fftSize: 128,
+                    map: {
+                        from: '#000000',
+                        to: 'var(--spectrum-hot, #ff0000)',
+                    },
+                }),
+            ],
+        });
+        const created = vi.spyOn(document, 'createElement');
+        const images = (): number =>
+            created.mock.calls.filter(([tag]) => tag === 'canvas').length;
+        const { canvas, frame, container } = mounted;
+        triggerResize(canvas, { width: 200, height: 40 });
+        triggerVisible(canvas, true);
+        await vi.waitFor(
+            () => expect(recordingOf(canvas).ops).toContain('drawImage'),
+            { timeout: 3_000, interval: 20 },
+        );
+        const painted = images();
+
+        frame.invalidate();
+        await nextFrame();
+        expect(images()).toBe(painted);
+
+        container.style.setProperty('--spectrum-hot', '#00ff00');
+        frame.refresh();
+        await nextFrame();
+        expect(images()).toBe(painted + 1);
+        created.mockRestore();
+    });
+
+    it('decodes through a function, to share one decode with the app', async () => {
+        const decoded = vi.fn(() => new Promise<never>(() => undefined));
+        mounted = mount({
+            lazy: false,
+            plugins: [spectrogram({ source: decoded })],
+        });
+        triggerResize(mounted.canvas, { width: 200, height: 40 });
+        triggerVisible(mounted.canvas, true);
+        await nextFrame();
+
+        expect(decoded).toHaveBeenCalledTimes(1);
+    });
+
     it('downloads nothing until the frame comes near the screen', async () => {
         const downloads = endlessDownloads();
         mounted = mount({ plugins: [spectrogram({ source: '/voice.mp3' })] });

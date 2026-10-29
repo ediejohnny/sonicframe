@@ -241,20 +241,21 @@ and the time together, plus any of these parts: `speed` (steps through `1×`, `1
 avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
 the browser when it first comes near the screen (`peaks` skips that).
 
-| Option      | Default    | What it does                                                                        |
-| ----------- | ---------- | ----------------------------------------------------------------------------------- |
-| `container` | (required) | The element the player is added to.                                                 |
-| `src`       | none       | The sound's address; the player makes its own `<audio>`.                            |
-| `media`     | none       | Your own audio or video element instead.                                            |
-| `peaks`     | decoded    | Peaks or a loader, as for `SonicFrame`.                                             |
-| `theme`     | none       | A theme name (built-in or registered) or one made with `defineTheme`.               |
-| `look`      | see below  | How the player is put together.                                                     |
-| `palette`   | `'light'`  | A palette name, `'auto'` (light or dark, following the system), or your own colors. |
-| `wave`      | `'bars'`   | How the sound is drawn (as for `SonicFrame`).                                       |
-| `font`      | the look's | A stack name, a `font-family` list, or a font you bring (see below).                |
-| `volume`    | `false`    | Show the volume control.                                                            |
-| `slot`      | none       | Your element for the `slot` part.                                                   |
-| `frame`     | `{}`       | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                         |
+| Option        | Default    | What it does                                                                        |
+| ------------- | ---------- | ----------------------------------------------------------------------------------- |
+| `container`   | (required) | The element the player is added to.                                                 |
+| `src`         | none       | The sound's address; the player makes its own `<audio>`.                            |
+| `media`       | none       | Your own audio or video element instead.                                            |
+| `peaks`       | decoded    | Peaks or a loader, as for `SonicFrame`.                                             |
+| `theme`       | none       | A theme name (built-in or registered) or one made with `defineTheme`.               |
+| `look`        | see below  | How the player is put together.                                                     |
+| `palette`     | `'light'`  | A palette name, `'auto'` (light or dark, following the system), or your own colors. |
+| `wave`        | `'bars'`   | How the sound is drawn (as for `SonicFrame`).                                       |
+| `font`        | the look's | A stack name, a `font-family` list, or a font you bring (see below).                |
+| `volume`      | `false`    | Show the volume control.                                                            |
+| `spectrogram` | `false`    | A spectrogram under the wave, in the palette's colors (the sound is decoded once).  |
+| `slot`        | none       | Your element for the `slot` part.                                                   |
+| `frame`       | `{}`       | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                         |
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
@@ -311,7 +312,10 @@ Each of these is a plugin; import it and `frame.use(it)`.
   below the bars.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
   browser with a dependency-free FFT, in slices so it never freezes, and only once the frame is near the screen
-  (like the peaks); color maps `viridis`, `magma`, `gray`.
+  (like the peaks). Color maps: `viridis`, `magma` (the default), `gray`, `ice`, `fire`, `ocean`, or your own colors
+  from quiet to loud, `{ from, via, to }` (any CSS color or `var(--name, fallback)`, so a theme's palette works); when
+  those colors change after `refresh()`, the image is repainted without computing again. `source` also takes a function
+  that gives decoded audio, so the app can share one decode.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
   Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
 - **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback, landing

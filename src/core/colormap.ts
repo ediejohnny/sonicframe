@@ -4,7 +4,13 @@
  * land in an `ImageData`, never in CSS.
  */
 
-export type ColormapName = 'gray' | 'viridis' | 'magma';
+export type ColormapName =
+    | 'gray'
+    | 'viridis'
+    | 'magma'
+    | 'ice'
+    | 'fire'
+    | 'ocean';
 
 const ANCHORS: Record<ColormapName, [number, number, number][]> = {
     gray: [
@@ -24,6 +30,27 @@ const ANCHORS: Record<ColormapName, [number, number, number][]> = {
         [183, 55, 121],
         [252, 137, 97],
         [252, 253, 191],
+    ],
+    ice: [
+        [4, 8, 20],
+        [22, 48, 92],
+        [44, 112, 170],
+        [120, 190, 220],
+        [235, 248, 255],
+    ],
+    fire: [
+        [0, 0, 0],
+        [90, 10, 10],
+        [200, 50, 0],
+        [250, 160, 20],
+        [255, 250, 200],
+    ],
+    ocean: [
+        [2, 12, 24],
+        [8, 48, 80],
+        [10, 110, 130],
+        [60, 180, 160],
+        [220, 250, 230],
     ],
 };
 

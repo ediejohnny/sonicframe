@@ -21,6 +21,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   level meter, 8-bit, editorial, glass, brutalist and more. The player's own options win over its
   theme; `defineTheme` extends one, `registerTheme` names your own (built-in names are kept), and
   `setTheme` switches later. Bar numbers from a theme are kept in range.
+- The spectrogram takes its colors from your own stops (`map: { from, via, to }`, CSS colors or
+  variables, read back as numbers) and repaints its image when they change, without computing again;
+  new named maps `ice`, `fire` and `ocean`. `source` also takes a function that gives decoded audio,
+  and the player's `spectrogram: true` draws one in the palette's colors from the same decode as its
+  peaks.
 - Ten ways to draw the sound (`wave`): bars, needles, LED blocks, a dot matrix, 8-bit steps, a line, a
   filled area, an oscilloscope trace, a heartbeat monitor, and a plain track that needs no peaks. The
   bar style still sets their density and alignment; played, hover and unplayed colors, live
