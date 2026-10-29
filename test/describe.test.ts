@@ -308,6 +308,7 @@ describe('moving between the parts', () => {
 
     it('names a part for the live region', () => {
         expect(soundWords().part(1, 2, 24)).toBe('Part 2 of 2, 24 seconds.');
+        expect(soundWords().part(0, 2, 0.2)).toBe('Part 1 of 2, at the start.');
         expect(soundWords({ lang: 'pt' }).part(1, 2, 24)).toBe(
             'Parte 2 de 2, 24 segundos.',
         );

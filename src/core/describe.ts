@@ -77,6 +77,8 @@ export type DescriptionWords = {
     loudest: string;
     /** Where a step between the parts landed: `{part}`, `{count}`, `{at}`. */
     part: string;
+    /** A step that landed at the very start: `{part}`, `{count}`. */
+    partStart: string;
     /** No part left in that direction. */
     noPart: string;
     /** Added to the slider's value inside a silence. */
@@ -128,6 +130,7 @@ export const DESCRIPTION_WORDS: Readonly<
         falls: 'Gets quieter toward the end.',
         loudest: 'Loudest at {at}.',
         part: 'Part {part} of {count}, {at}.',
+        partStart: 'Part {part} of {count}, at the start.',
         noPart: 'No more parts.',
         pauseNote: 'pause',
         join: ',',
@@ -151,6 +154,7 @@ export const DESCRIPTION_WORDS: Readonly<
         falls: 'Fica mais baixo no fim.',
         loudest: 'Mais alto por volta de {at}.',
         part: 'Parte {part} de {count}, {at}.',
+        partStart: 'Parte {part} de {count}, no início.',
         noPart: 'Não há mais partes.',
         pauseNote: 'pausa',
         join: ',',
@@ -600,8 +604,11 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
         },
 
         part(index, total, time): string {
+            // Under half a second is the start: "0 seconds" reads oddly, and in some languages wrongly.
+            const template = time < 0.5 ? words.partStart : words.part;
+
             return cleanText(
-                fill(words.part, {
+                fill(template, {
                     part: count(index + 1),
                     count: count(total),
                     at: at(time),

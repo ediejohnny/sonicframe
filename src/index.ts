@@ -50,6 +50,12 @@ export {
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
+    soundDescription,
+    type SoundDescriptionKeys,
+    type SoundDescriptionOptions,
+    type SoundDescriptionPlugin,
+} from './plugins/description';
+export {
     skipSilences,
     type SkipSilencesOptions,
     type SkipSilencesPlugin,
