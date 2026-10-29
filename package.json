@@ -11,8 +11,16 @@
         "visualization",
         "waveform"
     ],
+    "homepage": "https://github.com/ediejohnny/sonicframe#readme",
+    "bugs": {
+        "url": "https://github.com/ediejohnny/sonicframe/issues"
+    },
     "license": "MIT",
     "author": "Edie Johnny",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ediejohnny/sonicframe.git"
+    },
     "files": [
         "dist",
         "CHANGELOG.md"

@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/logo.svg" alt="SonicFrame logo" width="72" height="72">
+
 # SonicFrame.js
 
 Audio visualization and interaction framework for the web.
