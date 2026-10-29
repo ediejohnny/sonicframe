@@ -288,7 +288,7 @@ winning over the theme; `setPalette()`, `setWave()` or `setFont()` with nothing 
 <sonic-player
     src="/notes/42.ogg"
     theme="bubble"
-    palette="midnight"
+    palette="ocean"
     volume
 ></sonic-player>
 
