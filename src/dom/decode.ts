@@ -56,17 +56,24 @@ export async function readCapped(
     return out.buffer;
 }
 
-/** Fetches (or reads a blob) and decodes to mono samples; throws past the byte or length caps. */
+/**
+ * Fetches (or reads a blob) and decodes to mono samples; throws past the byte or length caps, and
+ * once `signal` fires (the download stops at once; a decode cannot be cut short, so it is skipped).
+ */
 export async function decodeAudio(
     source: string | Blob,
-    options: { maxBytes?: number; sampleRate?: number } = {},
+    options: {
+        maxBytes?: number;
+        sampleRate?: number;
+        signal?: AbortSignal;
+    } = {},
 ): Promise<{ samples: Float32Array; sampleRate: number }> {
     const maxBytes = options.maxBytes ?? MAX_BYTES;
     const rate = options.sampleRate ?? 22050;
     let data: ArrayBuffer;
 
     if (typeof source === 'string') {
-        const response = await fetch(source);
+        const response = await fetch(source, { signal: options.signal });
 
         if (!response.ok) {
             throw new Error(
@@ -82,6 +89,8 @@ export async function decodeAudio(
 
         data = await source.arrayBuffer();
     }
+
+    options.signal?.throwIfAborted();
 
     const Decoder = window.OfflineAudioContext;
 
