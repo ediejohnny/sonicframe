@@ -79,7 +79,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Plugins can stack a lane above or below the bars (`host.addLane`); the wave shrinks to make room,
   and a press on a lane is not a seek. They can also draw into a shared layer over the canvas
   (`host.overlay`), read the peaks and the wave's geometry (`host.peaks`, `host.geometry`), learn
-  when the wave area changes size (the `resize` event and a `resize` hook on a plugin) and when the
+  when the wave area changes size or a lazy frame gets its pixels near the screen (the `resize` event
+  and a `resize` hook on a plugin) and when the
   duration becomes known or changes (the `durationchange` event), and resolve a CSS color against the
   frame (`host.color`). All of this is additive: a 0.1.0 plugin keeps working unchanged.
 

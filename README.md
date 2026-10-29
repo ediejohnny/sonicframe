@@ -122,7 +122,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `hover`          | `ratio, time`             | The mouse moved over the frame (`null` when it left).                            |
 | `timeupdate`     | `time, ratio`             | The media moved, at the media's own pace, never once per frame.                  |
 | `durationchange` | `duration`                | The duration became known or changed (`null` when unknown again).                |
-| `resize`         | `geometry`                | The wave area changed size (a lane was added, the element resized).              |
+| `resize`         | `geometry`                | The wave area changed size or a lazy frame got its pixels near the screen.       |
 | `rangeend`       |                           | A range being played (`host.playRange`) ended or was abandoned.                  |
 | `error`          | `error`                   | Loading peaks, drawing a plugin or a plugin's own work (a download, say) failed. |
 | `destroy`        |                           | The frame was destroyed.                                                         |
