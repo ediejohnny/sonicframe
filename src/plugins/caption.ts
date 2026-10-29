@@ -62,7 +62,6 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
 
     let textSpan: HTMLSpanElement | null = null;
     let fullSpan: HTMLSpanElement | null = null;
-    let priorDescribedBy: string | null = null;
     let dismissed = false;
     let focused = false;
     let overCaption = false;
@@ -307,30 +306,43 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
         lane = null;
         textSpan = null;
         fullSpan = null;
-        restoreDescribedBy(current);
+        removeDescribedBy(current);
     }
 
+    /** The ids in the frame's `aria-describedby`, whoever put them there. */
+    function describedIds(current: PluginHost): string[] {
+        return (current.container.getAttribute('aria-describedby') ?? '')
+            .split(/\s+/)
+            .filter((id) => id !== '');
+    }
+
+    /** Adds this caption's id after the ids already there (the page's own, or another plugin's). */
     function addDescribedBy(current: PluginHost): void {
-        priorDescribedBy = current.container.getAttribute('aria-describedby');
-        current.container.setAttribute(
-            'aria-describedby',
-            priorDescribedBy === null
-                ? describedId
-                : `${priorDescribedBy} ${describedId}`,
-        );
-    }
+        const ids = describedIds(current);
 
-    function restoreDescribedBy(current: PluginHost): void {
-        if (priorDescribedBy === null) {
-            current.container.removeAttribute('aria-describedby');
-        } else {
+        if (!ids.includes(describedId)) {
             current.container.setAttribute(
                 'aria-describedby',
-                priorDescribedBy,
+                [...ids, describedId].join(' '),
             );
         }
+    }
 
-        priorDescribedBy = null;
+    /** Takes only this caption's id out: every other id stays, even one the page added meanwhile. */
+    function removeDescribedBy(current: PluginHost): void {
+        const ids = describedIds(current);
+
+        if (!ids.includes(describedId)) {
+            return;
+        }
+
+        const rest = ids.filter((id) => id !== describedId);
+
+        if (rest.length === 0) {
+            current.container.removeAttribute('aria-describedby');
+        } else {
+            current.container.setAttribute('aria-describedby', rest.join(' '));
+        }
     }
 
     return {
@@ -404,8 +416,8 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
                 cleanup();
             }
 
-            if (host !== null && lane !== null) {
-                restoreDescribedBy(host);
+            if (host !== null) {
+                removeDescribedBy(host);
             }
 
             lane?.remove();

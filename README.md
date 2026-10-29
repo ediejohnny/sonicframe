@@ -180,8 +180,8 @@ Each of these is a plugin; import it and `frame.use(it)`.
 
 - **`caption({ text, badges, tooltip, tooltipLimit })`** — a line under the bars that fades out on the right, with
   optional badges (an `auto` mark, a language tag) and a tooltip (hover, keyboard focus, or a tap) carrying the fuller
-  text. `set(text)` / `setTooltip(content)` update it; the full text reaches screen readers through `aria-describedby`.
-  Text goes in as text, never HTML.
+  text. `set(text)` / `setTooltip(content)` update it; the full text reaches screen readers through `aria-describedby`
+  (next to any ids the page put there, which it never removes). Text goes in as text, never HTML.
 - **`regions({ items, create, minLength, keys })`** — stretches to mark, play or loop. Shift-drag makes one (a plain
   drag still scrubs), the body moves it, an edge resizes it; with focus, `R`/`Shift+R` select, `Enter` plays, `L`
   loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add`, `update`, `remove`, `clear`, `list`,

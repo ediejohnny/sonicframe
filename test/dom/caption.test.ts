@@ -85,6 +85,55 @@ describe('the caption plugin', () => {
         expect(mounted.container.getAttribute('aria-describedby')).toBeNull();
     });
 
+    it('leaves the page own aria-describedby alone when a caption that never showed is cleared', () => {
+        mounted = mount();
+        mounted.container.setAttribute('aria-describedby', 'page-help');
+        const plugin: CaptionPlugin = caption();
+        mounted.frame.use(plugin);
+
+        plugin.set(null);
+
+        expect(mounted.container.getAttribute('aria-describedby')).toBe(
+            'page-help',
+        );
+    });
+
+    it('takes out only its own id, keeping what the page added meanwhile', () => {
+        mounted = mount();
+        mounted.container.setAttribute('aria-describedby', 'page-help');
+        const plugin: CaptionPlugin = caption({ text: 'hello' });
+        mounted.frame.use(plugin);
+        const shown = mounted.container.getAttribute('aria-describedby');
+        mounted.container.setAttribute(
+            'aria-describedby',
+            `${shown} page-more`,
+        );
+
+        plugin.set(null);
+        plugin.set(null);
+
+        expect(mounted.container.getAttribute('aria-describedby')).toBe(
+            'page-help page-more',
+        );
+    });
+
+    it('gives the page its own ids back when the frame is destroyed', () => {
+        mounted = mount();
+        mounted.container.setAttribute('aria-describedby', 'page-help');
+        mounted.frame.use(caption({ text: 'hello' }));
+        const shown = mounted.container.getAttribute('aria-describedby');
+        mounted.container.setAttribute(
+            'aria-describedby',
+            `${shown} page-more`,
+        );
+
+        mounted.frame.destroy();
+
+        expect(mounted.container.getAttribute('aria-describedby')).toBe(
+            'page-help page-more',
+        );
+    });
+
     it('opens the tooltip on hover and is lazy until then', () => {
         const plugin = caption({ text: 'a longer caption to show' });
         mounted = mount({ plugins: [plugin] });
