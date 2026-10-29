@@ -17,6 +17,11 @@ and keeps pages with hundreds of players light.
   frequency bars and clip export in the box.
 - Works under a strict Content-Security-Policy: no inline style attributes, no `eval`, no blob workers.
 
+![A SonicFrame player: a round play button, the waveform with the played part in blue, a time ruler and the time](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/player.png)
+
+The playground shows every drawing, theme and plugin, plus a gallery of all themes in all palettes: run `npm run dev`
+in a clone and open `/playground/`.
+
 ## Install
 
 ```sh
@@ -93,6 +98,8 @@ played, hover and unplayed colors work for all of them; live frequency and expor
 `lineWidth` 2 (line drawings and the track), `glow` 0, `mirror` `true` (the line also traces the lower edge), `smooth`
 `true` (curves instead of corners) and `knob` 0, the diameter of a dot that rides the playing position over any
 drawing. `{ style: 'track', knob: 12 }` is a plain track with a moving dot.
+
+![The ten drawings, each part played: bars, needles, blocks, dots, steps, line, area, scope, pulse and track](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/drawings.png)
 
 Colors take any CSS color or `var(--name, fallback)`:
 
@@ -229,6 +236,8 @@ createPlayer({ container, src, theme: 'bubble' });
 createPlayer({ container, src, theme: 'pulse', palette: 'ocean' }); // your own options win over the theme
 ```
 
+![Six themes, one per row: card, a podcast card; bubble, a chat voice note; pulse, a heartbeat monitor; glass; retro, in 8-bit steps; and brutal](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/themes.png)
+
 Themes: `default` (SonicFrame as it always looked; no theme, or a name that does not exist, gives this one),
 `bubble` (a chat voice note), `pill`, `blocky`, `card` (a podcast card), `minimal`, `terminal`, `pulse` (a
 heartbeat monitor), `scope` (an oscilloscope), `neon`, `glass`, `soft`, `brutal`, `studio`, `retro` (8-bit), `dots`,
@@ -272,6 +281,8 @@ and visible controls (WCAG contrast). A palette is set as `--sonicframe-*` custo
 can still override one color; shadows and the glass surface are built from colors read back as numbers. `'auto'` is
 `light` or `dark`, following the system; `'default'` (the default theme's) sets no variable at all, so SonicFrame's
 own colors and any `--sonicframe-*` your page sets show, as without a player. An unknown name falls back to it.
+
+![The bubble and pill themes, each in all eight palettes](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/gallery.png)
 
 Fonts: SonicFrame ships no font files. The stacks (`system`, `rounded`, `mono`, `serif`, `humanist`, `geometric`,
 `industrial`, `slab`, `handwritten`) name fonts already on the device. To use another font, bring it:
@@ -327,6 +338,8 @@ Shift picks the direction, not the letter's case, so Caps Lock changes nothing (
 ## Captions, regions, timelines and more (0.2.0)
 
 Each of these is a plugin; import it and `frame.use(it)`.
+
+![Plugins on the wave: two markers, a region named Verse, a timeline, a caption with badges, a spectrogram under a line, and live frequency bars](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/plugins.png)
 
 - **`caption({ text, badges, tooltip, tooltipLimit })`** — a line under the bars that fades out on the right, with
   optional badges (an `auto` mark, a language tag) and a tooltip (hover, keyboard focus, or a tap) carrying the fuller
