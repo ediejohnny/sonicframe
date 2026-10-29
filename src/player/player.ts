@@ -23,11 +23,12 @@ import {
     type PlayerLook,
 } from '../core/look';
 import {
+    DEFAULT_PALETTE,
     PALETTES,
     paletteVariables,
     pickPalette,
     type Palette,
-    type PaletteName,
+    type PaletteChoice,
 } from '../core/palettes';
 import { peaksFromChannel } from '../core/peaks';
 import { DEFAULT_WAVE, resolveWave } from '../core/shapes';
@@ -75,8 +76,11 @@ export type PlayerOptions = {
     theme?: string | ThemeInput;
     /** How the player is put together (parts, sizes, finish); laid over the theme's look. */
     look?: Partial<PlayerLook>;
-    /** A palette by name, `'auto'` (light or dark, following the system), or your own colors. */
-    palette?: PaletteName | 'auto' | Palette;
+    /**
+     * A palette by name, `'auto'` (light or dark, following the system), `'default'` (SonicFrame's
+     * own colors and the page's variables), or your own colors.
+     */
+    palette?: PaletteChoice;
     /** How the sound is drawn. */
     wave?: WaveName | Partial<WaveStyle>;
     bar?: Partial<BarStyle>;
@@ -184,8 +188,8 @@ export class Player {
     private readonly events = new Emitter<PlayerEvents>();
     private readonly abort = new AbortController();
     private look: PlayerLook = DEFAULT_LOOK;
-    private palette: PaletteName | 'auto' | Palette = 'light';
-    private colors: Palette = PALETTES.light;
+    private palette: PaletteChoice = 'default';
+    private colors: Palette = DEFAULT_PALETTE;
     private wave: Partial<WaveStyle> = {};
     private bar: Partial<BarStyle> = {};
     private font: FontChoice | undefined;
@@ -275,7 +279,7 @@ export class Player {
     }
 
     /** Changes the colors. */
-    setPalette(palette: PaletteName | 'auto' | Palette): void {
+    setPalette(palette: PaletteChoice): void {
         if (!this.destroyed) {
             this.palette = palette;
             this.applyPalette();
@@ -819,9 +823,10 @@ export class Player {
             return;
         }
 
-        const palette = pickPalette(choice, false);
+        const palette =
+            choice === 'default' ? null : pickPalette(choice, false);
 
-        if (palette === null) {
+        if (palette === null && choice !== 'default') {
             this.later(
                 new Error(
                     `sonicframe: unknown palette "${cleanText(choice, 40)}"`,
@@ -829,14 +834,22 @@ export class Player {
             );
         }
 
-        this.paint(palette ?? PALETTES.light);
+        this.paint(palette);
     }
 
-    private paint(palette: Palette): void {
-        this.colors = palette;
+    /**
+     * Sets a palette's variables on the player; null (the default palette) removes them all, so
+     * SonicFrame's own colors and the page's variables show, as without a palette.
+     */
+    private paint(palette: Palette | null): void {
+        this.colors = palette ?? DEFAULT_PALETTE;
 
-        for (const [name, value] of paletteVariables(palette)) {
-            this.element.style.setProperty(name, value);
+        for (const [name, value] of paletteVariables(this.colors)) {
+            if (palette === null) {
+                this.element.style.removeProperty(name);
+            } else {
+                this.element.style.setProperty(name, value);
+            }
         }
 
         this.finish();

@@ -227,7 +227,8 @@ createPlayer({ container, src, theme: 'bubble' });
 createPlayer({ container, src, theme: 'pulse', palette: 'ocean' }); // your own options win over the theme
 ```
 
-Themes: `bubble` (a chat voice note), `pill`, `blocky`, `card` (a podcast card), `minimal`, `terminal`, `pulse` (a
+Themes: `default` (SonicFrame as it always looked; no theme, or a name that does not exist, gives this one),
+`bubble` (a chat voice note), `pill`, `blocky`, `card` (a podcast card), `minimal`, `terminal`, `pulse` (a
 heartbeat monitor), `scope` (an oscilloscope), `neon`, `glass`, `soft`, `brutal`, `studio`, `retro` (8-bit), `dots`,
 `paper` (editorial), `bold`, `stream`, `led` (a level meter), `smooth`, `compact`, `bubbly`, `mono` and `classic`. Each
 has its own palette and wears any other. Make your own from one with
@@ -241,21 +242,21 @@ and the time together, plus any of these parts: `speed` (steps through `1×`, `1
 avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
 the browser when it first comes near the screen (`peaks` skips that).
 
-| Option        | Default    | What it does                                                                        |
-| ------------- | ---------- | ----------------------------------------------------------------------------------- |
-| `container`   | (required) | The element the player is added to.                                                 |
-| `src`         | none       | The sound's address; the player makes its own `<audio>`.                            |
-| `media`       | none       | Your own audio or video element instead.                                            |
-| `peaks`       | decoded    | Peaks or a loader, as for `SonicFrame`.                                             |
-| `theme`       | none       | A theme name (built-in or registered) or one made with `defineTheme`.               |
-| `look`        | see below  | How the player is put together.                                                     |
-| `palette`     | `'light'`  | A palette name, `'auto'` (light or dark, following the system), or your own colors. |
-| `wave`        | `'bars'`   | How the sound is drawn (as for `SonicFrame`).                                       |
-| `font`        | the look's | A stack name, a `font-family` list, or a font you bring (see below).                |
-| `volume`      | `false`    | Show the volume control.                                                            |
-| `spectrogram` | `false`    | A spectrogram under the wave, in the palette's colors (the sound is decoded once).  |
-| `slot`        | none       | Your element for the `slot` part.                                                   |
-| `frame`       | `{}`       | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                         |
+| Option        | Default     | What it does                                                                       |
+| ------------- | ----------- | ---------------------------------------------------------------------------------- |
+| `container`   | (required)  | The element the player is added to.                                                |
+| `src`         | none        | The sound's address; the player makes its own `<audio>`.                           |
+| `media`       | none        | Your own audio or video element instead.                                           |
+| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                            |
+| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.              |
+| `look`        | see below   | How the player is put together.                                                    |
+| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).             |
+| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                      |
+| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).               |
+| `volume`      | `false`     | Show the volume control.                                                           |
+| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once). |
+| `slot`        | none        | Your element for the `slot` part.                                                  |
+| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                        |
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
@@ -266,7 +267,9 @@ range.
 
 Palettes: `light`, `dark`, `ocean`, `forest`, `sunset`, `berry`, `paper` and `contrast`, each checked for readable text
 and visible controls (WCAG contrast). A palette is set as `--sonicframe-*` custom properties on the player, so plain CSS
-can still override one color; shadows and the glass surface are built from colors read back as numbers.
+can still override one color; shadows and the glass surface are built from colors read back as numbers. `'auto'` is
+`light` or `dark`, following the system; `'default'` (the default theme's) sets no variable at all, so SonicFrame's
+own colors and any `--sonicframe-*` your page sets show, as without a player. An unknown name falls back to it.
 
 Fonts: SonicFrame ships no font files. The stacks (`system`, `rounded`, `mono`, `serif`, `humanist`, `geometric`,
 `industrial`, `slab`, `handwritten`) name fonts already on the device. To use another font, bring it:

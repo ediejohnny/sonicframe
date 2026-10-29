@@ -20,7 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   (`theme: 'bubble'`): a chat voice note, a podcast card, a heartbeat monitor, an oscilloscope, a
   level meter, 8-bit, editorial, glass, brutalist and more. The player's own options win over its
   theme; `defineTheme` extends one, `registerTheme` names your own (built-in names are kept), and
-  `setTheme` switches later. Bar numbers from a theme are kept in range.
+  `setTheme` switches later. Bar numbers from a theme are kept in range. Everything builds on the
+  `default` theme, SonicFrame as it always looked: no theme, an unknown name or a theme that extends
+  nothing ends up on it, and its `'default'` palette sets no variable, leaving the colors to SonicFrame
+  and to the page.
 - The spectrogram takes its colors from your own stops (`map: { from, via, to }`, CSS colors or
   variables, read back as numbers) and repaints its image when they change, without computing again;
   new named maps `ice`, `fire` and `ocean`. `source` also takes a function that gives decoded audio,

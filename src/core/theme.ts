@@ -1,21 +1,23 @@
 /**
  * Themes: a whole player in one name. A theme holds a look, a palette, a drawing of the sound and the
- * bars; a player's own options always win over its theme, and the theme over the defaults. Apps make
- * their own with `defineTheme({ extends, ... })` and can give one a name with `registerTheme`, so it
- * is as easy to use as a built-in one. A registered theme is stored already resolved, so extending it
- * never walks a chain (no loop can form). Bar numbers are kept in range here, like the look's.
+ * bars; a player's own options always win over its theme. Everything builds on the `default` theme
+ * (SonicFrame as it always looked): no theme, an unknown name, or a theme that extends nothing all
+ * end up on it. Apps make their own with `defineTheme({ extends, ... })` and can give one a name with
+ * `registerTheme`, so it is as easy to use as a built-in one. A registered theme is stored already
+ * resolved, so extending it never walks a chain (no loop can form). Bar numbers are kept in range
+ * here, like the look's.
  */
 
 import type { BarStyle, WaveName, WaveStyle } from '../types';
 import { DEFAULT_LOOK, resolveLook, type PlayerLook } from './look';
-import type { Palette, PaletteName } from './palettes';
+import type { PaletteChoice, PaletteName } from './palettes';
 import { THEMES, isThemeName } from './themes';
 
 export type Theme = {
     /** How the player is put together. */
     look: Partial<PlayerLook>;
-    /** The palette used unless the player names one. */
-    palette: PaletteName | 'auto';
+    /** The palette used unless the player names one (`'default'`: SonicFrame's own colors). */
+    palette: PaletteName | 'auto' | 'default';
     /** How the sound is drawn. */
     wave: Partial<WaveStyle>;
     /** The bars' density and shape. */
@@ -28,7 +30,7 @@ export type ThemeInput = Partial<Theme> & { extends?: string };
 /** What a player is built from, once its options and its theme are combined. */
 export type ThemeParts = {
     look: PlayerLook;
-    palette: PaletteName | 'auto' | Palette;
+    palette: PaletteChoice;
     wave: Partial<WaveStyle>;
     bar: Partial<BarStyle>;
 };
@@ -38,13 +40,6 @@ const THEME_NAME = /^[a-z][a-z0-9-]{0,31}$/;
 
 /** The most themes an app may register. */
 const MAX_REGISTERED = 100;
-
-const EMPTY: Readonly<Theme> = Object.freeze({
-    look: {},
-    palette: 'light',
-    wave: {},
-    bar: {},
-});
 
 const registry = new Map<string, Theme>();
 
@@ -108,12 +103,12 @@ export function findTheme(name: string): Theme | null {
     return registry.get(name) ?? null;
 }
 
-/** A theme from `input`, laid over the theme it `extends` (an unknown name extends nothing). */
+/** A theme from `input`, laid over the theme it `extends` (the default theme for none or an unknown name). */
 export function defineTheme(input: ThemeInput): Theme {
     const parent =
         typeof input.extends === 'string'
-            ? (findTheme(input.extends) ?? EMPTY)
-            : EMPTY;
+            ? (findTheme(input.extends) ?? THEMES.default)
+            : THEMES.default;
 
     return {
         look: mergeLook(parent.look, input.look),
@@ -141,17 +136,17 @@ export function registerTheme(name: string, input: ThemeInput): boolean {
     return true;
 }
 
-/** A player's own options laid over its theme, and the theme over the defaults. */
+/** A player's own options laid over its theme (the default theme when there is none). */
 export function themeParts(
     theme: Theme | null,
     options: {
         look?: Partial<PlayerLook>;
-        palette?: PaletteName | 'auto' | Palette;
+        palette?: PaletteChoice;
         wave?: WaveName | Partial<WaveStyle>;
         bar?: Partial<BarStyle>;
     },
 ): ThemeParts {
-    const base = theme ?? EMPTY;
+    const base = theme ?? THEMES.default;
     const own: Partial<WaveStyle> =
         typeof options.wave === 'string'
             ? { style: options.wave }

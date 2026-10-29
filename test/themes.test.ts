@@ -43,7 +43,10 @@ describe('the built-in themes', () => {
             }
 
             expect(cleanBar(theme.bar), `${name}.bar`).toEqual(theme.bar);
-            expect(isPaletteName(theme.palette), `${name}.palette`).toBe(true);
+            expect(
+                isPaletteName(theme.palette) || theme.palette === 'default',
+                `${name}.palette`,
+            ).toBe(true);
         }
     });
 
@@ -76,11 +79,14 @@ describe('themeParts', () => {
         expect(parts.bar).toEqual({ ...THEMES.pulse.bar, gap: 5 });
     });
 
-    it('falls back to the defaults without a theme', () => {
+    it('wears the default theme without one: the default look, bars and SonicFrame’s own colors', () => {
         const parts = themeParts(null, {});
 
+        expect(THEMES.default).toBeDefined();
         expect(parts.look).toEqual(DEFAULT_LOOK);
-        expect(parts.palette).toBe('light');
+        expect(parts.palette).toBe('default');
+        expect(parts.wave).toEqual({ style: 'bars' });
+        expect(parts.bar).toEqual({});
     });
 });
 
@@ -91,6 +97,13 @@ describe('defineTheme and registerTheme', () => {
         expect(theme.palette).toBe('dark');
         expect(theme.look).toEqual(THEMES.bubble.look);
         expect(theme.wave).toEqual(THEMES.bubble.wave);
+    });
+
+    it('builds on the default theme when it extends nothing, or a name that does not exist', () => {
+        expect(defineTheme({ look: { corner: 0 } }).palette).toBe('default');
+        expect(defineTheme({ extends: 'lava' }).wave).toEqual(
+            THEMES.default.wave,
+        );
     });
 
     it('merges the button instead of replacing it', () => {

@@ -148,6 +148,31 @@ export const PALETTES: Readonly<Record<PaletteName, Readonly<Palette>>> =
         },
     });
 
+/**
+ * A palette choice: a built-in name, `'auto'` (light or dark, following the system), `'default'`
+ * (SonicFrame's own colors, leaving every `--sonicframe-*` variable to the page, as without a
+ * palette), or your own colors.
+ */
+export type PaletteChoice = PaletteName | 'auto' | 'default' | Palette;
+
+/**
+ * SonicFrame's own colors (the fallbacks of its variables). `'default'` sets none of them; they only
+ * serve as numbers for a shadow or a glass surface.
+ */
+export const DEFAULT_PALETTE: Readonly<Palette> = Object.freeze({
+    surface: '#ffffff',
+    text: '#1f2530',
+    muted: '#5c6676',
+    border: '#d5dbe4',
+    wave: '#c4cad4',
+    progress: '#2f6fdb',
+    accent: '#2f6fdb',
+    onAccent: '#ffffff',
+    marker: '#e5484d',
+    region: '#2f6fdb2e',
+    dim: '#0000001f',
+});
+
 export const PALETTE_NAMES: readonly PaletteName[] = Object.freeze(
     Object.keys(PALETTES) as PaletteName[],
 );

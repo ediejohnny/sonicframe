@@ -21,11 +21,13 @@ export {
 } from './core/theme';
 export { THEME_NAMES, THEMES, type ThemeName } from './core/themes';
 export {
+    DEFAULT_PALETTE,
     PALETTE_NAMES,
     PALETTES,
     paletteVariables,
     pickPalette,
     type Palette,
+    type PaletteChoice,
     type PaletteName,
 } from './core/palettes';
 export {

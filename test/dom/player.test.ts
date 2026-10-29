@@ -91,7 +91,7 @@ describe('themes on the player', () => {
         expect(waveOnTop()).toBe(false);
     });
 
-    it('reports an unknown theme and keeps the defaults', async () => {
+    it('falls back to the default theme for a name that does not exist, and says so', async () => {
         player = createPlayer({
             container: container(),
             media: fakeMedia({ duration: 40 }),
@@ -102,7 +102,21 @@ describe('themes on the player', () => {
         await Promise.resolve();
 
         expect(String(errors[0])).toContain('unknown theme');
-        expect(surface()).toBe(PALETTES.light.surface);
+        expect(surface()).toBe('');
+    });
+
+    it('leaves the colors to the page with the default theme, as SonicFrame always did', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            palette: 'ocean',
+        });
+        expect(surface()).toBe(PALETTES.ocean.surface);
+
+        player.setPalette('default');
+
+        expect(surface()).toBe('');
+        expect(root().style.getPropertyValue('--sonicframe-progress')).toBe('');
     });
 
     it('switches to another theme later', () => {

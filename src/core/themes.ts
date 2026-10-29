@@ -1,12 +1,14 @@
 /**
- * The built-in themes: twenty-four ways a player can look, from a chat voice note to a heartbeat
- * monitor. Each names its own palette, used unless the player picks another, so any theme can wear
- * any palette. They follow familiar kinds of players without copying any product.
+ * The built-in themes: `default` (SonicFrame as it always looked) and twenty-four more, from a chat
+ * voice note to a heartbeat monitor. Each names its own palette, used unless the player picks
+ * another, so any theme can wear any palette. They follow familiar kinds of players without copying
+ * any product.
  */
 
 import type { Theme } from './theme';
 
 export type ThemeName =
+    | 'default'
     | 'bubble'
     | 'pill'
     | 'blocky'
@@ -34,6 +36,16 @@ export type ThemeName =
 
 export const THEMES: Readonly<Record<ThemeName, Readonly<Theme>>> =
     Object.freeze({
+        /**
+         * SonicFrame as it always looked: the default look and bars, and its own colors, which leave
+         * every `--sonicframe-*` variable to the page. No theme, or an unknown one, means this one.
+         */
+        default: {
+            look: {},
+            palette: 'default',
+            wave: { style: 'bars' },
+            bar: {},
+        },
         /** A chat voice note: a round button, slim bars with a dot, the time and speed underneath. */
         bubble: {
             look: {
