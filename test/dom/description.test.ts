@@ -307,6 +307,27 @@ describe('keys and the value, when turned on', () => {
         );
     });
 
+    it('says "silence" at the ends and never "pause" right where a step landed', () => {
+        const media = fakeMedia({ duration: 33 });
+        const quietStart = NOTE.map((peak, index) => (index < 20 ? 0 : peak));
+        mounted = mount({
+            media,
+            peaks: quietStart,
+            plugins: [soundDescription({ keys: true, pauseInValue: true })],
+        });
+
+        expect(mounted.container.getAttribute('aria-valuetext')).toBe(
+            '0:00 / 0:33, silence',
+        );
+
+        press(mounted.container, 'p');
+
+        expect(spoken()).toBe('Part 1 of 2, 2 seconds.');
+        expect(mounted.container.getAttribute('aria-valuetext')).toBe(
+            '0:02 / 0:33',
+        );
+    });
+
     it('leaves the value alone by default', () => {
         const media = fakeMedia({ duration: 33 });
         mounted = mount({

@@ -4,6 +4,7 @@ import {
     nextPart,
     outlineSound,
     partAt,
+    silenceAt,
     soundWords,
 } from '../src/core/describe';
 import { localeFor, resolveLanguage } from '../src/core/language';
@@ -232,7 +233,7 @@ describe('the wave in words', () => {
             '1 minute. Continuous sound. Gets louder toward the end. Loudest at 59 seconds.',
         );
         expect(fades && describeSound(fades, { lang: 'pt' })).toBe(
-            '1 minuto. Som contínuo. Fica mais baixo no fim. Mais alto por volta de 1 segundo.',
+            '1 minuto. Som contínuo. Fica mais baixo no fim. Mais alto no início.',
         );
     });
 
@@ -302,10 +303,34 @@ describe('the wave in words', () => {
 describe('moving between the parts', () => {
     const outline = outlineSound(NOTE, 33);
 
-    it('knows which part a time falls in', () => {
+    it('knows which part a time falls in, a seek landing a hair early included', () => {
         expect(outline && partAt(outline, 10)).toBe(0);
         expect(outline && partAt(outline, 22)).toBe(-1);
         expect(outline && partAt(outline, 30)).toBe(1);
+        expect(outline && partAt(outline, 23.97)).toBe(1);
+        expect(outline && nextPart(outline, 23.97, 1)).toBeNull();
+    });
+
+    it('tells the silence at the ends from a pause between parts', () => {
+        const ends = outlineSound(
+            peaksOf(60, 600, (time) =>
+                time < 3 || time >= 50 || (time >= 20 && time < 24) ? 0 : 0.5,
+            ),
+            60,
+        );
+
+        expect(ends && silenceAt(ends, 1)).toBe('silence');
+        expect(ends && silenceAt(ends, 22)).toBe('pause');
+        expect(ends && silenceAt(ends, 30)).toBeNull();
+        expect(ends && silenceAt(ends, 55)).toBe('silence');
+    });
+
+    it("says a position as the slider's clock does, cut to the second", () => {
+        expect(soundWords().part(0, 4, 1.65)).toBe('Part 1 of 4, 1 second.');
+        expect(soundWords({ times: 'clock' }).part(1, 4, 8.9)).toBe(
+            'Part 2 of 4, 0:08.',
+        );
+        expect(soundWords().part(1, 4, 8.9)).toBe('Part 2 of 4, 8 seconds.');
     });
 
     it('finds the next part and, like a previous track, the start of this one', () => {
@@ -325,6 +350,7 @@ describe('moving between the parts', () => {
         );
         expect(soundWords({ lang: 'pt' }).noPart()).toBe('Não há mais partes.');
         expect(soundWords({ lang: 'pt' }).pauseNote()).toBe('pausa');
+        expect(soundWords({ lang: 'pt' }).silenceNote()).toBe('silêncio');
     });
 });
 

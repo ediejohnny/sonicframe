@@ -75,14 +75,18 @@ export type DescriptionWords = {
     falls: string;
     /** `{at}`. */
     loudest: string;
+    /** The loudest stretch, within the first second. */
+    loudestStart: string;
     /** Where a step between the parts landed: `{part}`, `{count}`, `{at}`. */
     part: string;
-    /** A step that landed at the very start: `{part}`, `{count}`. */
+    /** A step that landed within the first second: `{part}`, `{count}`. */
     partStart: string;
     /** No part left in that direction. */
     noPart: string;
-    /** Added to the slider's value inside a silence. */
+    /** Added to the slider's value inside a pause between two parts. */
     pauseNote: string;
+    /** Added to the slider's value inside the silence at the start or at the end. */
+    silenceNote: string;
     /** The mark between the steps of one sentence (a space follows it). */
     join: string;
     /** The end of a sentence made of steps. */
@@ -107,6 +111,7 @@ export type SoundWords = {
     part(index: number, count: number, time: number): string;
     noPart(): string;
     pauseNote(): string;
+    silenceNote(): string;
 };
 
 export const DESCRIPTION_WORDS: Readonly<
@@ -129,10 +134,12 @@ export const DESCRIPTION_WORDS: Readonly<
         rises: 'Gets louder toward the end.',
         falls: 'Gets quieter toward the end.',
         loudest: 'Loudest at {at}.',
+        loudestStart: 'Loudest at the start.',
         part: 'Part {part} of {count}, {at}.',
         partStart: 'Part {part} of {count}, at the start.',
         noPart: 'No more parts.',
         pauseNote: 'pause',
+        silenceNote: 'silence',
         join: ',',
         stop: '.',
     }),
@@ -153,10 +160,12 @@ export const DESCRIPTION_WORDS: Readonly<
         rises: 'Fica mais alto no fim.',
         falls: 'Fica mais baixo no fim.',
         loudest: 'Mais alto por volta de {at}.',
+        loudestStart: 'Mais alto no início.',
         part: 'Parte {part} de {count}, {at}.',
         partStart: 'Parte {part} de {count}, no início.',
         noPart: 'Não há mais partes.',
         pauseNote: 'pausa',
+        silenceNote: 'silêncio',
         join: ',',
         stop: '.',
     }),
@@ -179,6 +188,9 @@ const TREND = 1.5;
 
 /** Up to this many pauses, the description walks through the sound; beyond, it sums them up. */
 const NARRATED_PAUSES = 2;
+
+/** How early before a part's start a time already counts as in it, in seconds. */
+const NEAR = 0.05;
 
 /** The longest phrase taken from the app, in characters. */
 const MAX_WORD = 200;
@@ -362,22 +374,47 @@ export function outlineSound(
     };
 }
 
-/** The index of the part playing at `time`, or -1 inside a silence. */
+/**
+ * The index of the part playing at `time`, or -1 inside a silence. A time up to `NEAR` before a
+ * part's start is in it already: a seek to that start can land a hair early.
+ */
 export function partAt(outline: SoundOutline, time: number): number {
     const parts = outline.parts;
 
     return parts.findIndex(
         (part, index) =>
-            time >= part.start &&
+            time >= part.start - NEAR &&
             (time < part.end ||
                 (index === parts.length - 1 && time <= part.end)),
     );
 }
 
+/** Which silence `time` is in: a pause between two parts, the silence at an end, or none (null). */
+export function silenceAt(
+    outline: SoundOutline,
+    time: number,
+): 'pause' | 'silence' | null {
+    if (partAt(outline, time) >= 0) {
+        return null;
+    }
+
+    const parts = outline.parts;
+    const first = parts[0];
+    const last = parts[parts.length - 1];
+
+    return first === undefined ||
+        last === undefined ||
+        time < first.start ||
+        time > last.end
+        ? 'silence'
+        : 'pause';
+}
+
 /**
  * The part a step lands on, or null when there is none. Forward, the next part to start after
- * `time`; back, like a player's previous track, the start of the current part once more than `grace`
- * seconds into it (floored at 0.01), otherwise the one before.
+ * `time` (one starting within `NEAR` of it is where a step just landed); back, like a player's
+ * previous track, the start of the current part once more than `grace` seconds into it (floored at
+ * `NEAR`), otherwise the one before.
  */
 export function nextPart(
     outline: SoundOutline,
@@ -388,12 +425,12 @@ export function nextPart(
     const parts = outline.parts;
 
     if (direction > 0) {
-        const index = parts.findIndex((part) => part.start > time + 0.01);
+        const index = parts.findIndex((part) => part.start > time + NEAR);
 
         return index < 0 ? null : index;
     }
 
-    const before = time - Math.max(0.01, grace);
+    const before = time - Math.max(NEAR, grace);
 
     for (let index = parts.length - 1; index >= 0; index--) {
         if (parts[index].start < before) {
@@ -425,10 +462,13 @@ function both(first: string, second: string, locale: string): string {
 
 /**
  * Seconds in words: whole seconds under a minute, minutes and seconds under ten minutes, then
- * minutes, then hours and minutes. A length is never said as zero.
+ * minutes, then hours and minutes. A length is rounded and never said as zero; a position is cut,
+ * as the slider's clock cuts it, so "8 seconds" and "0:08" always agree.
  */
 function spoken(seconds: number, locale: string, length: boolean): string {
-    const whole = Math.max(length ? 1 : 0, Math.round(seconds));
+    const whole = length
+        ? Math.max(1, Math.round(seconds))
+        : Math.max(0, Math.floor(seconds));
 
     if (whole < 60) {
         return amount(whole, 'second', locale);
@@ -444,7 +484,9 @@ function spoken(seconds: number, locale: string, length: boolean): string {
             : both(said, amount(rest, 'second', locale), locale);
     }
 
-    const minutes = Math.round(seconds / 60);
+    const minutes = length
+        ? Math.round(seconds / 60)
+        : Math.floor(seconds / 60);
 
     if (minutes < 60) {
         return amount(minutes, 'minute', locale);
@@ -583,7 +625,9 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
 
         if (outline.loudest !== null) {
             sentences.push(
-                fillTemplate(words.loudest, { at: at(outline.loudest) }),
+                outline.loudest < 1
+                    ? words.loudestStart
+                    : fillTemplate(words.loudest, { at: at(outline.loudest) }),
             );
         } else if (outline.level === 'steady') {
             sentences.push(words.even);
@@ -609,8 +653,8 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
         },
 
         part(index, total, time): string {
-            // Under half a second is the start: "0 seconds" reads oddly, and in some languages wrongly.
-            const template = time < 0.5 ? words.partStart : words.part;
+            // The first second is the start: "0 seconds" reads oddly, and in some languages wrongly.
+            const template = time < 1 ? words.partStart : words.part;
 
             return cleanText(
                 fillTemplate(template, {
@@ -628,6 +672,10 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
 
         pauseNote(): string {
             return words.pauseNote;
+        },
+
+        silenceNote(): string {
+            return words.silenceNote;
         },
     };
 }

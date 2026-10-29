@@ -77,6 +77,7 @@ export {
     nextPart,
     outlineSound,
     partAt,
+    silenceAt,
     soundWords,
     type DescribeOptions,
     type DescriptionWords,

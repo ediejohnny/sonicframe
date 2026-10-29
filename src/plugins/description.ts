@@ -11,7 +11,7 @@
 import {
     nextPart,
     outlineSound,
-    partAt,
+    silenceAt,
     soundWords,
     type DescriptionWords,
     type OutlineOptions,
@@ -351,14 +351,18 @@ export function soundDescription(
         },
 
         valueNote(time): string | void {
-            if (
-                options.pauseInValue &&
-                outline !== null &&
-                !outline.silent &&
-                time !== null &&
-                partAt(outline, time) < 0
-            ) {
+            if (!options.pauseInValue || outline === null || time === null) {
+                return;
+            }
+
+            const silence = silenceAt(outline, time);
+
+            if (silence === 'pause') {
                 return words.pauseNote();
+            }
+
+            if (silence === 'silence') {
+                return words.silenceNote();
             }
         },
 
