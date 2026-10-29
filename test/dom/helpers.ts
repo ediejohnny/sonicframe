@@ -99,6 +99,8 @@ export function dragAcross(
 /** The media surface a frame follows: an `EventTarget` with the few fields the controller reads. */
 export class FakeMedia extends EventTarget {
     currentTime = 0;
+    volume = 1;
+    muted = false;
     private readonly state: {
         duration: number;
         readyState: number;
@@ -153,6 +155,26 @@ export function fakeMedia(
     } = {},
 ): HTMLMediaElement & FakeMedia {
     return new FakeMedia(options) as HTMLMediaElement & FakeMedia;
+}
+
+/** The style properties set on `element` when it takes keyboard focus (`:focus-visible`). */
+export function focusRing(element: HTMLElement): string[] {
+    const names: string[] = [];
+    const set = element.style.setProperty.bind(element.style);
+    element.matches = ((): boolean =>
+        true) as unknown as HTMLElement['matches'];
+    element.style.setProperty = (
+        name: string,
+        value: string | null,
+        priority?: string,
+    ): void => {
+        names.push(name);
+        set(name, value, priority);
+    };
+
+    element.dispatchEvent(new FocusEvent('focus'));
+
+    return names;
 }
 
 /** Resolves after one animation frame, so a scheduled repaint has run. */

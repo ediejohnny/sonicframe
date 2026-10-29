@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `VolumeControl`: a speaker button that mutes and unmutes (the icon follows the level) beside a
+  bar that sets the level. The bar is a keyboard slider that speaks the level in percent and follows
+  a press or a drag; unmuting brings the level back. It follows the media's own `volume` and `muted`,
+  can show the bar always or only on hover and focus, and shows only the mute button where the
+  browser keeps the volume fixed (iOS). The play button's focus ring now sets only `outline-color`
+  from your color.
 - `exportClip` (and `frame.exportClip`): records a short video of the wave playing — the decoded audio
   plays silently into a MediaStream, the wave is drawn each frame, and a MediaRecorder captures both.
   It picks a container the browser can record (`pickMimeType`: MP4/H.264 first, then WebM), runs in

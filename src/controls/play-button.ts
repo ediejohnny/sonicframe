@@ -16,6 +16,7 @@ import {
 } from '../core/button';
 import { Emitter } from '../core/emitter';
 import { applyStyles } from '../core/styles';
+import { hideFocusRing, showFocusRing } from './focus';
 
 export type PlayButtonOptions = {
     /** The element the button is added to. */
@@ -280,19 +281,17 @@ export class PlayButton {
         this.element.style.setProperty('transform', 'none');
     };
 
-    /** A ring for keyboard focus only (`:focus-visible` cannot be set from inline styles). */
+    /**
+     * A ring for keyboard focus only (`:focus-visible` cannot be set from inline styles). The color
+     * goes into `outline-color` alone, never into a shorthand.
+     */
     private readonly onFocus = (): void => {
         if (this.element.matches(':focus-visible')) {
-            this.element.style.setProperty(
-                'outline',
-                `2px solid ${this.look.colors.background}`,
-            );
-            this.element.style.setProperty('outline-offset', '2px');
+            showFocusRing(this.element, this.look.colors.background);
         }
     };
 
     private readonly onBlur = (): void => {
-        this.element.style.removeProperty('outline');
-        this.element.style.removeProperty('outline-offset');
+        hideFocusRing(this.element);
     };
 }
