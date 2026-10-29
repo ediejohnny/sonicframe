@@ -1,521 +1,600 @@
 /**
- * The playground: play buttons and bar styles side by side in a compact player row, a real voice
- * playing in all of them, colors to try, and 60 frames playing at once with a frame-rate meter.
+ * The playground: SonicFrame's own page. Every player has its own `<audio>` on the same sound, so
+ * only the one pressed plays (the play buttons are exclusive); the sound is decoded once and every
+ * player is given its peaks and duration. Picking another sound builds every player again.
  * Run `npm run dev` and open /playground/.
  */
 
 import {
     caption,
-    formatTime,
-    markers,
     liveFrequency,
-    peaksFromChannel,
+    markers,
     PlayButton,
     regions,
+    silencesFromPeaks,
+    skipSilences,
     SonicFrame,
-    spectrogram,
     timeline,
     type BarStyle,
     type ButtonFill,
     type ButtonShape,
-    type Colors,
+    type WaveName,
+    type WaveStyle,
 } from '../src/index';
-import { oldWaveform } from './old-waveform';
+import {
+    createPlayer,
+    defineSonicPlayer,
+    type PlayerOptions,
+    type ThemeName,
+} from '../src/player';
+import {
+    bundledSound,
+    byId,
+    forget,
+    pickSound,
+    setupCopyButtons,
+    setupHeader,
+    type Sound,
+} from './site';
 
-type ButtonCard = {
-    title: string;
-    shape: ButtonShape;
-    fill: ButtonFill;
-    size?: number;
-    radius?: number;
+/** Builds something for a sound; returns what takes it down. */
+type Build = (host: HTMLElement, sound: Sound) => () => void;
+
+type Drawing = {
+    name: WaveName;
+    text: string;
+    wave?: Partial<WaveStyle>;
+    bar?: Partial<BarStyle>;
 };
 
-type BarCard = {
-    letter: string;
+type PluginCard = {
     title: string;
-    bar: Partial<BarStyle>;
-    colors?: Partial<Colors>;
-    marked?: boolean;
+    text: string;
+    build: Build;
 };
 
-/** The library's default bars (`DEFAULT_BAR`): style D with the quiet parts lifted. */
-const CHOSEN: Partial<BarStyle> = { width: 3, gap: 2, radius: 1.5, curve: 0.7 };
-
-const BUTTONS: ButtonCard[] = [
-    { title: 'circle, solid', shape: 'circle', fill: 'solid' },
-    { title: 'circle, outline', shape: 'circle', fill: 'outline' },
-    { title: 'rounded, solid', shape: 'rounded', fill: 'solid' },
-    { title: 'rounded, outline', shape: 'rounded', fill: 'outline' },
-    { title: 'square, solid', shape: 'square', fill: 'solid' },
-    { title: 'square, outline', shape: 'square', fill: 'outline' },
+const DRAWINGS: Drawing[] = [
+    { name: 'bars', text: 'Rounded bars, the default.' },
     {
-        title: 'square corners of 0.2rem, solid',
-        shape: 'square',
-        fill: 'solid',
-        radius: 3,
-    },
-    { title: 'ghost (icon only)', shape: 'circle', fill: 'ghost' },
-    { title: 'circle, solid, 28 px', shape: 'circle', fill: 'solid', size: 28 },
-];
-
-const PLAIN: Partial<Colors> = { hover: null, cursor: null };
-
-const BARS: BarCard[] = [
-    {
-        letter: 'B',
-        title: 'bars 2 px, gap 1, radius 1',
-        bar: { width: 2, gap: 1, radius: 1 },
-        colors: PLAIN,
+        name: 'needles',
+        text: 'One hairline per peak.',
+        bar: { width: 1, gap: 2 },
     },
     {
-        letter: 'C',
-        title: 'bars 3 px, gap 1, radius 1.5',
-        bar: { width: 3, gap: 1, radius: 1.5 },
-        colors: PLAIN,
+        name: 'blocks',
+        text: 'Stacked cells, like a level meter.',
+        bar: { width: 4, gap: 2, radius: 0 },
+    },
+    { name: 'dots', text: 'A matrix of dots.', bar: { width: 4, gap: 2 } },
+    {
+        name: 'steps',
+        text: 'An 8-bit staircase from the floor.',
+        bar: { width: 3, gap: 0, radius: 0, align: 'bottom' },
     },
     {
-        letter: 'D',
-        title: 'bars 3 px, gap 2, radius 1.5 (chosen)',
-        bar: { width: 3, gap: 2, radius: 1.5 },
-        colors: PLAIN,
+        name: 'line',
+        text: 'One line along the peaks, mirrored.',
+        bar: { width: 2, gap: 1 },
     },
     {
-        letter: 'E',
-        title: 'bars 4 px, gap 2, radius 1.5',
-        bar: { width: 4, gap: 2, radius: 1.5 },
-        colors: PLAIN,
+        name: 'area',
+        text: 'The same outline, filled.',
+        bar: { width: 2, gap: 1 },
     },
     {
-        letter: 'F',
-        title: 'D growing from the base',
-        bar: { width: 3, gap: 2, radius: 1.5, align: 'bottom' },
-        colors: PLAIN,
+        name: 'scope',
+        text: 'A trace swinging around the middle.',
+        bar: { width: 2, gap: 1 },
     },
     {
-        letter: 'G',
-        title: 'D with quiet parts lifted (curve 0.7)',
-        bar: CHOSEN,
-        colors: PLAIN,
+        name: 'pulse',
+        text: 'A heartbeat monitor; silence stays flat.',
+        wave: { glow: 4 },
     },
     {
-        letter: 'H',
-        title: 'G with hover band, cursor line and two markers',
-        bar: CHOSEN,
-        colors: { hover: 'auto', cursor: 'var(--voice)' },
-        marked: true,
-    },
-    {
-        letter: 'I',
-        title: 'the bars recolor under the pointer (hover colors, auto)',
-        bar: CHOSEN,
-        colors: { hover: 'auto', waveHover: 'auto', progressHover: 'auto' },
+        name: 'track',
+        text: 'Only a track and a knob; it needs no peaks.',
+        wave: { knob: 12, lineWidth: 4 },
     },
 ];
 
-const DEFAULT_COLORS = { wave: '#c2cad6', voice: '#4d6d94', button: '#4d6d94' };
-const SPEEDS = [1, 1.25, 1.5, 2];
+const THEME_PREVIEW: [ThemeName, string][] = [
+    ['bubble', 'A chat voice note.'],
+    ['card', 'A podcast card with skip buttons.'],
+    ['pulse', 'A heartbeat monitor.'],
+    ['brutal', 'Thick lines and a hard shadow.'],
+    ['glass', 'Frosted glass over the page.'],
+    ['retro', 'Chunky 8-bit steps.'],
+];
 
-const audio = document.querySelector<HTMLAudioElement>('#audio')!;
-const root = document.documentElement;
-const frames: SonicFrame[] = [];
-const times: HTMLElement[] = [];
-let stopOld: (() => void) | null = null;
+const BUTTON_KINDS: [ButtonShape, ButtonFill][] = [
+    ['circle', 'solid'],
+    ['circle', 'outline'],
+    ['rounded', 'solid'],
+    ['rounded', 'outline'],
+    ['square', 'solid'],
+    ['circle', 'ghost'],
+];
 
-function section(id: string): HTMLElement {
-    return document.querySelector<HTMLElement>(id)!;
+/** The sixty waves of the load test. */
+const CROWD = 60;
+
+/** The clip the export card records, in seconds. */
+const CLIP_SECONDS = 5;
+
+/** Everything drawn on a canvas, repainted when the page switches between light and dark. */
+const painted = new Set<() => void>();
+const mounts: { host: HTMLElement; build: Build }[] = [];
+let teardowns: (() => void)[] = [];
+let current: Sound | null = null;
+
+function mount(host: HTMLElement, build: Build): void {
+    mounts.push({ host, build });
 }
 
-function card(parent: HTMLElement, title: string): HTMLElement {
-    const box = document.createElement('article');
-    box.className = 'post';
-
-    const heading = document.createElement('h3');
-    heading.textContent = title;
-    box.append(heading);
-    parent.append(box);
-
-    return box;
-}
-
-/** A compact player row: button, waveform, time. */
-function playerRow(
-    box: HTMLElement,
-    button: Omit<ButtonCard, 'title'>,
-): HTMLElement {
-    const row = document.createElement('div');
-    row.className = 'player';
-
-    const wave = document.createElement('div');
-    wave.className = 'wave';
-
-    const time = document.createElement('span');
-    time.className = 'time';
-    times.push(time);
-
-    box.append(row);
-    PlayButton.create({
-        container: row,
-        media: audio,
-        shape: button.shape,
-        fill: button.fill,
-        size: button.size ?? 32,
-        radius: button.radius ?? null,
-        colors: { background: 'var(--button)', icon: '#fff' },
+/** A player on its own `<audio>`, with the sound's peaks and duration. */
+function player(
+    host: HTMLElement,
+    sound: Sound,
+    options: Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
+): () => void {
+    const made = createPlayer({
+        container: host,
+        src: sound.url,
+        peaks: sound.peaks,
+        duration: sound.duration,
+        ...options,
     });
-    row.append(wave, time);
+    const repaint = (): void => made.frame.refresh();
+    const stopErrors = made.on('error', (error) => console.error(error));
+    painted.add(repaint);
 
-    return wave;
+    return () => {
+        painted.delete(repaint);
+        stopErrors();
+        made.destroy();
+    };
 }
 
-function frame(
-    container: HTMLElement,
-    bar: Partial<BarStyle>,
-    colors: Partial<Colors> = {},
-    marked = false,
-): void {
-    frames.push(
-        SonicFrame.create({
-            container,
-            media: audio,
-            bar,
-            colors: {
-                wave: 'var(--wave-idle)',
-                progress: 'var(--voice)',
-                ...colors,
-            },
-            label: 'Playback position',
-            rewindOnEnd: true,
-            plugins: marked
-                ? [
-                      markers({
-                          marks: [
-                              { time: 4, label: 'intro' },
-                              { time: 21, label: 'the reply' },
-                          ],
-                          color: 'var(--record)',
-                      }),
-                  ]
-                : [],
-        }),
-    );
+/** A figure on a shelf: the player, then its option in code and a few words. */
+function figure(shelf: HTMLElement, option: string, text: string): HTMLElement {
+    const box = document.createElement('figure');
+    const host = document.createElement('div');
+    const caption = document.createElement('figcaption');
+    const code = document.createElement('code');
+    const words = document.createElement('span');
+
+    code.textContent = option;
+    words.textContent = text;
+    caption.append(code, words);
+    box.append(host, caption);
+    shelf.append(box);
+
+    return host;
 }
 
-function build(): void {
-    BUTTONS.forEach((item, index) => {
-        const box = card(section('#buttons'), `${index + 1} · ${item.title}`);
-        frame(playerRow(box, item), CHOSEN);
-    });
+function clipCard(): PluginCard {
+    return {
+        title: 'Export a clip',
+        text: `Records a stretch of the wave and its sound as a video file, in the player's drawing and colors.`,
+        build(host, sound) {
+            const status = document.createElement('p');
+            const button = document.createElement('button');
+            const wave = document.createElement('div');
+            const row = document.createElement('div');
+            row.className = 'buttons';
+            button.type = 'button';
+            button.className = 'button small';
+            button.textContent = `Export the first ${CLIP_SECONDS} seconds`;
+            row.append(button, status);
+            host.append(row, wave);
 
-    const old = card(
-        section('#bars'),
-        'A · a plain SVG waveform, for comparison (100 stretched bars)',
-    );
-    playerRow(old, { shape: 'circle', fill: 'solid' }).id = 'old';
+            const made = createPlayer({
+                container: wave,
+                src: sound.url,
+                peaks: sound.peaks,
+                duration: sound.duration,
+                wave: 'line',
+                bar: { width: 2, gap: 1 },
+                label: 'Clip source',
+            });
+            const repaint = (): void => made.frame.refresh();
+            painted.add(repaint);
 
-    for (const item of BARS) {
-        const box = card(section('#bars'), `${item.letter} · ${item.title}`);
-        frame(
-            playerRow(box, { shape: 'circle', fill: 'solid' }),
-            item.bar,
-            item.colors,
-            item.marked,
-        );
-    }
+            button.addEventListener('click', () => {
+                button.disabled = true;
+                status.textContent = 'Recording…';
+                made.frame
+                    .exportClip({
+                        start: 0,
+                        end: CLIP_SECONDS,
+                        caption: sound.name,
+                    })
+                    .then(({ blob, mimeType }) => {
+                        const name = mimeType.startsWith('video/mp4')
+                            ? 'sonicframe-clip.mp4'
+                            : 'sonicframe-clip.webm';
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = name;
+                        link.click();
+                        // The download reads the blob after the click returns, so the URL outlives it a little.
+                        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        status.textContent = `Saved ${name}.`;
+                    })
+                    .catch((error: unknown) => {
+                        status.textContent =
+                            error instanceof Error
+                                ? error.message
+                                : 'The clip could not be recorded.';
+                    })
+                    .finally(() => {
+                        button.disabled = false;
+                    });
+            });
 
-    const captionBox = card(
-        section('#bars'),
-        'Caption · a line that fades out, a badge, and a tooltip on hover or tap',
-    );
-    frames.push(
-        SonicFrame.create({
-            container: playerRow(captionBox, {
-                shape: 'circle',
-                fill: 'solid',
-            }),
-            media: audio,
-            bar: CHOSEN,
-            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
-            label: 'Playback position',
-            rewindOnEnd: true,
-            plugins: [
-                caption({
-                    // "The Little Elf" by John Kendrick Bangs (public domain; see the page credits).
-                    text: 'I met a little Elf-man once, down where the lilies blow.',
-                    badges: ['auto', 'en'],
-                    tooltip:
-                        'I met a little Elf-man once, down where the lilies blow. ' +
-                        "I asked him why he was so small, and why he didn't grow.",
+            return () => {
+                painted.delete(repaint);
+                made.destroy();
+                row.remove();
+                wave.remove();
+            };
+        },
+    };
+}
+
+function buttonsCard(): PluginCard {
+    return {
+        title: 'Play buttons and a bare wave',
+        text: 'The core pieces without the player: three shapes and three fills, all on one sound.',
+        build(host, sound) {
+            const audio = document.createElement('audio');
+            const row = document.createElement('div');
+            const wave = document.createElement('div');
+            audio.preload = 'metadata';
+            audio.src = sound.url;
+            row.className = 'buttons';
+            wave.className = 'bare-wave';
+            host.append(audio, row, wave);
+
+            const buttons = BUTTON_KINDS.map(([shape, fill]) =>
+                PlayButton.create({
+                    container: row,
+                    media: audio,
+                    shape,
+                    fill,
+                    size: 36,
                 }),
-            ],
-        }),
-    );
+            );
+            const frame = SonicFrame.create({
+                container: wave,
+                media: audio,
+                peaks: sound.peaks,
+                duration: sound.duration,
+                label: 'Playback position',
+                rewindOnEnd: true,
+            });
+            const repaint = (): void => frame.refresh();
+            painted.add(repaint);
 
-    const regionBox = card(
-        section('#bars'),
-        'Regions · Shift-drag to make one, drag an edge to resize, R selects, Enter plays, L loops',
-    );
-    frames.push(
-        SonicFrame.create({
-            container: playerRow(regionBox, { shape: 'circle', fill: 'solid' }),
-            media: audio,
-            bar: CHOSEN,
-            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
-            label: 'Playback position',
-            rewindOnEnd: true,
-            plugins: [
-                regions({ items: [{ start: 5, end: 12, label: 'chorus' }] }),
-            ],
-        }),
-    );
+            return () => {
+                painted.delete(repaint);
+                buttons.forEach((button) => button.destroy());
+                frame.destroy();
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.remove();
+                row.remove();
+                wave.remove();
+            };
+        },
+    };
+}
 
-    const timelineBox = card(
-        section('#bars'),
-        'Timeline · a ruler under the bars',
-    );
-    frames.push(
-        SonicFrame.create({
-            container: playerRow(timelineBox, {
-                shape: 'circle',
-                fill: 'solid',
+function pluginCards(): PluginCard[] {
+    const simple = (
+        title: string,
+        text: string,
+        options: (
+            sound: Sound,
+        ) => Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
+    ): PluginCard => ({
+        title,
+        text,
+        build: (host, sound) => player(host, sound, options(sound)),
+    });
+
+    return [
+        simple(
+            'Markers',
+            'Labeled moments on the wave. Hover one to read it, click it to jump there.',
+            () => ({
+                label: 'Markers',
+                plugins: [
+                    markers({
+                        marks: [
+                            { time: 4, label: 'The elf' },
+                            { time: 21, label: 'His reply' },
+                        ],
+                    }),
+                ],
             }),
-            media: audio,
-            bar: CHOSEN,
-            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
-            label: 'Playback position',
-            rewindOnEnd: true,
+        ),
+        simple(
+            'Regions',
+            'Shift-drag to mark a stretch and drag an edge to resize it. With the wave focused, R selects, Enter plays and L loops.',
+            () => ({
+                label: 'Regions',
+                plugins: [
+                    regions({ items: [{ start: 5, end: 12, label: 'Verse' }] }),
+                ],
+            }),
+        ),
+        simple(
+            'Timeline',
+            'A ruler of minutes and seconds under the wave.',
+            () => ({ label: 'Timeline', plugins: [timeline()] }),
+        ),
+        simple(
+            'Caption',
+            'A line of text with badges, and the whole text in a tooltip on hover or tap.',
+            () => ({
+                label: 'Caption',
+                plugins: [
+                    caption({
+                        // "The Little Elf" by John Kendrick Bangs (public domain; see the page credits).
+                        text: 'I met a little Elf-man once, down where the lilies blow.',
+                        badges: ['auto', 'en'],
+                        tooltip:
+                            'I met a little Elf-man once, down where the lilies blow. ' +
+                            "I asked him why he was so small, and why he didn't grow.",
+                    }),
+                ],
+            }),
+        ),
+        simple(
+            'Spectrogram',
+            'Frequencies over time, computed in the browser and drawn in the player’s colors.',
+            () => ({
+                label: 'Spectrogram',
+                spectrogram: true,
+                look: { waveHeight: 4 },
+                wave: 'line',
+            }),
+        ),
+        simple(
+            'Live frequency',
+            'Press play: the bars follow the frequencies of what is playing.',
+            () => ({
+                label: 'Live frequency',
+                bar: { align: 'bottom' },
+                plugins: [liveFrequency()],
+            }),
+        ),
+        simple(
+            'Skip silences',
+            'Quiet stretches are found from the peaks, dimmed, and skipped while playing.',
+            (sound) => ({
+                label: 'Skip silences',
+                plugins: [
+                    skipSilences({
+                        silences: silencesFromPeaks(
+                            sound.peaks,
+                            sound.duration,
+                        ),
+                        dim: true,
+                    }),
+                ],
+            }),
+        ),
+        simple(
+            'Volume',
+            'A speaker button and a volume bar, kept in step with the media. Off unless you turn it on.',
+            () => ({
+                label: 'Volume',
+                volume: true,
+                look: { volume: 'always' },
+            }),
+        ),
+        clipCard(),
+        buttonsCard(),
+    ];
+}
+
+function setupPage(): void {
+    mount(byId('hero-player'), (host, sound) =>
+        player(host, sound, {
+            label: sound.name,
+            look: {
+                waveHeight: 5,
+                button: { shape: 'circle', fill: 'solid', size: 52 },
+                padding: 0,
+                border: 0,
+                gap: 1,
+                surface: 'none',
+                fontSize: 0.9375,
+            },
             plugins: [timeline()],
         }),
     );
 
-    const spectrumBox = card(
-        section('#bars'),
-        'Spectrogram · time across, frequency up, computed in the browser',
+    const tag = byId('tag-player');
+    mount(tag, (host, sound) => {
+        host.setAttribute('src', sound.url);
+
+        return () => host.removeAttribute('src');
+    });
+    tag.addEventListener('sonicframe:error', (event) =>
+        console.error((event as CustomEvent<unknown[]>).detail[0]),
     );
-    frames.push(
-        SonicFrame.create({
-            container: playerRow(spectrumBox, {
-                shape: 'circle',
-                fill: 'solid',
+
+    const drawings = byId('drawing-shelf');
+
+    for (const drawing of DRAWINGS) {
+        const host = figure(drawings, `wave: '${drawing.name}'`, drawing.text);
+        mount(host, (box, sound) =>
+            player(box, sound, {
+                label: `Drawn as ${drawing.name}`,
+                wave: { style: drawing.name, ...drawing.wave },
+                bar: drawing.bar,
             }),
-            media: audio,
-            bar: { ...CHOSEN },
-            colors: {
-                wave: 'rgba(255,255,255,0.35)',
-                progress: 'rgba(255,255,255,0.7)',
-            },
-            label: 'Playback position',
-            rewindOnEnd: true,
-            plugins: [
-                spectrogram({
-                    source: './sounds/little-elf.mp3',
-                    map: 'magma',
-                    columns: 400,
-                }),
-            ],
-        }),
-    );
+        );
+    }
 
-    const liveBox = card(
-        section('#bars'),
-        'Live frequency · the bars dance to the sound while it plays (press play)',
-    );
-    frames.push(
-        SonicFrame.create({
-            container: playerRow(liveBox, { shape: 'circle', fill: 'solid' }),
-            media: audio,
-            bar: { ...CHOSEN, align: 'bottom' },
-            colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
-            label: 'Playback position',
-            rewindOnEnd: true,
-            plugins: [liveFrequency()],
-        }),
-    );
+    const themes = byId('theme-shelf');
 
-    const clipBox = card(
-        section('#bars'),
-        'Export clip · record the first 5 seconds of the wave as a video',
-    );
-    const clipFrame = SonicFrame.create({
-        container: playerRow(clipBox, { shape: 'circle', fill: 'solid' }),
+    for (const [name, text] of THEME_PREVIEW) {
+        const host = figure(themes, `theme: '${name}'`, text);
+        mount(host, (box, sound) =>
+            player(box, sound, { label: `The ${name} theme`, theme: name }),
+        );
+    }
+
+    const cards = byId('plugin-cards');
+
+    for (const card of pluginCards()) {
+        const box = document.createElement('article');
+        const title = document.createElement('h3');
+        const text = document.createElement('p');
+        const demo = document.createElement('div');
+        box.className = 'plugin';
+        demo.className = 'demo';
+        title.textContent = card.title;
+        text.textContent = card.text;
+        box.append(title, text, demo);
+        cards.append(box);
+        mount(demo, card.build);
+    }
+}
+
+/** The load test: sixty bare waves on one `<audio>`, with one play button and a frame-rate readout. */
+function crowd(sound: Sound): () => void {
+    const host = byId('crowd');
+    const playHost = byId('crowd-play');
+    const fps = byId('fps');
+    const audio = document.createElement('audio');
+    audio.preload = 'metadata';
+    audio.src = sound.url;
+    playHost.append(audio);
+
+    const button = PlayButton.create({
+        container: playHost,
         media: audio,
-        bar: CHOSEN,
-        colors: { wave: 'var(--wave-idle)', progress: 'var(--voice)' },
-        label: 'Playback position',
-        rewindOnEnd: true,
+        size: 40,
+        labels: { play: 'Play all sixty', pause: 'Pause all sixty' },
     });
-    frames.push(clipFrame);
+    const frames: SonicFrame[] = [];
 
-    const exportButton = document.createElement('button');
-    exportButton.type = 'button';
-    exportButton.textContent = 'Export 5s clip';
-    exportButton.addEventListener('click', () => {
-        exportButton.disabled = true;
-        exportButton.textContent = 'Recording…';
-        clipFrame
-            .exportClip({ start: 0, end: 5, caption: 'The Little Elf' })
-            .then(({ blob, mimeType }) => {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = mimeType.startsWith('video/mp4')
-                    ? 'sonicframe-clip.mp4'
-                    : 'sonicframe-clip.webm';
-                link.click();
-                // The download reads the blob after the click returns, so the URL outlives it a little.
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            })
-            .catch((error: unknown) => console.error(error))
-            .finally(() => {
-                exportButton.disabled = false;
-                exportButton.textContent = 'Export 5s clip';
-            });
-    });
-    clipBox.append(exportButton);
-
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < CROWD; i++) {
         const wave = document.createElement('div');
-        wave.className = 'wave cell';
-        section('#grid').append(wave);
-        frame(wave, CHOSEN, { hover: null });
-    }
-}
-
-function load(peaks: number[], source: string, label: string): void {
-    audio.src = source;
-    section('#source').textContent = label;
-
-    for (const each of frames) {
-        each.setPeaks(() => Promise.resolve(peaks));
-    }
-
-    stopOld?.();
-    stopOld = oldWaveform(section('#old'), audio, peaks);
-}
-
-async function decode(data: ArrayBuffer): Promise<number[]> {
-    const context = new AudioContext();
-
-    try {
-        const buffer = await context.decodeAudioData(data);
-
-        return peaksFromChannel(buffer.getChannelData(0), 1000);
-    } finally {
-        void context.close();
-    }
-}
-
-/** Canvas colors are read once; after a CSS variable changes, every frame reads them again. */
-function refreshFrames(): void {
-    for (const each of frames) {
-        each.refresh();
-    }
-}
-
-function setColor(name: string, value: string): void {
-    root.style.setProperty(name, value);
-    refreshFrames();
-}
-
-function watch(): void {
-    const playAll = section('#play') as HTMLButtonElement;
-    const speed = section('#speed') as HTMLButtonElement;
-    const pickers = {
-        wave: section('#color-wave') as HTMLInputElement,
-        voice: section('#color-voice') as HTMLInputElement,
-        button: section('#color-button') as HTMLInputElement,
-    };
-
-    const sync = (): void => {
-        const text = `${formatTime(audio.ended ? 0 : audio.currentTime)} / ${formatTime(audio.duration)}`;
-        times.forEach((time) => (time.textContent = text));
-        playAll.textContent = audio.paused ? 'Play all' : 'Pause all';
-    };
-
-    for (const type of [
-        'timeupdate',
-        'durationchange',
-        'play',
-        'pause',
-        'ended',
-    ]) {
-        audio.addEventListener(type, sync);
+        wave.className = 'bare-wave';
+        host.append(wave);
+        frames.push(
+            SonicFrame.create({
+                container: wave,
+                media: audio,
+                peaks: sound.peaks,
+                duration: sound.duration,
+                label: `Wave ${i + 1} of ${CROWD}`,
+                rewindOnEnd: true,
+            }),
+        );
     }
 
-    playAll.addEventListener('click', () =>
-        audio.paused ? void audio.play() : audio.pause(),
-    );
-    speed.addEventListener('click', () => {
-        const next =
-            SPEEDS[(SPEEDS.indexOf(audio.playbackRate) + 1) % SPEEDS.length];
-        audio.playbackRate = next;
-        speed.textContent = `Speed ${next}×`;
-    });
-
-    pickers.wave.addEventListener('input', () =>
-        setColor('--wave-idle', pickers.wave.value),
-    );
-    pickers.voice.addEventListener('input', () => {
-        root.style.setProperty('--wave-progress', pickers.voice.value);
-        setColor('--voice', pickers.voice.value);
-    });
-    pickers.button.addEventListener('input', () =>
-        setColor('--button', pickers.button.value),
-    );
-    section('#reset').addEventListener('click', () => {
-        pickers.wave.value = DEFAULT_COLORS.wave;
-        pickers.voice.value = DEFAULT_COLORS.voice;
-        pickers.button.value = DEFAULT_COLORS.button;
-        for (const name of [
-            '--wave-idle',
-            '--voice',
-            '--wave-progress',
-            '--button',
-        ]) {
-            root.style.removeProperty(name);
-        }
-        refreshFrames();
-    });
-
-    const file = section('#file') as HTMLInputElement;
-    file.addEventListener('change', async () => {
-        const chosen = file.files?.[0];
-
-        if (chosen) {
-            load(
-                await decode(await chosen.arrayBuffer()),
-                URL.createObjectURL(chosen),
-                chosen.name,
-            );
-        }
-    });
+    const repaint = (): void => frames.forEach((frame) => frame.refresh());
+    painted.add(repaint);
 
     let count = 0;
     let since = performance.now();
+    let loop = 0;
     const meter = (now: number): void => {
         count++;
 
         if (now - since >= 1000) {
-            section('#fps').textContent =
-                `${Math.round((count * 1000) / (now - since))} fps`;
-            section('#density').textContent =
-                `device pixel ratio ${window.devicePixelRatio}`;
+            fps.textContent = `${Math.round((count * 1000) / (now - since))} fps`;
             count = 0;
             since = now;
         }
 
-        requestAnimationFrame(meter);
+        loop = requestAnimationFrame(meter);
     };
+    loop = requestAnimationFrame(meter);
 
-    requestAnimationFrame(meter);
+    return () => {
+        cancelAnimationFrame(loop);
+        painted.delete(repaint);
+        frames.forEach((frame) => frame.destroy());
+        button.destroy();
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.remove();
+        host.replaceChildren();
+        fps.textContent = '';
+    };
 }
 
-build();
-watch();
+let stopCrowd: (() => void) | null = null;
 
-// Fetched once: the same bytes give the peaks and play (a hidden tab would not load the address).
-const sound = await (await fetch('./sounds/little-elf.mp3')).blob();
-load(
-    await decode(await sound.arrayBuffer()),
-    URL.createObjectURL(sound),
-    '“The Little Elf” (see the credits below)',
+function setupCrowd(): void {
+    const toggle = byId<HTMLButtonElement>('crowd-toggle');
+
+    toggle.addEventListener('click', () => {
+        if (stopCrowd !== null) {
+            stopCrowd();
+            stopCrowd = null;
+            toggle.textContent = `Draw ${CROWD} waves`;
+        } else if (current !== null) {
+            stopCrowd = crowd(current);
+            toggle.textContent = 'Remove them';
+        }
+    });
+}
+
+function render(sound: Sound): void {
+    const previous = current;
+
+    for (const stop of teardowns) {
+        stop();
+    }
+
+    current = sound;
+    teardowns = mounts.map(({ host, build }) => build(host, sound));
+
+    if (stopCrowd !== null) {
+        stopCrowd();
+        stopCrowd = crowd(sound);
+    }
+
+    byId('source').textContent = `Playing ${sound.name}.`;
+
+    if (previous !== null) {
+        forget(previous);
+    }
+}
+
+function showError(error: unknown): void {
+    console.error(error);
+    byId('source').textContent =
+        current === null
+            ? 'That file could not be read as audio. Try an MP3, WAV, OGG or M4A file.'
+            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`;
+}
+
+defineSonicPlayer();
+setupHeader(() => painted.forEach((repaint) => repaint()));
+setupCopyButtons();
+setupPage();
+setupCrowd();
+pickSound(
+    byId<HTMLButtonElement>('pick'),
+    byId<HTMLInputElement>('file'),
+    render,
+    showError,
 );
+
+bundledSound().then(render, (error: unknown) => {
+    console.error(error);
+    byId('source').textContent =
+        'The page’s sound did not load. Use your own sound instead.';
+});
