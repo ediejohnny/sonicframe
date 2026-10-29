@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Ten ways to draw the sound (`wave`): bars, needles, LED blocks, a dot matrix, 8-bit steps, a line, a
+  filled area, an oscilloscope trace, a heartbeat monitor, and a plain track that needs no peaks. The
+  bar style still sets their density and alignment; played, hover and unplayed colors, live
+  frequency and exported clips work with every drawing. A `knob` dot can ride the playing position
+  (`colors.knob`), lines can glow, and `setWave` changes the drawing later. Every piece stays inside
+  the frame and the number of pieces is capped.
+
 - `exportClip` (and `frame.exportClip`): records a short video of the wave playing — the decoded audio
   plays silently into a MediaStream, the wave is drawn each frame, and a MediaRecorder captures both.
   It picks a container the browser can record (`pickMimeType`: MP4/H.264 first, then WebM), runs in

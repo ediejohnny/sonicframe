@@ -18,11 +18,12 @@ import {
     type ValueText,
 } from '../core/controller';
 import { Emitter } from '../core/emitter';
-import { barMetrics, layoutBars } from '../core/layout';
+import { barMetrics } from '../core/layout';
 import { clamp01 } from '../core/math';
 import { resample } from '../core/peaks';
 import { applyStyles } from '../core/styles';
 import { overlayOf, ratioAt, sameOverlay, type Overlay } from '../core/scene';
+import { DEFAULT_WAVE, knobSpot, resolveWave, waveShape } from '../core/shapes';
 import { easeOut } from '../core/timing';
 import type {
     BarStyle,
@@ -35,18 +36,22 @@ import type {
     Plugin,
     PluginHost,
     SonicFrameEvents,
+    WaveName,
     WavePoint,
+    WaveStyle,
 } from '../types';
 import { announce } from './announce';
 import { exportClip, type ClipOptions } from './clip';
 import { LaneManager } from './lanes';
 import { observeSize, observeVisibility, type Size } from './observe';
 import {
-    barsPath,
+    drawingOf,
     linePath,
-    paintBars,
     paintCursor,
+    paintKnob,
+    paintWave,
     readColor,
+    type Drawing,
     type Palette,
 } from './paint';
 import { schedule, setLooping, unschedule, type FrameTask } from './scheduler';
@@ -61,6 +66,8 @@ export type SonicFrameOptions = {
     /** Duration in seconds, used until the media knows its own (or without media). */
     duration?: number | null;
     bar?: Partial<BarStyle>;
+    /** How the sound is drawn: a name (`'line'`, `'pulse'`, `'track'`…) or its details. Bars by default. */
+    wave?: WaveName | Partial<WaveStyle>;
     colors?: Partial<Colors>;
     /** Width of the cursor line in CSS pixels (drawn only with a cursor color). */
     cursorWidth?: number;
@@ -99,6 +106,7 @@ export const DEFAULT_COLORS: Readonly<Colors> = Object.freeze({
     cursor: null,
     waveHover: null,
     progressHover: null,
+    knob: null,
 });
 
 /** A press being tracked: a plugin may own it (once its claim is active) or it is a plain seek. */
@@ -148,6 +156,7 @@ export class SonicFrame implements PluginHost {
     private readonly savedAttributes = new Map<string, string | null>();
     private restoreStyles: () => void = () => undefined;
     private bar: BarStyle;
+    private wave: WaveStyle;
     private colors: Colors;
     private palette: Palette | null = null;
     private readonly colorCache = new Map<string, string>();
@@ -158,7 +167,7 @@ export class SonicFrame implements PluginHost {
     private size: Size = { width: 0, height: 0, pixelRatio: 1 };
     private near = false;
     private allocated = false;
-    private path: Path2D | null = null;
+    private drawing: Drawing | null = null;
     private layoutDirty = true;
     private paintDirty = true;
     private painted: Overlay | null = null;
@@ -189,6 +198,7 @@ export class SonicFrame implements PluginHost {
         this.animate = options.animate ?? true;
         this.cursorWidth = options.cursorWidth ?? 2;
         this.bar = { ...DEFAULT_BAR, ...options.bar };
+        this.wave = resolveWave(DEFAULT_WAVE, options.wave);
         this.colors = { ...DEFAULT_COLORS, ...options.colors };
         this.task = { render: (now) => this.render(now) };
 
@@ -431,7 +441,12 @@ export class SonicFrame implements PluginHost {
             audio,
             peaks: this.peaksData ?? [],
             bar: this.bar,
-            colors: { wave: palette.wave, progress: palette.progress },
+            wave: this.wave,
+            colors: {
+                wave: palette.wave,
+                progress: palette.progress,
+                knob: palette.knob ?? undefined,
+            },
             // Its own media's length is known, so an over-long source is refused before any download.
             sourceSeconds:
                 options.audio === undefined
@@ -443,6 +458,13 @@ export class SonicFrame implements PluginHost {
 
     setBar(bar: Partial<BarStyle>): void {
         this.bar = { ...this.bar, ...bar };
+        this.layoutDirty = true;
+        this.invalidate();
+    }
+
+    /** Changes how the sound is drawn: a name, or details over the current drawing. */
+    setWave(wave: WaveName | Partial<WaveStyle>): void {
+        this.wave = resolveWave(this.wave, wave);
         this.layoutDirty = true;
         this.invalidate();
     }
@@ -1063,19 +1085,28 @@ export class SonicFrame implements PluginHost {
 
         const source = this.override ?? this.peaksData;
 
-        if (source === null) {
-            this.path = linePath(width, height, pixelRatio, this.bar.align);
+        // The track needs no peaks; every other drawing shows a thin line until they arrive.
+        if (source === null && this.wave.style !== 'track') {
+            this.drawing = {
+                path: linePath(width, height, pixelRatio, this.bar.align),
+                mode: 'fill',
+                lineWidth: 1,
+                glow: 0,
+            };
 
             return;
         }
 
         const count = barMetrics(width, this.bar, pixelRatio).count;
 
-        if (this.values === null || this.values.length !== count) {
+        if (
+            source !== null &&
+            (this.values === null || this.values.length !== count)
+        ) {
             this.values = resample(source, count);
         }
 
-        let values = this.values;
+        let values = source === null ? [] : (this.values ?? []);
 
         if (this.appear !== null) {
             if (this.appear < 0) {
@@ -1092,8 +1123,9 @@ export class SonicFrame implements PluginHost {
             }
         }
 
-        this.path = barsPath(
-            layoutBars(values, width, height, this.bar, pixelRatio),
+        this.drawing = drawingOf(
+            waveShape(values, width, height, this.bar, this.wave, pixelRatio),
+            Math.round(this.wave.glow * pixelRatio),
         );
     }
 
@@ -1119,8 +1151,8 @@ export class SonicFrame implements PluginHost {
         ctx.clearRect(0, 0, width, height);
         this.drawPlugins('under', paint);
 
-        if (this.path !== null) {
-            paintBars(ctx, this.path, overlay, width, height, palette);
+        if (this.drawing !== null) {
+            paintWave(ctx, this.drawing, overlay, width, height, palette);
         }
 
         this.drawPlugins('over', paint);
@@ -1134,6 +1166,19 @@ export class SonicFrame implements PluginHost {
                 height,
                 palette.cursor,
             );
+        }
+
+        const spot = knobSpot(
+            overlay.progress,
+            width,
+            height,
+            this.wave,
+            this.bar.align,
+            pixelRatio,
+        );
+
+        if (spot !== null) {
+            paintKnob(ctx, spot, palette.knob ?? palette.progress);
         }
     }
 
@@ -1210,6 +1255,10 @@ export class SonicFrame implements PluginHost {
                 this.colors.progressHover,
                 auto?.progress,
             ),
+            knob:
+                this.colors.knob == null
+                    ? null
+                    : this.color(this.colors.knob) || null,
         };
     }
 

@@ -9,6 +9,10 @@
 export type Recorded = {
     /** The `fillStyle` in force at each `fill` / `fillRect` / `fillText`, in order. */
     readonly fills: string[];
+    /** The `strokeStyle` in force at each `stroke`, in order. */
+    readonly strokes: string[];
+    /** Every path given to `fill` / `stroke`, in order, with the geometry calls it was built from. */
+    readonly paths: FakePath2D[];
     /** Every method called, in order, for coarse assertions. */
     readonly ops: string[];
 };
@@ -89,16 +93,41 @@ class FakeIntersectionObserver {
     }
 }
 
-/** A `Path2D` that accepts the geometry calls the painter makes and keeps none of it. */
-class FakePath2D {
-    rect(): void {}
-    roundRect(): void {}
-    moveTo(): void {}
-    lineTo(): void {}
-    arcTo(): void {}
-    arc(): void {}
-    ellipse(): void {}
-    closePath(): void {}
+/** A `Path2D` that records the geometry calls the painter makes: `[name, ...numbers]`. */
+export class FakePath2D {
+    readonly calls: (string | number)[][] = [];
+
+    private record(name: string, args: number[]): void {
+        this.calls.push([name, ...args]);
+    }
+
+    rect(...args: number[]): void {
+        this.record('rect', args);
+    }
+    roundRect(...args: number[]): void {
+        this.record('roundRect', args);
+    }
+    moveTo(...args: number[]): void {
+        this.record('moveTo', args);
+    }
+    lineTo(...args: number[]): void {
+        this.record('lineTo', args);
+    }
+    quadraticCurveTo(...args: number[]): void {
+        this.record('quadraticCurveTo', args);
+    }
+    arcTo(...args: number[]): void {
+        this.record('arcTo', args);
+    }
+    arc(...args: number[]): void {
+        this.record('arc', args);
+    }
+    ellipse(...args: number[]): void {
+        this.record('ellipse', args);
+    }
+    closePath(): void {
+        this.record('closePath', []);
+    }
 }
 
 /** Red, green, blue and alpha (0..255) for the CSS colors the painter resolves. */
@@ -147,14 +176,27 @@ function parseColor(value: string): [number, number, number, number] {
 
 function createRecordingContext(): CanvasRenderingContext2D & Recorded {
     const fills: string[] = [];
+    const strokes: string[] = [];
+    const paths: FakePath2D[] = [];
     const ops: string[] = [];
     const op =
         (name: string) =>
         (...args: unknown[]): void => {
             ops.push(name);
 
+            if (
+                (name === 'fill' || name === 'stroke') &&
+                args[0] instanceof FakePath2D
+            ) {
+                paths.push(args[0]);
+            }
+
             if (name === 'fill' || name === 'fillRect' || name === 'fillText') {
                 fills.push(String(context.fillStyle));
+            }
+
+            if (name === 'stroke') {
+                strokes.push(String(context.strokeStyle));
             }
 
             void args;
@@ -162,11 +204,15 @@ function createRecordingContext(): CanvasRenderingContext2D & Recorded {
 
     const context = {
         fills,
+        strokes,
+        paths,
         ops,
         canvas: null,
         fillStyle: '#000000',
         strokeStyle: '#000000',
         lineWidth: 1,
+        shadowBlur: 0,
+        shadowColor: 'rgba(0, 0, 0, 0)',
         lineCap: 'butt',
         lineJoin: 'miter',
         font: '10px sans-serif',

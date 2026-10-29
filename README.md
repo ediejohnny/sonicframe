@@ -67,7 +67,8 @@ number of bars that fit.
 | `peaks`          | `null`             | Peaks, or a function that loads them.                                         |
 | `duration`       | `null`             | Seconds, used until the media knows its own (or without media).               |
 | `bar`            | see below          | `{ width, gap, radius, minHeight, align, curve }` in CSS pixels.              |
-| `colors`         | see below          | `{ wave, progress, hover, cursor }`.                                          |
+| `wave`           | `'bars'`           | How the sound is drawn: a name or `{ style, lineWidth, glow, mirror, … }`.    |
+| `colors`         | see below          | `{ wave, progress, hover, cursor, knob }`.                                    |
 | `cursorWidth`    | `2`                | Width of the cursor line in CSS pixels.                                       |
 | `interact`       | `true`             | Click, drag and keys seek; `false` makes a picture only (`role="img"`).       |
 | `label`          | `'Audio position'` | The accessible name.                                                          |
@@ -83,6 +84,14 @@ Bars: `width` 3, `gap` 2, `radius` 1.5, `minHeight` 2, `align` `'center'` (or `'
 0.7 (below 1 lifts quiet sounds so speech reads well; 1 draws the peaks as they are; above 1 leaves only the loud parts
 standing out).
 
+Drawings (`wave`): `'bars'`, `'needles'` (thin lines), `'blocks'` (square LED cells), `'dots'` (a dot matrix),
+`'steps'` (an 8-bit staircase), `'line'`, `'area'`, `'scope'` (an oscilloscope trace), `'pulse'` (a heartbeat monitor)
+and `'track'` (only a track, which needs no peaks). The bar style still sets their density, curve and alignment, and the
+played, hover and unplayed colors work for all of them; live frequency and exported clips use the same drawing. Details:
+`lineWidth` 2 (line drawings and the track), `glow` 0, `mirror` `true` (the line also traces the lower edge), `smooth`
+`true` (curves instead of corners) and `knob` 0, the diameter of a dot that rides the playing position over any
+drawing. `{ style: 'track', knob: 12 }` is a plain track with a moving dot.
+
 Colors take any CSS color or `var(--name, fallback)`:
 
 - `wave`: bars not yet played, `var(--sonicframe-wave, #c4cad4)`.
@@ -93,6 +102,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 - `waveHover` / `progressHover`: recolor the unplayed and played bars while the pointer is over the frame; `'auto'`
   nudges the wave toward the played color and lightens or darkens the played color, a CSS color sets it outright, and
   `null` (the default) leaves them alone. Only the frame the pointer enters or leaves repaints.
+- `knob`: the dot riding the playing position (`wave.knob`); `null` (the default) takes `progress`.
 
 ## Methods
 
@@ -105,6 +115,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `setProgress(ratio)`   | The position shown (0..1) while no media is bound.                   |
 | `seekTo(ratio)`        | Move to a position (the media too) and emit `seek`.                  |
 | `setBar(bar)`          | Change part of the bar style.                                        |
+| `setWave(wave)`        | Change the drawing (a name) or some of its details.                  |
 | `setColors(colors)`    | Change some colors.                                                  |
 | `setLabel(label)`      | Change the accessible name.                                          |
 | `refresh()`            | Read the colors again after a theme change (dark mode is automatic). |
