@@ -30,6 +30,18 @@ class FakeMedia implements MediaLike {
     advance(to: number): void {
         this.time = to;
     }
+
+    /** How many times playback was started. */
+    plays = 0;
+
+    play(): void {
+        this.plays++;
+        this.paused = false;
+    }
+
+    pause(): void {
+        this.paused = true;
+    }
 }
 
 function setup(options: Partial<ControllerOptions> = {}) {
@@ -327,5 +339,72 @@ describe('hover', () => {
             ['hover', [null, null]],
         ]);
         expect(controller.hover).toBeNull();
+    });
+});
+
+describe('ranges', () => {
+    /** Playback reaches the end of the media; a browser then reports these events, already ended. */
+    function playToTheEnd(
+        media: FakeMedia,
+        fire: (...types: MediaEventType[]) => void,
+    ): void {
+        media.advance(media.duration);
+        media.ended = true;
+        media.paused = true;
+        fire('timeupdate', 'pause', 'ended');
+    }
+
+    const rangeEnds = (events: [string, unknown[]][]) =>
+        events.filter(([name]) => name === 'rangeend');
+
+    it('starts a looping range again when the media ends inside it', () => {
+        const { controller, media, fire, events } = setup();
+        loaded(media, 30);
+        controller.bind(media);
+
+        controller.playRange(20, 30, true);
+        playToTheEnd(media, fire);
+
+        expect(media.currentTime).toBe(20);
+        expect(media.plays).toBe(2);
+        expect(rangeEnds(events)).toEqual([]);
+    });
+
+    it('ends a range that runs to the end of the media, and says so once', () => {
+        const { controller, media, fire, events } = setup();
+        loaded(media, 30);
+        controller.bind(media);
+
+        controller.playRange(20, 30);
+        playToTheEnd(media, fire);
+        fire('ended');
+
+        expect(rangeEnds(events)).toHaveLength(1);
+    });
+
+    it('stops a range off screen at the media own pace', () => {
+        const { controller, media, fire, events } = setup();
+        loaded(media, 30);
+        controller.bind(media);
+
+        controller.playRange(5, 10);
+        media.advance(10.2);
+        fire('timeupdate');
+
+        expect(media.paused).toBe(true);
+        expect(rangeEnds(events)).toHaveLength(1);
+    });
+
+    it('loops a range off screen at the media own pace', () => {
+        const { controller, media, fire, events } = setup();
+        loaded(media, 30);
+        controller.bind(media);
+
+        controller.playRange(5, 10, true);
+        media.advance(10.2);
+        fire('timeupdate');
+
+        expect(media.currentTime).toBe(5);
+        expect(rangeEnds(events)).toEqual([]);
     });
 });
