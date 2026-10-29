@@ -4,7 +4,8 @@
  * page's own ids, which it never removes; the person's screen reader is the narrator. Everything
  * else is the app's choice and off until asked: an element of the app that shows the text, saying
  * it when it arrives while the wave has focus, keys to hear it again and to step between the parts,
- * and "pause" on the slider's value inside a silence. Text only ever goes in as text.
+ * "pause" on the slider's value inside a silence, and the browser's own voice for people without a
+ * screen reader (never on its own: only through `speak()`). Text only ever goes in as text.
  */
 
 import {
@@ -20,6 +21,7 @@ import {
 import { cleanText } from '../core/text';
 import type { Plugin, PluginHost } from '../types';
 import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
+import { speak, type Speaking, type SpeechOptions } from '../dom/speak';
 
 /** Single-key shortcuts while the wave has focus; a key set to false is not used. */
 export type SoundDescriptionKeys = {
@@ -50,6 +52,11 @@ export type SoundDescriptionOptions = OutlineOptions & {
     backGrace?: number;
     /** Add "pause" to the slider's value inside a silence; off by default. */
     pauseInValue?: boolean;
+    /**
+     * Let `speak()` read the text with the browser's own voice: true, or `{ voices, rate }`; off by
+     * default. Only voices on the device unless `voices: 'any'` (online voices send the text away).
+     */
+    speech?: boolean | SpeechOptions;
     /** Called with the new text (or null) whenever it changes. */
     onChange?: (text: string | null) => void;
 };
@@ -67,6 +74,15 @@ export type SoundDescriptionPlugin = Plugin & {
     refresh(): void;
     /** Says the description through the page's live region. */
     say(): void;
+    /** Whether the browser's voice is reading the text. */
+    readonly speaking: boolean;
+    /**
+     * Reads the text with the browser's voice (needs the `speech` option); resolves once it was read
+     * through or stopped, rejects when it cannot be read (no voice, say). Call it from a person's action.
+     */
+    speak(): Promise<void>;
+    /** Stops the browser's voice (Escape on the wave does too). */
+    stopSpeaking(): void;
 };
 
 /** The longest text taken from the app, in characters. */
@@ -115,7 +131,13 @@ export function soundDescription(
     let words: SoundWords = soundWords();
     let outline: SoundOutline | null = null;
     let text: string | null = null;
+    let speaking: Speaking | null = null;
     const cleanups: (() => void)[] = [];
+
+    function stopSpeaking(): void {
+        speaking?.stop();
+        speaking = null;
+    }
 
     /** The words for the language asked; `'auto'` reads the page's language at this moment. */
     function wordsFor(current: PluginHost): SoundWords {
@@ -258,6 +280,39 @@ export function soundDescription(
             }
         },
 
+        get speaking(): boolean {
+            return speaking !== null;
+        },
+
+        speak(): Promise<void> {
+            if (!options.speech) {
+                return Promise.reject(
+                    new Error('sonicframe: speech is off (the speech option)'),
+                );
+            }
+
+            stopSpeaking();
+
+            if (text === null) {
+                return Promise.resolve();
+            }
+
+            const current = speak(
+                text,
+                words.locale,
+                options.speech === true ? {} : options.speech,
+            );
+            speaking = current;
+
+            return current.done.finally(() => {
+                if (speaking === current) {
+                    speaking = null;
+                }
+            });
+        },
+
+        stopSpeaking,
+
         keyDown(key, modifiers): boolean {
             const current = host;
 
@@ -268,6 +323,12 @@ export function soundDescription(
                 modifiers.metaKey
             ) {
                 return false;
+            }
+
+            if (key === 'Escape' && speaking !== null) {
+                stopSpeaking();
+
+                return true;
             }
 
             // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
@@ -303,6 +364,8 @@ export function soundDescription(
         },
 
         destroy(): void {
+            stopSpeaking();
+
             for (const cleanup of cleanups.splice(0)) {
                 cleanup();
             }

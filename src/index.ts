@@ -55,6 +55,7 @@ export {
     type SoundDescriptionOptions,
     type SoundDescriptionPlugin,
 } from './plugins/description';
+export type { SpeechOptions } from './dom/speak';
 export {
     skipSilences,
     type SkipSilencesOptions,
