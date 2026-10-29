@@ -65,6 +65,21 @@ export {
     type Silence,
 } from './core/analysis';
 export {
+    DESCRIPTION_WORDS,
+    describeSound,
+    nextPart,
+    outlineSound,
+    partAt,
+    soundWords,
+    type DescribeOptions,
+    type DescriptionWords,
+    type OutlineOptions,
+    type SoundLevel,
+    type SoundOutline,
+    type SoundPart,
+    type SoundWords,
+} from './core/describe';
+export {
     spectrogram,
     type ColorStops,
     type DecodedAudio,
