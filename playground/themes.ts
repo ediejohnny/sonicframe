@@ -192,7 +192,7 @@ function jsCode(pick: Pick): string {
 
 function tagCode(pick: Pick): string {
     const attributes = [
-        'src="/voice.mp3"',
+        `src="/voice.mp3"`,
         `theme="${pick.theme}"`,
         `palette="${pick.palette}"`,
     ];
@@ -211,7 +211,11 @@ function tagCode(pick: Pick): string {
         attributes.push('volume');
     }
 
-    return `<sonic-player ${attributes.join(' ')}></sonic-player>`;
+    return [
+        '<sonic-player',
+        ...attributes.map((attribute) => `    ${attribute}`),
+        '></sonic-player>',
+    ].join('\n');
 }
 
 /** Marks the picked player and shows its code. */
