@@ -353,13 +353,16 @@ function build(): void {
         exportButton.textContent = 'Recording…';
         clipFrame
             .exportClip({ start: 0, end: 5, caption: 'The Little Elf' })
-            .then(({ blob }) => {
+            .then(({ blob, mimeType }) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = 'sonicframe-clip';
+                link.download = mimeType.startsWith('video/mp4')
+                    ? 'sonicframe-clip.mp4'
+                    : 'sonicframe-clip.webm';
                 link.click();
-                URL.revokeObjectURL(url);
+                // The download reads the blob after the click returns, so the URL outlives it a little.
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
             })
             .catch((error: unknown) => console.error(error))
             .finally(() => {
