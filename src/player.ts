@@ -4,8 +4,20 @@
  * waves never loads it.
  */
 
-export { createPlayer, Player, type PlayerOptions } from './player/player';
+export {
+    createPlayer,
+    Player,
+    type PlayerDescription,
+    type PlayerEvents,
+    type PlayerOptions,
+} from './player/player';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
+export {
+    PLAYER_LABELS,
+    playerWords,
+    type PlayerLabels,
+    type PlayerWords,
+} from './core/labels';
 export {
     DEFAULT_LOOK,
     PART_NAMES,

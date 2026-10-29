@@ -21,6 +21,7 @@ import {
 import { cleanText } from '../core/text';
 import type { Plugin, PluginHost } from '../types';
 import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
+import { pageLanguage } from '../dom/page-language';
 import { speak, type Speaking, type SpeechOptions } from '../dom/speak';
 
 /** Single-key shortcuts while the wave has focus; a key set to false is not used. */
@@ -143,9 +144,7 @@ export function soundDescription(
     function wordsFor(current: PluginHost): SoundWords {
         const lang =
             options.lang === 'auto'
-                ? (current.container.closest('[lang]')?.getAttribute('lang') ??
-                  document.documentElement.getAttribute('lang') ??
-                  undefined)
+                ? pageLanguage(current.container)
                 : options.lang;
 
         return soundWords({ lang, words: options.words, times: options.times });

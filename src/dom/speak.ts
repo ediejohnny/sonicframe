@@ -20,6 +20,14 @@ export type Speaking = {
     stop(): void;
 };
 
+/** Whether this browser has a voice at all (`speechSynthesis`). */
+export function canSpeak(): boolean {
+    return (
+        typeof speechSynthesis !== 'undefined' &&
+        typeof SpeechSynthesisUtterance !== 'undefined'
+    );
+}
+
 /** The longest wait for the browser's list of voices, in milliseconds. */
 const VOICE_WAIT = 2000;
 
