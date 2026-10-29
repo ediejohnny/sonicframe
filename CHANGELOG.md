@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-29
+
 ### Added
 
 - `sonicframe/player`: a ready-made player on its own entry (`createPlayer`). It lays out a play
@@ -92,17 +94,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   a touch-sized grab zone, and regions given before the sound's length is known are fitted to it once
   it is. The plugin offers `add` (a copy of the region, or `null` once `max` regions exist), `update`,
   `remove`, `clear`, `list`, `play`, `stop` and `select`.
-
-### Changed
-
-- `markers` can now carry a label and a color per mark (`marks: [{ time, label, color, id }]`, still
-  accepting plain `times`). A click on a marker seeks to it, hovering shows a tooltip, `M` and
-  `Shift+M` step through them (Shift, not the letter's case, sets the direction), and markers that
-  crowd together become one pill with a count. Within `backGrace` seconds of a marker (1 by
-  default), `Shift+M` goes to the one before it, like a player's "previous track".
-
-### Added
-
 - Plugins can take pointer and keyboard input: `pointerDown` claims a press (`'take'` now, or
   `'drag'` only once it moves past a few pixels, so a tap still seeks), with `pointerMove`,
   `pointerUp`, `pointerCancel` and a `pointerHover` that returns a cursor; `keyDown` runs before the
@@ -127,6 +118,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   and a `resize` hook on a plugin) and when the
   duration becomes known or changes (the `durationchange` event), and resolve a CSS color against the
   frame (`host.color`). All of this is additive: a 0.1.0 plugin keeps working unchanged.
+
+### Changed
+
+- `markers` can now carry a label and a color per mark (`marks: [{ time, label, color, id }]`, still
+  accepting plain `times`). A click on a marker seeks to it, hovering shows a tooltip, `M` and
+  `Shift+M` step through them (Shift, not the letter's case, sets the direction), and markers that
+  crowd together become one pill with a count. Within `backGrace` seconds of a marker (1 by
+  default), `Shift+M` goes to the one before it, like a player's "previous track".
 
 ## [0.1.0] - 2026-10-08
 

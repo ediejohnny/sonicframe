@@ -116,4 +116,4 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '0.1.0';
+export const VERSION: string = '0.2.0';
