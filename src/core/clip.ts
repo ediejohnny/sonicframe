@@ -15,6 +15,13 @@ export const DEFAULT_CLIP_TYPES: readonly string[] = [
 /** The longest clip, in seconds. */
 export const MAX_CLIP_SECONDS = 120;
 
+/**
+ * The longest source decoded for a clip unless the app sets its own, in seconds. A source is decoded
+ * whole before the clip is cut, about 23 MB of memory per minute of stereo audio, so 10 minutes stays
+ * near 230 MB.
+ */
+export const DEFAULT_MAX_SOURCE_SECONDS: number = 10 * 60;
+
 /** The first candidate the browser says it can record, or null. */
 export function pickMimeType(
     candidates: readonly string[],

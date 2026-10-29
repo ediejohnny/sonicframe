@@ -71,7 +71,12 @@ export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
 export { frequencyBands, MAX_BANDS } from './core/bands';
 export { canTapMedia } from './core/origin';
 export { exportClip, type ClipOptions } from './dom/clip';
-export { clipPlan, DEFAULT_CLIP_TYPES, pickMimeType } from './core/clip';
+export {
+    clipPlan,
+    DEFAULT_CLIP_TYPES,
+    DEFAULT_MAX_SOURCE_SECONDS,
+    pickMimeType,
+} from './core/clip';
 export {
     loadPeaks,
     MAX_PEAKS,
