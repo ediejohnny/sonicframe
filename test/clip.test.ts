@@ -34,4 +34,17 @@ describe('clipPlan', () => {
     it('clamps to the duration', () => {
         expect(clipPlan(0, 500, 100).end).toBe(100);
     });
+
+    it('takes a missing start or end as the sound own start or end', () => {
+        expect(clipPlan(Number.NaN, 10, 30)).toEqual({
+            start: 0,
+            end: 10,
+            seconds: 10,
+        });
+        expect(clipPlan(5, Number.NaN, 30)).toEqual({
+            start: 5,
+            end: 30,
+            seconds: 25,
+        });
+    });
 });

@@ -2,8 +2,10 @@
  * Recording a short clip of the wave playing, as a video the listener can share. The decoded audio
  * plays (silently for the user) into a MediaStream, the wave is drawn on a canvas each frame, and a
  * MediaRecorder captures both. It runs in real time, stops at the end of the range, aborts if the
- * tab is hidden or the signal fires, and is capped (length, size, resolution, bitrate). No user
- * color ever goes into a gradient; the caption is cleaned, capped and clipped, not faded through one.
+ * tab is hidden or the signal fires (the download included), rejects rather than waits when the
+ * audio never starts, and is capped (length, size, resolution, bitrate). Whatever way it ends, the
+ * audio context it opened is closed. No user color ever goes into a gradient; the caption is
+ * cleaned, capped and clipped, not faded through one.
  */
 
 import { clipPlan, DEFAULT_CLIP_TYPES, pickMimeType } from '../core/clip';
@@ -58,6 +60,7 @@ function whole(
 async function toBuffer(
     context: AudioContext,
     audio: AudioBuffer | Blob | string,
+    signal: AbortSignal | undefined,
 ): Promise<AudioBuffer> {
     if (typeof audio !== 'string' && 'getChannelData' in audio) {
         return audio;
@@ -66,7 +69,7 @@ async function toBuffer(
     let data: ArrayBuffer;
 
     if (typeof audio === 'string') {
-        const response = await fetch(audio);
+        const response = await fetch(audio, { signal });
 
         if (!response.ok) {
             throw new Error(
@@ -86,10 +89,16 @@ async function toBuffer(
     return context.decodeAudioData(data);
 }
 
-/** Records the clip and resolves with the video blob, its type and its length in seconds. */
+/**
+ * Records the clip and resolves with the video blob, its type and its length in seconds. Call it from
+ * a user gesture (a click): browsers keep audio suspended until one, and a clip whose audio never
+ * starts is rejected once its length has passed.
+ */
 export async function exportClip(
     options: ClipOptions,
 ): Promise<{ blob: Blob; mimeType: string; duration: number }> {
+    options.signal?.throwIfAborted();
+
     if (
         typeof MediaRecorder !== 'function' ||
         typeof AudioContext !== 'function'
@@ -118,7 +127,7 @@ export async function exportClip(
     let path: Path2D;
 
     try {
-        const buffer = await toBuffer(context, options.audio);
+        const buffer = await toBuffer(context, options.audio, options.signal);
         plan = clipPlan(
             options.start ?? 0,
             options.end ?? buffer.duration,
@@ -155,6 +164,9 @@ export async function exportClip(
         path = barsPath(
             layoutBars(values, width, height - captionHeight, options.bar, 1),
         );
+
+        // Decoding cannot be cancelled midway: a signal that fired meanwhile ends it here.
+        options.signal?.throwIfAborted();
     } catch (error) {
         if (context.state !== 'closed') {
             void context.close();
@@ -208,15 +220,29 @@ export async function exportClip(
         };
 
         const finish = (): void => {
-            if (!stopped) {
-                stopped = true;
-                teardown();
+            if (stopped || settled) {
+                return;
+            }
 
-                try {
-                    recorder.stop();
-                } catch {
-                    // already stopped
-                }
+            stopped = true;
+
+            // A recorder that never started never fires `onstop`: there is no clip, so say why.
+            if (recorder.state === 'inactive') {
+                fail(
+                    new Error(
+                        'sonicframe: the recording never started (audio stays suspended until a user gesture)',
+                    ),
+                );
+
+                return;
+            }
+
+            teardown();
+
+            try {
+                recorder.stop();
+            } catch {
+                // already stopped
             }
         };
 
@@ -330,10 +356,15 @@ export async function exportClip(
                 return;
             }
 
-            startedAt = context.currentTime;
-            source.start(0, plan.start, plan.seconds);
-            recorder.start(1000);
-            frame = requestAnimationFrame(draw);
+            // Starting can still be refused (no track to record, a codec gone): reject, never hang.
+            try {
+                startedAt = context.currentTime;
+                source.start(0, plan.start, plan.seconds);
+                recorder.start(1000);
+                frame = requestAnimationFrame(draw);
+            } catch (error) {
+                fail(error);
+            }
         }, fail);
     });
 }
