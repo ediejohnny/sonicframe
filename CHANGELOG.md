@@ -83,6 +83,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - The tag's `peaks` file may now be up to 8 MB, and one with more than 20,000 values is folded instead of refused.
+- The package holds no web address but the SVG namespace (`http://www.w3.org/2000/svg`, a name the browser needs to
+  create the icons, never fetched); an example address left in a type comment is gone, and the build check now
+  fails on any other.
 
 ## [0.3.0] - 2026-10-29
 

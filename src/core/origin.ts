@@ -9,7 +9,7 @@ export function canTapMedia(info: {
     src: string;
     /** The element's `crossOrigin` attribute, or null. */
     crossOrigin: string | null;
-    /** The page's origin, e.g. `https://example.com`. */
+    /** The page's origin (`location.origin`: scheme, host and port). */
     pageOrigin: string;
 }): boolean {
     const src = info.src ?? '';
