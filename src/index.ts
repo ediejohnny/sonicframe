@@ -51,6 +51,12 @@ export {
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
+    minimap,
+    MINIMAP_WORDS,
+    type MinimapOptions,
+    type MinimapWords,
+} from './plugins/minimap';
+export {
     soundDescription,
     type SoundDescriptionKeys,
     type SoundDescriptionOptions,

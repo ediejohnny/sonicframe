@@ -37,6 +37,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   elements. The spectrogram shows its part of the picture; with `detail` (off by default) it computes a sharp
   picture of the part in view once the view rests (`detailDelay`, `detailColumns`).
 
+- `minimap(options)`: a strip above or below the wave with the whole sound, the played part (`progress`) and a box
+  over the part in view, in the theme's colors (`--sonicframe-minimap-view` and `--sonicframe-minimap-edge`, which
+  fall back to the region and progress colors). Dragging the box and clicking beside it move the view, the wheel can
+  zoom (`controls.drag`, `controls.click`, `controls.wheel`); a press on it never seeks. `autoHide` takes no room at
+  the whole sound. Hidden from screen readers unless `a11y.keys` makes it a keyboard slider (arrows, Page Up/Down,
+  Home, End) with its own `a11y.label` and `a11y.words`.
+
 ### Fixed
 
 - `exportClip` with `start`/`end` draws only that range across the clip, so the played part runs over the bars it
