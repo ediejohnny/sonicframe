@@ -130,25 +130,27 @@ A missing sample rate, no channels or channels of different lengths throw.
 
 ## Options
 
-| Option           | Default            | What it does                                                                  |
-| ---------------- | ------------------ | ----------------------------------------------------------------------------- |
-| `container`      | (required)         | The element to draw in.                                                       |
-| `media`          | `null`             | An audio or video element to follow and control.                              |
-| `peaks`          | `null`             | Peaks, or a function that loads them.                                         |
-| `duration`       | `null`             | Seconds, used until the media knows its own (or without media).               |
-| `bar`            | see below          | `{ width, gap, radius, minHeight, align, curve }` in CSS pixels.              |
-| `wave`           | `'bars'`           | How the sound is drawn: a name or `{ style, lineWidth, glow, mirror, … }`.    |
-| `colors`         | see below          | `{ wave, progress, hover, cursor, knob }`.                                    |
-| `cursorWidth`    | `2`                | Width of the cursor line in CSS pixels.                                       |
-| `interact`       | `true`             | Click, drag and keys seek; `false` makes a picture only (`role="img"`).       |
-| `label`          | `'Audio position'` | The accessible name.                                                          |
-| `valueText`      | `0:12 / 0:45`      | `(time, ratio, duration) => string`, the position in words.                   |
-| `stepSeconds`    | `5`                | Seconds moved by an arrow key (5 % of the sound while its length is unknown). |
-| `largeStepRatio` | `0.1`              | Part of the sound moved by Page Up / Page Down.                               |
-| `rewindOnEnd`    | `false`            | Show the start again when the media ends.                                     |
-| `lazy`           | `true`             | Keep pixels and load peaks only near the screen.                              |
-| `animate`        | `true`             | Let the bars grow in when peaks arrive (never with reduced motion).           |
-| `plugins`        | `[]`               | Plugins to start with.                                                        |
+| Option           | Default            | What it does                                                                        |
+| ---------------- | ------------------ | ----------------------------------------------------------------------------------- |
+| `container`      | (required)         | The element to draw in.                                                             |
+| `media`          | `null`             | An audio or video element to follow and control.                                    |
+| `peaks`          | `null`             | Peaks, or a function that loads them.                                               |
+| `duration`       | `null`             | Seconds, used until the media knows its own (or without media).                     |
+| `bar`            | see below          | `{ width, gap, radius, minHeight, align, curve }` in CSS pixels.                    |
+| `wave`           | `'bars'`           | How the sound is drawn: a name or `{ style, lineWidth, glow, mirror, … }`.          |
+| `colors`         | see below          | `{ wave, progress, hover, cursor, knob }`.                                          |
+| `cursorWidth`    | `2`                | Width of the cursor line in CSS pixels.                                             |
+| `interact`       | `true`             | Click, drag and keys seek; `false` makes a picture only (`role="img"`).             |
+| `label`          | `'Audio position'` | The accessible name.                                                                |
+| `valueText`      | `0:12 / 0:45`      | `(time, ratio, duration) => string`, the position in words.                         |
+| `stepSeconds`    | `5`                | Seconds moved by an arrow key (5 % of the sound while its length is unknown).       |
+| `largeStepRatio` | `0.1`              | Part of the sound moved by Page Up / Page Down.                                     |
+| `rewindOnEnd`    | `false`            | Show the start again when the media ends.                                           |
+| `lazy`           | `true`             | Keep pixels and load peaks only near the screen.                                    |
+| `animate`        | `true`             | Let the bars grow in when peaks arrive (never with reduced motion).                 |
+| `zoom`           | `false`            | Zoom and scroll: `true` or `ZoomOptions` (see [Zoom and scroll](#zoom-and-scroll)). |
+| `a11y`           | `{}`               | Accessibility: `a11y.zoom.announce` and `a11y.zoom.words`.                          |
+| `plugins`        | `[]`               | Plugins to start with.                                                              |
 
 Bars: `width` 3, `gap` 2, `radius` 1.5, `minHeight` 2, `align` `'center'` (or `'bottom'` for a bar meter), `curve`
 0.7 (below 1 lifts quiet sounds so speech reads well; 1 draws the peaks as they are; above 1 leaves only the loud parts
@@ -186,6 +188,10 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `setDuration(seconds)` | The duration to use until the media knows its own.                   |
 | `setProgress(ratio)`   | The position shown (0..1) while no media is bound.                   |
 | `seekTo(ratio)`        | Move to a position (the media too) and emit `seek`.                  |
+| `setView(start, end)`  | Show part of the sound (ratios 0..1); zoom on only.                  |
+| `zoomTo(level, at?)`   | Zoom to a level around a ratio (or the anchor); zoom on only.        |
+| `zoomBy(factor, at?)`  | Zoom in (above 1) or out (below 1); zoom on only.                    |
+| `scrollTo(start)`      | Move the view to begin at a ratio, keeping its size; zoom on only.   |
 | `setBar(bar)`          | Change part of the bar style.                                        |
 | `setWave(wave)`        | Change the drawing (a name) or some of its details.                  |
 | `setColors(colors)`    | Change some colors.                                                  |
@@ -195,8 +201,95 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `on(event, listener)`  | Listen to an event; returns the function that stops listening.       |
 | `destroy()`            | Remove everything SonicFrame added. Safe to call twice.              |
 
-`progress` (0..1), `duration` (seconds or `null`) and `peaksDuration` (the duration the peaks came with, or `null`) are
-read-only properties.
+`progress` (0..1), `duration` (seconds or `null`), `peaksDuration` (the duration the peaks came with, or `null`) and
+`view` (`{ start, end, level, maxLevel }`, the whole sound while zoom is off) are read-only properties.
+
+## Zoom and scroll
+
+Off by default. `zoom: true` gives the frame a view of the sound and the methods above; each way of moving the view
+has its own switch, so a page turns on exactly what it wants. Without zoom nothing changes, not even the cost.
+
+```js
+new SonicFrame({
+    container,
+    media,
+    peaks: () => loadWaveform('/episode.dat'),
+    zoom: {
+        wheel: true,
+        scroll: true,
+        pinch: true,
+        keys: true,
+        follow: true,
+        edgeScroll: true,
+    },
+    a11y: { zoom: { announce: true } },
+});
+```
+
+| Option          | Default          | What it does                                                                                              |
+| --------------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `view`          | the whole sound  | The view at the start, `{ start, end }` as ratios of the sound.                                           |
+| `max`           | one peak per bar | The largest zoom, from 1 to 10,000 (100 without peaks). Past the peaks' detail, bars blend.               |
+| `step`          | `2`              | How much one key or button zooms in or out.                                                               |
+| `anchor`        | `'position'`     | Keys and buttons zoom around the playing position (when in view) or the `'center'`.                       |
+| `wheel`         | `false`          | The wheel zooms around the pointer; a touchpad pinch arrives as a wheel with Ctrl.                        |
+| `wheelModifier` | `'ctrl'`         | The key held for the wheel to zoom: `'ctrl'` (Ctrl or ⌘), `'alt'` or `'none'`.                            |
+| `wheelSpeed`    | `1`              | How fast the wheel zooms, from 0.1 to 10.                                                                 |
+| `scroll`        | `false`          | The horizontal wheel, a touchpad swipe and Shift + wheel scroll the view.                                 |
+| `pinch`         | `false`          | Two fingers zoom in and out and drag the view sideways.                                                   |
+| `keys`          | `false`          | `true` gives `+` (and `=`), `-` and `0` (the whole sound); `{ in, out, reset }` sets your own or `false`. |
+| `follow`        | `false`          | While playing, the view follows the position.                                                             |
+| `followType`    | `'page'`         | `'page'` turns a whole view; `'center'` keeps the position in the middle (pages with reduced motion).     |
+| `followHold`    | `true`           | A scroll or zoom by the person holds the following until the next seek or play.                           |
+| `edgeScroll`    | `false`          | Dragging near an edge (a seek, a region) scrolls the view, so a selection can grow past the screen.       |
+| `edgeSize`      | `32`             | The edge zone, in CSS pixels.                                                                             |
+| `edgeSpeed`     | `1`              | Views scrolled per second right at the edge.                                                              |
+| `revealKeys`    | `true`           | A keyboard seek (arrows, Home, End, M on a marker) outside the view brings the view to it.                |
+
+The keys never take Ctrl, ⌘ or Alt, which belong to the browser's own page zoom. The bars on screen come from a pyramid
+of the peaks built the first time the frame is zoomed in, so the cost follows the screen, not the file, and each bar
+stays on the same piece of sound while the view scrolls. Give a long sound many peaks (a `.dat` file, or the player's
+`decode.peaksPerSecond`) for detail when zoomed in. The cursor and the knob show only while the position is in view.
+
+The `viewchange` event says the new view and what moved it: `'api'`, `'wheel'`, `'keys'`, `'pinch'`, `'follow'`,
+`'edge'`, `'minimap'` or `'button'`. `a11y.zoom.announce` (off by default) says the new view through the live region
+after a zoom by the keys, a button or two fingers ("Zoom 4×, 1:20 to 2:40"), in your own `a11y.zoom.words` if given.
+
+The plugins follow the view: regions (with `scrollIntoView`, a region chosen by R comes into view), markers, the
+timeline (down to tenths of a second), the silences' shade and the spectrogram (with `detail`, a sharp picture of the
+part in view once the view rests; `detailDelay` 200 ms, `detailColumns` the width).
+
+### The minimap
+
+`minimap(options)` adds a strip with the whole sound, the played part and a box over the part in view.
+
+```js
+new SonicFrame({
+    container,
+    media,
+    peaks,
+    zoom: true,
+    plugins: [minimap({ a11y: { keys: true } })],
+});
+```
+
+| Option           | Default          | What it does                                                                                   |
+| ---------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `side`           | `'below'`        | `'above'` or `'below'` the wave.                                                               |
+| `height`         | `24`             | The strip's height, in CSS pixels.                                                             |
+| `wave`, `bar`    | thin bars        | How the sound is drawn in the strip.                                                           |
+| `colors`         | the theme's      | `{ wave, progress, view, edge }`; `--sonicframe-minimap-view` and `--sonicframe-minimap-edge`. |
+| `progress`       | `true`           | Paints the played part.                                                                        |
+| `controls.drag`  | `true`           | Dragging the box scrolls the view.                                                             |
+| `controls.click` | `true`           | A click beside the box brings the view there.                                                  |
+| `controls.wheel` | `false`          | The wheel over the strip zooms around the pointer.                                             |
+| `autoHide`       | `false`          | Takes no room while the whole sound is in view.                                                |
+| `a11y.keys`      | `false`          | Makes the strip a keyboard slider of the part in view; off, it is hidden from screen readers.  |
+| `a11y.label`     | `'Visible part'` | Its accessible name.                                                                           |
+| `a11y.words`     | English          | `{ value(from, to, total) }`, its value in words ("0:25 to 0:50 of 1:40").                     |
+
+As a slider, the arrows move a quarter of the view, Page Up and Page Down a whole view, Home and End go to the ends. A
+press on the strip never seeks.
 
 ## Events
 
@@ -209,6 +302,7 @@ read-only properties.
 | `peakschange`    | `peaks`                   | The peaks arrived, were replaced or went (`null`); never for live values.        |
 | `resize`         | `geometry`                | The wave area changed size or a lazy frame got its pixels near the screen.       |
 | `rangeend`       |                           | A range being played (`host.playRange`) ended or was abandoned.                  |
+| `viewchange`     | `view, source`            | The view moved (zoom on only), and what moved it.                                |
 | `error`          | `error`                   | Loading peaks, drawing a plugin or a plugin's own work (a download, say) failed. |
 | `destroy`        |                           | The frame was destroyed.                                                         |
 
@@ -331,8 +425,11 @@ the browser when it first comes near the screen (`peaks` skips that).
 | `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).               |
 | `volume`      | `false`     | Show the volume control.                                                           |
 | `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once). |
+| `zoom`        | `false`     | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`. |
+| `minimap`     | `false`     | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall.     |
+| `decode`      | see below   | How a sound is decoded for its peaks.                                              |
 | `slot`        | none        | Your element for the `slot` part.                                                  |
-| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description }` (see below).                        |
+| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).         |
 | `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                        |
 
 Accessibility options live in one group, `a11y`, arranged by place, and whatever adds behaviour is off until you turn
@@ -368,10 +465,26 @@ createPlayer({
   `button: { animation: true }` also moves it, as `animationType` says: `'pulse'` (the default, a type it does not
   know included: it grows a little and back) or `'fade'` (half transparent and back). Animation is off by default, and
   never shown to people who asked their system for less motion.
+- `a11y.zoom.announce`: says the new view after a zoom by the keys, the buttons or two fingers ("Zoom 2×, from 0:30 to
+  1:30" in Portuguese words when `lang` is Portuguese). Off by default.
+- `a11y.minimap.keys`: makes the minimap a keyboard slider named in the player's language ("Visible part", "Parte
+  visível"). Off by default: the minimap is hidden from screen readers.
+
+**Zoom on the player.** `zoom: { buttons: true }` adds three buttons, zoom out, the whole sound and zoom in, as the look
+parts `zoomOut`, `zoomReset` and `zoomIn`: where the look places them, or at the end of the line when it places none.
+At a limit a button is marked `aria-disabled` and does nothing, but keeps its place in the tab order, so focus is never
+lost under it. Zoom works with or without the buttons, by the ways switched on (wheel, two fingers, keys…); with zoom
+off, none of it is there. The labels `zoomIn`, `zoomOut`, `zoomReset`, `zoomView`, `minimap` and `minimapValue` come in
+English and Portuguese.
+
+**Decoding.** `decode.peaks` (1000, from 100 to 100,000) is how many peaks a decoded sound gets; with zoom on,
+`decode.peaksPerSecond` (100) gives a long sound more, never fewer than `peaks` nor more than 1,000,000.
+`decode.maxSeconds` and `decode.maxBytes` can only lower the decoder's ceilings (30 minutes, a longer sound read evenly
+through, and 50 MB).
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
-(`{ shape, fill, size }`), `waveHeight`, `corner`, `padding`, `gap` (rem), `border` (CSS pixels), `shadow` (`'none'`,
+(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `corner`, `padding`, `gap` (rem), `border` (CSS pixels), `shadow` (`'none'`,
 `'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`, `'none'`), `font`, `fontSize`, `weight`, `uppercase`,
 `skip` (seconds), `speeds` and `volume` (`'always'` or `'hover'`). Unknown names fall back and numbers are kept in
 range.
@@ -417,6 +530,10 @@ Attributes: `src`, `peaks` (the address of a waveform file: `.dat`, the audiowav
 `a11y-lang` (the language of the player's words, `a11y-lang="pt-BR"`) and `a11y-description`, which turns the wave in
 words on; words in it turn on its extras: `a11y-description="keys pauses"` (also `speech`, `announce`, `button`, and
 `animation` for the button, of the type `pulse`, the default, or `fade`: `a11y-description="button animation fade"`).
+Zoom is off unless `zoom` is there; its words turn on its ways and buttons:
+`zoom="wheel scroll pinch keys follow center edges buttons"`, with `zoom-max="8"`. `minimap` adds the strip (its words:
+`above`, `autohide`, `wheel`), `a11y-zoom="announce"` says a zoom and `a11y-minimap="keys"` makes the strip a slider.
+`peaks-channel` (`all` or a number), `peaks-max` and `peaks-normalize` say how the peaks file is read.
 They are read as untrusted input: an unknown name falls back to the default theme, text
 goes in only as text, and a font address is used only when it is safe.
 Changing an attribute updates the player; removing the element destroys it, and putting it back builds it again. The
@@ -454,9 +571,10 @@ Each of these is a plugin; import it and `frame.use(it)`.
   drag still scrubs), the body moves it, an edge resizes it; with focus, `R`/`Shift+R` select, `Enter` plays, `L`
   loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add` (returns a copy, or `null` once `max`
   regions exist), `update`, `remove`, `clear`, `list`, `play`, `stop`, `select`, with `onChange` / `onSelect`.
-  Regions are fitted to the sound once its length is known.
+  Regions are fitted to the sound once its length is known. Zoomed in, `scrollIntoView: true` brings a region chosen
+  by `R` into view.
 - **`timeline({ side, size, minSpacing })`** — a ruler with labels on round seconds and minutes, in a lane above or
-  below the bars.
+  below the bars; zoomed in, it marks the part in view, down to tenths of a second.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
   browser with a dependency-free FFT, in slices so it never freezes, and only once the frame is near the screen
   (like the peaks). Color maps: `viridis`, `magma` (the default), `gray`, `ice`, `fire`, `ocean`, or your own colors
@@ -546,11 +664,17 @@ A plugin is an object with a `name` and any of `setup(host)`, `draw(paint)`, `re
 input hooks `pointerDown` / `pointerMove` / `pointerUp` / `pointerCancel` / `pointerHover` / `keyDown`. `layer:
 'under'` draws it before the bars, `'over'` (the default) after them. `valueNote(time, ratio)` returns a short note
 added to the wave's value in words (`"pause"` makes `"0:22 / 0:33, pause"`); `host.updateValueText()` asks for it again. `draw` gets the canvas context in device pixels
-with `width`, `height`, `pixelRatio`, `progress`, `duration`, `hover`, `xAt(ratio)` and `color(value)`.
+with `width`, `height`, `pixelRatio`, `progress`, `duration`, `hover`, `view`, `xAt(ratio)`, `ratioAt(x)` and
+`color(value)`.
+
+**Zoom-ready plugins.** Place things with `paint.xAt(ratio)`, which goes through the view (a position out of view lands
+off the canvas), and read presses from `point.ratio` / `point.time`, which are already the sound's. `host.view` is the
+part in view and `host.on('viewchange', …)` tells when it moves; `host.setView(start, end, source)` moves it. A seek a
+key asked for passes `host.seekTo(ratio, 'keyboard')`, so the view follows it like the frame's own keys.
 
 `pointerDown` returns `'take'` to own the press now, or `'drag'` to own it only once it moves past a few pixels (so a
 tap still seeks); `pointerHover` returns a CSS cursor; `keyDown` runs before the slider keys and returns whether it
-used the key. The host gives `container`, `duration`, `progress`, `peaks`, `media`, `geometry`, `invalidate()`,
+used the key. The host gives `container`, `duration`, `progress`, `peaks`, `media`, `geometry`, `view`, `setView`, `invalidate()`,
 `on()`, `color(value)`, `addLane(side, px)` (a strip above or below the bars, so the wave shrinks), `overlay()` (a
 layer over the canvas for text), `seekTo`, `playRange` / `stopRange`, `setValues` (override the bar heights) and
 `announce(text)` (a shared polite live region) and `reportError(error)` (a failure met outside its hooks, such as a
