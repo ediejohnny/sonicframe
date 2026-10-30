@@ -1,12 +1,24 @@
 import type { KeyModifiers } from './core/keys';
 
+/** Peaks with the duration they came with, as `readWaveform` and `loadWaveform` give them. */
+export type PeaksData = {
+    readonly peaks: readonly number[];
+    /**
+     * In seconds, used while neither the media nor the app gives one; anything but a number above
+     * zero is ignored.
+     */
+    readonly duration?: number | null;
+};
+
 /**
- * Where a frame gets its peaks: values from 0 to 1, the loudest point of each slice of the sound.
- * A function is called once, when the frame first comes near the screen (lazy loading).
+ * Where a frame gets its peaks: values from 0 to 1, the loudest point of each slice of the sound,
+ * alone or with their duration. A function is called once, when the frame first comes near the
+ * screen (lazy loading).
  */
 export type PeaksSource =
     | readonly number[]
-    | (() => Promise<readonly number[]>)
+    | PeaksData
+    | (() => Promise<readonly number[] | PeaksData>)
     | null;
 
 /** How the bars of a waveform look. Sizes are in CSS pixels. */

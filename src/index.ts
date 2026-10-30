@@ -118,6 +118,19 @@ export {
     resample,
     type PeaksFetcher,
 } from './core/peaks';
+export {
+    loadWaveform,
+    readWaveform,
+    writeWaveform,
+    type LoadWaveformOptions,
+    type ReadWaveformOptions,
+    type WaveformData,
+    type WaveformFetcher,
+    type WaveformFormat,
+    type WaveformJson,
+    type WaveformResponse,
+    type WriteWaveformOptions,
+} from './core/waveform';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
 export { formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
@@ -128,6 +141,7 @@ export type {
     Lane,
     MediaLike,
     PaintContext,
+    PeaksData,
     PeaksSource,
     Plugin,
     PluginHost,

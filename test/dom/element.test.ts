@@ -7,6 +7,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { defineSonicPlayer, PALETTES } from '../../src/player';
+import { triggerResize, triggerVisible } from './fakes';
 
 const made: HTMLElement[] = [];
 
@@ -113,6 +114,40 @@ describe('the <sonic-player> tag', () => {
         expect(surface(element)).toBe('');
         expect(faces).toEqual([]);
         expect(player(element)?.getAttribute('aria-label')).toBe('<b>hi</b>');
+    });
+
+    it('reads a .dat waveform file from peaks, and takes its duration before the sound has one', async () => {
+        // Version 2, 16 bits, 100 samples per second, 4500 per point, one point: 45 seconds.
+        const bytes = new Uint8Array(28);
+        const view = new DataView(bytes.buffer);
+        view.setInt32(0, 2, true);
+        view.setInt32(8, 100, true);
+        view.setInt32(12, 4500, true);
+        view.setUint32(16, 1, true);
+        view.setInt32(20, 1, true);
+        view.setInt16(24, -16384, true);
+        view.setInt16(26, 8192, true);
+        const fetch = vi.fn((_address: string) =>
+            Promise.resolve({
+                ok: true,
+                status: 200,
+                body: null,
+                arrayBuffer: () => Promise.resolve(bytes.buffer),
+            }),
+        );
+        vi.stubGlobal('fetch', fetch);
+        const element = tag({ src: 'note.ogg', peaks: '/long.dat' });
+        const durations: unknown[] = [];
+        element.addEventListener('sonicframe:durationchange', (event) =>
+            durations.push((event as CustomEvent<unknown[]>).detail[0]),
+        );
+        document.body.append(element);
+        const canvas = element.querySelector('canvas') as HTMLCanvasElement;
+        triggerResize(canvas, { width: 200, height: 40 });
+        triggerVisible(canvas, true);
+
+        await vi.waitFor(() => expect(durations).toEqual([45]));
+        expect(fetch.mock.calls.map((call) => call[0])).toEqual(['/long.dat']);
     });
 
     it('is destroyed when taken out of the page and built again when put back', () => {

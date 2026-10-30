@@ -81,6 +81,8 @@ export class Controller {
     private readonly effects: ControllerEffects;
     private media: MediaLike | null = null;
     private hint: number | null = null;
+    /** The duration the peaks came with: used while neither the media nor the app gives one. */
+    private peaksHint: number | null = null;
     /** 0..1 from the media, a seek or the app. */
     private position = 0;
     /** 0..1 under a pressed pointer, shown instead of the position until it is let go. */
@@ -104,7 +106,15 @@ export class Controller {
 
     /** In seconds, or null while unknown. */
     get duration(): number | null {
-        return effectiveDuration(this.media?.duration, this.hint);
+        return effectiveDuration(
+            this.media?.duration,
+            this.hint ?? this.peaksHint,
+        );
+    }
+
+    /** The duration the peaks came with, in seconds, or null. */
+    get peaksDuration(): number | null {
+        return this.peaksHint;
     }
 
     /** 0..1, the position shown (under the pointer while it drags). */
@@ -287,6 +297,16 @@ export class Controller {
     /** A duration known before the media knows its own (or without media at all), in seconds. */
     setDuration(seconds: number | null): void {
         this.hint = positive(seconds);
+        this.durationChanged();
+    }
+
+    /** The duration the peaks came with (a waveform file's), in seconds: the last one to count. */
+    setPeaksDuration(seconds: number | null): void {
+        this.peaksHint = positive(seconds);
+        this.durationChanged();
+    }
+
+    private durationChanged(): void {
         this.applyPending();
         this.announceDuration();
         this.sync(true);
