@@ -976,14 +976,86 @@ html {
 }
 
 .foot .wrap {
-    display: grid;
-    gap: 0.5rem;
-    padding-top: 1.75rem;
-    padding-bottom: 2rem;
+    padding-top: 2.5rem;
+    padding-bottom: 1.5rem;
 }
 
-.foot p {
-    max-width: 48rem;
+/* The name, the pages, the project and the sound: four columns, two on tablets, one on phones. */
+.foot-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)) minmax(
+            0,
+            1.4fr
+        );
+    gap: 2rem;
+}
+
+@media (max-width: 60rem) {
+    .foot-columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 30rem) {
+    .foot-columns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.foot-name,
+.foot-title {
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.foot-name {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 1.0625rem;
+}
+
+.foot-name img {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.foot-title {
+    font-size: 0.8125rem;
+}
+
+.foot ul {
+    display: grid;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.foot a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.foot a:hover {
+    color: var(--link);
+}
+
+.foot-columns p a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.foot-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 0.0625rem solid var(--line);
 }
 
 /* The theme gallery. */
@@ -1140,6 +1212,12 @@ html {
     border: 0.0625rem solid var(--line);
     border-radius: 0.125rem 0.125rem 0 0;
     background: var(--panel);
+}
+
+/* Nothing picked, no bar and no code: `hidden` wins over the display above. */
+.pickbar[hidden],
+.picked[hidden] {
+    display: none;
 }
 
 .pickbar p {

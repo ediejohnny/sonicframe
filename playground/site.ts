@@ -145,6 +145,7 @@ export function setupHeader(repaint: () => void): void {
     });
     show();
     setupSidebar();
+    setupFooter();
 }
 
 /** The pages, in groups, as the sidebar lists them. */
@@ -260,6 +261,123 @@ function setupSidebar(): void {
     window.matchMedia(SIDE_QUERY).addEventListener('change', () => {
         setOpen(false);
     });
+}
+
+/** The project's home on GitHub. */
+const REPOSITORY = 'https://github.com/ediejohnny/sonicframe';
+
+/** The first year of the copyright. */
+const FIRST_YEAR = 2026;
+
+/** A link, from its words and address. */
+function linkTo(text: string, href: string): HTMLAnchorElement {
+    const link = document.createElement('a');
+    link.href = href;
+    link.textContent = text;
+
+    return link;
+}
+
+/** A footer column: a name over a list of links. */
+function footColumn(name: string, links: HTMLAnchorElement[]): HTMLElement {
+    const column = document.createElement('nav');
+    const title = document.createElement('p');
+    const list = document.createElement('ul');
+    title.className = 'foot-title';
+    title.textContent = name;
+    column.setAttribute('aria-label', name);
+
+    for (const link of links) {
+        const item = document.createElement('li');
+        item.append(link);
+        list.append(item);
+    }
+
+    column.append(title, list);
+
+    return column;
+}
+
+/**
+ * The footer, the same on every page: the name and what it does, the pages, the project's links,
+ * the sound's credits, and a closing line with the copyright and the license.
+ */
+function setupFooter(): void {
+    const foot = document.querySelector<HTMLElement>('#foot');
+
+    if (foot === null) {
+        return;
+    }
+
+    const wrap = document.createElement('div');
+    const columns = document.createElement('div');
+    const about = document.createElement('div');
+    const name = document.createElement('p');
+    const line = document.createElement('p');
+    wrap.className = 'wrap';
+    columns.className = 'foot-columns';
+    about.className = 'foot-about';
+    name.className = 'foot-name';
+    const logo = document.createElement('img');
+    logo.src = '../assets/logo.svg';
+    logo.alt = '';
+    name.append(logo, `SonicFrame v${VERSION}`);
+    line.textContent =
+        'Draws sound on the web: waveforms, ready-made players and plugins, with no dependencies.';
+    about.append(name, line);
+
+    const sound = document.createElement('div');
+    const soundTitle = document.createElement('p');
+    const credit = document.createElement('p');
+    soundTitle.className = 'foot-title';
+    soundTitle.textContent = 'The sound';
+    credit.append(
+        '“The Little Elf”, a poem by John Kendrick Bangs, read by ',
+        linkTo('Avery', 'https://librivox.org/reader/1252'),
+        ' for LibriVox’s ',
+        linkTo(
+            'Short Poetry Collection 026',
+            'https://librivox.org/short-poetry-collection-026/',
+        ),
+        ' (',
+        linkTo(
+            'archive.org',
+            'https://archive.org/details/shortpoetry_026_librivox',
+        ),
+        '). LibriVox recordings are in the ',
+        linkTo('public domain', 'https://librivox.org/pages/public-domain/'),
+        '. Thank you, Avery and LibriVox.',
+    );
+    sound.append(soundTitle, credit);
+
+    columns.append(
+        about,
+        footColumn(
+            'Docs',
+            PAGES.flatMap(({ pages }) =>
+                pages.map((page) => linkTo(page.name, `./${page.file}`)),
+            ),
+        ),
+        footColumn('Project', [
+            linkTo('GitHub', REPOSITORY),
+            linkTo('npm', 'https://www.npmjs.com/package/sonicframe'),
+            linkTo('Changelog', `${REPOSITORY}/blob/main/CHANGELOG.md`),
+            linkTo('License', `${REPOSITORY}/blob/main/LICENSE`),
+            linkTo('Report a problem', `${REPOSITORY}/issues`),
+        ]),
+        sound,
+    );
+
+    const bottom = document.createElement('div');
+    const copyright = document.createElement('p');
+    const year = new Date().getFullYear();
+    const years = year > FIRST_YEAR ? `${FIRST_YEAR}–${year}` : `${FIRST_YEAR}`;
+    bottom.className = 'foot-bottom';
+    copyright.textContent = `© ${years} Edie Johnny. SonicFrame is free software under the MIT license.`;
+    bottom.append(copyright, linkTo('Back to top', '#'));
+
+    wrap.append(columns, bottom);
+    foot.replaceChildren(wrap);
 }
 
 /** A heading's anchor: its section's id when it opens one, else its own (made from its words). */

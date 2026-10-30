@@ -99,7 +99,7 @@
 
                 <div id="gallery" class="gallery"></div>
 
-                <div class="pickbar">
+                <div class="pickbar" id="pickbar" hidden>
                     <p id="pickbar-name"></p>
                     <button id="copy-js" class="button small" type="button">
                         Copy JavaScript
@@ -112,7 +112,12 @@
                     >
                 </div>
 
-                <section class="picked" aria-labelledby="picked-title">
+                <section
+                    class="picked"
+                    id="picked"
+                    aria-labelledby="picked-title"
+                    hidden
+                >
                     <h2 id="picked-title">The player you picked</h2>
                     <p id="picked-name" class="note"></p>
                     <div class="snippets">
@@ -139,16 +144,7 @@
             </main>
         </div>
 
-        <footer class="foot">
-            <div class="wrap">
-                <p>
-                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
-                    by <a href="https://librivox.org/reader/1252">Avery</a> for
-                    LibriVox (public domain).
-                    <a href="./#credits">Full credits on the main page</a>.
-                </p>
-            </div>
-        </footer>
+        <footer class="foot" id="foot"></footer>
 
         <script type="module" src="./themes.ts"></script>
     </body>
