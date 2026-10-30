@@ -5,7 +5,7 @@
  * light and dark; canvas colors are read once, so the page repaints its players after every switch.
  */
 
-import { peaksFromChannel, VERSION } from '../src/index';
+import { peaksFromChannel } from '../src/index';
 
 export type Sound = {
     /** An object URL for the sound's bytes; each player's own `<audio>` plays it. */
@@ -24,6 +24,7 @@ const PEAKS = 1000;
 const COPIED_FOR = 1500;
 
 const SCHEME_KEY = 'sonicframe-playground-scheme';
+const FONT_KEY = 'sonicframe-docs-font';
 
 type Scheme = 'light' | 'dark';
 
@@ -87,6 +88,14 @@ function storedScheme(): Scheme | null {
     }
 }
 
+function store(key: string, value: string): void {
+    try {
+        localStorage.setItem(key, value);
+    } catch {
+        // Storage can be off; the choice then lasts for this visit only.
+    }
+}
+
 function systemQuery(): MediaQueryList {
     return window.matchMedia('(prefers-color-scheme: dark)');
 }
@@ -102,9 +111,10 @@ function currentScheme(): Scheme {
 }
 
 /**
- * Fills in the version and wires the light/dark switch, which sets `data-theme` on the page and is
- * remembered for the next visit. `repaint` runs after every change, the system's included while the
- * page follows it.
+ * Wires what the header and the sidebar carry (the build drew them into the page): the light/dark
+ * switch and the font, both remembered for the next visit; the drawer of pages on narrow screens;
+ * the search; and the early fetch of a page the pointer rests on. `repaint` runs after every change
+ * of scheme or font, the system's included while the page follows it.
  */
 export function setupHeader(repaint: () => void): void {
     const root = document.documentElement;
@@ -112,10 +122,6 @@ export function setupHeader(repaint: () => void): void {
 
     if (stored !== null) {
         root.dataset.theme = stored;
-    }
-
-    for (const element of document.querySelectorAll('[data-version]')) {
-        element.textContent = `v${VERSION}`;
     }
 
     const toggle = document.querySelector<HTMLButtonElement>('#scheme');
@@ -129,13 +135,7 @@ export function setupHeader(repaint: () => void): void {
     toggle?.addEventListener('click', () => {
         const next: Scheme = currentScheme() === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next;
-
-        try {
-            localStorage.setItem(SCHEME_KEY, next);
-        } catch {
-            // Storage can be off; the choice then lasts for this visit only.
-        }
-
+        store(SCHEME_KEY, next);
         show();
         repaint();
     });
@@ -144,39 +144,34 @@ export function setupHeader(repaint: () => void): void {
         repaint();
     });
     show();
+    setupFont(repaint);
     setupSidebar();
-    setupFooter();
+    setupSearch();
+    prefetchOnHover();
 }
 
-/** The pages, in groups, as the sidebar lists them. */
-const PAGES: { group: string; pages: { file: string; name: string }[] }[] = [
-    {
-        group: 'Getting started',
-        pages: [{ file: 'index.html', name: 'Introduction' }],
-    },
-    {
-        group: 'Look',
-        pages: [
-            { file: 'drawings.html', name: 'Drawings and themes' },
-            { file: 'themes.html', name: 'Theme gallery' },
-        ],
-    },
-    {
-        group: 'Accessibility',
-        pages: [{ file: 'words.html', name: 'The wave in words' }],
-    },
-    {
-        group: 'Long sounds',
-        pages: [{ file: 'zoom.html', name: 'Zoom and long sounds' }],
-    },
-    {
-        group: 'Going further',
-        pages: [
-            { file: 'plugins.html', name: 'Plugins and controls' },
-            { file: 'performance.html', name: 'Sixty at once' },
-        ],
-    },
-];
+/** The font picker: the page's font from the library's own stacks, remembered for the next visit. */
+function setupFont(repaint: () => void): void {
+    const root = document.documentElement;
+    const select = document.querySelector<HTMLSelectElement>('#site-font');
+
+    if (select === null) {
+        return;
+    }
+
+    const known = [...select.options].map((option) => option.value);
+
+    if (!known.includes(root.dataset.font ?? '')) {
+        delete root.dataset.font;
+    }
+
+    select.value = root.dataset.font ?? known[0];
+    select.addEventListener('change', () => {
+        root.dataset.font = select.value;
+        store(FONT_KEY, select.value);
+        repaint();
+    });
+}
 
 /** The width at which the sidebar stops being a drawer and stays beside the page (60rem). */
 const SIDE_QUERY = '(min-width: 60rem)';
@@ -184,16 +179,9 @@ const SIDE_QUERY = '(min-width: 60rem)';
 /** The width at which "On this page" stays beside the text instead of folding above it (76rem). */
 const TOC_QUERY = '(min-width: 76rem)';
 
-/** The page file this is: `index.html` for the folder itself. */
-function currentFile(): string {
-    const last = location.pathname.split('/').pop() ?? '';
-
-    return last === '' ? 'index.html' : last;
-}
-
 /**
- * The sidebar: every page, in groups, the current one marked. On narrow screens it is a drawer the
- * Menu button opens, closed by a link, the backdrop or Escape.
+ * The sidebar of pages: on narrow screens a drawer the Menu button opens, closed by a link, the
+ * backdrop or Escape.
  */
 function setupSidebar(): void {
     const side = document.querySelector<HTMLElement>('#side');
@@ -202,31 +190,6 @@ function setupSidebar(): void {
 
     if (side === null || menu === null || backdrop === null) {
         return;
-    }
-
-    const here = currentFile();
-
-    for (const { group, pages } of PAGES) {
-        const name = document.createElement('p');
-        const list = document.createElement('ul');
-        name.className = 'side-group';
-        name.textContent = group;
-
-        for (const page of pages) {
-            const item = document.createElement('li');
-            const link = document.createElement('a');
-            link.href = `./${page.file}`;
-            link.textContent = page.name;
-
-            if (page.file === here) {
-                link.setAttribute('aria-current', 'page');
-            }
-
-            item.append(link);
-            list.append(item);
-        }
-
-        side.append(name, list);
     }
 
     const setOpen = (open: boolean, restoreFocus = false): void => {
@@ -261,199 +224,276 @@ function setupSidebar(): void {
     window.matchMedia(SIDE_QUERY).addEventListener('change', () => {
         setOpen(false);
     });
+
+    // The current page in sight, without moving the page itself.
+    const current = side.querySelector<HTMLElement>('[aria-current="page"]');
+
+    if (current !== null) {
+        keepInSight(side, current);
+    }
 }
 
-/** The project's home on GitHub. */
-const REPOSITORY = 'https://github.com/ediejohnny/sonicframe';
+/** Fetches a docs page early once the pointer rests on (or focus reaches) a link to it. */
+function prefetchOnHover(): void {
+    const fetched = new Set<string>([location.href.split('#')[0]]);
+    const ahead = (event: Event): void => {
+        const link = (event.target as Element | null)?.closest?.('a');
 
-/** The first year of the copyright. */
-const FIRST_YEAR = 2026;
+        if (
+            !(link instanceof HTMLAnchorElement) ||
+            link.origin !== location.origin ||
+            !link.pathname.endsWith('.html')
+        ) {
+            return;
+        }
 
-/** A link, from its words and address. */
-function linkTo(text: string, href: string): HTMLAnchorElement {
-    const link = document.createElement('a');
-    link.href = href;
-    link.textContent = text;
+        const address = link.href.split('#')[0];
 
-    return link;
+        if (fetched.has(address)) {
+            return;
+        }
+
+        fetched.add(address);
+        const hint = document.createElement('link');
+        hint.rel = 'prefetch';
+        hint.href = address;
+        document.head.append(hint);
+    };
+
+    document.addEventListener('pointerover', ahead, { passive: true });
+    document.addEventListener('focusin', ahead);
 }
 
-/** A footer column: a name over a list of links. */
-function footColumn(name: string, links: HTMLAnchorElement[]): HTMLElement {
-    const column = document.createElement('nav');
-    const title = document.createElement('p');
-    const list = document.createElement('ul');
-    title.className = 'foot-title';
-    title.textContent = name;
-    column.setAttribute('aria-label', name);
+type SearchEntry = {
+    file: string;
+    name: string;
+    group: string;
+    lede: string;
+    headings: { id: string; text: string }[];
+};
 
-    for (const link of links) {
-        const item = document.createElement('li');
-        item.append(link);
-        list.append(item);
+type Hit = { href: string; title: string; where: string; score: number };
+
+/** The most results the search shows. */
+const MAX_HITS = 12;
+
+/** Every place in the docs the words lead to, best first. */
+function findIn(index: SearchEntry[], query: string): Hit[] {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+
+    if (terms.length === 0) {
+        return [];
     }
 
-    column.append(title, list);
+    const score = (text: string, weight: number): number => {
+        const lower = text.toLowerCase();
 
-    return column;
+        return terms.every((term) => lower.includes(term))
+            ? weight + (lower.startsWith(terms[0]) ? 1 : 0)
+            : 0;
+    };
+    const hits: Hit[] = [];
+
+    for (const page of index) {
+        const pageScore = Math.max(
+            score(page.name, 6),
+            score(`${page.name} ${page.lede}`, 3),
+        );
+
+        if (pageScore > 0) {
+            hits.push({
+                href: `./${page.file}`,
+                title: page.name,
+                where: page.group,
+                score: pageScore,
+            });
+        }
+
+        for (const heading of page.headings) {
+            const headingScore = score(heading.text, 4);
+
+            if (headingScore > 0) {
+                hits.push({
+                    href: `./${page.file}#${heading.id}`,
+                    title: heading.text,
+                    where: `${page.group} › ${page.name}`,
+                    score: headingScore,
+                });
+            }
+        }
+    }
+
+    return hits.sort((a, b) => b.score - a.score).slice(0, MAX_HITS);
 }
 
 /**
- * The footer, the same on every page: the name and what it does, the pages, the project's links,
- * the sound's credits, and a closing line with the copyright and the license.
+ * The search: Ctrl+K or ⌘K (or the header's button) opens a dialog over the page; typing lists the
+ * pages and sections that hold every word, the arrows move through them and Enter opens one. The
+ * index is fetched the first time the dialog opens.
  */
-function setupFooter(): void {
-    const foot = document.querySelector<HTMLElement>('#foot');
+function setupSearch(): void {
+    const opener = document.querySelector<HTMLButtonElement>('#search-open');
 
-    if (foot === null) {
+    if (opener === null) {
         return;
     }
 
-    const wrap = document.createElement('div');
-    const columns = document.createElement('div');
-    const about = document.createElement('div');
-    const name = document.createElement('p');
-    const line = document.createElement('p');
-    wrap.className = 'wrap';
-    columns.className = 'foot-columns';
-    about.className = 'foot-about';
-    name.className = 'foot-name';
-    const logo = document.createElement('img');
-    logo.src = '../assets/logo.svg';
-    logo.alt = '';
-    name.append(logo, `SonicFrame v${VERSION}`);
-    line.textContent =
-        'Draws sound on the web: waveforms, ready-made players and plugins, with no dependencies.';
-    about.append(name, line);
+    let dialog: HTMLDialogElement | null = null;
+    let index: Promise<SearchEntry[]> | null = null;
 
-    const sound = document.createElement('div');
-    const soundTitle = document.createElement('p');
-    const credit = document.createElement('p');
-    soundTitle.className = 'foot-title';
-    soundTitle.textContent = 'The sound';
-    credit.append(
-        '“The Little Elf”, a poem by John Kendrick Bangs, read by ',
-        linkTo('Avery', 'https://librivox.org/reader/1252'),
-        ' for LibriVox’s ',
-        linkTo(
-            'Short Poetry Collection 026',
-            'https://librivox.org/short-poetry-collection-026/',
-        ),
-        ' (',
-        linkTo(
-            'archive.org',
-            'https://archive.org/details/shortpoetry_026_librivox',
-        ),
-        '). LibriVox recordings are in the ',
-        linkTo('public domain', 'https://librivox.org/pages/public-domain/'),
-        '. Thank you, Avery and LibriVox.',
-    );
-    sound.append(soundTitle, credit);
+    const build = (): HTMLDialogElement => {
+        const box = document.createElement('dialog');
+        const label = document.createElement('label');
+        const input = document.createElement('input');
+        const list = document.createElement('ul');
+        const status = document.createElement('p');
+        const close = document.createElement('button');
+        box.className = 'search';
+        box.setAttribute('aria-label', 'Search the docs');
+        label.className = 'search-label';
+        label.textContent = 'Search the docs';
+        input.type = 'search';
+        input.className = 'search-input';
+        input.placeholder = 'Zoom, regions, keyboard…';
+        input.setAttribute('role', 'combobox');
+        input.setAttribute('aria-expanded', 'false');
+        input.setAttribute('aria-controls', 'search-results');
+        input.setAttribute('aria-autocomplete', 'list');
+        list.id = 'search-results';
+        list.className = 'search-results';
+        list.setAttribute('role', 'listbox');
+        status.className = 'search-status';
+        status.setAttribute('aria-live', 'polite');
+        close.type = 'button';
+        close.className = 'button small';
+        close.textContent = 'Close';
+        close.addEventListener('click', () => box.close());
+        label.append(input);
+        box.append(label, status, list, close);
+        document.body.append(box);
 
-    columns.append(
-        about,
-        footColumn(
-            'Docs',
-            PAGES.flatMap(({ pages }) =>
-                pages.map((page) => linkTo(page.name, `./${page.file}`)),
-            ),
-        ),
-        footColumn('Project', [
-            linkTo('GitHub', REPOSITORY),
-            linkTo('npm', 'https://www.npmjs.com/package/sonicframe'),
-            linkTo('Changelog', `${REPOSITORY}/blob/main/CHANGELOG.md`),
-            linkTo('License', `${REPOSITORY}/blob/main/LICENSE`),
-            linkTo('Report a problem', `${REPOSITORY}/issues`),
-        ]),
-        sound,
-    );
+        let active = -1;
+        let links: HTMLAnchorElement[] = [];
+        const mark = (at: number): void => {
+            links.forEach((link, i) =>
+                link.setAttribute('aria-selected', String(i === at)),
+            );
+            active = at;
 
-    const bottom = document.createElement('div');
-    const copyright = document.createElement('p');
-    const year = new Date().getFullYear();
-    const years = year > FIRST_YEAR ? `${FIRST_YEAR}–${year}` : `${FIRST_YEAR}`;
-    bottom.className = 'foot-bottom';
-    copyright.textContent = `© ${years} Edie Johnny. SonicFrame is free software under the MIT license.`;
-    bottom.append(copyright, linkTo('Back to top', '#'));
+            if (at >= 0) {
+                input.setAttribute('aria-activedescendant', links[at].id);
+                links[at].scrollIntoView({ block: 'nearest' });
+            } else {
+                input.removeAttribute('aria-activedescendant');
+            }
+        };
+        const run = async (): Promise<void> => {
+            const query = input.value.trim();
+            index ??= fetch('./search.json').then(
+                (response) => response.json() as Promise<SearchEntry[]>,
+            );
+            const hits = query === '' ? [] : findIn(await index, query);
 
-    wrap.append(columns, bottom);
-    foot.replaceChildren(wrap);
-}
+            if (input.value.trim() !== query) {
+                return;
+            }
 
-/** A heading's anchor: its section's id when it opens one, else its own (made from its words). */
-function anchorOf(heading: HTMLElement): string {
-    const section = heading.parentElement;
+            links = hits.map((hit, i) => {
+                const link = document.createElement('a');
+                const where = document.createElement('span');
+                link.id = `search-hit-${i}`;
+                link.href = hit.href;
+                link.setAttribute('role', 'option');
+                link.textContent = hit.title;
+                where.textContent = hit.where;
+                link.append(where);
 
-    if (
-        section?.tagName === 'SECTION' &&
-        section.id !== '' &&
-        section.querySelector('h2, h3') === heading
-    ) {
-        return section.id;
-    }
+                return link;
+            });
+            list.replaceChildren(
+                ...links.map((link) => {
+                    const item = document.createElement('li');
+                    item.append(link);
 
-    if (heading.id === '') {
-        heading.id = (heading.textContent ?? '')
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '');
-    }
+                    return item;
+                }),
+            );
+            input.setAttribute('aria-expanded', String(links.length > 0));
+            status.textContent =
+                query === ''
+                    ? ''
+                    : links.length === 0
+                      ? 'Nothing found.'
+                      : `${links.length} found.`;
+            mark(links.length > 0 ? 0 : -1);
+        };
 
-    return heading.id;
+        input.addEventListener('input', () => void run());
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowDown' && links.length > 0) {
+                event.preventDefault();
+                mark((active + 1) % links.length);
+            } else if (event.key === 'ArrowUp' && links.length > 0) {
+                event.preventDefault();
+                mark((active - 1 + links.length) % links.length);
+            } else if (event.key === 'Enter' && active >= 0) {
+                event.preventDefault();
+                links[active].click();
+            }
+        });
+        list.addEventListener('click', (event) => {
+            if ((event.target as Element).closest('a') !== null) {
+                box.close();
+            }
+        });
+        // A click on the backdrop (the dialog itself, outside its box) closes it.
+        box.addEventListener('click', (event) => {
+            if (event.target === box) {
+                box.close();
+            }
+        });
+        box.addEventListener('close', () => opener.focus());
+
+        return box;
+    };
+
+    const open = (): void => {
+        dialog ??= build();
+
+        if (!dialog.open) {
+            dialog.showModal();
+            dialog.querySelector('input')?.select();
+        }
+    };
+
+    opener.addEventListener('click', open);
+    document.addEventListener('keydown', (event) => {
+        if (
+            event.key.toLowerCase() === 'k' &&
+            (event.ctrlKey || event.metaKey) &&
+            !event.altKey
+        ) {
+            event.preventDefault();
+            open();
+        }
+    });
 }
 
 /**
- * "On this page": the page's headings as a track, filled up to the one being read, with a playhead
- * on it. Beside the text on wide screens; above it, folded behind a button, on narrower ones.
+ * "On this page" (the build drew it from the page's headings): a track filled up to the heading being
+ * read, with a playhead on it. Beside the text on wide screens; above it, folded behind a button, on
+ * narrower ones.
  */
 export function setupContents(): void {
     const toc = document.querySelector<HTMLElement>('#toc');
-    const doc = document.querySelector<HTMLElement>('.doc');
+    const toggle = toc?.querySelector<HTMLButtonElement>('.toc-toggle');
+    const list = toc?.querySelector<HTMLElement>('.toc-list');
 
-    if (toc === null || doc === null) {
+    if (!toc || !toggle || !list) {
         return;
     }
 
-    const headings = [...doc.querySelectorAll<HTMLElement>('h2, h3')].filter(
-        (heading) => heading.closest('[hidden]') === null,
-    );
-
-    if (headings.length === 0) {
-        toc.remove();
-
-        return;
-    }
-
-    const title = document.createElement('p');
-    const toggle = document.createElement('button');
-    const list = document.createElement('ol');
-    title.className = 'toc-title';
-    title.id = 'toc-title';
-    title.textContent = 'On this page';
-    toggle.type = 'button';
-    toggle.className = 'toc-toggle';
-    toggle.textContent = 'On this page';
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-controls', 'toc-list');
-    list.id = 'toc-list';
-    list.className = 'toc-list';
-    toc.setAttribute('aria-labelledby', 'toc-title');
-
-    const links = headings.map((heading) => {
-        const item = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = `#${anchorOf(heading)}`;
-        link.textContent = heading.textContent?.trim() ?? '';
-        item.className = heading.tagName === 'H3' ? 'toc-sub' : '';
-        item.append(link);
-        list.append(item);
-
-        return link;
-    });
-
-    toc.append(title, toggle, list);
-
+    const links = [...list.querySelectorAll<HTMLAnchorElement>('a')];
     const wide = window.matchMedia(TOC_QUERY);
     const fold = (open: boolean): void => {
         toggle.setAttribute('aria-expanded', String(open));

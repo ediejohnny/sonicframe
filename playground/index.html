@@ -2,169 +2,107 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>SonicFrame</title>
         <meta
             name="description"
             content="SonicFrame draws sound on the web: waveforms, ready-made players, spectrograms and more, with no dependencies."
         />
-        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
-        <link rel="stylesheet" href="./site.css" />
     </head>
     <body>
-        <header class="top">
-            <div class="wrap">
-                <button
-                    id="menu"
-                    class="button small menu"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="side"
-                >
-                    Menu
-                </button>
-                <a class="brand" href="./">
-                    <img src="../assets/logo.svg" alt="" />
-                    SonicFrame
-                    <span class="version" data-version></span>
-                </a>
-                <nav class="nav" aria-label="Elsewhere">
-                    <a
-                        class="far"
-                        href="https://github.com/ediejohnny/sonicframe"
-                        >GitHub</a
-                    >
-                    <a
-                        class="far"
-                        href="https://www.npmjs.com/package/sonicframe"
-                        >npm</a
-                    >
-                    <button
-                        id="scheme"
-                        class="button small"
-                        type="button"
-                        aria-pressed="false"
-                    >
-                        Dark
+        <main class="content">
+            <div class="page-head hero">
+                <h1 id="title">Draw sound on the web.</h1>
+                <p class="lede">
+                    SonicFrame draws a sound on a canvas, follows it while it
+                    plays, and lets people seek with a click, a drag or the
+                    keyboard. No dependencies, any framework, a strict
+                    Content-Security-Policy.
+                </p>
+                <div class="stage" id="hero-player"></div>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
                     </button>
-                </nav>
-            </div>
-        </header>
-
-        <div class="wrap layout">
-            <nav class="side" id="side" aria-label="Pages"></nav>
-            <div class="side-backdrop" id="side-backdrop" hidden></div>
-
-            <main class="content">
-                <div class="page-head hero">
-                    <h1 id="title">Draw sound on the web.</h1>
-                    <p class="lede">
-                        SonicFrame draws a sound on a canvas, follows it while
-                        it plays, and lets people seek with a click, a drag or
-                        the keyboard. No dependencies, any framework, a strict
-                        Content-Security-Policy.
-                    </p>
-                    <div class="stage" id="hero-player"></div>
-                    <div class="source">
-                        <p id="source" aria-live="polite">Loading the sound…</p>
-                        <button id="pick" class="button small" type="button">
-                            Use your own sound
-                        </button>
-                        <input id="file" type="file" accept="audio/*" hidden />
-                    </div>
+                    <input id="file" type="file" accept="audio/*" hidden />
                 </div>
+            </div>
 
-                <aside class="toc" id="toc"></aside>
+            <div class="doc">
+                <section class="section" id="use" aria-labelledby="use-title">
+                    <h2 id="use-title">Install</h2>
+                    <p class="lede">
+                        One package, nothing else to install. Use the player
+                        from JavaScript, or write it as a tag.
+                    </p>
+                    <div class="code install">
+                        <pre><code>npm install sonicframe</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
 
-                <div class="doc">
-                    <section
-                        class="section"
-                        id="use"
-                        aria-labelledby="use-title"
-                    >
-                        <h2 id="use-title">Install</h2>
-                        <p class="lede">
-                            One package, nothing else to install. Use the player
-                            from JavaScript, or write it as a tag.
-                        </p>
-                        <div class="code install">
-                            <pre><code>npm install sonicframe</code></pre>
-                            <button class="button small" type="button">
-                                Copy
-                            </button>
-                        </div>
-                    </section>
-
-                    <section class="section" id="javascript">
-                        <h2>In JavaScript</h2>
-                        <div class="code">
-                            <pre><code>import { createPlayer } from 'sonicframe/player';
+                <section class="section" id="javascript">
+                    <h2>In JavaScript</h2>
+                    <div class="code">
+                        <pre><code>import { createPlayer } from 'sonicframe/player';
 
 createPlayer({
     container: document.querySelector('#voice'),
     src: '/voice.mp3',
     theme: 'bubble',
 });</code></pre>
-                            <button class="button small" type="button">
-                                Copy
-                            </button>
-                        </div>
-                    </section>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
 
-                    <section class="section" id="tag">
-                        <h2>As an HTML tag</h2>
-                        <div class="code">
-                            <pre><code>&lt;sonic-player src="/voice.mp3" theme="bubble"&gt;
+                <section class="section" id="tag">
+                    <h2>As an HTML tag</h2>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player src="/voice.mp3" theme="bubble"&gt;
 &lt;/sonic-player&gt;
 
 &lt;script type="module"&gt;
     import { defineSonicPlayer } from 'sonicframe/player';
     defineSonicPlayer();
 &lt;/script&gt;</code></pre>
-                            <button class="button small" type="button">
-                                Copy
-                            </button>
-                        </div>
-                        <sonic-player
-                            id="tag-player"
-                            class="live-tag"
-                            theme="bubble"
-                            label="The tag, live"
-                        ></sonic-player>
-                        <p class="note">
-                            This player is the tag above, on this page.
-                        </p>
-                    </section>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <sonic-player
+                        id="tag-player"
+                        class="live-tag"
+                        theme="bubble"
+                        label="The tag, live"
+                    ></sonic-player>
+                    <p class="note">
+                        This player is the tag above, on this page.
+                    </p>
+                </section>
 
-                    <section class="section" id="next">
-                        <h2>Where next</h2>
-                        <ul class="next">
-                            <li>
-                                <a href="./drawings.html">Drawings and themes</a
-                                >: ten ways to draw a sound and a whole player
-                                in one word.
-                            </li>
-                            <li>
-                                <a href="./words.html">The wave in words</a>: a
-                                description of the sound for people who cannot
-                                see it.
-                            </li>
-                            <li>
-                                <a href="./zoom.html">Zoom and long sounds</a>:
-                                get close to a word, or across an hour.
-                            </li>
-                            <li>
-                                <a href="./plugins.html">Plugins and controls</a
-                                >: regions, markers, a ruler, a spectrogram and
-                                more.
-                            </li>
-                        </ul>
-                    </section>
-                </div>
-            </main>
-        </div>
-
-        <footer class="foot" id="foot"></footer>
+                <section class="section" id="next">
+                    <h2>Where next</h2>
+                    <ul class="next">
+                        <li>
+                            <a href="./drawings.html">Drawings and themes</a>:
+                            ten ways to draw a sound and a whole player in one
+                            word.
+                        </li>
+                        <li>
+                            <a href="./words.html">The wave in words</a>: a
+                            description of the sound for people who cannot see
+                            it.
+                        </li>
+                        <li>
+                            <a href="./zoom.html">Zoom and long sounds</a>: get
+                            close to a word, or across an hour.
+                        </li>
+                        <li>
+                            <a href="./plugins.html">Plugins and controls</a>:
+                            regions, markers, a ruler, a spectrogram and more.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
 
         <script type="module" src="./main.ts"></script>
     </body>

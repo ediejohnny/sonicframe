@@ -46,6 +46,7 @@
     "scripts": {
         "build": "vp pack",
         "dev": "vp dev",
+        "docs:build": "vp build --config vite.docs.config.ts",
         "test": "vp test run",
         "lint": "vp check",
         "lint:fix": "vp check --fix",
