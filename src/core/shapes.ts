@@ -97,8 +97,9 @@ export function resolveWave(
 /**
  * Shapes one drawing of `values` (0..1, one per bar that fits) across `width` × `height` device
  * pixels. The bar layout gives every drawing the same density, curve, minimum height and alignment;
- * the track needs no values at all. With a window, the values are its bars (see `BarWindow`), and the
- * scope's swings and the pulse's beats stay on the same bars while the view scrolls.
+ * the track needs no values at all. With a window of the row (`grid`, see `BarWindow`), the values
+ * are its bars, and the scope's swings and the pulse's beats stay on the same bars while the view
+ * scrolls.
  */
 export function waveShape(
     values: readonly number[],
@@ -107,7 +108,7 @@ export function waveShape(
     bar: BarStyle,
     wave: WaveStyle,
     pixelRatio: number,
-    window?: BarWindow,
+    grid?: BarWindow,
 ): WaveShape {
     const ratio = pixelRatio > 0 ? pixelRatio : 1;
     const shape: WaveShape = {
@@ -132,8 +133,8 @@ export function waveShape(
         return shape;
     }
 
-    const bars = layoutBars(values, width, height, bar, ratio, window);
-    const first = window?.first ?? 0;
+    const bars = layoutBars(values, width, height, bar, ratio, grid);
+    const first = grid?.first ?? 0;
 
     if (bars.length === 0) {
         return shape;
@@ -181,7 +182,7 @@ export function waveShape(
                     bar,
                     shape.lineWidth,
                     ratio,
-                    window,
+                    grid,
                 ),
             );
             break;
@@ -454,17 +455,17 @@ function pulse(
     bar: BarStyle,
     lineWidth: number,
     ratio: number,
-    window: BarWindow | undefined,
+    grid: BarWindow | undefined,
 ): Polyline {
     const middle = height / 2;
     const reach = Math.max(0, middle - lineWidth / 2);
     const curve = bar.curve > 0 ? bar.curve : 1;
     const edges = boundaries(bars, width);
-    const slot = window
-        ? window.virtualWidth / Math.max(1, window.total)
+    const slot = grid
+        ? grid.virtualWidth / Math.max(1, grid.total)
         : width / bars.length;
     const group = Math.max(1, Math.round((BEAT * ratio) / Math.max(1, slot)));
-    const first = window?.first ?? 0;
+    const first = grid?.first ?? 0;
     const points = [0, middle];
 
     // Groups start at whole multiples of `group` along the row; the first one may begin off screen.
@@ -483,9 +484,9 @@ function pulse(
         const swing = level * reach;
 
         if (swing >= 0.5) {
-            const from = window ? start * slot - window.offset : edges[start];
-            const span = window
-                ? (Math.min(start + group, window.total) - start) * slot
+            const from = grid ? start * slot - grid.offset : edges[start];
+            const span = grid
+                ? (Math.min(start + group, grid.total) - start) * slot
                 : edges[end] - from;
 
             points.push(

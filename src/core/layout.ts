@@ -77,8 +77,8 @@ export function barWindow(
 
 /**
  * Places one bar per value (0..1) across the whole width: the first bar starts at the left edge and the
- * last one ends at the right edge. With a window, the values are its bars, placed on its row and
- * shifted to the screen. Bars never overlap; without a gap they touch, drawing one shape. Centered
+ * last one ends at the right edge. With a window of the row (`grid`), the values are its bars,
+ * placed on its row and shifted to the screen. Bars never overlap; without a gap they touch, drawing one shape. Centered
  * bars keep the same parity as the height, so they are exactly symmetric.
  */
 export function layoutBars(
@@ -87,13 +87,13 @@ export function layoutBars(
     height: number,
     bar: BarStyle,
     pixelRatio: number,
-    window?: BarWindow,
+    grid?: BarWindow,
 ): Bar[] {
-    const row = window?.virtualWidth ?? width;
+    const row = grid?.virtualWidth ?? width;
     const metrics = barMetrics(row, bar, pixelRatio);
-    const count = window?.total ?? values.length;
-    const first = window?.first ?? 0;
-    const offset = window?.offset ?? 0;
+    const count = grid?.total ?? values.length;
+    const first = grid?.first ?? 0;
+    const offset = grid?.offset ?? 0;
 
     if (values.length === 0 || metrics.count === 0 || height <= 0) {
         return [];

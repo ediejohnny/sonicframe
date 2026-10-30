@@ -4,14 +4,17 @@
  */
 
 import { clamp01 } from './math';
+import { FULL_VIEW, viewX, type View } from './view';
 
 export type Overlay = {
-    /** Device-pixel x where the played part ends. */
+    /** Device-pixel x where the played part ends, held inside the frame. */
     progress: number;
     /** Device-pixel x under the mouse pointer, or null. */
     hover: number | null;
     /** Whether the pointer is over the frame (used to recolor the bars). */
     hovered?: boolean;
+    /** Whether the playing position is out of view (no cursor, no knob). */
+    offscreen?: boolean;
 };
 
 export type RegionKind = 'progress' | 'hover' | 'wave';
@@ -29,16 +32,24 @@ export function ratioAt(offset: number, width: number): number {
     return width > 0 ? clamp01(offset / width) : 0;
 }
 
+/** The overlay of positions of the sound (0..1) across `width` device pixels showing `view`. */
 export function overlayOf(
     progress: number,
     hover: number | null,
     width: number,
     hovered: boolean = false,
+    view: View = FULL_VIEW,
 ): Overlay {
+    const size = Math.max(0, width);
+    const at = (ratio: number): number =>
+        Math.round(viewX(clamp01(ratio), view, size));
+    const played = at(progress);
+
     return {
-        progress: xAt(progress, width),
-        hover: hover === null ? null : xAt(hover, width),
+        progress: Math.min(size, Math.max(0, played)),
+        hover: hover === null ? null : Math.min(size, Math.max(0, at(hover))),
         hovered,
+        offscreen: played < 0 || played > size,
     };
 }
 
@@ -47,7 +58,8 @@ export function sameOverlay(a: Overlay | null, b: Overlay): boolean {
         a !== null &&
         a.progress === b.progress &&
         a.hover === b.hover &&
-        (a.hovered ?? false) === (b.hovered ?? false)
+        (a.hovered ?? false) === (b.hovered ?? false) &&
+        (a.offscreen ?? false) === (b.offscreen ?? false)
     );
 }
 
