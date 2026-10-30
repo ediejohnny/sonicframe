@@ -414,25 +414,26 @@ and the time together, plus any of these parts: `speed` (steps through `1×`, `1
 avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
 the browser when it first comes near the screen (`peaks` skips that).
 
-| Option        | Default     | What it does                                                                                                                                                                              |
-| ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `container`   | (required)  | The element the player is added to.                                                                                                                                                       |
-| `src`         | none        | The sound's address; the player makes its own `<audio>`.                                                                                                                                  |
-| `media`       | none        | Your own audio or video element instead.                                                                                                                                                  |
-| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                                                                                                                                   |
-| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.                                                                                                                     |
-| `look`        | see below   | How the player is put together.                                                                                                                                                           |
-| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).                                                                                                                    |
-| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                                                                                                                             |
-| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).                                                                                                                      |
-| `volume`      | `false`     | Show the volume control.                                                                                                                                                                  |
-| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once).                                                                                                        |
-| `zoom`        | `false`     | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`.                                                                                                        |
-| `minimap`     | `false`     | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall and `minimapGap` away; the player grows to fit it (with `autoHide`, it takes from the wave while it shows). |
-| `decode`      | see below   | How a sound is decoded for its peaks.                                                                                                                                                     |
-| `slot`        | none        | Your element for the `slot` part.                                                                                                                                                         |
-| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).                                                                                                                |
-| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                                                                                                                               |
+| Option        | Default      | What it does                                                                                                                                                                              |
+| ------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `container`   | (required)   | The element the player is added to.                                                                                                                                                       |
+| `src`         | none         | The sound's address; the player makes its own `<audio>`.                                                                                                                                  |
+| `preload`     | `'metadata'` | How much of `src` loads before play: `'metadata'`, `'none'` (nothing until play; give the duration with the peaks) or `'auto'`. Also the tag's `preload` attribute.                       |
+| `media`       | none         | Your own audio or video element instead.                                                                                                                                                  |
+| `peaks`       | decoded      | Peaks or a loader, as for `SonicFrame`.                                                                                                                                                   |
+| `theme`       | none         | A theme name (built-in or registered) or one made with `defineTheme`.                                                                                                                     |
+| `look`        | see below    | How the player is put together.                                                                                                                                                           |
+| `palette`     | the theme's  | A palette name, `'auto'`, `'default'`, or your own colors (see below).                                                                                                                    |
+| `wave`        | `'bars'`     | How the sound is drawn (as for `SonicFrame`).                                                                                                                                             |
+| `font`        | the look's   | A stack name, a `font-family` list, or a font you bring (see below).                                                                                                                      |
+| `volume`      | `false`      | Show the volume control.                                                                                                                                                                  |
+| `spectrogram` | `false`      | A spectrogram under the wave, in the palette's colors (the sound is decoded once).                                                                                                        |
+| `zoom`        | `false`      | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`.                                                                                                        |
+| `minimap`     | `false`      | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall and `minimapGap` away; the player grows to fit it (with `autoHide`, it takes from the wave while it shows). |
+| `decode`      | see below    | How a sound is decoded for its peaks.                                                                                                                                                     |
+| `slot`        | none         | Your element for the `slot` part.                                                                                                                                                         |
+| `a11y`        | `{}`         | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).                                                                                                                |
+| `frame`       | `{}`         | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                                                                                                                               |
 
 Accessibility options live in one group, `a11y`, arranged by place, and whatever adds behaviour is off until you turn
 it on:

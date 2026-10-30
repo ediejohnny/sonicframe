@@ -83,6 +83,11 @@ export type PlayerOptions = {
     /** The sound's address, when the player should make its own media element. */
     src?: string;
     /**
+     * How much of the sound the player's own media loads before play: `'metadata'` (the default),
+     * `'none'` (nothing until play; give the duration with the peaks) or `'auto'`.
+     */
+    preload?: 'none' | 'metadata' | 'auto';
+    /**
      * Peaks, alone or with their duration (`{ peaks, duration }`), or a function that loads them;
      * by default they are decoded from the sound.
      */
@@ -639,7 +644,9 @@ export class Player {
 
     private makeMedia(): HTMLMediaElement {
         const audio = document.createElement('audio');
-        audio.preload = 'metadata';
+        const preload = this.options.preload;
+        audio.preload =
+            preload === 'none' || preload === 'auto' ? preload : 'metadata';
         audio.setAttribute('src', this.options.src ?? '');
 
         return audio;

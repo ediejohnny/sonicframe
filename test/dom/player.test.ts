@@ -195,6 +195,25 @@ describe('the player', () => {
         expect(root().querySelector('.sonicframe-volume')).toBeNull();
     });
 
+    it('lets its own media load metadata by default, or as much as the app asks', () => {
+        const preloadOf = (preload?: unknown): string => {
+            player?.destroy();
+            player = createPlayer({
+                container: container(),
+                src: 'note.ogg',
+                peaks: [0.2, 0.5],
+                preload: preload as 'none',
+            });
+
+            return player.media?.getAttribute('preload') ?? '';
+        };
+
+        expect(preloadOf()).toBe('metadata');
+        expect(preloadOf('none')).toBe('none');
+        expect(preloadOf('auto')).toBe('auto');
+        expect(preloadOf('everything')).toBe('metadata');
+    });
+
     it('adds the volume control only when asked', () => {
         player = createPlayer({
             container: container(),

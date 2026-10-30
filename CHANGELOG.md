@@ -65,6 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   voice note, with the time under the wave on the left and the other controls on the right. It is on by default and
   only changes players narrower than that. The player gets `data-narrow` while it lasts. `narrowLine` and
   `narrowStart` choose which parts stay on the line and which go under the wave on the left.
+- `preload` on the player and the tag: how much of `src` its own `<audio>` loads before play (`'metadata'`, as
+  before; `'none'`, so a page of many players fetches nothing until one plays; or `'auto'`).
 - `waveMin` in the look (8 rem): with zoom buttons on the line, the wave keeps at least this width and the buttons
   wrap under it.
 
