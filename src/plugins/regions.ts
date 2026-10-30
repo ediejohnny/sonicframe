@@ -16,6 +16,7 @@ import {
 } from '../core/regions';
 import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
+import { placeX } from '../core/scene';
 import { FULL_VIEW, viewX } from '../core/view';
 import type { Plugin, PluginHost, WavePoint } from '../types';
 
@@ -47,6 +48,16 @@ export type RegionsOptions = {
     onSelect?: (region: Region | null) => void;
     /** Zoomed in, a region chosen by the keys (R) is brought into view, centered. Off by default. */
     scrollIntoView?: boolean;
+    /**
+     * Draws the bands' edges on whole device pixels (crisper, moved by less than half a pixel). Off by
+     * default: at fractions of a pixel, as always.
+     */
+    snap?: boolean;
+    /**
+     * The mouse cursor (any CSS cursor): `'grab'` over a region's body, `'grabbing'` while moving
+     * it, `'ew-resize'` over its edges and while resizing or drawing one.
+     */
+    cursors?: { body?: string; moving?: string; edge?: string };
 };
 
 export type RegionsPlugin = Plugin & {
@@ -74,6 +85,12 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const max = Math.min(200, Math.max(0, options.max ?? 200));
 
     const scrollIntoView = options.scrollIntoView === true;
+    const snap = options.snap === true;
+    const cursors = {
+        body: options.cursors?.body ?? 'grab',
+        moving: options.cursors?.moving ?? 'grabbing',
+        edge: options.cursors?.edge ?? 'ew-resize',
+    };
 
     let host: PluginHost | null = null;
     let stopFitting: (() => void) | null = null;
@@ -456,8 +473,8 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             const edge = paint.color('var(--sonicframe-progress, #2f6fdb)');
 
             for (const region of items) {
-                const from = paint.xAt(region.start / span);
-                const to = paint.xAt(region.end / span);
+                const from = placeX(paint, region.start / span, snap);
+                const to = placeX(paint, region.end / span, snap);
 
                 // Zoomed in, a region wholly outside the view is not drawn.
                 if (to < 0 || from > paint.width) {
@@ -487,13 +504,17 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 return;
             }
 
+            if (drag !== null) {
+                return drag.mode === 'move' ? cursors.moving : cursors.edge;
+            }
+
             const hit = hitAt(point);
 
             if (hit === null) {
                 return;
             }
 
-            return hit.part === 'body' ? 'grab' : 'ew-resize';
+            return hit.part === 'body' ? cursors.body : cursors.edge;
         },
 
         pointerDown(point): 'take' | 'drag' | void {

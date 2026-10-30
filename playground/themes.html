@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>SonicFrame themes</title>
+        <title>Theme gallery · SonicFrame</title>
         <meta
             name="description"
             content="Every SonicFrame player theme in every palette, with the code for each."
@@ -14,20 +14,31 @@
     <body>
         <header class="top">
             <div class="wrap">
+                <button
+                    id="menu"
+                    class="button small menu"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="side"
+                >
+                    Menu
+                </button>
                 <a class="brand" href="./">
                     <img src="../assets/logo.svg" alt="" />
                     SonicFrame
                     <span class="version" data-version></span>
                 </a>
-                <nav class="nav" aria-label="Main">
-                    <a href="./#use">Install</a>
-                    <a href="./#drawings">Drawings</a>
-                    <a href="./themes.html" aria-current="page">Themes</a>
-                    <a href="./#plugins">Plugins</a>
-                    <a href="https://github.com/ediejohnny/sonicframe"
+                <nav class="nav" aria-label="Elsewhere">
+                    <a
+                        class="far"
+                        href="https://github.com/ediejohnny/sonicframe"
                         >GitHub</a
                     >
-                    <a href="https://www.npmjs.com/package/sonicframe">npm</a>
+                    <a
+                        class="far"
+                        href="https://www.npmjs.com/package/sonicframe"
+                        >npm</a
+                    >
                     <button
                         id="scheme"
                         class="button small"
@@ -40,97 +51,100 @@
             </div>
         </header>
 
-        <main class="wrap">
-            <section class="gallery-head" aria-labelledby="title">
-                <h1 id="title">Themes</h1>
-                <p class="lede">
-                    Twenty-four themes, eight at a time, each in all eight
-                    palettes. Every player here plays the same sound, so they
-                    all move together. Touch one to pick it; the bar at the
-                    bottom copies its code.
-                </p>
+        <div class="wrap layout">
+            <nav class="side" id="side" aria-label="Pages"></nav>
+            <div class="side-backdrop" id="side-backdrop" hidden></div>
 
-                <div class="toolbar">
-                    <div class="field">
-                        <span id="sets-label">Themes</span>
-                        <div
-                            id="sets"
-                            class="tabs"
-                            role="group"
-                            aria-labelledby="sets-label"
-                        ></div>
+            <main class="content gallery-page">
+                <section class="gallery-head" aria-labelledby="title">
+                    <h1 id="title">Themes</h1>
+                    <p class="lede">
+                        Twenty-four themes, eight at a time, each in all eight
+                        palettes. Every player here plays the same sound, so
+                        they all move together. Touch one to pick it; the bar at
+                        the bottom copies its code.
+                    </p>
+
+                    <div class="toolbar">
+                        <div class="field">
+                            <span id="sets-label">Themes</span>
+                            <div
+                                id="sets"
+                                class="tabs"
+                                role="group"
+                                aria-labelledby="sets-label"
+                            ></div>
+                        </div>
+                        <label class="field">
+                            Drawing
+                            <select id="wave"></select>
+                        </label>
+                        <label class="field">
+                            Font
+                            <select id="font"></select>
+                        </label>
+                        <label class="check">
+                            <input id="volume" type="checkbox" />
+                            Volume
+                        </label>
+                        <button id="pick" class="button" type="button">
+                            Use your own sound
+                        </button>
+                        <input id="file" type="file" accept="audio/*" hidden />
                     </div>
-                    <label class="field">
-                        Drawing
-                        <select id="wave"></select>
-                    </label>
-                    <label class="field">
-                        Font
-                        <select id="font"></select>
-                    </label>
-                    <label class="check">
-                        <input id="volume" type="checkbox" />
-                        Volume
-                    </label>
-                    <button id="pick" class="button" type="button">
-                        Use your own sound
+                    <p id="source" class="note" aria-live="polite">
+                        Loading the sound…
+                    </p>
+                </section>
+
+                <div id="gallery" class="gallery"></div>
+
+                <div class="pickbar" id="pickbar" hidden>
+                    <p id="pickbar-name"></p>
+                    <button id="copy-js" class="button small" type="button">
+                        Copy JavaScript
                     </button>
-                    <input id="file" type="file" accept="audio/*" hidden />
+                    <button id="copy-tag" class="button small" type="button">
+                        Copy HTML tag
+                    </button>
+                    <a class="button small" href="#picked-title"
+                        >See the code</a
+                    >
                 </div>
-                <p id="source" class="note" aria-live="polite">
-                    Loading the sound…
-                </p>
-            </section>
 
-            <div id="gallery" class="gallery"></div>
-
-            <div class="pickbar">
-                <p id="pickbar-name"></p>
-                <button id="copy-js" class="button small" type="button">
-                    Copy JavaScript
-                </button>
-                <button id="copy-tag" class="button small" type="button">
-                    Copy HTML tag
-                </button>
-                <a class="button small" href="#picked-title">See the code</a>
-            </div>
-
-            <section class="picked" aria-labelledby="picked-title">
-                <h2 id="picked-title">The player you picked</h2>
-                <p id="picked-name" class="note"></p>
-                <div class="snippets">
-                    <div class="snippet">
-                        <h3>In JavaScript</h3>
-                        <div class="code">
-                            <pre><code id="picked-js"></code></pre>
-                            <button class="button small" type="button">
-                                Copy
-                            </button>
+                <section
+                    class="picked"
+                    id="picked"
+                    aria-labelledby="picked-title"
+                    hidden
+                >
+                    <h2 id="picked-title">The player you picked</h2>
+                    <p id="picked-name" class="note"></p>
+                    <div class="snippets">
+                        <div class="snippet">
+                            <h3>In JavaScript</h3>
+                            <div class="code">
+                                <pre><code id="picked-js"></code></pre>
+                                <button class="button small" type="button">
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                        <div class="snippet">
+                            <h3>As an HTML tag</h3>
+                            <div class="code">
+                                <pre><code id="picked-tag"></code></pre>
+                                <button class="button small" type="button">
+                                    Copy
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="snippet">
-                        <h3>As an HTML tag</h3>
-                        <div class="code">
-                            <pre><code id="picked-tag"></code></pre>
-                            <button class="button small" type="button">
-                                Copy
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
+                </section>
+            </main>
+        </div>
 
-        <footer class="foot">
-            <div class="wrap">
-                <p>
-                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
-                    by <a href="https://librivox.org/reader/1252">Avery</a> for
-                    LibriVox (public domain).
-                    <a href="./#credits">Full credits on the main page</a>.
-                </p>
-            </div>
-        </footer>
+        <footer class="foot" id="foot"></footer>
 
         <script type="module" src="./themes.ts"></script>
     </body>

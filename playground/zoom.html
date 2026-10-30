@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Zoom and long sounds · SonicFrame</title>
+        <meta
+            name="description"
+            content="Zoom, scroll and a minimap, and an hour of ready-made peaks."
+        />
+        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
+        <link rel="stylesheet" href="./site.css" />
+    </head>
+    <body>
+        <header class="top">
+            <div class="wrap">
+                <button
+                    id="menu"
+                    class="button small menu"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="side"
+                >
+                    Menu
+                </button>
+                <a class="brand" href="./">
+                    <img src="../assets/logo.svg" alt="" />
+                    SonicFrame
+                    <span class="version" data-version></span>
+                </a>
+                <nav class="nav" aria-label="Elsewhere">
+                    <a
+                        class="far"
+                        href="https://github.com/ediejohnny/sonicframe"
+                        >GitHub</a
+                    >
+                    <a
+                        class="far"
+                        href="https://www.npmjs.com/package/sonicframe"
+                        >npm</a
+                    >
+                    <button
+                        id="scheme"
+                        class="button small"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Dark
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <div class="wrap layout">
+            <nav class="side" id="side" aria-label="Pages"></nav>
+            <div class="side-backdrop" id="side-backdrop" hidden></div>
+
+            <main class="content">
+                <div class="page-head">
+                    <h1>Zoom and long sounds</h1>
+                    <p class="lede">
+                        Get close to a word, or across an hour. Every way of
+                        moving the view has its own switch; with zoom off,
+                        nothing changes.
+                    </p>
+                    <div class="source">
+                        <p id="source" aria-live="polite">Loading the sound…</p>
+                        <button id="pick" class="button small" type="button">
+                            Use your own sound
+                        </button>
+                        <input id="file" type="file" accept="audio/*" hidden />
+                    </div>
+                </div>
+
+                <aside class="toc" id="toc"></aside>
+
+                <div class="doc">
+                    <section class="section" id="try">
+                        <h2>Try it</h2>
+                        <div class="zoom">
+                            <div class="zoom-switches">
+                                <div class="zoom-group">
+                                    <span
+                                        class="zoom-group-name"
+                                        id="zoom-ways-name"
+                                        >Ways to move</span
+                                    >
+                                    <div
+                                        class="buttons"
+                                        role="group"
+                                        aria-labelledby="zoom-ways-name"
+                                        id="zoom-ways"
+                                    ></div>
+                                </div>
+                                <div class="zoom-group">
+                                    <span
+                                        class="zoom-group-name"
+                                        id="zoom-extras-name"
+                                        >Extras</span
+                                    >
+                                    <div
+                                        class="buttons"
+                                        role="group"
+                                        aria-labelledby="zoom-extras-name"
+                                        id="zoom-extras"
+                                    ></div>
+                                </div>
+                            </div>
+                            <div class="zoom-stage" id="zoom-player"></div>
+                            <p class="zoom-view" id="zoom-view"></p>
+                            <p
+                                class="note"
+                                id="zoom-status"
+                                aria-hidden="true"
+                            ></p>
+                        </div>
+                    </section>
+
+                    <section class="section" id="gestures">
+                        <h2>Gestures and keys</h2>
+                        <ul class="keys">
+                            <li>
+                                <kbd>Ctrl</kbd> + wheel zooms around the pointer
+                            </li>
+                            <li>
+                                <kbd>Shift</kbd> + wheel, or a sideways swipe,
+                                scrolls
+                            </li>
+                            <li>
+                                <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd> on the
+                                focused wave
+                            </li>
+                            <li>Two fingers pinch and pan on a touch screen</li>
+                            <li>
+                                Drag the box in the strip below to move the view
+                            </li>
+                            <li>
+                                <kbd>Shift</kbd> + drag past the edge draws a
+                                region and the view follows
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="section" id="code">
+                        <h2>In code</h2>
+                        <div class="code">
+                            <pre><code>createPlayer({
+    container,
+    src: '/voice.mp3',
+    zoom: { wheel: true, keys: true, pinch: true, buttons: true },
+    minimap: true,
+    a11y: { zoom: { announce: true }, minimap: { keys: true } },
+});</code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="section" id="long">
+                        <h2>A long sound</h2>
+                        <p class="lede">
+                            An hour of peaks, written on this page as an
+                            audiowaveform .dat file and read back, with no audio
+                            at all. The length comes from the file, so it shows
+                            at once.
+                        </p>
+                        <div class="words">
+                            <button id="long-make" class="button" type="button">
+                                Make an hour
+                            </button>
+                            <div id="long-wave" class="long-wave"></div>
+                            <p class="note" id="long-status"></p>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <footer class="foot" id="foot"></footer>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

@@ -248,11 +248,11 @@ describe('the <sonic-player> tag', () => {
         // With autohide, no room while the whole sound is in view; without it, the strip is there.
         expect(strips[0]?.style.getPropertyValue('display')).toBe('none');
         expect(strips[1]?.style.getPropertyValue('display')).toBe('block');
-        // Above: the strip at the top (1.5rem, 24 px), the wave under it.
+        // Above: the strip at the top (1.5 rem, 24 px, and 0.375 rem, 6 px, of space), the wave under it.
         expect(strips[1]?.style.getPropertyValue('top')).toBe('0px');
         expect(
             always.querySelector('canvas')?.style.getPropertyValue('top'),
-        ).toBe('24px');
+        ).toBe('30px');
     });
 
     it('says a zoom with a11y-zoom="announce"', () => {

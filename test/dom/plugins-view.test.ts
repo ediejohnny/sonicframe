@@ -78,6 +78,7 @@ describe('regions in a view', () => {
                     { start: 10, end: 20 },
                 ],
                 color: 'red',
+                snap: true,
             }),
         ]);
         frame.setView(0.5, 0.75);
@@ -87,6 +88,34 @@ describe('regions in a view', () => {
         await nextFrame();
 
         expect(painted(canvas, 'red', from)).toEqual([{ x: 40, width: 40 }]);
+    });
+
+    it('draws at fractions of a pixel, as it always did, unless told to snap to whole pixels', async () => {
+        // 55.3 s to 60 s of 100 s across 200 px: from 110.6 px, 9.4 px wide; snapped, 111 and 9.
+        const band = async (snap?: boolean) => {
+            const { canvas, frame } = shown([
+                regions({
+                    items: [{ start: 55.3, end: 60 }],
+                    color: 'red',
+                    snap,
+                }),
+            ]);
+            await nextFrame();
+            const from = recordingOf(canvas).rects.length;
+            frame.invalidate();
+            await nextFrame();
+            const [rect] = painted(canvas, 'red', from);
+            frame.destroy();
+            mounted?.unmount();
+            mounted = null;
+
+            return rect;
+        };
+
+        const fractional = await band(undefined);
+        expect(fractional.x).toBeCloseTo(110.6, 9);
+        expect(fractional.width).toBeCloseTo(9.4, 9);
+        expect(await band(true)).toEqual({ x: 111, width: 9 });
     });
 
     it('grabs a region under the pointer through the view', () => {
@@ -186,6 +215,7 @@ describe('the silences in a view', () => {
                 silences: [{ start: 55, end: 60 }],
                 dim: true,
                 dimColor: 'red',
+                snap: true,
             }),
         ]);
         frame.setView(0.5, 0.75);
@@ -195,6 +225,34 @@ describe('the silences in a view', () => {
         await nextFrame();
 
         expect(painted(canvas, 'red', from)).toEqual([{ x: 40, width: 40 }]);
+    });
+
+    it('shades at fractions of a pixel, as it always did, unless told to snap to whole pixels', async () => {
+        const shade = async (snap?: boolean) => {
+            const { canvas, frame } = shown([
+                skipSilences({
+                    silences: [{ start: 55.3, end: 60 }],
+                    dim: true,
+                    dimColor: 'red',
+                    snap,
+                }),
+            ]);
+            await nextFrame();
+            const from = recordingOf(canvas).rects.length;
+            frame.invalidate();
+            await nextFrame();
+            const [rect] = painted(canvas, 'red', from);
+            frame.destroy();
+            mounted?.unmount();
+            mounted = null;
+
+            return rect;
+        };
+
+        const fractional = await shade(undefined);
+        expect(fractional.x).toBeCloseTo(110.6, 9);
+        expect(fractional.width).toBeCloseTo(9.4, 9);
+        expect(await shade(true)).toEqual({ x: 111, width: 9 });
     });
 });
 

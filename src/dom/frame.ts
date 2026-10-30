@@ -491,13 +491,15 @@ export class SonicFrame implements PluginHost {
 
             for (const [property, value] of [
                 ['position', 'absolute'],
-                ['inset', '0'],
+                ['left', '0'],
+                ['right', '0'],
                 ['pointer-events', 'none'],
             ]) {
                 element.style.setProperty(property, value);
             }
 
             this.container.append(element);
+            this.lanes.fitToBars(element);
             this.overlayEl = element;
         }
 
@@ -1154,6 +1156,7 @@ export class SonicFrame implements PluginHost {
                 this.safely(claimed.plugin, () =>
                     claimed.plugin.pointerMove?.(point),
                 );
+                this.hoverPress(event, point, claimed.plugin);
             }
         } else {
             if (!this.controller.pointerDown(point.ratio)) {
@@ -1318,6 +1321,18 @@ export class SonicFrame implements PluginHost {
         if (press.active) {
             const plugin = press.plugin;
             this.safely(plugin, () => plugin.pointerMove?.(point));
+            this.hoverPress(press.last, point, plugin);
+        }
+    }
+
+    /** A mouse drag a plugin owns shows that plugin's cursor (a closed hand, say). */
+    private hoverPress(
+        event: PointerEvent,
+        point: WavePoint,
+        plugin: Plugin,
+    ): void {
+        if (event.pointerType === 'mouse') {
+            this.hover(point, plugin);
         }
     }
 
@@ -1345,6 +1360,11 @@ export class SonicFrame implements PluginHost {
         if (press.active) {
             this.safely(plugin, () => plugin.pointerUp?.(point));
 
+            // The drag is over: the cursor is again whatever lies under the mouse.
+            if (event.pointerType === 'mouse') {
+                this.hover(point);
+            }
+
             return;
         }
 
@@ -1370,14 +1390,21 @@ export class SonicFrame implements PluginHost {
         }
     }
 
-    /** Shows the cursor a plugin asks for while the mouse hovers (restoring the previous one). */
-    private hover(point: WavePoint | null): void {
+    /**
+     * Shows the cursor a plugin asks for while the mouse hovers (restoring the previous one). During
+     * a plugin's drag only that plugin is asked, so its cursor holds while it drags.
+     */
+    private hover(point: WavePoint | null, only: Plugin | null = null): void {
         let cursor: string | undefined;
 
         for (let i = this.plugins.length - 1; i >= 0; i--) {
             const plugin = this.plugins[i];
 
-            if (plugin.pointerHover === undefined || this.failed.has(plugin)) {
+            if (
+                plugin.pointerHover === undefined ||
+                this.failed.has(plugin) ||
+                (only !== null && plugin !== only)
+            ) {
                 continue;
             }
 
@@ -1531,9 +1558,14 @@ export class SonicFrame implements PluginHost {
         this.notifyResize();
     }
 
-    /** Re-places the lanes and insets the canvas for the container's current height. */
+    /** Re-places the lanes and insets the canvas and the overlay for the container's current height. */
     private relayoutLanes(): void {
         this.lanes.layout(this.container.getBoundingClientRect().height);
+
+        if (this.overlayEl !== null) {
+            this.lanes.fitToBars(this.overlayEl);
+        }
+
         this.invalidate();
     }
 

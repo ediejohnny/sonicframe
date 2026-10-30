@@ -35,6 +35,8 @@ export type MinimapOptions = {
     side?: 'above' | 'below';
     /** The strip's height, in CSS pixels: 24. */
     height?: number;
+    /** Space between the strip and the wave (or the lane next to it), in CSS pixels: 4. */
+    gap?: number;
     /** How the sound is drawn in the strip: thin bars by default. */
     wave?: WaveName | Partial<WaveStyle>;
     bar?: Partial<BarStyle>;
@@ -50,6 +52,11 @@ export type MinimapOptions = {
         /** The wheel over the strip zooms around the pointer: off. */
         wheel?: boolean;
     };
+    /**
+     * The mouse cursor (any CSS cursor): `'grab'` over the box, `'grabbing'` while dragging it,
+     * `'pointer'` beside it. Where a press does nothing (its control off), the plain arrow.
+     */
+    cursors?: { box?: string; moving?: string; beside?: string };
     /** Takes no room while the whole sound is in view: off. */
     autoHide?: boolean;
     a11y?: {
@@ -93,12 +100,28 @@ function isFull(view: View): boolean {
     return view.start <= 0 && view.end >= 1;
 }
 
+/**
+ * The strip's height and the space on its wave side, in CSS pixels: 24 and 4 unless given; the
+ * height is at least 4 and the space at least 0.
+ */
+export function minimapSize(options: Pick<MinimapOptions, 'height' | 'gap'>): {
+    height: number;
+    gap: number;
+} {
+    return {
+        height: Math.max(
+            4,
+            Number.isFinite(options.height) ? (options.height ?? 24) : 24,
+        ),
+        gap: Math.max(0, Number.isFinite(options.gap) ? (options.gap ?? 4) : 4),
+    };
+}
+
 export function minimap(options: MinimapOptions = {}): Plugin {
     const side = options.side === 'above' ? 'above' : 'below';
-    const height = Math.max(
-        4,
-        Number.isFinite(options.height) ? (options.height ?? 24) : 24,
-    );
+    const { height, gap } = minimapSize(options);
+    /** The lane's room: the strip and the space on its wave side. */
+    const laneSize = height + gap;
     const wave = resolveWave({ ...DEFAULT_WAVE, style: 'bars' }, options.wave);
     const bar: BarStyle = { ...MINIMAP_BAR, ...options.bar };
     const colors = { ...COLORS, ...options.colors };
@@ -106,6 +129,11 @@ export function minimap(options: MinimapOptions = {}): Plugin {
     const drag = options.controls?.drag !== false;
     const click = options.controls?.click !== false;
     const wheel = options.controls?.wheel === true;
+    const cursors = {
+        box: drag ? (options.cursors?.box ?? 'grab') : 'default',
+        moving: options.cursors?.moving ?? 'grabbing',
+        beside: click ? (options.cursors?.beside ?? 'pointer') : 'default',
+    };
     const autoHide = options.autoHide === true;
     const keys = options.a11y?.keys === true;
     const words: MinimapWords = { ...MINIMAP_WORDS, ...options.a11y?.words };
@@ -162,6 +190,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
 
         if (drag) {
             grab = at - frame.view.start;
+            showCursor(cursors.moving);
 
             try {
                 lane?.element.setPointerCapture(event.pointerId);
@@ -170,17 +199,42 @@ export function minimap(options: MinimapOptions = {}): Plugin {
             }
         }
 
+        // Holding back the browser's default also holds back its focus, so a slider takes it here.
+        if (keys) {
+            lane?.element.focus({ preventScroll: true });
+        }
+
         event.preventDefault();
+    }
+
+    function showCursor(cursor: string): void {
+        lane?.element.style.setProperty('cursor', cursor);
+    }
+
+    /** The cursor for a mouse at rest over the strip: over the box or beside it. */
+    function hover(event: PointerEvent): void {
+        const frame = host;
+
+        if (frame === null || event.pointerType !== 'mouse') {
+            return;
+        }
+
+        const at = ratioOf(event);
+        const { start, end } = frame.view;
+        showCursor(at >= start && at <= end ? cursors.box : cursors.beside);
     }
 
     function pointerMove(event: PointerEvent): void {
         if (grab !== null) {
             moveTo(ratioOf(event) - grab);
+        } else {
+            hover(event);
         }
     }
 
-    function pointerEnd(): void {
+    function pointerEnd(event: PointerEvent): void {
         grab = null;
+        hover(event);
     }
 
     function onWheel(event: WheelEvent): void {
@@ -262,7 +316,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
         const frame = host;
 
         if (frame !== null && autoHide) {
-            lane?.setSize(isFull(frame.view) ? 0 : height);
+            lane?.setSize(isFull(frame.view) ? 0 : laneSize);
         }
 
         describe();
@@ -358,7 +412,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
             host = frame;
             lane = frame.addLane(
                 side,
-                autoHide && isFull(frame.view) ? 0 : height,
+                autoHide && isFull(frame.view) ? 0 : laneSize,
             );
             const element = lane.element;
             element.classList.add('sonicframe-minimap');
@@ -367,7 +421,8 @@ export function minimap(options: MinimapOptions = {}): Plugin {
             for (const [property, value] of [
                 ['display', 'block'],
                 ['width', '100%'],
-                ['height', '100%'],
+                ['height', `${height}px`],
+                [side === 'below' ? 'margin-top' : 'margin-bottom', `${gap}px`],
             ]) {
                 canvas.style.setProperty(property, value);
             }
@@ -380,6 +435,11 @@ export function minimap(options: MinimapOptions = {}): Plugin {
                 'pointer-events',
                 pointer ? 'auto' : 'none',
             );
+
+            // The wave's cursor says a press seeks; here it never does.
+            if (pointer) {
+                showCursor('default');
+            }
 
             if (drag || click) {
                 element.style.setProperty('touch-action', 'none');

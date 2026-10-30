@@ -273,20 +273,22 @@ new SonicFrame({
 });
 ```
 
-| Option           | Default          | What it does                                                                                   |
-| ---------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
-| `side`           | `'below'`        | `'above'` or `'below'` the wave.                                                               |
-| `height`         | `24`             | The strip's height, in CSS pixels.                                                             |
-| `wave`, `bar`    | thin bars        | How the sound is drawn in the strip.                                                           |
-| `colors`         | the theme's      | `{ wave, progress, view, edge }`; `--sonicframe-minimap-view` and `--sonicframe-minimap-edge`. |
-| `progress`       | `true`           | Paints the played part.                                                                        |
-| `controls.drag`  | `true`           | Dragging the box scrolls the view.                                                             |
-| `controls.click` | `true`           | A click beside the box brings the view there.                                                  |
-| `controls.wheel` | `false`          | The wheel over the strip zooms around the pointer.                                             |
-| `autoHide`       | `false`          | Takes no room while the whole sound is in view.                                                |
-| `a11y.keys`      | `false`          | Makes the strip a keyboard slider of the part in view; off, it is hidden from screen readers.  |
-| `a11y.label`     | `'Visible part'` | Its accessible name.                                                                           |
-| `a11y.words`     | English          | `{ value(from, to, total) }`, its value in words ("0:25 to 0:50 of 1:40").                     |
+| Option           | Default          | What it does                                                                                          |
+| ---------------- | ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `side`           | `'below'`        | `'above'` or `'below'` the wave.                                                                      |
+| `height`         | `24`             | The strip's height, in CSS pixels.                                                                    |
+| `gap`            | `4`              | Space between the strip and the wave (or the lane next to it), in CSS pixels.                         |
+| `cursors`        | hands            | `{ box, moving, beside }`: `'grab'`, `'grabbing'`, `'pointer'`; the arrow where a press does nothing. |
+| `wave`, `bar`    | thin bars        | How the sound is drawn in the strip.                                                                  |
+| `colors`         | the theme's      | `{ wave, progress, view, edge }`; `--sonicframe-minimap-view` and `--sonicframe-minimap-edge`.        |
+| `progress`       | `true`           | Paints the played part.                                                                               |
+| `controls.drag`  | `true`           | Dragging the box scrolls the view.                                                                    |
+| `controls.click` | `true`           | A click beside the box brings the view there.                                                         |
+| `controls.wheel` | `false`          | The wheel over the strip zooms around the pointer.                                                    |
+| `autoHide`       | `false`          | Takes no room while the whole sound is in view.                                                       |
+| `a11y.keys`      | `false`          | Makes the strip a keyboard slider of the part in view; off, it is hidden from screen readers.         |
+| `a11y.label`     | `'Visible part'` | Its accessible name.                                                                                  |
+| `a11y.words`     | English          | `{ value(from, to, total) }`, its value in words ("0:25 to 0:50 of 1:40").                            |
 
 As a slider, the arrows move a quarter of the view, Page Up and Page Down a whole view, Home and End go to the ends. A
 press on the strip never seeks.
@@ -412,25 +414,25 @@ and the time together, plus any of these parts: `speed` (steps through `1×`, `1
 avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
 the browser when it first comes near the screen (`peaks` skips that).
 
-| Option        | Default     | What it does                                                                       |
-| ------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `container`   | (required)  | The element the player is added to.                                                |
-| `src`         | none        | The sound's address; the player makes its own `<audio>`.                           |
-| `media`       | none        | Your own audio or video element instead.                                           |
-| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                            |
-| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.              |
-| `look`        | see below   | How the player is put together.                                                    |
-| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).             |
-| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                      |
-| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).               |
-| `volume`      | `false`     | Show the volume control.                                                           |
-| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once). |
-| `zoom`        | `false`     | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`. |
-| `minimap`     | `false`     | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall.     |
-| `decode`      | see below   | How a sound is decoded for its peaks.                                              |
-| `slot`        | none        | Your element for the `slot` part.                                                  |
-| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).         |
-| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                        |
+| Option        | Default     | What it does                                                                                                                                                                              |
+| ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `container`   | (required)  | The element the player is added to.                                                                                                                                                       |
+| `src`         | none        | The sound's address; the player makes its own `<audio>`.                                                                                                                                  |
+| `media`       | none        | Your own audio or video element instead.                                                                                                                                                  |
+| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                                                                                                                                   |
+| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.                                                                                                                     |
+| `look`        | see below   | How the player is put together.                                                                                                                                                           |
+| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).                                                                                                                    |
+| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                                                                                                                             |
+| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).                                                                                                                      |
+| `volume`      | `false`     | Show the volume control.                                                                                                                                                                  |
+| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once).                                                                                                        |
+| `zoom`        | `false`     | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`.                                                                                                        |
+| `minimap`     | `false`     | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall and `minimapGap` away; the player grows to fit it (with `autoHide`, it takes from the wave while it shows). |
+| `decode`      | see below   | How a sound is decoded for its peaks.                                                                                                                                                     |
+| `slot`        | none        | Your element for the `slot` part.                                                                                                                                                         |
+| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).                                                                                                                |
+| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                                                                                                                               |
 
 Accessibility options live in one group, `a11y`, arranged by place, and whatever adds behaviour is off until you turn
 it on:
@@ -484,10 +486,16 @@ through, and 50 MB).
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
-(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `corner`, `padding`, `gap` (rem), `border` (CSS pixels), `shadow` (`'none'`,
-`'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`, `'none'`), `font`, `fontSize`, `weight`, `uppercase`,
-`skip` (seconds), `speeds` and `volume` (`'always'` or `'hover'`). Unknown names fall back and numbers are kept in
-range.
+(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `minimapGap`, `waveMin`, `narrow`, `corner`, `padding`, `gap`
+(rem), `border` (CSS pixels), `shadow` (`'none'`, `'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`,
+`'none'`), `font`, `fontSize`, `weight`, `uppercase`, `skip` (seconds), `speeds` and `volume` (`'always'` or
+`'hover'`). Unknown names fall back and numbers are kept in range.
+
+A narrow player turns into a voice note. Under `narrow` (22 rem; `0` turns it off), a player with the wave in its
+line keeps only the play button and the wave there; the time goes under the wave on the left and the other controls
+on the right, wrapping under the time when they do not fit. The pieces are moved, not built again, so the wave keeps
+its state, and the player gets a `data-narrow` attribute for your CSS (the row is `.sonicframe-under`). With zoom
+buttons on a wider line, the wave keeps at least `waveMin` (8 rem) and the buttons wrap under it.
 
 Palettes: `light`, `dark`, `ocean`, `forest`, `sunset`, `berry`, `paper` and `contrast`, each checked for readable text
 and visible controls (WCAG contrast). A palette is set as `--sonicframe-*` custom properties on the player, so plain CSS
@@ -572,7 +580,10 @@ Each of these is a plugin; import it and `frame.use(it)`.
   loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add` (returns a copy, or `null` once `max`
   regions exist), `update`, `remove`, `clear`, `list`, `play`, `stop`, `select`, with `onChange` / `onSelect`.
   Regions are fitted to the sound once its length is known. Zoomed in, `scrollIntoView: true` brings a region chosen
-  by `R` into view.
+  by `R` into view. `snap: true` draws the bands' edges on whole device pixels: a little crisper, each edge moved by
+  less than half a pixel; off by default, the edges sit at fractions of a pixel, as they always did. `cursors`
+  (`{ body, moving, edge }`, any CSS cursor) sets the mouse cursor: an open hand over a region (`'grab'`), a closed
+  one while moving it (`'grabbing'`), and `'ew-resize'` over its edges and while resizing or drawing one.
 - **`timeline({ side, size, minSpacing })`** — a ruler with labels on round seconds and minutes, in a lane above or
   below the bars; zoomed in, it marks the part in view, down to tenths of a second.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
@@ -584,7 +595,8 @@ Each of these is a plugin; import it and `frame.use(it)`.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
   Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
 - **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback, landing
-  `lead` seconds (0.1 by default) before each one ends, so the next word is not clipped.
+  `lead` seconds (0.1 by default) before each one ends, so the next word is not clipped. `dim` shades them; `snap:
+  true` puts the shade's edges on whole device pixels, as for regions.
 
 ### Analysis and clips
 

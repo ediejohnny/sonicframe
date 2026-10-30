@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Drawings and themes · SonicFrame</title>
+        <meta
+            name="description"
+            content="Ten ways SonicFrame draws a sound, and whole players in one word."
+        />
+        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
+        <link rel="stylesheet" href="./site.css" />
+    </head>
+    <body>
+        <header class="top">
+            <div class="wrap">
+                <button
+                    id="menu"
+                    class="button small menu"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="side"
+                >
+                    Menu
+                </button>
+                <a class="brand" href="./">
+                    <img src="../assets/logo.svg" alt="" />
+                    SonicFrame
+                    <span class="version" data-version></span>
+                </a>
+                <nav class="nav" aria-label="Elsewhere">
+                    <a
+                        class="far"
+                        href="https://github.com/ediejohnny/sonicframe"
+                        >GitHub</a
+                    >
+                    <a
+                        class="far"
+                        href="https://www.npmjs.com/package/sonicframe"
+                        >npm</a
+                    >
+                    <button
+                        id="scheme"
+                        class="button small"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Dark
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <div class="wrap layout">
+            <nav class="side" id="side" aria-label="Pages"></nav>
+            <div class="side-backdrop" id="side-backdrop" hidden></div>
+
+            <main class="content">
+                <div class="page-head">
+                    <h1>Drawings and themes</h1>
+                    <p class="lede">
+                        How the sound is drawn, and whole players in one word.
+                        Every player on this page plays; press any of them.
+                    </p>
+                    <div class="source">
+                        <p id="source" aria-live="polite">Loading the sound…</p>
+                        <button id="pick" class="button small" type="button">
+                            Use your own sound
+                        </button>
+                        <input id="file" type="file" accept="audio/*" hidden />
+                    </div>
+                </div>
+
+                <aside class="toc" id="toc"></aside>
+
+                <div class="doc">
+                    <section class="section" id="drawings">
+                        <h2>Ten ways to draw the sound</h2>
+                        <p class="lede">
+                            Every drawing takes the played, hover and unplayed
+                            colors, and any of them can carry a knob at the
+                            playhead.
+                        </p>
+                        <div class="shelf" id="drawing-shelf"></div>
+                    </section>
+
+                    <section class="section" id="themes">
+                        <h2>Themes</h2>
+                        <p class="lede">
+                            A whole player in one word: the layout, the button,
+                            the drawing, the font and a palette. Any theme wears
+                            any of the eight palettes.
+                        </p>
+                        <div class="theme-list" id="theme-shelf"></div>
+                        <p class="more">
+                            <a class="button main" href="./themes.html"
+                                >See all 24 themes in 8 palettes</a
+                            >
+                        </p>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <footer class="foot" id="foot"></footer>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

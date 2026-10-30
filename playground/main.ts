@@ -1,8 +1,9 @@
 /**
- * The playground: SonicFrame's own page. Every player has its own `<audio>` on the same sound, so
- * only the one pressed plays (the play buttons are exclusive); the sound is decoded once and every
- * player is given its peaks and duration. Picking another sound builds every player again.
- * Run `npm run dev` and open /playground/.
+ * The docs pages' players: every page but the theme gallery runs this script and mounts only the
+ * parts it holds. Every player has its own `<audio>` on the same sound, so only the one pressed plays
+ * (the play buttons are exclusive); the sound is decoded once and every player is given its peaks
+ * and duration. Picking another sound builds every player again. Run `npm run dev` and open
+ * /playground/.
  */
 
 import {
@@ -23,6 +24,7 @@ import {
     type ButtonFill,
     type ButtonShape,
     type WaveName,
+    type ViewState,
     type WaveStyle,
 } from '../src/index';
 import {
@@ -36,6 +38,7 @@ import {
     byId,
     forget,
     pickSound,
+    setupContents,
     setupCopyButtons,
     setupHeader,
     type Sound,
@@ -151,6 +154,7 @@ function player(
     sound: Sound,
     options: Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
     failed?: (error: unknown) => void,
+    ready?: (made: ReturnType<typeof createPlayer>) => void,
 ): () => void {
     const made = createPlayer({
         container: host,
@@ -159,6 +163,7 @@ function player(
         duration: sound.duration,
         ...options,
     });
+    ready?.(made);
     const repaint = (): void => made.frame.refresh();
     const stopErrors = made.on('error', (error) => {
         console.error(error);
@@ -255,53 +260,84 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
     };
 }
 
-/** The switches of the zoom demo: a name on the page and what it turns on. */
-const ZOOM_SWITCHES: { name: string; key: string; on: boolean }[] = [
-    { name: 'Wheel (Ctrl)', key: 'wheel', on: true },
-    { name: 'Scroll', key: 'scroll', on: true },
-    { name: 'Two fingers', key: 'pinch', on: true },
-    { name: 'Keys', key: 'keys', on: true },
-    { name: 'Buttons', key: 'buttons', on: true },
-    { name: 'Minimap', key: 'minimap', on: true },
-    { name: 'Follow', key: 'follow', on: false },
-    { name: 'Centered', key: 'center', on: false },
-    { name: 'Edges', key: 'edgeScroll', on: true },
-    { name: 'Announce', key: 'announce', on: false },
+/**
+ * The switches of the zoom demo: a name on the page, what it turns on, and its row (the ways to
+ * move the view, or the extras).
+ */
+const ZOOM_SWITCHES: {
+    name: string;
+    key: string;
+    on: boolean;
+    row: 'zoom-ways' | 'zoom-extras';
+}[] = [
+    { name: 'Wheel (Ctrl)', key: 'wheel', on: true, row: 'zoom-ways' },
+    { name: 'Scroll', key: 'scroll', on: true, row: 'zoom-ways' },
+    { name: 'Two fingers', key: 'pinch', on: true, row: 'zoom-ways' },
+    { name: 'Keys', key: 'keys', on: true, row: 'zoom-ways' },
+    { name: 'Buttons', key: 'buttons', on: true, row: 'zoom-ways' },
+    { name: 'Minimap', key: 'minimap', on: true, row: 'zoom-extras' },
+    { name: 'Follow', key: 'follow', on: false, row: 'zoom-extras' },
+    { name: 'Centered', key: 'center', on: false, row: 'zoom-extras' },
+    { name: 'Edges', key: 'edgeScroll', on: true, row: 'zoom-extras' },
+    { name: 'Announce', key: 'announce', on: false, row: 'zoom-extras' },
 ];
+
+/** What is in view, in words: "Zoom 4×, 0:10 to 0:18", or the whole sound. */
+function viewWords(view: ViewState, duration: number): string {
+    if (view.level <= 1) {
+        return `Whole sound, ${formatTime(duration)}`;
+    }
+
+    const level = Math.round(view.level * 10) / 10;
+
+    return `Zoom ${level}×, ${formatTime(view.start * duration)} to ${formatTime(view.end * duration)}`;
+}
 
 /** Zoom: a player built again whenever a switch changes, each way of moving the view on or off. */
 function zoomDemo(host: HTMLElement, sound: Sound): () => void {
-    const switches = byId('zoom-switches');
     const status = byId('zoom-status');
+    const seen = byId('zoom-view');
     const on = new Map(ZOOM_SWITCHES.map((item) => [item.key, item.on]));
     let stop = (): void => undefined;
 
     const build = (): void => {
         stop();
         const is = (key: string): boolean => on.get(key) === true;
-        stop = player(host, sound, {
-            label: 'Zoom',
-            look: { waveHeight: 4 },
-            zoom: {
-                wheel: is('wheel'),
-                scroll: is('scroll'),
-                pinch: is('pinch'),
-                keys: is('keys'),
-                buttons: is('buttons'),
-                follow: is('follow'),
-                followType: is('center') ? 'center' : 'page',
-                edgeScroll: is('edgeScroll'),
+        const show = (view: ViewState): void => {
+            seen.textContent = viewWords(view, sound.duration);
+        };
+        stop = player(
+            host,
+            sound,
+            {
+                label: 'Zoom',
+                look: { waveHeight: 4.5 },
+                zoom: {
+                    wheel: is('wheel'),
+                    scroll: is('scroll'),
+                    pinch: is('pinch'),
+                    keys: is('keys'),
+                    buttons: is('buttons'),
+                    follow: is('follow'),
+                    followType: is('center') ? 'center' : 'page',
+                    edgeScroll: is('edgeScroll'),
+                },
+                minimap: is('minimap') ? { a11y: { keys: true } } : false,
+                a11y: { zoom: { announce: is('announce') } },
+                plugins: [
+                    timeline({ side: 'above' }),
+                    regions({
+                        items: [{ start: 5, end: 12, label: 'Verse' }],
+                        scrollIntoView: true,
+                    }),
+                ],
             },
-            minimap: is('minimap') ? { a11y: { keys: true } } : false,
-            a11y: { zoom: { announce: is('announce') } },
-            plugins: [
-                timeline(),
-                regions({
-                    items: [{ start: 5, end: 12, label: 'Verse' }],
-                    scrollIntoView: true,
-                }),
-            ],
-        });
+            undefined,
+            (made) => {
+                show(made.frame.view);
+                made.on('viewchange', show);
+            },
+        );
     };
 
     const buttons = ZOOM_SWITCHES.map((item) => {
@@ -317,7 +353,7 @@ function zoomDemo(host: HTMLElement, sound: Sound): () => void {
             status.textContent = `${item.name} ${next ? 'on' : 'off'}.`;
             build();
         });
-        switches.append(button);
+        byId(item.row).append(button);
 
         return button;
     });
@@ -328,6 +364,7 @@ function zoomDemo(host: HTMLElement, sound: Sound): () => void {
         stop();
         buttons.forEach((button) => button.remove());
         status.textContent = '';
+        seen.textContent = '';
     };
 }
 
@@ -342,7 +379,12 @@ const LONG_RATE = 100;
  * file by `writeWaveform`, read back by `readWaveform`, and drawn with zoom, a ruler and a minimap.
  */
 function setupLongSound(): void {
-    const button = byId<HTMLButtonElement>('long-make');
+    const button = document.getElementById('long-make');
+
+    if (button === null) {
+        return;
+    }
+
     const host = byId('long-wave');
     const status = byId('long-status');
     let frame: SonicFrame | null = null;
@@ -615,73 +657,90 @@ function pluginCards(): PluginCard[] {
     ];
 }
 
+/** Calls `use` with the element of that id, when this page has one. */
+function on(id: string, use: (element: HTMLElement) => void): void {
+    const element = document.getElementById(id);
+
+    if (element !== null) {
+        use(element);
+    }
+}
+
+/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
 function setupPage(): void {
-    mount(byId('hero-player'), (host, sound) =>
-        player(host, sound, {
-            label: sound.name,
-            look: {
-                waveHeight: 5,
-                button: { shape: 'circle', fill: 'solid', size: 52 },
-                padding: 0,
-                border: 0,
-                gap: 1,
-                surface: 'none',
-                fontSize: 0.9375,
-            },
-            plugins: [timeline()],
-        }),
-    );
-
-    const tag = byId('tag-player');
-    mount(tag, (host, sound) => {
-        host.setAttribute('src', sound.url);
-
-        return () => host.removeAttribute('src');
-    });
-    tag.addEventListener('sonicframe:error', (event) =>
-        console.error((event as CustomEvent<unknown[]>).detail[0]),
-    );
-
-    const drawings = byId('drawing-shelf');
-
-    for (const drawing of DRAWINGS) {
-        const host = figure(drawings, `wave: '${drawing.name}'`, drawing.text);
-        mount(host, (box, sound) =>
-            player(box, sound, {
-                label: `Drawn as ${drawing.name}`,
-                wave: { style: drawing.name, ...drawing.wave },
-                bar: drawing.bar,
+    on('hero-player', (hero) =>
+        mount(hero, (host, sound) =>
+            player(host, sound, {
+                label: sound.name,
+                look: {
+                    waveHeight: 5,
+                    button: { shape: 'circle', fill: 'solid', size: 52 },
+                    padding: 0,
+                    border: 0,
+                    gap: 1,
+                    surface: 'none',
+                    fontSize: 0.9375,
+                },
+                plugins: [timeline()],
             }),
+        ),
+    );
+
+    on('tag-player', (tag) => {
+        mount(tag, (host, sound) => {
+            host.setAttribute('src', sound.url);
+
+            return () => host.removeAttribute('src');
+        });
+        tag.addEventListener('sonicframe:error', (event) =>
+            console.error((event as CustomEvent<unknown[]>).detail[0]),
         );
-    }
+    });
 
-    const themes = byId('theme-shelf');
+    on('drawing-shelf', (drawings) => {
+        for (const drawing of DRAWINGS) {
+            const host = figure(
+                drawings,
+                `wave: '${drawing.name}'`,
+                drawing.text,
+            );
+            mount(host, (box, sound) =>
+                player(box, sound, {
+                    label: `Drawn as ${drawing.name}`,
+                    wave: { style: drawing.name, ...drawing.wave },
+                    bar: drawing.bar,
+                }),
+            );
+        }
+    });
 
-    for (const [name, text] of THEME_PREVIEW) {
-        const host = figure(themes, `theme: '${name}'`, text);
-        mount(host, (box, sound) =>
-            player(box, sound, { label: `The ${name} theme`, theme: name }),
-        );
-    }
+    on('theme-shelf', (themes) => {
+        for (const [name, text] of THEME_PREVIEW) {
+            const host = figure(themes, `theme: '${name}'`, text);
+            mount(host, (box, sound) =>
+                player(box, sound, { label: `The ${name} theme`, theme: name }),
+            );
+        }
+    });
 
-    mount(byId('words-player'), wordsDemo);
-    mount(byId('zoom-player'), zoomDemo);
+    on('words-player', (host) => mount(host, wordsDemo));
+    on('zoom-player', (host) => mount(host, zoomDemo));
 
-    const cards = byId('plugin-cards');
-
-    for (const card of pluginCards()) {
-        const box = document.createElement('article');
-        const title = document.createElement('h3');
-        const text = document.createElement('p');
-        const demo = document.createElement('div');
-        box.className = 'plugin';
-        demo.className = 'demo';
-        title.textContent = card.title;
-        text.textContent = card.text;
-        box.append(title, text, demo);
-        cards.append(box);
-        mount(demo, card.build);
-    }
+    on('plugin-cards', (cards) => {
+        for (const card of pluginCards()) {
+            const box = document.createElement('section');
+            const title = document.createElement('h2');
+            const text = document.createElement('p');
+            const demo = document.createElement('div');
+            box.className = 'plugin';
+            demo.className = 'demo';
+            title.textContent = card.title;
+            text.textContent = card.text;
+            box.append(title, text, demo);
+            cards.append(box);
+            mount(demo, card.build);
+        }
+    });
 }
 
 /** The load test: sixty bare waves on one `<audio>`, with one play button and a frame-rate readout. */
@@ -753,9 +812,9 @@ function crowd(sound: Sound): () => void {
 let stopCrowd: (() => void) | null = null;
 
 function setupCrowd(): void {
-    const toggle = byId<HTMLButtonElement>('crowd-toggle');
+    const toggle = document.getElementById('crowd-toggle');
 
-    toggle.addEventListener('click', () => {
+    toggle?.addEventListener('click', () => {
         if (stopCrowd !== null) {
             stopCrowd();
             stopCrowd = null;
@@ -801,6 +860,7 @@ defineSonicPlayer();
 setupHeader(() => painted.forEach((repaint) => repaint()));
 setupCopyButtons();
 setupPage();
+setupContents();
 setupCrowd();
 setupLongSound();
 pickSound(

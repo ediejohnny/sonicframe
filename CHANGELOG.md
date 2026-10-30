@@ -42,12 +42,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   fall back to the region and progress colors). Dragging the box and clicking beside it move the view, the wheel can
   zoom (`controls.drag`, `controls.click`, `controls.wheel`); a press on it never seeks. `autoHide` takes no room at
   the whole sound. Hidden from screen readers unless `a11y.keys` makes it a keyboard slider (arrows, Page Up/Down,
-  Home, End) with its own `a11y.label` and `a11y.words`.
+  Home, End) with its own `a11y.label` and `a11y.words`; as a slider, a press on it gives it the focus. `gap` keeps
+  it apart from the wave (4 px), and `cursors` shows an open hand over the box, a closed one dragging it, a hand
+  beside it, and the arrow where a press does nothing.
 
 - The player takes `zoom` (the wave's zoom options plus `buttons`: zoom in, zoom out and back to the whole sound,
   three new look parts `zoomIn`, `zoomOut` and `zoomReset`, placed by the look or at the end of the line, marked
-  `aria-disabled` at their limits so focus is never lost), `minimap` (its height from the look's new
-  `minimapHeight`, in rem), `a11y.zoom.announce`, `a11y.minimap.keys`, and the `viewchange` event. Their words come in
+  `aria-disabled` at their limits so focus is never lost), `minimap` (its height and space from the look's new
+  `minimapHeight` and `minimapGap`, in rem; the player grows to fit it), `a11y.zoom.announce`, `a11y.minimap.keys`, and the `viewchange` event. Their words come in
   English and Portuguese.
 - The player's `decode`: `peaks` (1000), `peaksPerSecond` (100, with zoom on, so zooming in shows detail), and
   `maxSeconds` and `maxBytes`, which can only lower the decoder's ceilings.
@@ -55,6 +57,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   (`above`, `autohide`, `wheel`), `a11y-zoom="announce"`, `a11y-minimap="keys"`, and the peaks file's
   `peaks-channel`, `peaks-max` and `peaks-normalize`. The tag dispatches `sonicframe:viewchange`.
 - `loadWaveform` and `readWaveform` are on `sonicframe/player` too.
+- `snap` on `regions` and `skipSilences` (off by default): their edges on whole device pixels, a little crisper and
+  moved by less than half a pixel; without it they sit at fractions of a pixel, as before.
+- `cursors` on `regions`: the open hand over a region now turns into a closed one while it moves (`'grabbing'`) and
+  back after; each cursor can be changed. A plugin's mouse drag keeps that plugin's cursor while it lasts.
+- `narrow` in the player's look (22 rem; `0` turns it off): a narrower player with the wave in its line turns into a
+  voice note, with the time under the wave on the left and the other controls on the right. It is on by default and
+  only changes players narrower than that. The player gets `data-narrow` while it lasts.
+- `waveMin` in the look (8 rem): with zoom buttons on the line, the wave keeps at least this width and the buttons
+  wrap under it.
 
 ### Fixed
 
@@ -62,6 +73,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   the samples given back (it was the file's), so times computed from it stay right.
 - `exportClip` with `start`/`end` draws only that range across the clip, so the played part runs over the bars it
   plays (it used to draw the whole sound under a progress bar of the range).
+- The plugins' shared overlay (`host.overlay()`) sits over the bars, as documented, and no longer over the lanes, so
+  a region's label no longer lands on a timeline placed above the wave.
+- On a 320 px screen the zoom buttons no longer crush the wave to a sliver beside them.
 
 ### Changed
 

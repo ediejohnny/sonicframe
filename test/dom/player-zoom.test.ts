@@ -95,6 +95,40 @@ describe('zoom on the player', () => {
         ]);
     });
 
+    it('keeps the wave at least 8rem wide beside the buttons, the line wrapping below it on a phone', () => {
+        const shapes = (): { wrap: string; wave: string } => {
+            const line = (host as HTMLElement).querySelector<HTMLElement>(
+                '.sonicframe-player > div',
+            );
+            const wave = player?.frame.container.parentElement;
+
+            return {
+                wrap: line?.style.getPropertyValue('flex-wrap') ?? '',
+                wave: wave?.style.getPropertyValue('min-width') ?? '',
+            };
+        };
+
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 60 }),
+            peaks: PEAKS,
+            zoom: { buttons: true },
+        });
+
+        expect(shapes()).toEqual({ wrap: 'wrap', wave: '8rem' });
+
+        player.destroy();
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 60 }),
+            peaks: PEAKS,
+            zoom: { keys: true },
+        });
+
+        // Without the buttons, the line is as it always was: the wave gives up the room.
+        expect(shapes()).toEqual({ wrap: 'nowrap', wave: '0' });
+    });
+
     it('zooms in, out and back with its buttons, marked aria-disabled at the limits', () => {
         player = createPlayer({
             container: container(),
@@ -175,7 +209,7 @@ describe('the minimap on the player', () => {
             peaks: PEAKS,
             zoom: true,
             minimap: true,
-            look: { minimapHeight: 2 },
+            look: { minimapHeight: 2, minimapGap: 0.5 },
         });
         // Room for the wave and the strip, so the lanes are laid out.
         boxOf(player.frame.container, {
@@ -194,7 +228,12 @@ describe('the minimap on the player', () => {
 
         expect(strip).not.toBeNull();
         expect(strip?.getAttribute('aria-hidden')).toBe('true');
-        expect(strip?.style.getPropertyValue('height')).toBe('32px');
+        // 2 rem of strip and 0.5 rem of space.
+        expect(strip?.style.getPropertyValue('height')).toBe('40px');
+        // The strip adds to the wave's 2.5 rem instead of taking from it.
+        expect(player.frame.container.style.getPropertyValue('height')).toBe(
+            'calc(2.5rem + 40px)',
+        );
     });
 
     it('is a slider named in the player language with a11y.minimap.keys', () => {
@@ -229,6 +268,9 @@ describe('the minimap on the player', () => {
         expect(
             (host as HTMLElement).querySelector('.sonicframe-minimap'),
         ).toBeNull();
+        expect(player.frame.container.style.getPropertyValue('height')).toBe(
+            '2.5rem',
+        );
     });
 });
 
