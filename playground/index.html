@@ -204,23 +204,56 @@ createPlayer({
                     the view has its own switch; turn them on and off here. With
                     zoom off, nothing changes.
                 </p>
-                <div class="words">
-                    <div
-                        class="buttons"
-                        role="group"
-                        aria-label="Ways to zoom"
-                        id="zoom-switches"
-                    ></div>
-                    <div id="zoom-player"></div>
+                <div class="zoom">
+                    <div class="zoom-switches">
+                        <div class="zoom-group">
+                            <span class="zoom-group-name" id="zoom-ways-name"
+                                >Ways to move</span
+                            >
+                            <div
+                                class="buttons"
+                                role="group"
+                                aria-labelledby="zoom-ways-name"
+                                id="zoom-ways"
+                            ></div>
+                        </div>
+                        <div class="zoom-group">
+                            <span class="zoom-group-name" id="zoom-extras-name"
+                                >Extras</span
+                            >
+                            <div
+                                class="buttons"
+                                role="group"
+                                aria-labelledby="zoom-extras-name"
+                                id="zoom-extras"
+                            ></div>
+                        </div>
+                    </div>
+                    <div class="zoom-stage" id="zoom-player"></div>
+                    <p class="zoom-view" id="zoom-view"></p>
                     <p class="note" id="zoom-status" aria-hidden="true"></p>
-                    <p class="note">
-                        Ctrl and the wheel zoom around the pointer, Shift and
-                        the wheel scroll. With the wave focused, + and - zoom
-                        and 0 shows the whole sound. Shift-drag a region past
-                        the edge to see the view follow it.
-                    </p>
+                    <ul class="zoom-help">
+                        <li>
+                            <kbd>Ctrl</kbd> + wheel zooms around the pointer
+                        </li>
+                        <li>
+                            <kbd>Shift</kbd> + wheel, or a sideways swipe,
+                            scrolls
+                        </li>
+                        <li>
+                            <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd> on the
+                            focused wave
+                        </li>
+                        <li>
+                            Drag the box in the strip below to move the view
+                        </li>
+                        <li>
+                            <kbd>Shift</kbd> + drag past the edge draws a region
+                            and the view follows
+                        </li>
+                    </ul>
                 </div>
-                <div class="code words-code">
+                <div class="code zoom-code">
                     <pre><code>createPlayer({
     container,
     src: '/voice.mp3',

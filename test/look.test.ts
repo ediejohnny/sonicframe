@@ -80,6 +80,18 @@ describe('resolveLook', () => {
         ).toBe(0.5);
     });
 
+    it('keeps the space between the wave and the minimap in range', () => {
+        expect(DEFAULT_LOOK.minimapGap).toBe(0.375);
+        expect(resolveLook(DEFAULT_LOOK, { minimapGap: 0 }).minimapGap).toBe(0);
+        expect(resolveLook(DEFAULT_LOOK, { minimapGap: 9 }).minimapGap).toBe(2);
+        expect(resolveLook(DEFAULT_LOOK, { minimapGap: -1 }).minimapGap).toBe(
+            0,
+        );
+        expect(
+            resolveLook(DEFAULT_LOOK, { minimapGap: Number.NaN }).minimapGap,
+        ).toBe(0.375);
+    });
+
     it('caps the number of parts', () => {
         const many = Array.from({ length: 40 }, () => 'spacer' as Part);
 

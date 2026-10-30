@@ -67,6 +67,57 @@ describe('regions on the page', () => {
         expect(media.currentTime).toBe(20);
     });
 
+    it('shows an open hand over a region, a closed one while moving it, and the open one after', () => {
+        const media = fakeMedia({ duration: 40 });
+        mounted = mount({
+            media,
+            plugins: [regions({ items: [{ start: 8, end: 16 }] })],
+        });
+        const cursor = (): string =>
+            mounted?.container.style.getPropertyValue('cursor') ?? '';
+
+        // 8 s to 16 s of 40 s across 200 px: 40 px to 80 px, its edges 12 px wide.
+        pointer(mounted.container, 'pointermove', 60);
+        expect(cursor()).toBe('grab');
+
+        pointer(mounted.container, 'pointerdown', 60);
+        expect(cursor()).toBe('grabbing');
+
+        pointer(mounted.container, 'pointermove', 70);
+        expect(cursor()).toBe('grabbing');
+
+        pointer(mounted.container, 'pointerup', 70);
+        expect(cursor()).toBe('grab');
+        expect(media.currentTime).toBe(0);
+    });
+
+    it('takes your own cursors', () => {
+        mounted = mount({
+            media: fakeMedia({ duration: 40 }),
+            plugins: [
+                regions({
+                    items: [{ start: 8, end: 16 }],
+                    cursors: {
+                        body: 'move',
+                        moving: 'copy',
+                        edge: 'col-resize',
+                    },
+                }),
+            ],
+        });
+        const cursor = (): string =>
+            mounted?.container.style.getPropertyValue('cursor') ?? '';
+
+        pointer(mounted.container, 'pointermove', 40);
+        expect(cursor()).toBe('col-resize');
+
+        pointer(mounted.container, 'pointermove', 60);
+        expect(cursor()).toBe('move');
+
+        pointer(mounted.container, 'pointerdown', 60);
+        expect(cursor()).toBe('copy');
+    });
+
     it('plays the selected region on Enter', () => {
         const plugin: RegionsPlugin = regions({
             items: [{ start: 8, end: 12 }],

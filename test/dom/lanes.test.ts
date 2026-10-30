@@ -29,6 +29,30 @@ describe('lanes around the bars', () => {
         expect(lane.element.style.getPropertyValue('display')).toBe('block');
     });
 
+    it('keeps the overlay over the bars, clear of the lanes, made before or after them', () => {
+        mounted = mount(undefined, { left: 0, top: 0, width: 200, height: 64 });
+        const early = mounted.frame.overlay();
+        const above = mounted.frame.addLane('above', 14);
+        mounted.frame.addLane('below', 10);
+
+        expect(early.style.getPropertyValue('top')).toBe('14px');
+        expect(early.style.getPropertyValue('bottom')).toBe('10px');
+
+        above.remove();
+
+        expect(early.style.getPropertyValue('top')).toBe('0px');
+        expect(early.style.getPropertyValue('bottom')).toBe('10px');
+
+        mounted.frame.destroy();
+        mounted.unmount();
+        mounted = mount(undefined, { left: 0, top: 0, width: 200, height: 64 });
+        mounted.frame.addLane('above', 14);
+        const late = mounted.frame.overlay();
+
+        expect(late.style.getPropertyValue('top')).toBe('14px');
+        expect(late.style.getPropertyValue('bottom')).toBe('0px');
+    });
+
     it('gives the room back to the wave when the lane is removed', () => {
         mounted = mount(undefined, { left: 0, top: 0, width: 200, height: 32 });
 

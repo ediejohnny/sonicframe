@@ -175,7 +175,7 @@ describe('the minimap on the player', () => {
             peaks: PEAKS,
             zoom: true,
             minimap: true,
-            look: { minimapHeight: 2 },
+            look: { minimapHeight: 2, minimapGap: 0.5 },
         });
         // Room for the wave and the strip, so the lanes are laid out.
         boxOf(player.frame.container, {
@@ -194,7 +194,12 @@ describe('the minimap on the player', () => {
 
         expect(strip).not.toBeNull();
         expect(strip?.getAttribute('aria-hidden')).toBe('true');
-        expect(strip?.style.getPropertyValue('height')).toBe('32px');
+        // 2 rem of strip and 0.5 rem of space.
+        expect(strip?.style.getPropertyValue('height')).toBe('40px');
+        // The strip adds to the wave's 2.5 rem instead of taking from it.
+        expect(player.frame.container.style.getPropertyValue('height')).toBe(
+            'calc(2.5rem + 40px)',
+        );
     });
 
     it('is a slider named in the player language with a11y.minimap.keys', () => {
@@ -229,6 +234,9 @@ describe('the minimap on the player', () => {
         expect(
             (host as HTMLElement).querySelector('.sonicframe-minimap'),
         ).toBeNull();
+        expect(player.frame.container.style.getPropertyValue('height')).toBe(
+            '2.5rem',
+        );
     });
 });
 

@@ -23,6 +23,7 @@ import {
     type ButtonFill,
     type ButtonShape,
     type WaveName,
+    type ViewState,
     type WaveStyle,
 } from '../src/index';
 import {
@@ -151,6 +152,7 @@ function player(
     sound: Sound,
     options: Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
     failed?: (error: unknown) => void,
+    ready?: (made: ReturnType<typeof createPlayer>) => void,
 ): () => void {
     const made = createPlayer({
         container: host,
@@ -159,6 +161,7 @@ function player(
         duration: sound.duration,
         ...options,
     });
+    ready?.(made);
     const repaint = (): void => made.frame.refresh();
     const stopErrors = made.on('error', (error) => {
         console.error(error);
@@ -255,53 +258,84 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
     };
 }
 
-/** The switches of the zoom demo: a name on the page and what it turns on. */
-const ZOOM_SWITCHES: { name: string; key: string; on: boolean }[] = [
-    { name: 'Wheel (Ctrl)', key: 'wheel', on: true },
-    { name: 'Scroll', key: 'scroll', on: true },
-    { name: 'Two fingers', key: 'pinch', on: true },
-    { name: 'Keys', key: 'keys', on: true },
-    { name: 'Buttons', key: 'buttons', on: true },
-    { name: 'Minimap', key: 'minimap', on: true },
-    { name: 'Follow', key: 'follow', on: false },
-    { name: 'Centered', key: 'center', on: false },
-    { name: 'Edges', key: 'edgeScroll', on: true },
-    { name: 'Announce', key: 'announce', on: false },
+/**
+ * The switches of the zoom demo: a name on the page, what it turns on, and its row (the ways to
+ * move the view, or the extras).
+ */
+const ZOOM_SWITCHES: {
+    name: string;
+    key: string;
+    on: boolean;
+    row: 'zoom-ways' | 'zoom-extras';
+}[] = [
+    { name: 'Wheel (Ctrl)', key: 'wheel', on: true, row: 'zoom-ways' },
+    { name: 'Scroll', key: 'scroll', on: true, row: 'zoom-ways' },
+    { name: 'Two fingers', key: 'pinch', on: true, row: 'zoom-ways' },
+    { name: 'Keys', key: 'keys', on: true, row: 'zoom-ways' },
+    { name: 'Buttons', key: 'buttons', on: true, row: 'zoom-ways' },
+    { name: 'Minimap', key: 'minimap', on: true, row: 'zoom-extras' },
+    { name: 'Follow', key: 'follow', on: false, row: 'zoom-extras' },
+    { name: 'Centered', key: 'center', on: false, row: 'zoom-extras' },
+    { name: 'Edges', key: 'edgeScroll', on: true, row: 'zoom-extras' },
+    { name: 'Announce', key: 'announce', on: false, row: 'zoom-extras' },
 ];
+
+/** What is in view, in words: "Zoom 4×, 0:10 to 0:18", or the whole sound. */
+function viewWords(view: ViewState, duration: number): string {
+    if (view.level <= 1) {
+        return `Whole sound, ${formatTime(duration)}`;
+    }
+
+    const level = Math.round(view.level * 10) / 10;
+
+    return `Zoom ${level}×, ${formatTime(view.start * duration)} to ${formatTime(view.end * duration)}`;
+}
 
 /** Zoom: a player built again whenever a switch changes, each way of moving the view on or off. */
 function zoomDemo(host: HTMLElement, sound: Sound): () => void {
-    const switches = byId('zoom-switches');
     const status = byId('zoom-status');
+    const seen = byId('zoom-view');
     const on = new Map(ZOOM_SWITCHES.map((item) => [item.key, item.on]));
     let stop = (): void => undefined;
 
     const build = (): void => {
         stop();
         const is = (key: string): boolean => on.get(key) === true;
-        stop = player(host, sound, {
-            label: 'Zoom',
-            look: { waveHeight: 4 },
-            zoom: {
-                wheel: is('wheel'),
-                scroll: is('scroll'),
-                pinch: is('pinch'),
-                keys: is('keys'),
-                buttons: is('buttons'),
-                follow: is('follow'),
-                followType: is('center') ? 'center' : 'page',
-                edgeScroll: is('edgeScroll'),
+        const show = (view: ViewState): void => {
+            seen.textContent = viewWords(view, sound.duration);
+        };
+        stop = player(
+            host,
+            sound,
+            {
+                label: 'Zoom',
+                look: { waveHeight: 4.5 },
+                zoom: {
+                    wheel: is('wheel'),
+                    scroll: is('scroll'),
+                    pinch: is('pinch'),
+                    keys: is('keys'),
+                    buttons: is('buttons'),
+                    follow: is('follow'),
+                    followType: is('center') ? 'center' : 'page',
+                    edgeScroll: is('edgeScroll'),
+                },
+                minimap: is('minimap') ? { a11y: { keys: true } } : false,
+                a11y: { zoom: { announce: is('announce') } },
+                plugins: [
+                    timeline({ side: 'above' }),
+                    regions({
+                        items: [{ start: 5, end: 12, label: 'Verse' }],
+                        scrollIntoView: true,
+                    }),
+                ],
             },
-            minimap: is('minimap') ? { a11y: { keys: true } } : false,
-            a11y: { zoom: { announce: is('announce') } },
-            plugins: [
-                timeline(),
-                regions({
-                    items: [{ start: 5, end: 12, label: 'Verse' }],
-                    scrollIntoView: true,
-                }),
-            ],
-        });
+            undefined,
+            (made) => {
+                show(made.frame.view);
+                made.on('viewchange', show);
+            },
+        );
     };
 
     const buttons = ZOOM_SWITCHES.map((item) => {
@@ -317,7 +351,7 @@ function zoomDemo(host: HTMLElement, sound: Sound): () => void {
             status.textContent = `${item.name} ${next ? 'on' : 'off'}.`;
             build();
         });
-        switches.append(button);
+        byId(item.row).append(button);
 
         return button;
     });
@@ -328,6 +362,7 @@ function zoomDemo(host: HTMLElement, sound: Sound): () => void {
         stop();
         buttons.forEach((button) => button.remove());
         status.textContent = '';
+        seen.textContent = '';
     };
 }
 

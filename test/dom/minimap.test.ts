@@ -82,6 +82,29 @@ describe('the minimap strip', () => {
         expect(strip.hasAttribute('role')).toBe(false);
     });
 
+    it('keeps a space between itself and the wave, 4 px unless told', () => {
+        const below = shown();
+
+        expect(below.strip.style.getPropertyValue('height')).toBe('28px');
+        expect(below.map.style.getPropertyValue('height')).toBe('24px');
+        expect(below.map.style.getPropertyValue('margin-top')).toBe('4px');
+
+        below.mounted.frame.destroy();
+        below.mounted.unmount();
+        const above = shown({ side: 'above', gap: 10, height: 20 });
+
+        expect(above.strip.style.getPropertyValue('height')).toBe('30px');
+        expect(above.map.style.getPropertyValue('height')).toBe('20px');
+        expect(above.map.style.getPropertyValue('margin-bottom')).toBe('10px');
+        expect(above.map.style.getPropertyValue('margin-top')).toBe('');
+
+        above.mounted.frame.destroy();
+        above.mounted.unmount();
+        const none = shown({ gap: -3 });
+
+        expect(none.strip.style.getPropertyValue('height')).toBe('24px');
+    });
+
     it('draws a box over the part in view, in the colors given', async () => {
         const { mounted: frame, map } = shown({
             colors: { view: 'red', edge: 'blue' },
@@ -152,6 +175,54 @@ describe('moving the view from the minimap', () => {
 
         expect(frame.frame.view.start).toBeCloseTo(0.375, 12);
         expect(frame.frame.view.end).toBeCloseTo(0.625, 12);
+    });
+
+    it('shows an open hand over the box, a closed one dragging it, and a hand beside it', () => {
+        const { mounted: frame, strip } = shown();
+        frame.frame.setView(0.25, 0.5);
+        const cursor = (): string => strip.style.getPropertyValue('cursor');
+
+        // The box spans 50 px to 100 px of the 200 px strip.
+        strip.dispatchEvent(pointer('pointermove', 75));
+        expect(cursor()).toBe('grab');
+
+        strip.dispatchEvent(pointer('pointermove', 150));
+        expect(cursor()).toBe('pointer');
+
+        strip.dispatchEvent(pointer('pointerdown', 75));
+        expect(cursor()).toBe('grabbing');
+
+        strip.dispatchEvent(pointer('pointermove', 125));
+        expect(cursor()).toBe('grabbing');
+
+        strip.dispatchEvent(pointer('pointerup', 125));
+        expect(cursor()).toBe('grab');
+    });
+
+    it('shows the plain arrow where a press does nothing, and takes your own cursors', () => {
+        const still = shown({ controls: { click: false } });
+        still.mounted.frame.setView(0.25, 0.5);
+        still.strip.dispatchEvent(pointer('pointermove', 150));
+
+        expect(still.strip.style.getPropertyValue('cursor')).toBe('default');
+
+        still.mounted.frame.destroy();
+        still.mounted.unmount();
+        const own = shown({
+            cursors: { box: 'move', moving: 'copy', beside: 'crosshair' },
+        });
+        own.mounted.frame.setView(0.25, 0.5);
+        own.strip.dispatchEvent(pointer('pointermove', 75));
+
+        expect(own.strip.style.getPropertyValue('cursor')).toBe('move');
+
+        own.strip.dispatchEvent(pointer('pointermove', 150));
+
+        expect(own.strip.style.getPropertyValue('cursor')).toBe('crosshair');
+
+        own.strip.dispatchEvent(pointer('pointerdown', 75));
+
+        expect(own.strip.style.getPropertyValue('cursor')).toBe('copy');
     });
 
     it('never seeks the sound', () => {
@@ -260,6 +331,14 @@ describe('the minimap as a keyboard slider', () => {
 
         // Its keys move the view only, never the sound.
         expect(frame.frame.progress).toBe(0);
+    });
+
+    it('takes the focus when pressed, so its keys work right after a click', () => {
+        const slider = shown({ a11y: { keys: true } });
+        slider.mounted.frame.setView(0, 0.25);
+        slider.strip.dispatchEvent(pointer('pointerdown', 100));
+
+        expect(document.activeElement).toBe(slider.strip);
     });
 
     it('takes your own name and words', () => {

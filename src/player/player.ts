@@ -70,7 +70,7 @@ import {
     type ColorStops,
     type DecodedAudio,
 } from '../plugins/spectrogram';
-import { minimap, type MinimapOptions } from '../plugins/minimap';
+import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -757,14 +757,12 @@ export class Player {
             );
         }
 
-        const strip = this.options.minimap;
+        const own = this.minimapOptions();
 
-        if (strip) {
-            const own: MinimapOptions = strip === true ? {} : strip;
+        if (own !== null) {
             const words = this.words;
             plugins.push(
                 minimap({
-                    height: remPixels(this.look.minimapHeight),
                     ...own,
                     a11y: {
                         label: words.labels.minimap,
@@ -800,6 +798,39 @@ export class Player {
         return plugins;
     }
 
+    /** The minimap's options: the look's height and space, then the app's own. */
+    private minimapOptions(): MinimapOptions | null {
+        const strip = this.options.minimap;
+
+        if (!strip) {
+            return null;
+        }
+
+        return {
+            height: remPixels(this.look.minimapHeight),
+            gap: remPixels(this.look.minimapGap),
+            ...(strip === true ? {} : strip),
+        };
+    }
+
+    /**
+     * The wave box's height: the wave, plus the minimap's room so the strip never takes from the
+     * wave. A strip that hides itself at the whole sound adds none: it takes from the wave while it
+     * shows.
+     */
+    private boxHeight(): string {
+        const strip = this.minimapOptions();
+        const wave = `${this.look.waveHeight}rem`;
+
+        if (strip === null || strip.autoHide === true) {
+            return wave;
+        }
+
+        const { height, gap } = minimapSize(strip);
+
+        return `calc(${wave} + ${height + gap}px)`;
+    }
+
     private build(): void {
         const peaks = this.peaksSource();
         this.teardown();
@@ -817,7 +848,7 @@ export class Player {
         ]);
         css(box, [
             ['position', 'relative'],
-            ['height', `${look.waveHeight}rem`],
+            ['height', this.boxHeight()],
             ['min-width', '0'],
         ]);
 

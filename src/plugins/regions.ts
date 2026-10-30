@@ -53,6 +53,11 @@ export type RegionsOptions = {
      * default: at fractions of a pixel, as always.
      */
     snap?: boolean;
+    /**
+     * The mouse cursor (any CSS cursor): `'grab'` over a region's body, `'grabbing'` while moving
+     * it, `'ew-resize'` over its edges and while resizing or drawing one.
+     */
+    cursors?: { body?: string; moving?: string; edge?: string };
 };
 
 export type RegionsPlugin = Plugin & {
@@ -81,6 +86,11 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
     const scrollIntoView = options.scrollIntoView === true;
     const snap = options.snap === true;
+    const cursors = {
+        body: options.cursors?.body ?? 'grab',
+        moving: options.cursors?.moving ?? 'grabbing',
+        edge: options.cursors?.edge ?? 'ew-resize',
+    };
 
     let host: PluginHost | null = null;
     let stopFitting: (() => void) | null = null;
@@ -494,13 +504,17 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 return;
             }
 
+            if (drag !== null) {
+                return drag.mode === 'move' ? cursors.moving : cursors.edge;
+            }
+
             const hit = hitAt(point);
 
             if (hit === null) {
                 return;
             }
 
-            return hit.part === 'body' ? 'grab' : 'ew-resize';
+            return hit.part === 'body' ? cursors.body : cursors.edge;
         },
 
         pointerDown(point): 'take' | 'drag' | void {

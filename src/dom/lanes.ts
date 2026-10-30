@@ -13,6 +13,8 @@ type Record = { side: Side; size: number; element: HTMLElement };
 
 export class LaneManager {
     private readonly records: Record[] = [];
+    /** CSS pixels the lanes took above and below the bars at the last layout. */
+    private taken = { top: 0, bottom: 0 };
 
     constructor(
         private readonly container: HTMLElement,
@@ -103,6 +105,7 @@ export class LaneManager {
             bottom += below[i].size;
         }
 
+        this.taken = { top: inset.top, bottom: inset.bottom };
         const taken = inset.top + inset.bottom;
         this.canvas.style.setProperty('top', `${inset.top}px`);
         this.canvas.style.setProperty(
@@ -111,6 +114,12 @@ export class LaneManager {
         );
 
         return inset.waveHeight;
+    }
+
+    /** Places an element over the bars only, clear of the lanes (as at the last layout). */
+    fitToBars(element: HTMLElement): void {
+        element.style.setProperty('top', `${this.taken.top}px`);
+        element.style.setProperty('bottom', `${this.taken.bottom}px`);
     }
 
     /** Removes every lane element (on destroy). */
