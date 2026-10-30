@@ -152,7 +152,7 @@ html {
 
     ::-webkit-scrollbar-thumb {
         border: 0.1875rem solid transparent;
-        border-radius: 62rem;
+        border-radius: 0.125rem;
         background: var(--thumb) padding-box;
     }
 
@@ -195,7 +195,7 @@ p {
 
 .wrap {
     width: 100%;
-    max-width: 70rem;
+    max-width: 90rem;
     margin: 0 auto;
     padding: 0 1rem;
 }
@@ -203,18 +203,31 @@ p {
 /* The header: the mark, the name and version, the links and the scheme switch. */
 
 .top {
+    position: sticky;
+    z-index: 20;
+    top: 0;
     border-bottom: 0.0625rem solid var(--line);
     background: var(--panel);
 }
 
+/* One line, 3.75rem tall: the sidebar and the drawer sit right under it. */
 .top .wrap {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
+    gap: 1rem;
     align-items: center;
-    min-height: 3.75rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    height: 3.75rem;
+}
+
+@media (max-width: 40rem) {
+    .top .far {
+        display: none;
+    }
+}
+
+@media (max-width: 24rem) {
+    .top .version {
+        display: none;
+    }
 }
 
 .brand {
@@ -236,7 +249,7 @@ p {
 .version {
     padding: 0.0625rem 0.5rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 62rem;
+    border-radius: 0.125rem;
     color: var(--muted);
     font-size: 0.8125rem;
     font-weight: 500;
@@ -245,8 +258,7 @@ p {
 
 .nav {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
+    gap: 0.75rem 1.25rem;
     align-items: center;
     margin-left: auto;
 }
@@ -272,7 +284,7 @@ p {
     min-height: 2.5rem;
     padding: 0.375rem 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     background: var(--panel);
     color: var(--ink);
     font: inherit;
@@ -312,16 +324,329 @@ p {
 /* Sections. */
 
 /* More specific than `.wrap`, whose padding shorthand would reset the bottom. */
-main.wrap {
+.content {
+    min-width: 0;
     padding-bottom: 4rem;
 }
 
+/*
+ * The docs layout: the pages on the left, the page in the middle, "On this page" on the right. The
+ * sidebar stays under the header from 60rem and is a drawer below that; "On this page" stays beside
+ * the text from 76rem and folds above it below that.
+ */
+
+html {
+    scroll-padding-top: 5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+}
+
+.side {
+    position: sticky;
+    top: 3.75rem;
+    max-height: calc(100vh - 3.75rem);
+    overflow-y: auto;
+    padding: 1.75rem 0.5rem 2rem 0;
+    font-size: 0.9375rem;
+}
+
+.side ul {
+    display: grid;
+    gap: 0.125rem;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.side-group {
+    margin: 0 0 0.375rem;
+    padding: 0 0.75rem;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.side a {
+    display: block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.125rem;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.side a:hover {
+    background: var(--sunken);
+    color: var(--ink);
+}
+
+/* The page being read wears the logo's tile. */
+.side a[aria-current='page'] {
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+.menu,
+.side-backdrop {
+    display: none;
+}
+
+@media (max-width: 59.99rem) {
+    .layout {
+        display: block;
+    }
+
+    .menu {
+        display: inline-flex;
+    }
+
+    .side {
+        position: fixed;
+        z-index: 30;
+        top: 3.75rem;
+        bottom: 0;
+        left: 0;
+        width: min(18rem, 85vw);
+        max-height: none;
+        padding: 1.25rem 0.75rem;
+        border-right: 0.0625rem solid var(--line);
+        background: var(--panel);
+        visibility: hidden;
+    }
+
+    .side.open {
+        visibility: visible;
+    }
+
+    .side-backdrop:not([hidden]) {
+        display: block;
+        position: fixed;
+        z-index: 25;
+        inset: 3.75rem 0 0;
+        background: rgb(0 0 0 / 0.4);
+    }
+}
+
+/* A page's title, its sentence and the sound its players play. */
+
+.page-head {
+    padding-top: 2.5rem;
+}
+
+.page-head h1 {
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/*
+ * "On this page": a track along the headings, filled up to the one being read (`--played`, set by
+ * the script) with a playhead on it, like the played part of a wave.
+ */
+
+.toc {
+    font-size: 0.875rem;
+}
+
+.toc-title {
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.toc-toggle {
+    display: none;
+}
+
+.toc-list {
+    position: relative;
+    display: grid;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0 0 0 1rem;
+    list-style: none;
+}
+
+.toc-list::before,
+.toc-list::after {
+    position: absolute;
+    top: 0;
+    left: 0.25rem;
+    width: 0.125rem;
+    border-radius: 0.125rem;
+    content: '';
+}
+
+.toc-list::before {
+    bottom: 0;
+    background: var(--line);
+}
+
+.toc-list::after {
+    height: var(--played, 0);
+    background: var(--brand);
+}
+
+.toc-list a {
+    position: relative;
+    display: block;
+    padding: 0.25rem 0.5rem;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.toc-sub a {
+    padding-left: 1.25rem;
+}
+
+.toc-list a:hover {
+    color: var(--ink);
+}
+
+.toc-list a[aria-current] {
+    color: var(--link);
+    font-weight: 600;
+}
+
+/* The playhead, centered on the track: the track's middle sits 0.3125rem in from the list. */
+.toc-list a[aria-current]::before {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: -1rem;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-top: -0.3125rem;
+    border-radius: 0.125rem;
+    background: var(--brand);
+    box-shadow: 0 0 0 0.1875rem var(--page);
+    content: '';
+}
+
+@media (min-width: 76rem) {
+    .content:has(> .toc) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 13rem;
+        column-gap: 3rem;
+    }
+
+    .content > .page-head {
+        grid-row: 1;
+        grid-column: 1;
+    }
+
+    .content > .toc {
+        position: sticky;
+        top: 3.75rem;
+        grid-row: 1 / span 2;
+        grid-column: 2;
+        align-self: start;
+        max-height: calc(100vh - 3.75rem);
+        overflow-y: auto;
+        padding: 2.75rem 0 2rem;
+    }
+
+    .content > .doc {
+        grid-row: 2;
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 75.99rem) {
+    .toc {
+        margin-top: 1.75rem;
+        border: 0.0625rem solid var(--line);
+        border-radius: 0.125rem;
+        background: var(--panel);
+    }
+
+    .toc-title {
+        display: none;
+    }
+
+    .toc-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 0;
+        background: none;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .toc-toggle::after {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-right: 0.125rem solid currentColor;
+        border-bottom: 0.125rem solid currentColor;
+        transform: rotate(45deg);
+        content: '';
+    }
+
+    .toc-toggle[aria-expanded='true']::after {
+        transform: rotate(-135deg);
+    }
+
+    .toc-list {
+        display: none;
+        margin: 0 1rem 1rem;
+    }
+
+    .toc-list.open {
+        display: grid;
+    }
+}
+
 .section {
-    padding-top: 4.5rem;
+    padding-top: 3.5rem;
 }
 
 .section > h2 {
     font-size: 1.75rem;
+}
+
+/* Keys and gestures: one per line, each key as a cap. */
+
+.keys,
+.next {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.keys {
+    color: var(--muted);
+}
+
+.keys kbd {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0 0.375em;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    text-align: center;
 }
 
 .lede {
@@ -357,7 +682,7 @@ main.wrap {
     margin-top: 2.25rem;
     padding: 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 1.25rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
@@ -393,7 +718,7 @@ main.wrap {
     padding: 1rem 5.5rem 1rem 1rem;
     overflow-x: auto;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
     background: var(--code);
     line-height: 1.6;
 }
@@ -429,18 +754,13 @@ main.wrap {
     margin-top: 1rem;
     padding: 0.875rem 1rem;
     border-left: 0.25rem solid var(--brand);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     background: var(--sunken);
     font-size: 1.0625rem;
 }
 
 .words-text:empty {
     display: none;
-}
-
-.words-code {
-    max-width: 42rem;
-    margin-top: 1.25rem;
 }
 
 /* Zoom: the switches in two named rows, a roomy player, what is in view, then the gestures. */
@@ -482,34 +802,6 @@ main.wrap {
     margin-top: 0.75rem;
     font-variant-numeric: tabular-nums;
     font-size: 0.9375rem;
-}
-
-.zoom-help {
-    display: grid;
-    gap: 0.375rem;
-    margin: 1rem 0 0;
-    padding: 0;
-    list-style: none;
-    color: var(--muted);
-    font-size: 0.875rem;
-}
-
-.zoom-help kbd {
-    display: inline-block;
-    min-width: 1.5em;
-    padding: 0 0.375em;
-    border: 0.0625rem solid var(--line);
-    border-radius: 0.3125rem;
-    background: var(--sunken);
-    color: var(--ink);
-    font-family: var(--mono);
-    font-size: 0.8125rem;
-    text-align: center;
-}
-
-.zoom-code {
-    max-width: 52rem;
-    margin-top: 1.25rem;
 }
 
 /* A long sound: a bare wave with a ruler above and a minimap below, no player. */
@@ -597,6 +889,7 @@ main.wrap {
 
 .plugins {
     display: grid;
+    margin-top: 2.5rem;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
     gap: 1.25rem;
 }
@@ -608,11 +901,11 @@ main.wrap {
     min-width: 0;
     padding: 1.125rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
-.plugin h3 {
+.plugin h2 {
     font-size: 1.0625rem;
 }
 
@@ -661,7 +954,7 @@ main.wrap {
     margin-top: 1.25rem;
     padding: 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
@@ -717,7 +1010,7 @@ main.wrap {
     gap: 0.25rem;
     padding: 0.25rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.625rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
@@ -743,7 +1036,7 @@ main.wrap {
     min-height: 2.5rem;
     padding: 0.25rem 0.5rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     background: var(--panel);
     color: var(--ink);
     font: inherit;
@@ -805,7 +1098,7 @@ main.wrap {
     min-width: 0;
     padding: 0.75rem;
     border: 0.0625rem solid;
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
 }
 
 .cell[aria-current='true'] {
@@ -830,7 +1123,7 @@ main.wrap {
     width: 0.75rem;
     height: 0.75rem;
     border: 0.0625rem solid rgba(127, 127, 127, 0.4);
-    border-radius: 50%;
+    border-radius: 0.125rem;
 }
 
 /* The picked player stays in reach while the page scrolls. */
@@ -845,7 +1138,7 @@ main.wrap {
     margin-top: 2.5rem;
     padding: 0.75rem 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem 0.75rem 0 0;
+    border-radius: 0.125rem 0.125rem 0 0;
     background: var(--panel);
 }
 

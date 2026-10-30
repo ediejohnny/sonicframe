@@ -1,8 +1,9 @@
 /**
- * The playground: SonicFrame's own page. Every player has its own `<audio>` on the same sound, so
- * only the one pressed plays (the play buttons are exclusive); the sound is decoded once and every
- * player is given its peaks and duration. Picking another sound builds every player again.
- * Run `npm run dev` and open /playground/.
+ * The docs pages' players: every page but the theme gallery runs this script and mounts only the
+ * parts it holds. Every player has its own `<audio>` on the same sound, so only the one pressed plays
+ * (the play buttons are exclusive); the sound is decoded once and every player is given its peaks
+ * and duration. Picking another sound builds every player again. Run `npm run dev` and open
+ * /playground/.
  */
 
 import {
@@ -37,6 +38,7 @@ import {
     byId,
     forget,
     pickSound,
+    setupContents,
     setupCopyButtons,
     setupHeader,
     type Sound,
@@ -377,7 +379,12 @@ const LONG_RATE = 100;
  * file by `writeWaveform`, read back by `readWaveform`, and drawn with zoom, a ruler and a minimap.
  */
 function setupLongSound(): void {
-    const button = byId<HTMLButtonElement>('long-make');
+    const button = document.getElementById('long-make');
+
+    if (button === null) {
+        return;
+    }
+
     const host = byId('long-wave');
     const status = byId('long-status');
     let frame: SonicFrame | null = null;
@@ -650,73 +657,90 @@ function pluginCards(): PluginCard[] {
     ];
 }
 
+/** Calls `use` with the element of that id, when this page has one. */
+function on(id: string, use: (element: HTMLElement) => void): void {
+    const element = document.getElementById(id);
+
+    if (element !== null) {
+        use(element);
+    }
+}
+
+/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
 function setupPage(): void {
-    mount(byId('hero-player'), (host, sound) =>
-        player(host, sound, {
-            label: sound.name,
-            look: {
-                waveHeight: 5,
-                button: { shape: 'circle', fill: 'solid', size: 52 },
-                padding: 0,
-                border: 0,
-                gap: 1,
-                surface: 'none',
-                fontSize: 0.9375,
-            },
-            plugins: [timeline()],
-        }),
-    );
-
-    const tag = byId('tag-player');
-    mount(tag, (host, sound) => {
-        host.setAttribute('src', sound.url);
-
-        return () => host.removeAttribute('src');
-    });
-    tag.addEventListener('sonicframe:error', (event) =>
-        console.error((event as CustomEvent<unknown[]>).detail[0]),
-    );
-
-    const drawings = byId('drawing-shelf');
-
-    for (const drawing of DRAWINGS) {
-        const host = figure(drawings, `wave: '${drawing.name}'`, drawing.text);
-        mount(host, (box, sound) =>
-            player(box, sound, {
-                label: `Drawn as ${drawing.name}`,
-                wave: { style: drawing.name, ...drawing.wave },
-                bar: drawing.bar,
+    on('hero-player', (hero) =>
+        mount(hero, (host, sound) =>
+            player(host, sound, {
+                label: sound.name,
+                look: {
+                    waveHeight: 5,
+                    button: { shape: 'circle', fill: 'solid', size: 52 },
+                    padding: 0,
+                    border: 0,
+                    gap: 1,
+                    surface: 'none',
+                    fontSize: 0.9375,
+                },
+                plugins: [timeline()],
             }),
+        ),
+    );
+
+    on('tag-player', (tag) => {
+        mount(tag, (host, sound) => {
+            host.setAttribute('src', sound.url);
+
+            return () => host.removeAttribute('src');
+        });
+        tag.addEventListener('sonicframe:error', (event) =>
+            console.error((event as CustomEvent<unknown[]>).detail[0]),
         );
-    }
+    });
 
-    const themes = byId('theme-shelf');
+    on('drawing-shelf', (drawings) => {
+        for (const drawing of DRAWINGS) {
+            const host = figure(
+                drawings,
+                `wave: '${drawing.name}'`,
+                drawing.text,
+            );
+            mount(host, (box, sound) =>
+                player(box, sound, {
+                    label: `Drawn as ${drawing.name}`,
+                    wave: { style: drawing.name, ...drawing.wave },
+                    bar: drawing.bar,
+                }),
+            );
+        }
+    });
 
-    for (const [name, text] of THEME_PREVIEW) {
-        const host = figure(themes, `theme: '${name}'`, text);
-        mount(host, (box, sound) =>
-            player(box, sound, { label: `The ${name} theme`, theme: name }),
-        );
-    }
+    on('theme-shelf', (themes) => {
+        for (const [name, text] of THEME_PREVIEW) {
+            const host = figure(themes, `theme: '${name}'`, text);
+            mount(host, (box, sound) =>
+                player(box, sound, { label: `The ${name} theme`, theme: name }),
+            );
+        }
+    });
 
-    mount(byId('words-player'), wordsDemo);
-    mount(byId('zoom-player'), zoomDemo);
+    on('words-player', (host) => mount(host, wordsDemo));
+    on('zoom-player', (host) => mount(host, zoomDemo));
 
-    const cards = byId('plugin-cards');
-
-    for (const card of pluginCards()) {
-        const box = document.createElement('article');
-        const title = document.createElement('h3');
-        const text = document.createElement('p');
-        const demo = document.createElement('div');
-        box.className = 'plugin';
-        demo.className = 'demo';
-        title.textContent = card.title;
-        text.textContent = card.text;
-        box.append(title, text, demo);
-        cards.append(box);
-        mount(demo, card.build);
-    }
+    on('plugin-cards', (cards) => {
+        for (const card of pluginCards()) {
+            const box = document.createElement('section');
+            const title = document.createElement('h2');
+            const text = document.createElement('p');
+            const demo = document.createElement('div');
+            box.className = 'plugin';
+            demo.className = 'demo';
+            title.textContent = card.title;
+            text.textContent = card.text;
+            box.append(title, text, demo);
+            cards.append(box);
+            mount(demo, card.build);
+        }
+    });
 }
 
 /** The load test: sixty bare waves on one `<audio>`, with one play button and a frame-rate readout. */
@@ -788,9 +812,9 @@ function crowd(sound: Sound): () => void {
 let stopCrowd: (() => void) | null = null;
 
 function setupCrowd(): void {
-    const toggle = byId<HTMLButtonElement>('crowd-toggle');
+    const toggle = document.getElementById('crowd-toggle');
 
-    toggle.addEventListener('click', () => {
+    toggle?.addEventListener('click', () => {
         if (stopCrowd !== null) {
             stopCrowd();
             stopCrowd = null;
@@ -836,6 +860,7 @@ defineSonicPlayer();
 setupHeader(() => painted.forEach((repaint) => repaint()));
 setupCopyButtons();
 setupPage();
+setupContents();
 setupCrowd();
 setupLongSound();
 pickSound(

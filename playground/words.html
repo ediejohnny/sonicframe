@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>The wave in words · SonicFrame</title>
+        <meta
+            name="description"
+            content="A description of the sound for people who cannot see the wave."
+        />
+        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
+        <link rel="stylesheet" href="./site.css" />
+    </head>
+    <body>
+        <header class="top">
+            <div class="wrap">
+                <button
+                    id="menu"
+                    class="button small menu"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="side"
+                >
+                    Menu
+                </button>
+                <a class="brand" href="./">
+                    <img src="../assets/logo.svg" alt="" />
+                    SonicFrame
+                    <span class="version" data-version></span>
+                </a>
+                <nav class="nav" aria-label="Elsewhere">
+                    <a
+                        class="far"
+                        href="https://github.com/ediejohnny/sonicframe"
+                        >GitHub</a
+                    >
+                    <a
+                        class="far"
+                        href="https://www.npmjs.com/package/sonicframe"
+                        >npm</a
+                    >
+                    <button
+                        id="scheme"
+                        class="button small"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Dark
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <div class="wrap layout">
+            <nav class="side" id="side" aria-label="Pages"></nav>
+            <div class="side-backdrop" id="side-backdrop" hidden></div>
+
+            <main class="content">
+                <div class="page-head">
+                    <h1>The wave in words</h1>
+                    <p class="lede">
+                        For people who cannot see the wave: a short description
+                        of the sound, read by their own screen reader when they
+                        reach the player. It is shown here as text too. Off
+                        until you turn it on.
+                    </p>
+                    <div class="source">
+                        <p id="source" aria-live="polite">Loading the sound…</p>
+                        <button id="pick" class="button small" type="button">
+                            Use your own sound
+                        </button>
+                        <input id="file" type="file" accept="audio/*" hidden />
+                    </div>
+                </div>
+
+                <aside class="toc" id="toc"></aside>
+
+                <div class="doc">
+                    <section class="section" id="try">
+                        <h2>Try it</h2>
+                        <div class="words">
+                            <div
+                                class="buttons"
+                                role="group"
+                                aria-label="Language"
+                            >
+                                <button
+                                    class="button small"
+                                    type="button"
+                                    data-words-lang="en"
+                                    aria-pressed="true"
+                                >
+                                    English
+                                </button>
+                                <button
+                                    class="button small"
+                                    type="button"
+                                    data-words-lang="pt"
+                                    aria-pressed="false"
+                                    lang="pt"
+                                >
+                                    Português
+                                </button>
+                            </div>
+                            <div id="words-player"></div>
+                            <p class="words-text" id="words-text"></p>
+                            <!-- Seen, not spoken: the player says the same through the live region. -->
+                            <p
+                                class="note"
+                                id="words-status"
+                                aria-hidden="true"
+                            ></p>
+                        </div>
+                    </section>
+
+                    <section class="section" id="keys">
+                        <h2>Keys</h2>
+                        <ul class="keys">
+                            <li><kbd>D</kbd> says the description again</li>
+                            <li>
+                                <kbd>P</kbd> and <kbd>Shift</kbd> + <kbd>P</kbd>
+                                step between the parts
+                            </li>
+                            <li>
+                                The speech bubble reads it with your browser’s
+                                own voice
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="section" id="code">
+                        <h2>In code</h2>
+                        <div class="code">
+                            <pre><code>createPlayer({
+    container,
+    src: '/voice.mp3',
+    a11y: {
+        lang: 'pt',
+        description: {
+            keys: true,
+            pauseInValue: true,
+            button: { animation: true, animationType: 'pulse' },
+        },
+    },
+});</code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <footer class="foot">
+            <div class="wrap">
+                <p>
+                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
+                    by <a href="https://librivox.org/reader/1252">Avery</a> for
+                    LibriVox (public domain).
+                    <a href="./#credits">Full credits on the first page</a>.
+                </p>
+            </div>
+        </footer>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

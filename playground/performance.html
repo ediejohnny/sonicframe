@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Sixty at once · SonicFrame</title>
+        <meta
+            name="description"
+            content="Sixty waves on one sound, and the frame rate."
+        />
+        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
+        <link rel="stylesheet" href="./site.css" />
+    </head>
+    <body>
+        <header class="top">
+            <div class="wrap">
+                <button
+                    id="menu"
+                    class="button small menu"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="side"
+                >
+                    Menu
+                </button>
+                <a class="brand" href="./">
+                    <img src="../assets/logo.svg" alt="" />
+                    SonicFrame
+                    <span class="version" data-version></span>
+                </a>
+                <nav class="nav" aria-label="Elsewhere">
+                    <a
+                        class="far"
+                        href="https://github.com/ediejohnny/sonicframe"
+                        >GitHub</a
+                    >
+                    <a
+                        class="far"
+                        href="https://www.npmjs.com/package/sonicframe"
+                        >npm</a
+                    >
+                    <button
+                        id="scheme"
+                        class="button small"
+                        type="button"
+                        aria-pressed="false"
+                    >
+                        Dark
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <div class="wrap layout">
+            <nav class="side" id="side" aria-label="Pages"></nav>
+            <div class="side-backdrop" id="side-backdrop" hidden></div>
+
+            <main class="content">
+                <div class="page-head">
+                    <h1>Sixty at once</h1>
+                    <p class="lede">
+                        Pages with long lists of recordings stay smooth: frames
+                        draw only near the screen, and one shared loop moves
+                        every playhead. Draw sixty waves on one sound and watch
+                        the frame rate.
+                    </p>
+                    <div class="source">
+                        <p id="source" aria-live="polite">Loading the sound…</p>
+                        <button id="pick" class="button small" type="button">
+                            Use your own sound
+                        </button>
+                        <input id="file" type="file" accept="audio/*" hidden />
+                    </div>
+                </div>
+
+                <div class="doc">
+                    <div class="load">
+                        <button id="crowd-toggle" class="button" type="button">
+                            Draw 60 waves
+                        </button>
+                        <span id="crowd-play"></span>
+                        <span id="fps" class="fps" aria-live="off"></span>
+                    </div>
+                    <div id="crowd" class="crowd"></div>
+                </div>
+            </main>
+        </div>
+
+        <footer class="foot">
+            <div class="wrap">
+                <p>
+                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
+                    by <a href="https://librivox.org/reader/1252">Avery</a> for
+                    LibriVox (public domain).
+                    <a href="./#credits">Full credits on the first page</a>.
+                </p>
+            </div>
+        </footer>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

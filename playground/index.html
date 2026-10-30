@@ -14,22 +14,31 @@
     <body>
         <header class="top">
             <div class="wrap">
+                <button
+                    id="menu"
+                    class="button small menu"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="side"
+                >
+                    Menu
+                </button>
                 <a class="brand" href="./">
                     <img src="../assets/logo.svg" alt="" />
                     SonicFrame
                     <span class="version" data-version></span>
                 </a>
-                <nav class="nav" aria-label="Main">
-                    <a href="#use">Install</a>
-                    <a href="#drawings">Drawings</a>
-                    <a href="./themes.html">Themes</a>
-                    <a href="#words">In words</a>
-                    <a href="#zoom">Zoom</a>
-                    <a href="#plugins">Plugins</a>
-                    <a href="https://github.com/ediejohnny/sonicframe"
+                <nav class="nav" aria-label="Elsewhere">
+                    <a
+                        class="far"
+                        href="https://github.com/ediejohnny/sonicframe"
                         >GitHub</a
                     >
-                    <a href="https://www.npmjs.com/package/sonicframe">npm</a>
+                    <a
+                        class="far"
+                        href="https://www.npmjs.com/package/sonicframe"
+                        >npm</a
+                    >
                     <button
                         id="scheme"
                         class="button small"
@@ -42,38 +51,52 @@
             </div>
         </header>
 
-        <main class="wrap">
-            <section class="hero" aria-labelledby="title">
-                <h1 id="title">Draw sound on the web.</h1>
-                <p class="lede">
-                    SonicFrame draws a sound on a canvas, follows it while it
-                    plays, and lets people seek with a click, a drag or the
-                    keyboard. No dependencies, any framework, a strict
-                    Content-Security-Policy.
-                </p>
-                <div class="stage" id="hero-player"></div>
-                <div class="source">
-                    <p id="source" aria-live="polite">Loading the sound…</p>
-                    <button id="pick" class="button small" type="button">
-                        Use your own sound
-                    </button>
-                    <input id="file" type="file" accept="audio/*" hidden />
-                </div>
-            </section>
+        <div class="wrap layout">
+            <nav class="side" id="side" aria-label="Pages"></nav>
+            <div class="side-backdrop" id="side-backdrop" hidden></div>
 
-            <section class="section" id="use" aria-labelledby="use-title">
-                <h2 id="use-title">Install</h2>
-                <p class="lede">
-                    One package, nothing else to install. Use the player from
-                    JavaScript, or write it as a tag.
-                </p>
-                <div class="code install">
-                    <pre><code>npm install sonicframe</code></pre>
-                    <button class="button small" type="button">Copy</button>
+            <main class="content">
+                <div class="page-head hero">
+                    <h1 id="title">Draw sound on the web.</h1>
+                    <p class="lede">
+                        SonicFrame draws a sound on a canvas, follows it while
+                        it plays, and lets people seek with a click, a drag or
+                        the keyboard. No dependencies, any framework, a strict
+                        Content-Security-Policy.
+                    </p>
+                    <div class="stage" id="hero-player"></div>
+                    <div class="source">
+                        <p id="source" aria-live="polite">Loading the sound…</p>
+                        <button id="pick" class="button small" type="button">
+                            Use your own sound
+                        </button>
+                        <input id="file" type="file" accept="audio/*" hidden />
+                    </div>
                 </div>
-                <div class="snippets more">
-                    <div class="snippet">
-                        <h3>In JavaScript</h3>
+
+                <aside class="toc" id="toc"></aside>
+
+                <div class="doc">
+                    <section
+                        class="section"
+                        id="use"
+                        aria-labelledby="use-title"
+                    >
+                        <h2 id="use-title">Install</h2>
+                        <p class="lede">
+                            One package, nothing else to install. Use the player
+                            from JavaScript, or write it as a tag.
+                        </p>
+                        <div class="code install">
+                            <pre><code>npm install sonicframe</code></pre>
+                            <button class="button small" type="button">
+                                Copy
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="section" id="javascript">
+                        <h2>In JavaScript</h2>
                         <div class="code">
                             <pre><code>import { createPlayer } from 'sonicframe/player';
 
@@ -86,9 +109,10 @@ createPlayer({
                                 Copy
                             </button>
                         </div>
-                    </div>
-                    <div class="snippet">
-                        <h3>As an HTML tag</h3>
+                    </section>
+
+                    <section class="section" id="tag">
+                        <h2>As an HTML tag</h2>
                         <div class="code">
                             <pre><code>&lt;sonic-player src="/voice.mp3" theme="bubble"&gt;
 &lt;/sonic-player&gt;
@@ -110,209 +134,35 @@ createPlayer({
                         <p class="note">
                             This player is the tag above, on this page.
                         </p>
-                    </div>
-                </div>
-            </section>
+                    </section>
 
-            <section
-                class="section"
-                id="drawings"
-                aria-labelledby="drawings-title"
-            >
-                <h2 id="drawings-title">Ten ways to draw the sound</h2>
-                <p class="lede">
-                    Every drawing takes the played, hover and unplayed colors,
-                    and any of them can carry a knob at the playhead.
-                </p>
-                <div class="shelf" id="drawing-shelf"></div>
-            </section>
-
-            <section class="section" id="themes" aria-labelledby="themes-title">
-                <h2 id="themes-title">Themes</h2>
-                <p class="lede">
-                    A whole player in one word: the layout, the button, the
-                    drawing, the font and a palette. Any theme wears any of the
-                    eight palettes.
-                </p>
-                <div class="theme-list" id="theme-shelf"></div>
-                <p class="more">
-                    <a class="button main" href="./themes.html"
-                        >See all 24 themes in 8 palettes</a
-                    >
-                </p>
-            </section>
-
-            <section class="section" id="words" aria-labelledby="words-title">
-                <h2 id="words-title">The wave in words</h2>
-                <p class="lede">
-                    For people who cannot see the wave: a short description of
-                    the sound, read by their own screen reader when they reach
-                    the player. It is shown here as text too. Off until you turn
-                    it on.
-                </p>
-                <div class="words">
-                    <div class="buttons" role="group" aria-label="Language">
-                        <button
-                            class="button small"
-                            type="button"
-                            data-words-lang="en"
-                            aria-pressed="true"
-                        >
-                            English
-                        </button>
-                        <button
-                            class="button small"
-                            type="button"
-                            data-words-lang="pt"
-                            aria-pressed="false"
-                            lang="pt"
-                        >
-                            Português
-                        </button>
-                    </div>
-                    <div id="words-player"></div>
-                    <p class="words-text" id="words-text"></p>
-                    <!-- Seen, not spoken: the player says the same through the live region. -->
-                    <p class="note" id="words-status" aria-hidden="true"></p>
-                    <p class="note">
-                        With the wave focused, D says the description again and
-                        P or Shift+P steps between the parts. The speech bubble
-                        reads it with your browser’s own voice.
-                    </p>
+                    <section class="section" id="next">
+                        <h2>Where next</h2>
+                        <ul class="next">
+                            <li>
+                                <a href="./drawings.html">Drawings and themes</a
+                                >: ten ways to draw a sound and a whole player
+                                in one word.
+                            </li>
+                            <li>
+                                <a href="./words.html">The wave in words</a>: a
+                                description of the sound for people who cannot
+                                see it.
+                            </li>
+                            <li>
+                                <a href="./zoom.html">Zoom and long sounds</a>:
+                                get close to a word, or across an hour.
+                            </li>
+                            <li>
+                                <a href="./plugins.html">Plugins and controls</a
+                                >: regions, markers, a ruler, a spectrogram and
+                                more.
+                            </li>
+                        </ul>
+                    </section>
                 </div>
-                <div class="code words-code">
-                    <pre><code>createPlayer({
-    container,
-    src: '/voice.mp3',
-    a11y: {
-        lang: 'pt',
-        description: {
-            keys: true,
-            pauseInValue: true,
-            button: { animation: true, animationType: 'pulse' },
-        },
-    },
-});</code></pre>
-                    <button class="button small" type="button">Copy</button>
-                </div>
-            </section>
-
-            <section class="section" id="zoom" aria-labelledby="zoom-title">
-                <h2 id="zoom-title">Zoom</h2>
-                <p class="lede">
-                    Get close to a word, or across an hour. Every way of moving
-                    the view has its own switch; turn them on and off here. With
-                    zoom off, nothing changes.
-                </p>
-                <div class="zoom">
-                    <div class="zoom-switches">
-                        <div class="zoom-group">
-                            <span class="zoom-group-name" id="zoom-ways-name"
-                                >Ways to move</span
-                            >
-                            <div
-                                class="buttons"
-                                role="group"
-                                aria-labelledby="zoom-ways-name"
-                                id="zoom-ways"
-                            ></div>
-                        </div>
-                        <div class="zoom-group">
-                            <span class="zoom-group-name" id="zoom-extras-name"
-                                >Extras</span
-                            >
-                            <div
-                                class="buttons"
-                                role="group"
-                                aria-labelledby="zoom-extras-name"
-                                id="zoom-extras"
-                            ></div>
-                        </div>
-                    </div>
-                    <div class="zoom-stage" id="zoom-player"></div>
-                    <p class="zoom-view" id="zoom-view"></p>
-                    <p class="note" id="zoom-status" aria-hidden="true"></p>
-                    <ul class="zoom-help">
-                        <li>
-                            <kbd>Ctrl</kbd> + wheel zooms around the pointer
-                        </li>
-                        <li>
-                            <kbd>Shift</kbd> + wheel, or a sideways swipe,
-                            scrolls
-                        </li>
-                        <li>
-                            <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd> on the
-                            focused wave
-                        </li>
-                        <li>
-                            Drag the box in the strip below to move the view
-                        </li>
-                        <li>
-                            <kbd>Shift</kbd> + drag past the edge draws a region
-                            and the view follows
-                        </li>
-                    </ul>
-                </div>
-                <div class="code zoom-code">
-                    <pre><code>createPlayer({
-    container,
-    src: '/voice.mp3',
-    zoom: { wheel: true, keys: true, pinch: true, buttons: true },
-    minimap: true,
-    a11y: { zoom: { announce: true }, minimap: { keys: true } },
-});</code></pre>
-                    <button class="button small" type="button">Copy</button>
-                </div>
-            </section>
-
-            <section class="section" id="long" aria-labelledby="long-title">
-                <h2 id="long-title">A long sound</h2>
-                <p class="lede">
-                    An hour of peaks, written on this page as an audiowaveform
-                    .dat file and read back, with no audio at all. The length
-                    comes from the file, so it shows at once.
-                </p>
-                <div class="words">
-                    <button id="long-make" class="button" type="button">
-                        Make an hour
-                    </button>
-                    <div id="long-wave" class="long-wave"></div>
-                    <p class="note" id="long-status"></p>
-                </div>
-            </section>
-
-            <section
-                class="section"
-                id="plugins"
-                aria-labelledby="plugins-title"
-            >
-                <h2 id="plugins-title">Plugins and controls</h2>
-                <p class="lede">
-                    Plugins draw under or over the wave and can take the pointer
-                    and the keyboard. Each one below is on its own player; press
-                    play on any of them.
-                </p>
-                <div class="plugins" id="plugin-cards"></div>
-            </section>
-
-            <section class="section" id="load" aria-labelledby="load-title">
-                <h2 id="load-title">Sixty at once</h2>
-                <p class="lede">
-                    Pages with long lists of recordings stay smooth: frames draw
-                    only near the screen, and one shared loop moves every
-                    playhead. Draw sixty waves on one sound and watch the frame
-                    rate.
-                </p>
-                <div class="load">
-                    <button id="crowd-toggle" class="button" type="button">
-                        Draw 60 waves
-                    </button>
-                    <span id="crowd-play"></span>
-                    <span id="fps" class="fps" aria-live="off"></span>
-                </div>
-                <div id="crowd" class="crowd"></div>
-            </section>
-        </main>
+            </main>
+        </div>
 
         <footer class="foot" id="credits">
             <div class="wrap">

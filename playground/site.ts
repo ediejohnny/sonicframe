@@ -1,8 +1,8 @@
 /**
- * What both playground pages share: the sound, the header and the copy buttons. The sound is fetched
- * and decoded once, so every player gets the same peaks and duration and plays the same bytes. The
- * header shows the version and switches the page between light and dark; canvas colors are read
- * once, so the page repaints its players after every switch.
+ * What every docs page shares: the sound, the header, the sidebar of pages, "On this page" and the
+ * copy buttons. The sound is fetched and decoded once, so every player gets the same peaks and
+ * duration and plays the same bytes. The header shows the version and switches the page between
+ * light and dark; canvas colors are read once, so the page repaints its players after every switch.
  */
 
 import { peaksFromChannel, VERSION } from '../src/index';
@@ -144,6 +144,290 @@ export function setupHeader(repaint: () => void): void {
         repaint();
     });
     show();
+    setupSidebar();
+}
+
+/** The pages, in groups, as the sidebar lists them. */
+const PAGES: { group: string; pages: { file: string; name: string }[] }[] = [
+    {
+        group: 'Getting started',
+        pages: [{ file: 'index.html', name: 'Introduction' }],
+    },
+    {
+        group: 'Look',
+        pages: [
+            { file: 'drawings.html', name: 'Drawings and themes' },
+            { file: 'themes.html', name: 'Theme gallery' },
+        ],
+    },
+    {
+        group: 'Accessibility',
+        pages: [{ file: 'words.html', name: 'The wave in words' }],
+    },
+    {
+        group: 'Long sounds',
+        pages: [{ file: 'zoom.html', name: 'Zoom and long sounds' }],
+    },
+    {
+        group: 'Going further',
+        pages: [
+            { file: 'plugins.html', name: 'Plugins and controls' },
+            { file: 'performance.html', name: 'Sixty at once' },
+        ],
+    },
+];
+
+/** The width at which the sidebar stops being a drawer and stays beside the page (60rem). */
+const SIDE_QUERY = '(min-width: 60rem)';
+
+/** The width at which "On this page" stays beside the text instead of folding above it (76rem). */
+const TOC_QUERY = '(min-width: 76rem)';
+
+/** The page file this is: `index.html` for the folder itself. */
+function currentFile(): string {
+    const last = location.pathname.split('/').pop() ?? '';
+
+    return last === '' ? 'index.html' : last;
+}
+
+/**
+ * The sidebar: every page, in groups, the current one marked. On narrow screens it is a drawer the
+ * Menu button opens, closed by a link, the backdrop or Escape.
+ */
+function setupSidebar(): void {
+    const side = document.querySelector<HTMLElement>('#side');
+    const menu = document.querySelector<HTMLButtonElement>('#menu');
+    const backdrop = document.querySelector<HTMLElement>('#side-backdrop');
+
+    if (side === null || menu === null || backdrop === null) {
+        return;
+    }
+
+    const here = currentFile();
+
+    for (const { group, pages } of PAGES) {
+        const name = document.createElement('p');
+        const list = document.createElement('ul');
+        name.className = 'side-group';
+        name.textContent = group;
+
+        for (const page of pages) {
+            const item = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = `./${page.file}`;
+            link.textContent = page.name;
+
+            if (page.file === here) {
+                link.setAttribute('aria-current', 'page');
+            }
+
+            item.append(link);
+            list.append(item);
+        }
+
+        side.append(name, list);
+    }
+
+    const setOpen = (open: boolean, restoreFocus = false): void => {
+        side.classList.toggle('open', open);
+        backdrop.hidden = !open;
+        menu.setAttribute('aria-expanded', String(open));
+
+        if (open) {
+            (
+                side.querySelector<HTMLElement>('[aria-current]') ??
+                side.querySelector<HTMLElement>('a')
+            )?.focus();
+        } else if (restoreFocus) {
+            menu.focus();
+        }
+    };
+
+    menu.addEventListener('click', () =>
+        setOpen(!side.classList.contains('open')),
+    );
+    backdrop.addEventListener('click', () => setOpen(false, true));
+    side.addEventListener('click', (event) => {
+        if ((event.target as Element).closest('a') !== null) {
+            setOpen(false);
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && side.classList.contains('open')) {
+            setOpen(false, true);
+        }
+    });
+    window.matchMedia(SIDE_QUERY).addEventListener('change', () => {
+        setOpen(false);
+    });
+}
+
+/** A heading's anchor: its section's id when it opens one, else its own (made from its words). */
+function anchorOf(heading: HTMLElement): string {
+    const section = heading.parentElement;
+
+    if (
+        section?.tagName === 'SECTION' &&
+        section.id !== '' &&
+        section.querySelector('h2, h3') === heading
+    ) {
+        return section.id;
+    }
+
+    if (heading.id === '') {
+        heading.id = (heading.textContent ?? '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+
+    return heading.id;
+}
+
+/**
+ * "On this page": the page's headings as a track, filled up to the one being read, with a playhead
+ * on it. Beside the text on wide screens; above it, folded behind a button, on narrower ones.
+ */
+export function setupContents(): void {
+    const toc = document.querySelector<HTMLElement>('#toc');
+    const doc = document.querySelector<HTMLElement>('.doc');
+
+    if (toc === null || doc === null) {
+        return;
+    }
+
+    const headings = [...doc.querySelectorAll<HTMLElement>('h2, h3')].filter(
+        (heading) => heading.closest('[hidden]') === null,
+    );
+
+    if (headings.length === 0) {
+        toc.remove();
+
+        return;
+    }
+
+    const title = document.createElement('p');
+    const toggle = document.createElement('button');
+    const list = document.createElement('ol');
+    title.className = 'toc-title';
+    title.id = 'toc-title';
+    title.textContent = 'On this page';
+    toggle.type = 'button';
+    toggle.className = 'toc-toggle';
+    toggle.textContent = 'On this page';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', 'toc-list');
+    list.id = 'toc-list';
+    list.className = 'toc-list';
+    toc.setAttribute('aria-labelledby', 'toc-title');
+
+    const links = headings.map((heading) => {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = `#${anchorOf(heading)}`;
+        link.textContent = heading.textContent?.trim() ?? '';
+        item.className = heading.tagName === 'H3' ? 'toc-sub' : '';
+        item.append(link);
+        list.append(item);
+
+        return link;
+    });
+
+    toc.append(title, toggle, list);
+
+    const wide = window.matchMedia(TOC_QUERY);
+    const fold = (open: boolean): void => {
+        toggle.setAttribute('aria-expanded', String(open));
+        list.classList.toggle('open', open);
+    };
+
+    toggle.addEventListener('click', () =>
+        fold(toggle.getAttribute('aria-expanded') !== 'true'),
+    );
+    list.addEventListener('click', (event) => {
+        if (!wide.matches && (event.target as Element).closest('a') !== null) {
+            fold(false);
+        }
+    });
+    wide.addEventListener('change', () => fold(false));
+
+    followReading(list, links);
+}
+
+/**
+ * Marks the link of the heading being read, fills the track up to it (`--played`, in CSS pixels)
+ * and keeps it in sight inside the list.
+ */
+function followReading(list: HTMLElement, links: HTMLAnchorElement[]): void {
+    const targets = links.map((link) =>
+        document.getElementById(link.hash.slice(1)),
+    );
+    let current: HTMLAnchorElement | null = null;
+    let queued = false;
+
+    const mark = (): void => {
+        queued = false;
+        // A heading is being read once its top passes a fifth of the way down the screen.
+        const line = window.innerHeight / 5;
+        const atBottom =
+            window.scrollY + window.innerHeight >=
+            document.documentElement.scrollHeight - 2;
+        let reading = 0;
+
+        targets.forEach((target, index) => {
+            if (target !== null && target.getBoundingClientRect().top <= line) {
+                reading = index;
+            }
+        });
+
+        if (atBottom) {
+            reading = links.length - 1;
+        }
+
+        const link = links[reading];
+        const item = link.parentElement as HTMLElement;
+        list.style.setProperty(
+            '--played',
+            `${item.offsetTop + item.offsetHeight / 2}px`,
+        );
+
+        if (link === current) {
+            return;
+        }
+
+        current?.removeAttribute('aria-current');
+        link.setAttribute('aria-current', 'location');
+        current = link;
+        keepInSight(list, link);
+    };
+
+    const queue = (): void => {
+        if (!queued) {
+            queued = true;
+            requestAnimationFrame(mark);
+        }
+    };
+
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', queue);
+    mark();
+}
+
+/** Room kept around the current link when its list scrolls to it, in CSS pixels. */
+const SIDE_ROOM = 16;
+
+/** Scrolls a list (never the page) so that `link` is inside it. */
+function keepInSight(list: HTMLElement, link: HTMLElement): void {
+    const scroller = list.closest<HTMLElement>('.toc') ?? list;
+    const box = scroller.getBoundingClientRect();
+    const item = link.getBoundingClientRect();
+
+    if (item.top < box.top) {
+        scroller.scrollTop -= box.top - item.top + SIDE_ROOM;
+    } else if (item.bottom > box.bottom) {
+        scroller.scrollTop += item.bottom - box.bottom + SIDE_ROOM;
+    }
 }
 
 /** Makes the button of a `.code` block copy the block's code, whatever it says at the time. */
