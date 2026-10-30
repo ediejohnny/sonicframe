@@ -10,7 +10,10 @@ import type { ButtonFill, ButtonShape } from './button';
 import { isFontName, type FontName } from './fonts';
 import { formatTime } from './timing';
 
-/** A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end. */
+/**
+ * A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end; the
+ * zoom buttons show only when the player's zoom has `buttons`.
+ */
 export type Part =
     | 'play'
     | 'wave'
@@ -22,6 +25,9 @@ export type Part =
     | 'back'
     | 'forward'
     | 'volume'
+    | 'zoomIn'
+    | 'zoomOut'
+    | 'zoomReset'
     | 'slot'
     | 'spacer';
 
@@ -38,6 +44,8 @@ export type PlayerLook = {
     button: { shape: ButtonShape; fill: ButtonFill; size: number };
     /** Height of the wave, in rem. */
     waveHeight: number;
+    /** Height of the minimap strip (when the player has one), in rem. */
+    minimapHeight: number;
     /** Corner radius of the player, in rem. */
     corner: number;
     /** Space inside the player, in rem. */
@@ -75,6 +83,9 @@ export const PART_NAMES: readonly Part[] = Object.freeze([
     'back',
     'forward',
     'volume',
+    'zoomIn',
+    'zoomOut',
+    'zoomReset',
     'slot',
     'spacer',
 ] as const);
@@ -86,6 +97,7 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     time: 'both',
     button: { shape: 'circle', fill: 'solid', size: 36 },
     waveHeight: 2.5,
+    minimapHeight: 1.5,
     corner: 0.75,
     padding: 0.5,
     gap: 0.625,
@@ -218,6 +230,7 @@ export function resolveLook(
             size: within(button.size, base.button.size, 16, 96),
         },
         waveHeight: within(given.waveHeight, base.waveHeight, 0.5, 12),
+        minimapHeight: within(given.minimapHeight, base.minimapHeight, 0.5, 6),
         corner: within(given.corner, base.corner, 0, 4),
         padding: within(given.padding, base.padding, 0, 3),
         gap: within(given.gap, base.gap, 0, 3),

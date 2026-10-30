@@ -60,6 +60,26 @@ describe('resolveLook', () => {
         expect(look.speeds).toEqual([1, 3]);
     });
 
+    it('knows the zoom buttons as parts, and keeps the minimap height in range', () => {
+        const look = resolveLook(DEFAULT_LOOK, {
+            line: ['play', 'zoomOut', 'wave', 'zoomIn'],
+            meta: ['zoomReset'],
+            minimapHeight: 40,
+        });
+
+        expect(look.line).toEqual(['play', 'zoomOut', 'wave', 'zoomIn']);
+        expect(look.meta).toEqual(['zoomReset']);
+        expect(look.minimapHeight).toBe(6);
+        expect(DEFAULT_LOOK.minimapHeight).toBe(1.5);
+        expect(
+            resolveLook(DEFAULT_LOOK, { minimapHeight: Number.NaN })
+                .minimapHeight,
+        ).toBe(1.5);
+        expect(
+            resolveLook(DEFAULT_LOOK, { minimapHeight: 0.1 }).minimapHeight,
+        ).toBe(0.5);
+    });
+
     it('caps the number of parts', () => {
         const many = Array.from({ length: 40 }, () => 'spacer' as Part);
 
