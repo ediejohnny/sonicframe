@@ -10,6 +10,7 @@ import {
     caption,
     formatTime,
     liveFrequency,
+    loadWaveform,
     markers,
     minimap,
     PlayButton,
@@ -33,6 +34,7 @@ import {
     type PlayerOptions,
     type ThemeName,
 } from '../src/player';
+import { MUSIC } from './docs/sounds';
 import {
     bundledSound,
     byId,
@@ -728,12 +730,32 @@ function on(id: string, use: (element: HTMLElement) => void): void {
     }
 }
 
-/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
-function setupPage(): void {
-    on('hero-player', (hero) =>
-        mount(hero, (host, sound) =>
-            player(host, sound, {
-                label: sound.name,
+/**
+ * The home page's music: one track, drawn at random on each visit, shows its ready-made peaks and
+ * loads nothing more until someone presses play. When a track ends the next one plays, and the
+ * tracks go round for as long as the page is open. The player itself stays, so focus stays on it.
+ */
+function musicPlayer(host: HTMLElement): void {
+    const line = document.getElementById('now-playing');
+    const audio = document.createElement('audio');
+    audio.preload = 'none';
+    host.classList.add('loading');
+    let index = Math.floor(Math.random() * MUSIC.length);
+    let made: ReturnType<typeof createPlayer> | null = null;
+
+    const show = async (play: boolean): Promise<void> => {
+        const track = MUSIC[index];
+        const waveform = await loadWaveform(`./${track.peaks}`);
+        audio.src = `./${track.audio}`;
+
+        if (made === null) {
+            host.classList.remove('loading');
+            const created = createPlayer({
+                container: host,
+                media: audio,
+                label: 'Music',
+                peaks: waveform.peaks,
+                duration: waveform.duration ?? undefined,
                 look: {
                     waveHeight: 5,
                     button: { shape: 'circle', fill: 'solid', size: 52 },
@@ -744,9 +766,40 @@ function setupPage(): void {
                     fontSize: 0.9375,
                 },
                 plugins: [timeline()],
-            }),
-        ),
-    );
+            });
+            created.on('error', (error) => console.error(error));
+            painted.add(() => created.frame.refresh());
+            made = created;
+        } else {
+            made.frame.setPeaks(waveform.peaks);
+            made.frame.setDuration(waveform.duration);
+        }
+
+        if (line !== null) {
+            line.textContent = `Music: ${track.title} by ${track.artist}.`;
+        }
+
+        if (play) {
+            await audio.play();
+        }
+    };
+
+    audio.addEventListener('ended', () => {
+        index = (index + 1) % MUSIC.length;
+        show(true).catch((error: unknown) => console.error(error));
+    });
+    show(false).catch((error: unknown) => {
+        console.error(error);
+
+        if (line !== null) {
+            line.textContent = 'The music did not load.';
+        }
+    });
+}
+
+/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
+function setupPage(): void {
+    on('hero-player', musicPlayer);
 
     on('tag-player', (tag) => {
         mount(tag, (host, sound) => {
