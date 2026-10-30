@@ -17,15 +17,40 @@ import {
     type MediaEventType,
     type ValueText,
 } from '../core/controller';
+import { barValues, buildDetail, type Detail } from '../core/detail';
 import { Emitter } from '../core/emitter';
-import { barMetrics } from '../core/layout';
+import { barMetrics, barWindow } from '../core/layout';
 import { clamp01 } from '../core/math';
 import { resample } from '../core/peaks';
 import { applyStyles } from '../core/styles';
-import { overlayOf, ratioAt, sameOverlay, type Overlay } from '../core/scene';
+import { overlayOf, sameOverlay, type Overlay } from '../core/scene';
 import { DEFAULT_WAVE, knobSpot, resolveWave, waveShape } from '../core/shapes';
 import { cleanText } from '../core/text';
 import { defaultValueText, easeOut } from '../core/timing';
+import {
+    FULL_VIEW,
+    fitView,
+    revealView,
+    scrollView,
+    viewLevel,
+    viewRatio,
+    viewX,
+    zoomView,
+    type View,
+    type ViewState,
+} from '../core/view';
+import {
+    MAX_ZOOM,
+    resolveZoom,
+    viewWords,
+    wheelFactor,
+    ZOOM_WORDS,
+    zoomKey,
+    type ViewSource,
+    type ZoomOptions,
+    type ZoomSettings,
+    type ZoomWords,
+} from '../core/zoom';
 import type {
     BarStyle,
     Claim,
@@ -96,7 +121,23 @@ export type SonicFrameOptions = {
     lazy?: boolean;
     /** Let the bars grow in when peaks arrive (never with reduced motion). */
     animate?: boolean;
+    /**
+     * Zoom and scroll, off by default. `true` gives the view and its methods; each way of moving it
+     * (keys, wheel, two fingers, following, edges) has its own switch in `ZoomOptions`.
+     */
+    zoom?: boolean | ZoomOptions;
+    /** Accessibility options, by place and action. */
+    a11y?: SonicFrameA11y;
     plugins?: readonly Plugin[];
+};
+
+export type SonicFrameA11y = {
+    zoom?: {
+        /** Says the new view through the live region after a zoom by the keys, a button or two fingers. Off by default. */
+        announce?: boolean;
+        /** The words said; English by default. */
+        words?: Partial<ZoomWords>;
+    };
 };
 
 export const DEFAULT_BAR: Readonly<BarStyle> = Object.freeze({
@@ -125,7 +166,18 @@ type Press = {
     claim: Claim | null;
     active: boolean;
     fromX: number;
+    /** The pointer's last place, moved again when the view scrolls under it at an edge. */
+    last: PointerEvent;
 };
+
+/** Two fingers on the wave: where they started, and the sound that was between them. */
+type Pinch = { distance: number; level: number; anchor: number };
+
+/** The largest zoom while the frame has no peaks to set it. */
+const DEFAULT_MAX_ZOOM = 100;
+
+/** The longest time one edge-scroll step covers, in seconds (a frame after a pause never jumps). */
+const MAX_EDGE_STEP = 0.1;
 
 /** How long the bars take to grow in, in milliseconds. */
 const APPEAR_MS = 180;
@@ -201,6 +253,19 @@ export class SonicFrame implements PluginHost {
     private destroyed = false;
     private readonly lanes: LaneManager;
     private overlayEl: HTMLElement | null = null;
+    private readonly zoom: ZoomSettings | null;
+    private readonly zoomAnnounce: boolean;
+    private readonly zoomWords: ZoomWords;
+    private viewData: View = FULL_VIEW;
+    /** The peaks' pyramid, built the first time the frame draws zoomed in. */
+    private detail: Detail | null = null;
+    /** A scroll or zoom by the person holds the following until the next seek or play. */
+    private followHeld = false;
+    /** The touch pointers down on the frame, for two-finger zoom. */
+    private readonly touches = new Map<number, { x: number; y: number }>();
+    private pinch: Pinch | null = null;
+    /** When the last edge-scroll step ran, or null while no drag sits at an edge. */
+    private edgeAt: number | null = null;
 
     static create(options: SonicFrameOptions): SonicFrame {
         return new SonicFrame(options);
@@ -221,6 +286,9 @@ export class SonicFrame implements PluginHost {
         this.wave = resolveWave(DEFAULT_WAVE, options.wave);
         this.colors = { ...DEFAULT_COLORS, ...options.colors };
         this.task = { render: (now) => this.render(now) };
+        this.zoom = resolveZoom(options.zoom);
+        this.zoomAnnounce = options.a11y?.zoom?.announce === true;
+        this.zoomWords = { ...ZOOM_WORDS, ...options.a11y?.zoom?.words };
 
         this.prepareContainer(options.label ?? 'Audio position');
 
@@ -288,6 +356,22 @@ export class SonicFrame implements PluginHost {
         this.controller.setDuration(options.duration ?? null);
         this.bind(options.media ?? null);
 
+        if (this.zoom !== null) {
+            const view = this.zoom.view;
+            this.viewData = fitView(view.start, view.end, this.maxLevel());
+            this.events.on('seek', (event) => {
+                this.followHeld = false;
+
+                if (event.source === 'keyboard' && this.zoom?.revealKeys) {
+                    this.moveView(
+                        revealView(this.viewData, event.ratio, 'page'),
+                        'keys',
+                        false,
+                    );
+                }
+            });
+        }
+
         // After bind, so a plugin's setup already sees the media (e.g. liveFrequency taps it).
         for (const plugin of options.plugins ?? []) {
             this.use(plugin);
@@ -321,6 +405,49 @@ export class SonicFrame implements PluginHost {
     /** The duration the peaks came with (a waveform file's), in seconds, or null. */
     get peaksDuration(): number | null {
         return this.controller.peaksDuration;
+    }
+
+    /** The part of the sound in view, its zoom level and the largest one; the whole sound while zoom is off. */
+    get view(): ViewState {
+        const view = this.viewData;
+
+        return {
+            start: view.start,
+            end: view.end,
+            level: viewLevel(view),
+            maxLevel: this.maxLevel(),
+        };
+    }
+
+    /** Shows `start`..`end` of the sound (ratios from 0 to 1), kept possible; zoom must be on. */
+    setView(start: number, end: number, source: ViewSource = 'api'): void {
+        this.moveView(fitView(start, end, this.maxLevel()), source);
+    }
+
+    /**
+     * Zooms to `level` around `at` (a ratio of the sound that keeps its place on screen); without it,
+     * around the playing position when in view or the middle, as `anchor` says.
+     */
+    zoomTo(level: number, at?: number, source: ViewSource = 'api'): void {
+        this.moveView(
+            zoomView(
+                this.viewData,
+                level,
+                at ?? this.anchor(),
+                this.maxLevel(),
+            ),
+            source,
+        );
+    }
+
+    /** Zooms in (`factor` above 1) or out (below 1) from the current level; see `zoomTo`. */
+    zoomBy(factor: number, at?: number, source: ViewSource = 'api'): void {
+        this.zoomTo(viewLevel(this.viewData) * factor, at, source);
+    }
+
+    /** Moves the view to begin at `start` (a ratio of the sound), keeping its size. */
+    scrollTo(start: number, source: ViewSource = 'api'): void {
+        this.moveView(scrollView(this.viewData, start), source);
     }
 
     /** The media element the frame follows, or null. */
@@ -491,6 +618,7 @@ export class SonicFrame implements PluginHost {
 
     setBar(bar: Partial<BarStyle>): void {
         this.bar = { ...this.bar, ...bar };
+        this.refitView();
         this.layoutDirty = true;
         this.invalidate();
     }
@@ -663,7 +791,10 @@ export class SonicFrame implements PluginHost {
                 this.pointerMove(event),
             );
             on(this.container, 'pointerup', (event) => this.pointerUp(event));
-            on(this.container, 'pointercancel', () => this.pointerCancel());
+            on(this.container, 'pointercancel', (event) => {
+                this.touch(event, 'up');
+                this.pointerCancel();
+            });
             on(this.container, 'lostpointercapture', () =>
                 this.pointerCancel(),
             );
@@ -676,11 +807,23 @@ export class SonicFrame implements PluginHost {
             on(this.container, 'keydown', (event) => {
                 if (
                     this.pluginKey(event) ||
+                    this.zoomKeyDown(event) ||
                     this.controller.key(event.key, event)
                 ) {
                     event.preventDefault();
                 }
             });
+        }
+
+        if (this.zoom?.wheel || this.zoom?.scroll) {
+            // Not passive: a wheel that zooms or scrolls the view must not scroll the page too.
+            const listener = (event: WheelEvent): void => this.wheel(event);
+            this.container.addEventListener('wheel', listener, {
+                passive: false,
+            });
+            this.cleanups.push(() =>
+                this.container.removeEventListener('wheel', listener),
+            );
         }
 
         if (typeof window.matchMedia === 'function') {
@@ -694,8 +837,95 @@ export class SonicFrame implements PluginHost {
     }
 
     private readonly onMedia = (event: Event): void => {
+        if (event.type === 'play') {
+            this.followHeld = false;
+        }
+
         this.controller.mediaEvent(event.type as MediaEventType);
     };
+
+    /** The largest zoom: the option, or one peak per bar (100 while there are no peaks or pixels). */
+    private maxLevel(): number {
+        if (this.zoom === null) {
+            return 1;
+        }
+
+        if (this.zoom.max !== null) {
+            return this.zoom.max;
+        }
+
+        const { width, pixelRatio } = this.size;
+        const bars = barMetrics(width, this.bar, pixelRatio).count;
+        const peaks = this.peaksData;
+
+        return peaks === null || bars === 0
+            ? DEFAULT_MAX_ZOOM
+            : Math.min(MAX_ZOOM, Math.max(1, peaks.length / bars));
+    }
+
+    /** Where keys and buttons zoom around: the playing position while in view, else the middle. */
+    private anchor(): number {
+        const { start, end } = this.viewData;
+        const position = this.controller.progress;
+
+        return this.zoom?.anchor === 'position' &&
+            position >= start &&
+            position <= end
+            ? position
+            : (start + end) / 2;
+    }
+
+    /**
+     * Shows `next` (zoom on only) and tells listeners. A move by the person holds the following;
+     * keys, buttons and two fingers are announced when asked (two fingers once they let go).
+     */
+    private moveView(
+        next: View,
+        source: ViewSource,
+        hold: boolean = source !== 'api' && source !== 'follow',
+    ): void {
+        const view = this.viewData;
+
+        if (
+            this.zoom === null ||
+            this.destroyed ||
+            (next.start === view.start && next.end === view.end)
+        ) {
+            return;
+        }
+
+        this.viewData = next;
+        this.layoutDirty = true;
+        this.invalidate();
+
+        if (hold && this.zoom.followHold) {
+            this.followHeld = true;
+        }
+
+        this.events.emit('viewchange', this.view, source);
+
+        if (hold && (source === 'keys' || source === 'button')) {
+            this.announceView();
+        }
+    }
+
+    private announceView(): void {
+        if (this.zoomAnnounce) {
+            announce(
+                viewWords(
+                    this.zoomWords,
+                    this.viewData,
+                    this.controller.duration,
+                ),
+            );
+        }
+    }
+
+    /** Keeps the view possible after the largest zoom changed (new peaks, a new size or bar). */
+    private refitView(): void {
+        const { start, end } = this.viewData;
+        this.moveView(fitView(start, end, this.maxLevel()), 'api', false);
+    }
 
     private unbindMedia(): void {
         for (const type of MEDIA_EVENTS) {
@@ -705,9 +935,152 @@ export class SonicFrame implements PluginHost {
         this.mediaEl = null;
     }
 
+    /** A zoom key (zoom keys on): in, out or back to the whole sound. Returns whether it was one. */
+    private zoomKeyDown(event: KeyboardEvent): boolean {
+        const zoom = this.zoom;
+        const action =
+            zoom?.keys == null ? null : zoomKey(event.key, event, zoom.keys);
+
+        if (zoom === null || action === null) {
+            return false;
+        }
+
+        if (action === 'reset') {
+            this.setView(0, 1, 'keys');
+        } else {
+            this.zoomBy(
+                action === 'in' ? zoom.step : 1 / zoom.step,
+                undefined,
+                'keys',
+            );
+        }
+
+        return true;
+    }
+
+    /** The wheel: zooms around the pointer with its modifier held, or scrolls the view sideways. */
+    private wheel(event: WheelEvent): void {
+        const zoom = this.zoom;
+
+        if (zoom === null) {
+            return;
+        }
+
+        const box = this.canvas.getBoundingClientRect();
+        const held =
+            zoom.wheelModifier === 'none' ||
+            (zoom.wheelModifier === 'ctrl'
+                ? event.ctrlKey || event.metaKey
+                : event.altKey);
+
+        if (zoom.wheel && held && event.deltaY !== 0 && !event.shiftKey) {
+            event.preventDefault();
+            this.zoomTo(
+                viewLevel(this.viewData) *
+                    wheelFactor(event.deltaY, event.deltaMode, zoom.wheelSpeed),
+                viewRatio(event.clientX - box.left, this.viewData, box.width),
+                'wheel',
+            );
+
+            return;
+        }
+
+        const { start, end } = this.viewData;
+        const sideways =
+            event.deltaX !== 0
+                ? event.deltaX
+                : event.shiftKey
+                  ? event.deltaY
+                  : 0;
+
+        // At the whole sound there is nothing to scroll: the page keeps the wheel.
+        if (
+            !zoom.scroll ||
+            sideways === 0 ||
+            end - start >= 1 ||
+            box.width <= 0
+        ) {
+            return;
+        }
+
+        const pixels =
+            sideways *
+            (event.deltaMode === 1
+                ? 16
+                : event.deltaMode === 2
+                  ? box.width
+                  : 1);
+        event.preventDefault();
+        this.scrollTo(start + (pixels / box.width) * (end - start), 'wheel');
+    }
+
+    /**
+     * Tracks touch pointers (two-finger zoom on). Returns true while two fingers are down, when the
+     * pointer belongs to the pinch and nothing else should see it.
+     */
+    private touch(event: PointerEvent, phase: 'down' | 'move' | 'up'): boolean {
+        if (!this.zoom?.pinch || event.pointerType !== 'touch') {
+            return false;
+        }
+
+        if (phase === 'up') {
+            this.touches.delete(event.pointerId);
+
+            if (this.pinch !== null && this.touches.size < 2) {
+                this.pinch = null;
+                this.announceView();
+
+                return true;
+            }
+
+            return this.pinch !== null;
+        }
+
+        this.touches.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+        });
+
+        if (this.touches.size !== 2) {
+            return this.pinch !== null;
+        }
+
+        const [a, b] = [...this.touches.values()];
+        const box = this.canvas.getBoundingClientRect();
+        const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+        const middle = (a.x + b.x) / 2 - box.left;
+
+        if (this.pinch === null) {
+            // A second finger ends whatever the first one started.
+            this.pointerCancel();
+            this.pinch = {
+                distance,
+                level: viewLevel(this.viewData),
+                anchor: viewRatio(middle, this.viewData, box.width),
+            };
+
+            return true;
+        }
+
+        const span =
+            1 /
+            Math.min(
+                this.maxLevel(),
+                Math.max(
+                    1,
+                    (this.pinch.level * distance) / this.pinch.distance,
+                ),
+            );
+        const start =
+            this.pinch.anchor - (box.width > 0 ? middle / box.width : 0) * span;
+        this.moveView(fitView(start, start + span, this.maxLevel()), 'pinch');
+
+        return true;
+    }
+
     private wavePoint(event: PointerEvent, box: DOMRect): WavePoint {
         const x = event.clientX - box.left;
-        const ratio = ratioAt(x, box.width);
+        const ratio = viewRatio(x, this.viewData, box.width);
         const duration = this.controller.duration;
 
         return {
@@ -746,7 +1119,11 @@ export class SonicFrame implements PluginHost {
     }
 
     private pointerDown(event: PointerEvent): void {
-        if (!event.isPrimary || event.button !== 0) {
+        if (
+            this.touch(event, 'down') ||
+            !event.isPrimary ||
+            event.button !== 0
+        ) {
             return;
         }
 
@@ -766,6 +1143,7 @@ export class SonicFrame implements PluginHost {
                 claim: claimed.claim,
                 active: claimed.claim === 'take',
                 fromX: point.x,
+                last: event,
             };
 
             if (this.press.active) {
@@ -784,6 +1162,7 @@ export class SonicFrame implements PluginHost {
                 claim: null,
                 active: false,
                 fromX: point.x,
+                last: event,
             };
         }
 
@@ -795,6 +1174,10 @@ export class SonicFrame implements PluginHost {
     }
 
     private pointerMove(event: PointerEvent): void {
+        if (this.touch(event, 'move')) {
+            return;
+        }
+
         const press = this.press;
 
         if (press === null) {
@@ -810,7 +1193,109 @@ export class SonicFrame implements PluginHost {
             return;
         }
 
-        const point = this.wavePoint(event, press.box);
+        press.last = event;
+        this.movePress(press);
+
+        // Held at an edge, the view keeps scrolling on the animation frames.
+        if (this.edgeDepth(press) !== 0) {
+            schedule(this.task);
+        }
+    }
+
+    /**
+     * How deep a drag sits in an edge zone (edge scrolling on): -1 to 0 at the left, 0 to 1 at the
+     * right, 0 elsewhere, at the whole sound, or for a plugin's press that is not a drag yet.
+     */
+    private edgeDepth(press: Press): number {
+        const zoom = this.zoom;
+        const { start, end } = this.viewData;
+
+        if (
+            zoom === null ||
+            !zoom.edgeScroll ||
+            end - start >= 1 ||
+            (press.plugin !== null && !press.active)
+        ) {
+            return 0;
+        }
+
+        const width = press.box.width;
+        const size = Math.min(zoom.edgeSize, width / 2);
+        const x = press.last.clientX - press.box.left;
+
+        if (size <= 0) {
+            return 0;
+        }
+
+        if (x < size) {
+            return -Math.min(1, (size - x) / size);
+        }
+
+        return x > width - size ? Math.min(1, (x - (width - size)) / size) : 0;
+    }
+
+    /** One animation frame of a drag held at an edge: the view scrolls and the drag moves with it. */
+    private scrollAtEdge(now: number): void {
+        const press = this.press;
+        const depth = press === null ? 0 : this.edgeDepth(press);
+
+        if (press === null || depth === 0 || this.zoom === null) {
+            this.edgeAt = null;
+
+            return;
+        }
+
+        const seconds =
+            this.edgeAt === null
+                ? 0
+                : Math.min(
+                      MAX_EDGE_STEP,
+                      Math.max(0, (now - this.edgeAt) / 1000),
+                  );
+        this.edgeAt = now;
+
+        if (seconds > 0) {
+            const { start, end } = this.viewData;
+            this.scrollTo(
+                start + depth * this.zoom.edgeSpeed * (end - start) * seconds,
+                'edge',
+            );
+            this.movePress(press);
+        }
+
+        schedule(this.task);
+    }
+
+    /** While playing (following on, not held), the view turns a page or keeps the position centered. */
+    private followPosition(): void {
+        const zoom = this.zoom;
+        const { start, end } = this.viewData;
+
+        if (
+            zoom === null ||
+            !zoom.follow ||
+            this.followHeld ||
+            this.press !== null ||
+            end - start >= 1 ||
+            !this.controller.playing
+        ) {
+            return;
+        }
+
+        const at = this.controller.progress;
+        const center = zoom.followType === 'center' && !prefersReducedMotion();
+
+        this.moveView(
+            center
+                ? scrollView(this.viewData, at - (end - start) / 2)
+                : revealView(this.viewData, at, 'page'),
+            'follow',
+        );
+    }
+
+    /** Moves the press to where its pointer last was, through the view as it is now. */
+    private movePress(press: Press): void {
+        const point = this.wavePoint(press.last, press.box);
 
         if (press.plugin === null) {
             this.controller.pointerMove(point.ratio);
@@ -833,6 +1318,10 @@ export class SonicFrame implements PluginHost {
     }
 
     private pointerUp(event: PointerEvent): void {
+        if (this.touch(event, 'up')) {
+            return;
+        }
+
         const press = this.press;
 
         if (press === null) {
@@ -1007,6 +1496,8 @@ export class SonicFrame implements PluginHost {
                 : peaks.map((value) => clamp01(Math.abs(value)));
         this.controller.setPeaksDuration(duration);
         this.values = null;
+        this.detail = null;
+        this.refitView();
         this.layoutDirty = true;
         this.appear =
             this.peaksData !== null &&
@@ -1030,6 +1521,7 @@ export class SonicFrame implements PluginHost {
         }
 
         this.size = size;
+        this.refitView();
         this.relayoutLanes();
         this.allocate();
         this.notifyResize();
@@ -1113,6 +1605,8 @@ export class SonicFrame implements PluginHost {
         }
 
         this.controller.tick();
+        this.followPosition();
+        this.scrollAtEdge(now);
 
         if (!this.allocated || this.context === null) {
             return;
@@ -1137,6 +1631,7 @@ export class SonicFrame implements PluginHost {
             palette.hover === null ? null : this.controller.hover,
             this.size.width,
             hoverMatters && this.controller.hover !== null,
+            this.viewData,
         );
 
         if (this.paintDirty || !sameOverlay(this.painted, overlay)) {
@@ -1168,16 +1663,36 @@ export class SonicFrame implements PluginHost {
             return;
         }
 
-        const count = barMetrics(width, this.bar, pixelRatio).count;
+        const view = this.viewData;
+        const zoomed =
+            this.override === null && (view.start > 0 || view.end < 1);
+        const window = zoomed
+            ? barWindow(width, view, this.bar, pixelRatio)
+            : undefined;
+        let values: number[];
 
-        if (
-            source !== null &&
-            (this.values === null || this.values.length !== count)
-        ) {
-            this.values = resample(source, count);
+        // Zoomed in, the bars of the view come from the peaks' pyramid; live values and the whole
+        // sound keep one value per bar across the width.
+        if (window !== undefined && this.peaksData !== null) {
+            this.detail ??= buildDetail(this.peaksData);
+            values = barValues(
+                this.detail,
+                window.total,
+                window.first,
+                window.count,
+            );
+        } else {
+            const count = barMetrics(width, this.bar, pixelRatio).count;
+
+            if (
+                source !== null &&
+                (this.values === null || this.values.length !== count)
+            ) {
+                this.values = resample(source, count);
+            }
+
+            values = source === null ? [] : (this.values ?? []);
         }
-
-        let values = source === null ? [] : (this.values ?? []);
 
         if (this.appear !== null) {
             if (this.appear < 0) {
@@ -1195,7 +1710,15 @@ export class SonicFrame implements PluginHost {
         }
 
         this.drawing = drawingOf(
-            waveShape(values, width, height, this.bar, this.wave, pixelRatio),
+            waveShape(
+                values,
+                width,
+                height,
+                this.bar,
+                this.wave,
+                pixelRatio,
+                window,
+            ),
             Math.round(this.wave.glow * pixelRatio),
         );
     }
@@ -1206,6 +1729,7 @@ export class SonicFrame implements PluginHost {
         palette: Palette,
     ): void {
         const { width, height, pixelRatio } = this.size;
+        const view = this.viewData;
         const paint: PaintContext = {
             ctx,
             width,
@@ -1214,7 +1738,9 @@ export class SonicFrame implements PluginHost {
             progress: this.controller.progress,
             duration: this.controller.duration,
             hover: this.controller.hover,
-            xAt: (ratio) => Math.round(clamp01(ratio) * width),
+            view: this.view,
+            xAt: (ratio) => Math.round(viewX(clamp01(ratio), view, width)),
+            ratioAt: (x) => viewRatio(x, view, width),
             color: (value) => this.color(value),
         };
 
@@ -1227,6 +1753,10 @@ export class SonicFrame implements PluginHost {
         }
 
         this.drawPlugins('over', paint);
+
+        if (overlay.offscreen === true) {
+            return;
+        }
 
         if (palette.cursor !== null) {
             paintCursor(

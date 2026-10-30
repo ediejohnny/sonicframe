@@ -10,14 +10,13 @@
 
 import {
     clipPlan,
+    clipShape,
     DEFAULT_CLIP_TYPES,
     DEFAULT_MAX_SOURCE_SECONDS,
     pickMimeType,
 } from '../core/clip';
-import { barMetrics } from '../core/layout';
-import { resample } from '../core/peaks';
 import { overlayOf } from '../core/scene';
-import { DEFAULT_WAVE, knobSpot, waveShape } from '../core/shapes';
+import { DEFAULT_WAVE, knobSpot } from '../core/shapes';
 import { cleanText } from '../core/text';
 import type { BarStyle, WaveStyle } from '../types';
 import { readCapped } from './decode';
@@ -213,20 +212,16 @@ export async function exportClip(
                 : { mimeType, videoBitsPerSecond: MAX_BITRATE },
         );
 
-        const barCount = barMetrics(width, options.bar, 1).count;
-        const values = resample(
-            options.peaks.map((value) => Math.min(1, Math.abs(value))),
-            barCount,
-        );
         const captionHeight = options.caption === undefined ? 0 : 28;
         drawing = drawingOf(
-            waveShape(
-                values,
+            clipShape(
+                options.peaks,
+                plan,
+                buffer.duration,
                 width,
                 height - captionHeight,
                 options.bar,
                 wave,
-                1,
             ),
             Math.round(wave.glow),
         );

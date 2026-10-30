@@ -61,10 +61,42 @@ describe('overlay and pointer', () => {
         const a = overlayOf(0.5004, null, 1000);
         const b = overlayOf(0.4996, null, 1000);
 
-        expect(a).toEqual({ progress: 500, hover: null, hovered: false });
+        expect(a).toEqual({
+            progress: 500,
+            hover: null,
+            hovered: false,
+            offscreen: false,
+        });
         expect(sameOverlay(a, b)).toBe(true);
         expect(sameOverlay(a, overlayOf(0.5004, 0.2, 1000))).toBe(false);
         expect(sameOverlay(null, a)).toBe(false);
+    });
+
+    it('places positions through the view, holding the played edge inside and saying when it is out of view', () => {
+        const view = { start: 0.5, end: 1 };
+
+        expect(overlayOf(0.2, null, 200, false, view)).toEqual({
+            progress: 0,
+            hover: null,
+            hovered: false,
+            offscreen: true,
+        });
+        expect(overlayOf(0.75, 0.6, 200, true, view)).toEqual({
+            progress: 100,
+            hover: 40,
+            hovered: true,
+            offscreen: false,
+        });
+        expect(overlayOf(1, null, 200, false, view).offscreen).toBe(false);
+        expect(
+            overlayOf(0.6, null, 200, false, { start: 0, end: 0.5 }),
+        ).toMatchObject({ progress: 200, offscreen: true });
+        expect(
+            sameOverlay(
+                overlayOf(0.2, null, 200, false, view),
+                overlayOf(0.5, null, 200, false, view),
+            ),
+        ).toBe(false);
     });
 
     it('turns a pointer offset into a position from 0 to 1', () => {

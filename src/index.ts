@@ -7,6 +7,7 @@ export {
     DEFAULT_BAR,
     DEFAULT_COLORS,
     SonicFrame,
+    type SonicFrameA11y,
     type SonicFrameOptions,
 } from './dom/frame';
 export {
@@ -132,6 +133,15 @@ export {
     type WriteWaveformOptions,
 } from './core/waveform';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
+export type { View, ViewState } from './core/view';
+export {
+    MAX_ZOOM,
+    ZOOM_WORDS,
+    type ViewSource,
+    type ZoomKey,
+    type ZoomOptions,
+    type ZoomWords,
+} from './core/zoom';
 export { formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
 export type {
