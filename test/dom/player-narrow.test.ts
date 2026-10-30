@@ -207,6 +207,36 @@ describe('a narrow player', () => {
         expect(rows()).toEqual(WIDE);
     });
 
+    it('keeps on the line the parts narrowLine names', () => {
+        player = make({ narrowLine: ['play', 'wave', 'speed'] });
+        resize(320);
+
+        expect(rows()).toEqual({
+            line: ['sonicframe-play', 'wave', 'sonicframe-speed'],
+            under: [
+                'sonicframe-time',
+                '|',
+                'sonicframe-zoom-out',
+                'sonicframe-zoom-reset',
+                'sonicframe-zoom-in',
+            ],
+        });
+    });
+
+    it('puts on the left, under the wave, the parts narrowStart names', () => {
+        player = make({ narrowStart: ['speed', 'zoomReset'] });
+        resize(320);
+
+        expect(rows().under).toEqual([
+            'sonicframe-speed',
+            'sonicframe-zoom-reset',
+            '|',
+            'sonicframe-time',
+            'sonicframe-zoom-out',
+            'sonicframe-zoom-in',
+        ]);
+    });
+
     it('follows a narrow width of its own', () => {
         player = make({ narrow: 40 });
         resize(600);

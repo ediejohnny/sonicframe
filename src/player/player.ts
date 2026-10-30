@@ -271,27 +271,24 @@ function remPixels(rem: number): number {
 }
 
 /**
- * Where a piece of the main line goes in a narrow player: it stays on the line, goes under the wave
- * on the left (the time) or on the right (the other controls), or is left out (the look's spacers).
+ * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
+ * 
+arrowLine names), goes under the wave on the left (what 
+arrowStart names) or on the right
+ * (everything else), or is left out (the look's spacers).
  */
-type Place = 'line' | 'time' | 'control' | 'spacer';
+type Place = 'line' | 'start' | 'end' | 'spacer';
 
-function placeOf(part: Part): Place {
-    switch (part) {
-        case 'play':
-        case 'wave':
-        case 'slot':
-            return 'line';
-        case 'time':
-        case 'elapsed':
-        case 'remaining':
-        case 'duration':
-            return 'time';
-        case 'spacer':
-            return 'spacer';
-        default:
-            return 'control';
+function placeOf(part: Part, look: PlayerLook): Place {
+    if (part === 'wave' || look.narrowLine.includes(part)) {
+        return 'line';
     }
+
+    if (part === 'spacer') {
+        return 'spacer';
+    }
+
+    return look.narrowStart.includes(part) ? 'start' : 'end';
 }
 
 /** The built main line, kept so a narrow player can move its pieces without building again. */
@@ -981,7 +978,7 @@ export class Player {
             const before = line.childNodes.length;
             this.addPart(part, line, column);
             pieces.push({
-                place: placeOf(part),
+                place: placeOf(part, look),
                 nodes: [...line.childNodes].slice(before),
             });
         }
@@ -991,7 +988,7 @@ export class Player {
         if (listen !== null && canSpeak()) {
             const node = this.listenPart(listen);
             line.append(node);
-            pieces.push({ place: 'control', nodes: [node] });
+            pieces.push({ place: 'end', nodes: [node] });
         }
 
         this.layout = { line, box, pieces, under: null, narrow: false };
@@ -1028,9 +1025,10 @@ export class Player {
 
     /**
      * A narrow player (under the look's `narrow` width, with the wave in its line) turns into a voice
-     * note: the play button and the wave keep the line, the time goes under the wave on the left and
-     * the other controls under it on the right. The pieces built are moved, never built again, so
-     * the wave and its state stay; a moved control that had the focus gets it back.
+     * note: the wave and the parts `narrowLine` names keep the line, the parts `narrowStart` names go
+     * under the wave on the left and every other part under it on the right. The pieces built are
+     * moved, never built again, so the wave and its state stay; a moved control that had the focus
+     * gets it back.
      */
     private arrange(): void {
         const layout = this.layout;
@@ -1086,8 +1084,8 @@ export class Player {
                 node.remove();
             }
 
-            controls.append(...nodes('control'));
-            under.append(...nodes('time'), controls);
+            controls.append(...nodes('end'));
+            under.append(...nodes('start'), controls);
             layout.box.after(under);
             layout.under = under;
         } else {

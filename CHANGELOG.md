@@ -63,7 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   back after; each cursor can be changed. A plugin's mouse drag keeps that plugin's cursor while it lasts.
 - `narrow` in the player's look (22 rem; `0` turns it off): a narrower player with the wave in its line turns into a
   voice note, with the time under the wave on the left and the other controls on the right. It is on by default and
-  only changes players narrower than that. The player gets `data-narrow` while it lasts.
+  only changes players narrower than that. The player gets `data-narrow` while it lasts. `narrowLine` and
+  `narrowStart` choose which parts stay on the line and which go under the wave on the left.
 - `waveMin` in the look (8 rem): with zoom buttons on the line, the wave keeps at least this width and the buttons
   wrap under it.
 
