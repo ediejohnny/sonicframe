@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Spectrogram · SonicFrame</title>
+        <meta
+            name="description"
+            content="A time and frequency picture of the sound, computed in the browser with no dependency."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Spectrogram</h1>
+                <p class="lede">
+                    A picture of time and frequency: low sounds at the bottom,
+                    high at the top, loud in bright colors. It is computed in
+                    the browser with a dependency-free FFT, in slices, so the
+                    page never freezes.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding it</h2>
+                    <div class="code">
+                        <pre><code>import { spectrogram } from 'sonicframe';
+
+frame.use(spectrogram({ source: '/voice.mp3', map: 'magma' }));
+
+// On the player, in the palette's colors:
+createPlayer({ container, src, spectrogram: true });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"spectrogram":true,"look":{"waveHeight":4}}'
+                    ></div>
+                    <p>
+                        Like the peaks, it is computed only once the frame comes
+                        near the screen. The sound is decoded once; a function
+                        given as <code>source</code> lets the app share one
+                        decode between plugins.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>source</code></td>
+                                    <td></td>
+                                    <td>
+                                        An address or blob to decode, or a
+                                        function that gives decoded audio.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>samples</code></td>
+                                    <td></td>
+                                    <td>
+                                        Ready-made mono samples (skips
+                                        decoding).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>map</code></td>
+                                    <td><code>'magma'</code></td>
+                                    <td>
+                                        <code>viridis</code>,
+                                        <code>magma</code>, <code>gray</code>,
+                                        <code>ice</code>, <code>fire</code>,
+                                        <code>ocean</code>, or your own
+                                        <code>{ from, via, to }</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>fftSize</code></td>
+                                    <td></td>
+                                    <td>
+                                        Window size, a power of two from 32 to
+                                        8192.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>columns</code>, <code>rows</code>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        The picture's size in time and
+                                        frequency.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>minDb</code>, <code>maxDb</code>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        Decibels mapped to the quietest and the
+                                        brightest color.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>scale</code></td>
+                                    <td></td>
+                                    <td>
+                                        <code>'linear'</code> or
+                                        <code>'log'</code> (rows spread over
+                                        octaves).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>detail</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Zoomed in, a sharp picture of the part
+                                        in view once the view rests.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>detailDelay</code>,
+                                        <code>detailColumns</code>
+                                    </td>
+                                    <td><code>200</code>, the width</td>
+                                    <td>
+                                        How long the view rests first (ms), and
+                                        the sharp picture's columns (at most
+                                        4096).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Your own map colors take any CSS color or
+                        <code>var(--name, fallback)</code>, so a palette works;
+                        after <code>refresh()</code>, the picture is repainted
+                        in the new colors without computing again.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

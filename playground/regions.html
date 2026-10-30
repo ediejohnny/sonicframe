@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Regions · SonicFrame</title>
+        <meta
+            name="description"
+            content="Stretches of a sound to mark, play or loop, made and changed with the pointer or the keys."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Regions</h1>
+                <p class="lede">
+                    Stretches of the sound to mark, play or loop: a verse to
+                    practice, a part to cut, a passage to comment on. Made with
+                    the pointer, changed with the pointer or the keys.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding regions</h2>
+                    <div class="code">
+                        <pre><code>import { regions } from 'sonicframe';
+
+const parts = regions({
+    items: [{ start: 8.5, end: 16, label: 'Verse' }],
+    onChange: (list) =&gt; save(list),
+});
+frame.use(parts);</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-plugins="regions"
+                    ></div>
+                    <ul>
+                        <li>
+                            <kbd>Shift</kbd> + drag makes a region (a plain drag
+                            still scrubs).
+                        </li>
+                        <li>Drag the body to move it, an edge to resize it.</li>
+                        <li>
+                            The cursor shows what a press will do: an open hand,
+                            a closed one while moving, a resize arrow on the
+                            edges.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Keys</h2>
+                    <ul class="keys">
+                        <li>
+                            <kbd>R</kbd> and <kbd>Shift</kbd> +
+                            <kbd>R</kbd> select the next and previous region
+                        </li>
+                        <li>
+                            <kbd>Enter</kbd> plays it, <kbd>L</kbd> loops it,
+                            <kbd>Delete</kbd> removes it
+                        </li>
+                        <li>
+                            <kbd>[</kbd> <kbd>]</kbd> nudge its start,
+                            <kbd>{</kbd> <kbd>}</kbd> its end
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>items</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>
+                                        Regions to start with:
+                                        <code
+                                            >{ start, end, label, color }</code
+                                        >
+                                        in seconds.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>create</code></td>
+                                    <td><code>'shift-drag'</code></td>
+                                    <td>
+                                        <code>'shift-drag'</code>,
+                                        <code>'drag'</code> or
+                                        <code>false</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>minLength</code></td>
+                                    <td><code>0.25</code></td>
+                                    <td>The shortest region, in seconds.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td>the theme's</td>
+                                    <td>The band color (translucent).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>keys</code></td>
+                                    <td><code>true</code></td>
+                                    <td>The single-key shortcuts.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>max</code></td>
+                                    <td><code>200</code></td>
+                                    <td>The most regions kept.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>scrollIntoView</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Zoomed in, a region chosen by
+                                        <kbd>R</kbd> comes into view.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>snap</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Edges on whole device pixels: a little
+                                        crisper, each moved by less than half a
+                                        pixel.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>cursors</code></td>
+                                    <td>hands</td>
+                                    <td>
+                                        <code>{ body, moving, edge }</code>, any
+                                        CSS cursor.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>onChange</code>,
+                                        <code>onSelect</code>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        Called when regions change, and when one
+                                        is selected.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>From code</h2>
+                    <div class="code">
+                        <pre><code>const made = parts.add({ start: 20, end: 26, label: 'Chorus' }); // a copy, or null at max
+parts.update(made.id, { end: 28 });
+parts.play(made.id, { loop: true });
+parts.stop();
+parts.remove(made.id);
+parts.list(); // every region</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Regions are fitted to the sound once its length is
+                        known, and follow the view while zoomed in.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

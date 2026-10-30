@@ -661,6 +661,64 @@ function pluginCards(): PluginCard[] {
     ];
 }
 
+/**
+ * The plugins a `data-plugins` demo can name, each set up for the page's poem (33 seconds): marks on
+ * its lines, a region over the second line, its silences, and so on.
+ */
+const DEMO_PLUGINS: Record<string, (sound: Sound) => PlayerPlugin> = {
+    timeline: () => timeline(),
+    markers: () =>
+        markers({
+            marks: [
+                { time: 2.4, label: 'Title' },
+                { time: 9, label: 'Second line' },
+                { time: 21, label: 'Last lines' },
+            ],
+        }),
+    regions: () =>
+        regions({ items: [{ start: 8.5, end: 16, label: 'Verse' }] }),
+    caption: () =>
+        caption({
+            text: 'I met a little elf-man, once, down where the lilies blow.',
+            badges: ['auto', 'en'],
+        }),
+    skipSilences: (sound) =>
+        skipSilences({
+            silences: silencesFromPeaks(sound.peaks, sound.duration),
+            dim: true,
+        }),
+    liveFrequency: () => liveFrequency({ bars: 48 }),
+    minimap: () => minimap(),
+};
+
+type PlayerPlugin = NonNullable<PlayerOptions['plugins']>[number];
+
+/**
+ * Live demos written in a page's own markup: `data-demo="player"` builds a player on the page's
+ * sound, with the JSON in `data-options` (any player option) and the plugins `data-plugins` names.
+ */
+function setupDemos(): void {
+    for (const host of document.querySelectorAll<HTMLElement>(
+        '[data-demo="player"]',
+    )) {
+        const options = JSON.parse(host.dataset.options ?? '{}') as Omit<
+            PlayerOptions,
+            'container'
+        >;
+        const names = (host.dataset.plugins ?? '').split(/\s+/).filter(Boolean);
+
+        mount(host, (box, sound) =>
+            player(box, sound, {
+                label: host.dataset.label ?? sound.name,
+                ...options,
+                plugins: names.flatMap((name) =>
+                    name in DEMO_PLUGINS ? [DEMO_PLUGINS[name](sound)] : [],
+                ),
+            }),
+        );
+    }
+}
+
 /** Calls `use` with the element of that id, when this page has one. */
 function on(id: string, use: (element: HTMLElement) => void): void {
     const element = document.getElementById(id);
@@ -850,37 +908,48 @@ function render(sound: Sound): void {
         stopCrowd = crowd(sound);
     }
 
-    byId('source').textContent = `Playing ${sound.name}.`;
+    say(`Playing ${sound.name}.`);
 
     if (previous !== null) {
         forget(previous);
     }
 }
 
+/** Says what the page plays, on a page that shows its sound. */
+function say(text: string): void {
+    const source = document.getElementById('source');
+
+    if (source !== null) {
+        source.textContent = text;
+    }
+}
+
 function showError(error: unknown): void {
     console.error(error);
-    byId('source').textContent =
+    say(
         current === null
             ? 'That file could not be read as audio. Try an MP3, WAV, OGG or M4A file.'
-            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`;
+            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`,
+    );
 }
 
 defineSonicPlayer();
 setupHeader(() => painted.forEach((repaint) => repaint()));
 setupCopyButtons();
 setupPage();
+setupDemos();
 setupContents();
 setupCrowd();
 setupLongSound();
-pickSound(
-    byId<HTMLButtonElement>('pick'),
-    byId<HTMLInputElement>('file'),
-    render,
-    showError,
-);
+
+const pick = document.getElementById('pick');
+const file = document.getElementById('file');
+
+if (pick instanceof HTMLButtonElement && file instanceof HTMLInputElement) {
+    pickSound(pick, file, render, showError);
+}
 
 bundledSound().then(render, (error: unknown) => {
     console.error(error);
-    byId('source').textContent =
-        'The page’s sound did not load. Use your own sound instead.';
+    say('The page’s sound did not load. Use your own sound instead.');
 });

@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Frame methods and events · SonicFrame</title>
+        <meta
+            name="description"
+            content="Every method, property and event of a SonicFrame frame, the play button and the volume control."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Frame methods and events</h1>
+                <p class="lede">
+                    Everything a frame does after it is made, plus the two
+                    controls that come with it: the play button and the volume
+                    control.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Methods</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>SonicFrame.create(options)</code>
+                                    </td>
+                                    <td>
+                                        Same as
+                                        <code>new SonicFrame(options)</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>setPeaks(source)</code></td>
+                                    <td>
+                                        New peaks: a list,
+                                        <code>{ peaks, duration }</code>, a
+                                        loader or <code>null</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>bind(media)</code></td>
+                                    <td>
+                                        Follow another media element, or none.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>setDuration(seconds)</code></td>
+                                    <td>
+                                        The length to use until the media knows
+                                        its own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>setProgress(ratio)</code></td>
+                                    <td>
+                                        The position shown while no media is
+                                        bound.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>seekTo(ratio)</code></td>
+                                    <td>
+                                        Move there (the media too) and emit
+                                        <code>seek</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>setView(start, end)</code></td>
+                                    <td>
+                                        Show part of the sound; zoom on only.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoomTo(level, at?)</code></td>
+                                    <td>
+                                        Zoom to a level around a ratio (or the
+                                        anchor).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoomBy(factor, at?)</code></td>
+                                    <td>Zoom in (above 1) or out (below 1).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>scrollTo(start)</code></td>
+                                    <td>
+                                        Move the view to begin at a ratio,
+                                        keeping its size.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>setBar(bar)</code>,
+                                        <code>setWave(wave)</code>,
+                                        <code>setColors(colors)</code>
+                                    </td>
+                                    <td>Change part of the look.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>setLabel(label)</code></td>
+                                    <td>Change the accessible name.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>refresh()</code></td>
+                                    <td>
+                                        Read the colors again after your own
+                                        theme switch.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>exportClip(options)</code></td>
+                                    <td>
+                                        Record a video of a stretch; see
+                                        <a
+                                            href="./analysis.html#exporting-a-clip"
+                                            >clips</a
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>use(plugin)</code></td>
+                                    <td>
+                                        Add a plugin; returns the function that
+                                        removes it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>on(event, listener)</code></td>
+                                    <td>
+                                        Listen; returns the function that stops.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>destroy()</code></td>
+                                    <td>
+                                        Remove everything SonicFrame added. Safe
+                                        to call twice.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Properties</h2>
+                    <p>
+                        <code>progress</code> (0 to 1),
+                        <code>duration</code> (seconds or <code>null</code>),
+                        <code>peaksDuration</code>, <code>peaks</code>,
+                        <code>container</code> and <code>view</code> (<code
+                            >{ start, end, level, maxLevel }</code
+                        >, the whole sound while zoom is off), all read-only.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Events</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Arguments</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>seek</code></td>
+                                    <td>
+                                        <code>{ ratio, time, source }</code>
+                                    </td>
+                                    <td>
+                                        A click, drag, key or
+                                        <code>seekTo</code>;
+                                        <code>source</code> is
+                                        <code>'pointer'</code>,
+                                        <code>'keyboard'</code> or
+                                        <code>'api'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>hover</code></td>
+                                    <td><code>ratio, time</code></td>
+                                    <td>
+                                        The mouse moved over the wave (<code
+                                            >null</code
+                                        >
+                                        when it left).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeupdate</code></td>
+                                    <td><code>time, ratio</code></td>
+                                    <td>The media moved, at its own pace.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>durationchange</code></td>
+                                    <td><code>duration</code></td>
+                                    <td>The length became known or changed.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>peakschange</code></td>
+                                    <td><code>peaks</code></td>
+                                    <td>
+                                        The peaks arrived, were replaced or
+                                        went.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>resize</code></td>
+                                    <td><code>geometry</code></td>
+                                    <td>
+                                        The wave changed size, or got its
+                                        pixels.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>rangeend</code></td>
+                                    <td></td>
+                                    <td>
+                                        A played range ended or was abandoned.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>viewchange</code></td>
+                                    <td><code>view, source</code></td>
+                                    <td>
+                                        The view moved: <code>'api'</code>,
+                                        <code>'wheel'</code>,
+                                        <code>'keys'</code>,
+                                        <code>'pinch'</code>,
+                                        <code>'follow'</code>,
+                                        <code>'edge'</code>,
+                                        <code>'minimap'</code> or
+                                        <code>'button'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>error</code></td>
+                                    <td><code>error</code></td>
+                                    <td>
+                                        Loading peaks or a plugin's work failed.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>destroy</code></td>
+                                    <td></td>
+                                    <td>The frame was destroyed.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>The play button</h2>
+                    <div class="code">
+                        <pre><code>import { PlayButton } from 'sonicframe';
+
+PlayButton.create({ container, media, shape: 'circle', fill: 'solid', size: 32 });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>container</code></td>
+                                    <td>(required)</td>
+                                    <td>Where the button goes.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>media</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        What it plays and pauses (disabled
+                                        without one).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>shape</code></td>
+                                    <td><code>'circle'</code></td>
+                                    <td>
+                                        <code>'circle'</code>,
+                                        <code>'rounded'</code> or
+                                        <code>'square'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>fill</code></td>
+                                    <td><code>'solid'</code></td>
+                                    <td>
+                                        <code>'solid'</code>,
+                                        <code>'outline'</code> or
+                                        <code>'ghost'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>32</code></td>
+                                    <td>CSS pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>radius</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        Corner radius instead of the shape's
+                                        own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>colors</code></td>
+                                    <td>the theme's</td>
+                                    <td><code>{ background, icon }</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>labels</code></td>
+                                    <td>
+                                        <code>Play</code> / <code>Pause</code>
+                                    </td>
+                                    <td>The accessible names.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>exclusive</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Starting this media pauses every other
+                                        exclusive one.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        <code>setLook</code>, <code>bind</code>,
+                        <code>on('error', …)</code> (the browser refused to
+                        play) and <code>destroy</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>The volume control</h2>
+                    <div class="code">
+                        <pre><code>import { VolumeControl } from 'sonicframe';
+
+VolumeControl.create({ container, media, slider: 'hover' });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>container</code>,
+                                        <code>media</code>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        Where it goes, and what it controls.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>slider</code></td>
+                                    <td><code>'always'</code></td>
+                                    <td>
+                                        <code>'always'</code> or
+                                        <code>'hover'</code> (opens on hover or
+                                        focus).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>size</code></td>
+                                    <td><code>32</code></td>
+                                    <td>The speaker button, CSS pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>width</code></td>
+                                    <td><code>80</code></td>
+                                    <td>The bar's width, CSS pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>step</code></td>
+                                    <td><code>0.05</code></td>
+                                    <td>
+                                        How far an arrow key moves the level.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>colors</code></td>
+                                    <td>the theme's</td>
+                                    <td><code>{ icon, track, fill }</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>labels</code></td>
+                                    <td>English</td>
+                                    <td>
+                                        <code>{ mute, unmute, volume }</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        It follows the media's own <code>volume</code> and
+                        <code>muted</code>, so other controls stay in step.
+                        Where a page cannot set the volume (iOS), only the mute
+                        button shows.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

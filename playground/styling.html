@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Colors and CSS · SonicFrame</title>
+        <meta
+            name="description"
+            content="Theme every SonicFrame wave, button and plugin with plain CSS custom properties."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Colors and CSS</h1>
+                <p class="lede">
+                    Every color SonicFrame draws can come from your CSS. Set a
+                    few custom properties on any ancestor, and the waves, the
+                    buttons and every plugin follow, dark mode included.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Theming with custom properties</h2>
+                    <div class="code">
+                        <pre><code>:root {
+    --sonicframe-wave: #c4cad4;
+    --sonicframe-progress: #1f4fbf;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --sonicframe-wave: #3d4b60;
+        --sonicframe-progress: #8fb6ff;
+    }
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        The system's light and dark switch is followed on its
+                        own. If your site switches with a class instead, call
+                        <code>frame.refresh()</code> (or the player's
+                        <code>frame.refresh()</code>) after the switch: canvas
+                        colors are read once, not every frame.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Colors in code</h2>
+                    <p>
+                        <code>colors</code> takes any CSS color or
+                        <code>var(--name, fallback)</code>:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Color</th>
+                                    <th>Default</th>
+                                    <th>Used for</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>wave</code></td>
+                                    <td>
+                                        <code
+                                            >var(--sonicframe-wave,
+                                            #c4cad4)</code
+                                        >
+                                    </td>
+                                    <td>Bars not yet played.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>progress</code></td>
+                                    <td>
+                                        <code
+                                            >var(--sonicframe-progress,
+                                            #2f6fdb)</code
+                                        >
+                                    </td>
+                                    <td>Bars already played.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>hover</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        The band between the played part and the
+                                        pointer (<code>null</code> shows none).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>cursor</code></td>
+                                    <td><code>null</code></td>
+                                    <td>A line at the playing position.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>waveHover</code>,
+                                        <code>progressHover</code>
+                                    </td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        Recolor the bars while the pointer is
+                                        over the wave (<code>'auto'</code>
+                                        nudges them).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>knob</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        The dot riding the position (takes
+                                        <code>progress</code>).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>The focus ring</h2>
+                    <p>
+                        The wave is a focusable slider. Style its focus with
+                        <code>:focus-visible</code> on your container:
+                    </p>
+                    <div class="code">
+                        <pre><code>#wave:focus-visible {
+    outline: 2px solid var(--sonicframe-progress);
+    outline-offset: 2px;
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Safe colors</h2>
+                    <p>
+                        Colors only ever reach properties that accept nothing
+                        but a color (the canvas, <code>background-color</code>,
+                        <code>color</code>, <code>border</code>), so a color
+                        from a user or a database can never make the page fetch
+                        an address. Variables are resolved in linear time, at
+                        most eight levels deep.
+                    </p>
+                    <p>
+                        Every property, with what it paints, is in
+                        <a href="./css-variables.html">CSS variables</a>.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Events · SonicFrame</title>
+        <meta
+            name="description"
+            content="Listening to a SonicFrame wave: seeks, hovers, time, peaks, the view and errors."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Events</h1>
+                <p class="lede">
+                    <code>on(event, listener)</code> listens and gives back the
+                    function that stops listening. Events never fire once per
+                    animation frame, so listening is cheap.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Listening</h2>
+                    <div class="code">
+                        <pre><code>const stop = frame.on('timeupdate', (time, ratio) =&gt; {
+    clock.textContent = formatTime(time);
+});
+
+// Later:
+stop();</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        The player has the same <code>on</code>, with every
+                        frame event plus <code>description</code>; the
+                        <code>&lt;sonic-player&gt;</code> tag dispatches them as
+                        DOM events named <code>sonicframe:seek</code>,
+                        <code>sonicframe:timeupdate</code> and so on, with the
+                        arguments in <code>event.detail</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Every event</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Arguments</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>seek</code></td>
+                                    <td>
+                                        <code>{ ratio, time, source }</code>
+                                    </td>
+                                    <td>
+                                        A click, a drag, a key or
+                                        <code>seekTo</code> moved the position.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>hover</code></td>
+                                    <td><code>ratio, time</code></td>
+                                    <td>
+                                        The mouse moved over the wave (<code
+                                            >null</code
+                                        >
+                                        when it left).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeupdate</code></td>
+                                    <td><code>time, ratio</code></td>
+                                    <td>The media moved, at its own pace.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>durationchange</code></td>
+                                    <td><code>duration</code></td>
+                                    <td>The length became known or changed.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>peakschange</code></td>
+                                    <td><code>peaks</code></td>
+                                    <td>
+                                        The peaks arrived, were replaced or
+                                        went.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>resize</code></td>
+                                    <td><code>geometry</code></td>
+                                    <td>
+                                        The wave changed size, or a lazy frame
+                                        got its pixels.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>rangeend</code></td>
+                                    <td></td>
+                                    <td>
+                                        A range being played ended or was
+                                        abandoned.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>viewchange</code></td>
+                                    <td><code>view, source</code></td>
+                                    <td>
+                                        The view moved (zoom on), and what moved
+                                        it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>error</code></td>
+                                    <td><code>error</code></td>
+                                    <td>
+                                        Loading peaks or a plugin's work failed.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>destroy</code></td>
+                                    <td></td>
+                                    <td>The frame was destroyed.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Errors never break the page</h2>
+                    <p>
+                        A failed download, a plugin that throws, a peaks file
+                        that does not parse: each one reaches the
+                        <code>error</code> event, and the rest of the frame
+                        keeps working. A plugin that throws is parked, so one
+                        broken plugin never breaks the wave.
+                    </p>
+                    <div class="code">
+                        <pre><code>frame.on('error', (error) =&gt; report(error));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

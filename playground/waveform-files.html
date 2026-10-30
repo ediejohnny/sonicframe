@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Ready-made peaks · SonicFrame</title>
+        <meta
+            name="description"
+            content="Read and write audiowaveform files (.dat and JSON), so long sounds show at once and never decode in the browser."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Ready-made peaks</h1>
+                <p class="lede">
+                    For long sounds, write the peaks once on your server and
+                    serve them as a small file. The wave and the length show at
+                    once, and an hour of audio is never decoded in the browser.
+                    This site does it: each page reads a file of a few
+                    kilobytes.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Reading a file</h2>
+                    <div class="code">
+                        <pre><code>import { SonicFrame, loadWaveform } from 'sonicframe';
+
+new SonicFrame({
+    container: document.querySelector('#episode'),
+    media: document.querySelector('audio'),
+    peaks: () =&gt; loadWaveform('/episode.dat'),
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        SonicFrame reads the files of the audiowaveform tool,
+                        binary (<code>.dat</code>) or JSON, version 1 or 2, 8 or
+                        16 bits, any number of channels, and the simple peaks
+                        list. The format comes from the content, never from the
+                        address.
+                    </p>
+                    <ul>
+                        <li>
+                            <code>loadWaveform(url, options)</code> fetches a
+                            file piece by piece and reads it; the same address
+                            is fetched once per page, and a failed fetch can be
+                            tried again.
+                        </li>
+                        <li>
+                            <code>readWaveform(input, options)</code> reads one
+                            you already have: bytes, JSON text or parsed JSON.
+                        </li>
+                        <li>
+                            Both give
+                            <code
+                                >{ peaks, duration, sampleRate, samplesPerPeak,
+                                channels, bits, format }</code
+                            >, which <code>peaks</code> takes as it is.
+                        </li>
+                    </ul>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>maxPeaks</code></td>
+                                    <td><code>20000</code></td>
+                                    <td>
+                                        The most peaks kept; more points are
+                                        folded while reading. Up to 1,000,000.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxBytes</code></td>
+                                    <td><code>8000000</code></td>
+                                    <td>
+                                        A larger file is refused before it is
+                                        read. Up to 64,000,000.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>channel</code></td>
+                                    <td><code>'all'</code></td>
+                                    <td>
+                                        <code>'all'</code> keeps the loudest of
+                                        every channel; a number keeps that
+                                        channel.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>normalize</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Makes the loudest peak 1.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>shared</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        <code>loadWaveform</code>: the same
+                                        address is fetched once per page.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>fetcher</code></td>
+                                    <td><code>fetch</code></td>
+                                    <td>
+                                        <code>loadWaveform</code>: your own
+                                        <code>fetch</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="callout warn">
+                        <strong>Hostile files are refused</strong>
+                        A file whose data does not match its header, or with a
+                        value out of range, is refused with a
+                        <code>TypeError</code> or <code>RangeError</code>; a
+                        strange option falls back to its default.
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Writing a file</h2>
+                    <p>
+                        <code>writeWaveform(channels, options)</code> writes the
+                        audiowaveform format (version 2) from decoded samples:
+                        the bytes of a <code>.dat</code> file, or the JSON as an
+                        object. It runs in the browser or in Node.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { writeWaveform } from 'sonicframe/analysis';
+
+const channels = [0, 1].map((index) =&gt; audioBuffer.getChannelData(index));
+const bytes = writeWaveform(channels, {
+    sampleRate: audioBuffer.sampleRate,
+    samplesPerPeak: Math.round(audioBuffer.sampleRate / 40), // 40 points per second
+    bits: 8,
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>sampleRate</code></td>
+                                    <td>(required)</td>
+                                    <td>The samples' rate, per second.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>samplesPerPeak</code></td>
+                                    <td><code>256</code></td>
+                                    <td>Samples per point.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>bits</code></td>
+                                    <td><code>16</code></td>
+                                    <td><code>16</code> or <code>8</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>format</code></td>
+                                    <td><code>'dat'</code></td>
+                                    <td>
+                                        <code>'dat'</code> (bytes) or
+                                        <code>'json'</code> (an object).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>channels</code></td>
+                                    <td><code>'mix'</code></td>
+                                    <td>
+                                        <code>'mix'</code> writes the loudest of
+                                        all; <code>'each'</code> writes every
+                                        channel.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>With the audiowaveform tool</h2>
+                    <p>The same files come from the command line tool:</p>
+                    <div class="code">
+                        <pre><code>audiowaveform -i episode.mp3 -o episode.dat -z 256 -b 8</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>How many points?</h2>
+                    <p>
+                        For a wave that fills the screen, a few thousand points
+                        are plenty. To zoom in, keep more: 40 to 100 points per
+                        second of sound. An 8-bit file costs 2 bytes per point:
+                        six minutes at 40 per second is about 28 KB.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

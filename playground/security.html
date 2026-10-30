@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Security · SonicFrame</title>
+        <meta
+            name="description"
+            content="How SonicFrame handles untrusted input, works under a strict Content-Security-Policy, and stays free of dependencies."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Security</h1>
+                <p class="lede">
+                    SonicFrame treats everything that comes from outside as
+                    untrusted, works under a strict Content-Security-Policy, and
+                    brings no dependencies into your app.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>No HTML is ever parsed</h2>
+                    <p>
+                        Labels and values go into attributes, text goes in
+                        through <code>textContent</code> (with control and
+                        direction-changing characters removed, and a length
+                        cap), and icons are built element by element. Nothing
+                        uses <code>innerHTML</code> or <code>eval</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>A strict Content-Security-Policy</h2>
+                    <p>
+                        Styles are set through the CSSOM, never as inline style
+                        attributes, and no blob workers start, so a policy
+                        without <code>'unsafe-inline'</code> keeps working:
+                    </p>
+                    <div class="code">
+                        <pre><code>Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self'</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Colors cannot fetch</h2>
+                    <p>
+                        A color only ever reaches a property that accepts
+                        nothing but a color (the canvas,
+                        <code>background-color</code>, <code>color</code>,
+                        <code>border</code>), so a color from a user or a
+                        database can never make the page fetch an address.
+                        Variables are resolved in linear time, at most eight
+                        levels deep.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Limits on everything from outside</h2>
+                    <ul>
+                        <li>
+                            Peaks files: 2 MB and 20,000 values
+                            (<code>loadPeaks</code>); waveform files: 8 MB by
+                            default, folded past <code>maxPeaks</code>; files
+                            that do not match their header are refused.
+                        </li>
+                        <li>Captions and tooltips: text only, capped.</li>
+                        <li>
+                            Marks, regions, analysis windows, FFT sizes, live
+                            frequency bands, spectrogram size and audio length,
+                            clip length, size, resolution and bitrate, and the
+                            decode download (streamed and capped).
+                        </li>
+                        <li>
+                            Tag attributes: unknown names fall back, text stays
+                            text, font addresses only when http(s) or relative.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Never silences your page</h2>
+                    <p>
+                        Live frequency refuses media it cannot read without
+                        muting (another origin without CORS) with an
+                        <code>error</code>, and the shared audio context is
+                        never closed nor disconnected.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>No dependencies</h2>
+                    <p>
+                        The published package has no runtime dependencies and no
+                        install scripts, and holds only the built files, the
+                        readme, the changelog and the license.
+                    </p>
+                    <p>
+                        The only text in it that looks like an address is the
+                        SVG namespace, <code>http://www.w3.org/2000/svg</code>,
+                        which browsers require to create the icons. It is a
+                        name, never fetched.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Reporting a problem</h2>
+                    <p>
+                        Found a vulnerability? Report it privately to the author
+                        (see the npm page) rather than in a public issue.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

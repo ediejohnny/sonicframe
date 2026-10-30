@@ -2,16 +2,16 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Zoom and long sounds · SonicFrame</title>
+        <title>Zoom and scroll · SonicFrame</title>
         <meta
             name="description"
-            content="Zoom, scroll and a minimap, and an hour of ready-made peaks."
+            content="Get close to a word or across an hour: zoom, scroll, follow the sound, and every switch for it."
         />
     </head>
     <body>
         <main class="content">
             <div class="page-head">
-                <h1>Zoom and long sounds</h1>
+                <h1>Zoom and scroll</h1>
                 <p class="lede">
                     Get close to a word, or across an hour. Every way of moving
                     the view has its own switch; with zoom off, nothing changes.
@@ -63,6 +63,206 @@
                     </div>
                 </section>
 
+                <section class="section">
+                    <h2>Turning it on</h2>
+                    <p>
+                        Zoom is off by default. <code>zoom: true</code> gives
+                        the frame a view of the sound and its methods; each way
+                        of moving the view has its own switch, so a page turns
+                        on exactly what it wants. Without zoom nothing changes,
+                        not even the cost.
+                    </p>
+                    <div class="code">
+                        <pre><code>new SonicFrame({
+    container,
+    media,
+    peaks: () =&gt; loadWaveform('/episode.dat'),
+    zoom: { wheel: true, scroll: true, pinch: true, keys: true, follow: true, edgeScroll: true },
+    a11y: { zoom: { announce: true } },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>view</code></td>
+                                    <td>the whole sound</td>
+                                    <td>
+                                        The view at the start,
+                                        <code>{ start, end }</code> as ratios.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>max</code></td>
+                                    <td>one peak per bar</td>
+                                    <td>
+                                        The largest zoom, from 1 to 10,000 (100
+                                        without peaks).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>step</code></td>
+                                    <td><code>2</code></td>
+                                    <td>How much one key or button zooms.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>anchor</code></td>
+                                    <td><code>'position'</code></td>
+                                    <td>
+                                        Keys and buttons zoom around the playing
+                                        position (when in view) or the
+                                        <code>'center'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wheel</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The wheel zooms around the pointer; a
+                                        touchpad pinch arrives as a wheel with
+                                        Ctrl.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wheelModifier</code></td>
+                                    <td><code>'ctrl'</code></td>
+                                    <td>
+                                        The key held for the wheel to zoom:
+                                        <code>'ctrl'</code> (Ctrl or ⌘),
+                                        <code>'alt'</code> or
+                                        <code>'none'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wheelSpeed</code></td>
+                                    <td><code>1</code></td>
+                                    <td>
+                                        How fast the wheel zooms, from 0.1 to
+                                        10.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>scroll</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The sideways wheel, a touchpad swipe and
+                                        Shift + wheel scroll the view.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>pinch</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Two fingers zoom and drag the view.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>keys</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <code>true</code> gives <kbd>+</kbd>,
+                                        <kbd>-</kbd> and <kbd>0</kbd>;
+                                        <code>{ in, out, reset }</code> sets
+                                        your own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>follow</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        While playing, the view follows the
+                                        position.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>followType</code></td>
+                                    <td><code>'page'</code></td>
+                                    <td>
+                                        <code>'page'</code> turns a whole view;
+                                        <code>'center'</code> keeps the position
+                                        in the middle.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>followHold</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        A scroll or zoom by the person holds the
+                                        following until the next seek or play.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>edgeScroll</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Dragging near an edge scrolls the view,
+                                        so a selection can grow past the screen.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>edgeSize</code>,
+                                        <code>edgeSpeed</code>
+                                    </td>
+                                    <td><code>32</code>, <code>1</code></td>
+                                    <td>
+                                        The edge zone (CSS pixels) and views
+                                        scrolled per second there.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>revealKeys</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        A keyboard seek outside the view brings
+                                        the view to it.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>From code</h2>
+                    <div class="code">
+                        <pre><code>frame.zoomTo(4); // 4× around the anchor
+frame.zoomBy(2, 0.5); // twice as close, around the middle
+frame.setView(0.25, 0.5); // show the second quarter
+frame.scrollTo(0.6); // move the view, keeping its size
+frame.on('viewchange', (view, source) =&gt; console.log(view.level, source));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>view</code> is
+                        <code>{ start, end, level, maxLevel }</code>. The bars
+                        come from a pyramid of the peaks built the first time
+                        the frame zooms in, so the cost follows the screen, not
+                        the file, and each bar stays on the same piece of sound
+                        while the view scrolls. Give a long sound many peaks (a
+                        <code>.dat</code> file, or the player's
+                        <code>decode.peaksPerSecond</code>) for detail up close.
+                    </p>
+                    <p>
+                        On the player, <code>zoom: { buttons: true }</code> adds
+                        zoom out, the whole sound and zoom in; see
+                        <a href="./layouts.html">Parts and layouts</a>. Plugins
+                        follow the view on their own: regions, markers, the
+                        timeline (down to tenths of a second), the silences'
+                        shade and the spectrogram.
+                    </p>
+                </section>
+
                 <section class="section" id="gestures">
                     <h2>Gestures and keys</h2>
                     <ul class="keys">
@@ -99,23 +299,6 @@
     a11y: { zoom: { announce: true }, minimap: { keys: true } },
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
-                    </div>
-                </section>
-
-                <section class="section" id="long">
-                    <h2>A long sound</h2>
-                    <p class="lede">
-                        An hour of peaks, written on this page as an
-                        audiowaveform .dat file and read back, with no audio at
-                        all. The length comes from the file, so it shows at
-                        once.
-                    </p>
-                    <div class="words">
-                        <button id="long-make" class="button" type="button">
-                            Make an hour
-                        </button>
-                        <div id="long-wave" class="long-wave"></div>
-                        <p class="note" id="long-status"></p>
                     </div>
                 </section>
             </div>

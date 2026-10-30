@@ -1199,6 +1199,15 @@ html {
     background: var(--panel);
 }
 
+/* A player shown at phone width, so the voice note can be seen on any screen. */
+.narrow-demo {
+    max-width: 20rem;
+}
+
+.doc .stage {
+    margin-top: 1.25rem;
+}
+
 .source {
     display: flex;
     flex-wrap: wrap;

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>The HTML tag · SonicFrame</title>
+        <meta
+            name="description"
+            content="The &lt;sonic-player&gt; tag: the ready-made player with no JavaScript of your own."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>The HTML tag</h1>
+                <p class="lede">
+                    <code>&lt;sonic-player&gt;</code> is the ready-made player
+                    as a custom element. Write it in any page, template or
+                    framework; its attributes are the options.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Using it</h2>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player src="/notes/42.ogg" theme="bubble" palette="ocean" volume&gt;&lt;/sonic-player&gt;
+
+&lt;script type="module"&gt;
+    import { defineSonicPlayer } from 'sonicframe/player';
+    defineSonicPlayer(); // once; importing alone registers nothing
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <sonic-player
+                        class="live-tag"
+                        id="tag-player"
+                        theme="card"
+                        label="The tag, live"
+                    ></sonic-player>
+                    <p>
+                        <code>defineSonicPlayer('my-player')</code> registers it
+                        under another name. Changing an attribute updates the
+                        player; removing the element destroys it, and putting it
+                        back builds it again.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Attributes</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Attribute</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>src</code></td>
+                                    <td>The sound's address.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>preload</code></td>
+                                    <td>
+                                        <code>none</code>,
+                                        <code>metadata</code> (the default) or
+                                        <code>auto</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks</code></td>
+                                    <td>
+                                        A waveform file: <code>.dat</code>, the
+                                        audiowaveform JSON or a peaks list.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>peaks-channel</code>,
+                                        <code>peaks-max</code>,
+                                        <code>peaks-normalize</code>
+                                    </td>
+                                    <td>How that file is read.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>theme</code>,
+                                        <code>palette</code>, <code>wave</code>
+                                    </td>
+                                    <td>The look, by name.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>font</code>,
+                                        <code>font-src</code>,
+                                        <code>font-stylesheet</code>
+                                    </td>
+                                    <td>A stack name, or a font you bring.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td>The player's accessible name.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>volume</code>,
+                                        <code>spectrogram</code>
+                                    </td>
+                                    <td>Switches: present means on.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom</code></td>
+                                    <td>
+                                        Words turn on its ways:
+                                        <code
+                                            >wheel scroll pinch keys follow
+                                            center edges buttons</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom-max</code></td>
+                                    <td>The largest zoom.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>minimap</code></td>
+                                    <td>
+                                        The strip; words:
+                                        <code>above autohide wheel</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-lang</code></td>
+                                    <td>
+                                        The language of the player's words
+                                        (<code>pt-BR</code>,
+                                        <code>auto</code>…).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-description</code></td>
+                                    <td>
+                                        The wave in words; words:
+                                        <code
+                                            >keys pauses speech announce button
+                                            animation fade</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>a11y-zoom</code>,
+                                        <code>a11y-minimap</code>
+                                    </td>
+                                    <td>
+                                        <code>announce</code> says a zoom;
+                                        <code>keys</code> makes the minimap a
+                                        slider.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player
+    src="/episodes/12.mp3"
+    peaks="/episodes/12.dat"
+    preload="none"
+    zoom="wheel keys buttons"
+    minimap
+    a11y-lang="pt-BR"
+    a11y-description="keys button"
+&gt;&lt;/sonic-player&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Untrusted values are safe</h2>
+                    <p>
+                        Attributes are read as untrusted input: an unknown name
+                        falls back to the default, text goes in only as text,
+                        and a font address is used only when it is safe. A tag
+                        built from user content cannot inject markup or styles.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Events</h2>
+                    <p>
+                        The player's events reach the element as DOM events,
+                        with the arguments in <code>event.detail</code>:
+                    </p>
+                    <div class="code">
+                        <pre><code>document.querySelector('sonic-player').addEventListener('sonicframe:seek', (event) =&gt; {
+    const [{ time }] = event.detail;
+    console.log('Moved to', time);
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>sonicframe:seek</code>,
+                        <code>sonicframe:hover</code>,
+                        <code>sonicframe:timeupdate</code>,
+                        <code>sonicframe:durationchange</code>,
+                        <code>sonicframe:peakschange</code>,
+                        <code>sonicframe:resize</code>,
+                        <code>sonicframe:rangeend</code>,
+                        <code>sonicframe:viewchange</code>,
+                        <code>sonicframe:error</code> and
+                        <code>sonicframe:description</code>.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

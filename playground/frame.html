@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>The frame · SonicFrame</title>
+        <meta
+            name="description"
+            content="SonicFrame's core: a waveform on a canvas that follows an audio or video element."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>The frame</h1>
+                <p class="lede">
+                    A frame is one waveform: it draws a sound on a canvas inside
+                    your element, follows an audio or video element while it
+                    plays, and lets people seek it. Everything else in
+                    SonicFrame is built on it.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Making one</h2>
+                    <div class="code">
+                        <pre><code>import { SonicFrame } from 'sonicframe';
+
+const frame = new SonicFrame({
+    container: document.querySelector('#wave'),
+    media: document.querySelector('audio'),
+    peaks: [0.1, 0.4, 0.8, 0.5, 0.2],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>SonicFrame.create(options)</code> does the same as
+                        <code>new SonicFrame(options)</code>. Only
+                        <code>container</code> is required; a frame with no
+                        media shows a position you set with
+                        <code>setProgress(ratio)</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Your element keeps its size</h2>
+                    <p>
+                        SonicFrame adds a canvas inside the container and fills
+                        it. The container keeps the size your CSS gives it, so
+                        give it a height; the width follows the page. When it
+                        changes size, the wave is drawn again, with every bar on
+                        whole device pixels, so it stays sharp at any zoom or
+                        screen density.
+                    </p>
+                    <div class="code">
+                        <pre><code>#wave {
+    height: 3rem;
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>frame.destroy()</code> removes the canvas and
+                        gives the element back exactly as it was. It is safe to
+                        call twice.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Following the sound</h2>
+                    <p>
+                        With <code>media</code> bound, the played part moves
+                        smoothly while the sound plays, from one animation loop
+                        shared by every frame on the page, which runs only while
+                        something plays on screen. A paused page costs nothing.
+                    </p>
+                    <ul>
+                        <li>
+                            <code>bind(media)</code> follows another element, or
+                            none (<code>null</code>).
+                        </li>
+                        <li>
+                            <code>duration</code> (an option, or
+                            <code>setDuration(seconds)</code>) is used until the
+                            media knows its own length.
+                        </li>
+                        <li>
+                            <code>rewindOnEnd: true</code> shows the start again
+                            when the sound ends.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Lazy by default</h2>
+                    <p>
+                        A frame keeps its canvas pixels only while it is on or
+                        near the screen, and asks for its peaks the first time
+                        it gets there. A page with hundreds of recordings stays
+                        light. <code>lazy: false</code> draws everything at
+                        once.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>A picture, or a control</h2>
+                    <p>
+                        By default the frame is a slider: a click, a drag (touch
+                        included) or the keys seek. <code>interact: false</code>
+                        turns it into a picture only, marked
+                        <code>role="img"</code>, for lists where the row itself
+                        opens the sound.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Try it</h2>
+                    <div class="stage" data-demo="player"></div>
+                </section>
+
+                <section class="section">
+                    <h2>Next steps</h2>
+                    <ul>
+                        <li>
+                            <a href="./peaks.html">Peaks</a>: where the shape
+                            comes from.
+                        </li>
+                        <li>
+                            <a href="./playing.html">Playing and seeking</a>:
+                            the methods.
+                        </li>
+                        <li>
+                            <a href="./frame-options.html">Frame options</a>:
+                            every option, with its default.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>
