@@ -48,6 +48,17 @@ export type PlayerLook = {
     minimapHeight: number;
     /** Space between the wave and the minimap strip, in rem. */
     minimapGap: number;
+    /**
+     * The least width of a wave that shares its line with zoom buttons, in rem; narrower, the line
+     * wraps and the buttons go under it.
+     */
+    waveMin: number;
+    /**
+     * The width, in rem, under which a player with the wave in its line turns into a voice note:
+     * the play button and the wave keep the line, the time goes under the wave on the left and the
+     * other controls under it on the right. 0 keeps one line at any width.
+     */
+    narrow: number;
     /** Corner radius of the player, in rem. */
     corner: number;
     /** Space inside the player, in rem. */
@@ -101,6 +112,8 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     waveHeight: 2.5,
     minimapHeight: 1.5,
     minimapGap: 0.375,
+    waveMin: 8,
+    narrow: 22,
     corner: 0.75,
     padding: 0.5,
     gap: 0.625,
@@ -235,6 +248,8 @@ export function resolveLook(
         waveHeight: within(given.waveHeight, base.waveHeight, 0.5, 12),
         minimapHeight: within(given.minimapHeight, base.minimapHeight, 0.5, 6),
         minimapGap: within(given.minimapGap, base.minimapGap, 0, 2),
+        waveMin: within(given.waveMin, base.waveMin, 0, 40),
+        narrow: within(given.narrow, base.narrow, 0, 60),
         corner: within(given.corner, base.corner, 0, 4),
         padding: within(given.padding, base.padding, 0, 3),
         gap: within(given.gap, base.gap, 0, 3),

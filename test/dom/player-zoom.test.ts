@@ -95,6 +95,40 @@ describe('zoom on the player', () => {
         ]);
     });
 
+    it('keeps the wave at least 8rem wide beside the buttons, the line wrapping below it on a phone', () => {
+        const shapes = (): { wrap: string; wave: string } => {
+            const line = (host as HTMLElement).querySelector<HTMLElement>(
+                '.sonicframe-player > div',
+            );
+            const wave = player?.frame.container.parentElement;
+
+            return {
+                wrap: line?.style.getPropertyValue('flex-wrap') ?? '',
+                wave: wave?.style.getPropertyValue('min-width') ?? '',
+            };
+        };
+
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 60 }),
+            peaks: PEAKS,
+            zoom: { buttons: true },
+        });
+
+        expect(shapes()).toEqual({ wrap: 'wrap', wave: '8rem' });
+
+        player.destroy();
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 60 }),
+            peaks: PEAKS,
+            zoom: { keys: true },
+        });
+
+        // Without the buttons, the line is as it always was: the wave gives up the room.
+        expect(shapes()).toEqual({ wrap: 'nowrap', wave: '0' });
+    });
+
     it('zooms in, out and back with its buttons, marked aria-disabled at the limits', () => {
         player = createPlayer({
             container: container(),

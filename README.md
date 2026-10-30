@@ -486,10 +486,16 @@ through, and 50 MB).
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
-(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `minimapGap`, `corner`, `padding`, `gap` (rem), `border` (CSS pixels), `shadow` (`'none'`,
-`'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`, `'none'`), `font`, `fontSize`, `weight`, `uppercase`,
-`skip` (seconds), `speeds` and `volume` (`'always'` or `'hover'`). Unknown names fall back and numbers are kept in
-range.
+(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `minimapGap`, `waveMin`, `narrow`, `corner`, `padding`, `gap`
+(rem), `border` (CSS pixels), `shadow` (`'none'`, `'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`,
+`'none'`), `font`, `fontSize`, `weight`, `uppercase`, `skip` (seconds), `speeds` and `volume` (`'always'` or
+`'hover'`). Unknown names fall back and numbers are kept in range.
+
+A narrow player turns into a voice note. Under `narrow` (22 rem; `0` turns it off), a player with the wave in its
+line keeps only the play button and the wave there; the time goes under the wave on the left and the other controls
+on the right, wrapping under the time when they do not fit. The pieces are moved, not built again, so the wave keeps
+its state, and the player gets a `data-narrow` attribute for your CSS (the row is `.sonicframe-under`). With zoom
+buttons on a wider line, the wave keeps at least `waveMin` (8 rem) and the buttons wrap under it.
 
 Palettes: `light`, `dark`, `ocean`, `forest`, `sunset`, `berry`, `paper` and `contrast`, each checked for readable text
 and visible controls (WCAG contrast). A palette is set as `--sonicframe-*` custom properties on the player, so plain CSS

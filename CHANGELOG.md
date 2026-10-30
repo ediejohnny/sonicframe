@@ -61,6 +61,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   moved by less than half a pixel; without it they sit at fractions of a pixel, as before.
 - `cursors` on `regions`: the open hand over a region now turns into a closed one while it moves (`'grabbing'`) and
   back after; each cursor can be changed. A plugin's mouse drag keeps that plugin's cursor while it lasts.
+- `narrow` in the player's look (22 rem; `0` turns it off): a narrower player with the wave in its line turns into a
+  voice note, with the time under the wave on the left and the other controls on the right. It is on by default and
+  only changes players narrower than that. The player gets `data-narrow` while it lasts.
+- `waveMin` in the look (8 rem): with zoom buttons on the line, the wave keeps at least this width and the buttons
+  wrap under it.
 
 ### Fixed
 
@@ -70,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   plays (it used to draw the whole sound under a progress bar of the range).
 - The plugins' shared overlay (`host.overlay()`) sits over the bars, as documented, and no longer over the lanes, so
   a region's label no longer lands on a timeline placed above the wave.
+- On a 320 px screen the zoom buttons no longer crush the wave to a sliver beside them.
 
 ### Changed
 

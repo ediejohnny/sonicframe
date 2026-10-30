@@ -59,6 +59,7 @@ import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
 import { prefersReducedMotion } from '../dom/motion';
 import { pageLanguage } from '../dom/page-language';
+import { observeSize } from '../dom/observe';
 import { canSpeak } from '../dom/speak';
 import {
     soundDescription,
@@ -269,6 +270,39 @@ function remPixels(rem: number): number {
     return rem * (root > 0 ? root : 16);
 }
 
+/**
+ * Where a piece of the main line goes in a narrow player: it stays on the line, goes under the wave
+ * on the left (the time) or on the right (the other controls), or is left out (the look's spacers).
+ */
+type Place = 'line' | 'time' | 'control' | 'spacer';
+
+function placeOf(part: Part): Place {
+    switch (part) {
+        case 'play':
+        case 'wave':
+        case 'slot':
+            return 'line';
+        case 'time':
+        case 'elapsed':
+        case 'remaining':
+        case 'duration':
+            return 'time';
+        case 'spacer':
+            return 'spacer';
+        default:
+            return 'control';
+    }
+}
+
+/** The built main line, kept so a narrow player can move its pieces without building again. */
+type Layout = {
+    line: HTMLElement;
+    box: HTMLElement;
+    pieces: { place: Place; nodes: ChildNode[] }[];
+    under: HTMLElement | null;
+    narrow: boolean;
+};
+
 /** The longest a palette color may be. */
 const MAX_COLOR = 64;
 
@@ -385,6 +419,10 @@ export class Player {
     private readonly words: PlayerWords;
     private times: [HTMLElement, PlayerLook['time']][] = [];
     private partCleanups: (() => void)[] = [];
+    private layout: Layout | null = null;
+    /** The player's width in CSS pixels, once measured. */
+    private width: number | null = null;
+    private readonly stopSize: () => void;
     private peaks: readonly number[] | null = null;
     private decoding: Promise<DecodedAudio> | null = null;
     private stopScheme: (() => void) | null = null;
@@ -436,6 +474,10 @@ export class Player {
         this.build();
         this.applyPalette();
         this.applyFont();
+        this.stopSize = observeSize(this.element, (size) => {
+            this.width = size.width / size.pixelRatio;
+            this.arrange();
+        });
     }
 
     /** The wave (a `SonicFrame`). */
@@ -543,6 +585,7 @@ export class Player {
         this.destroyed = true;
         this.abort.abort();
         this.stopScheme?.();
+        this.stopSize();
         this.teardown();
 
         if (this.ownMedia && this.media !== null) {
@@ -640,6 +683,17 @@ export class Player {
         }
 
         return [...line.filter((part) => this.allowed(part)), ...extra];
+    }
+
+    /** Whether a zoom button shares the main line with a wave beside it. */
+    private zoomOnLine(): boolean {
+        const line = this.visibleLine();
+
+        return (
+            this.look.wavePlace !== 'top' &&
+            line.includes('wave') &&
+            ZOOM_PARTS.some((part) => line.includes(part))
+        );
     }
 
     private visibleMeta(): Part[] {
@@ -836,6 +890,7 @@ export class Player {
         this.teardown();
 
         const look = this.look;
+        const roomy = this.zoomOnLine();
         const column = document.createElement('div');
         const box = document.createElement('div');
         column.append(box);
@@ -844,7 +899,7 @@ export class Player {
             ['flex-direction', 'column'],
             ['gap', '0.25rem'],
             ['flex', '1 1 auto'],
-            ['min-width', '0'],
+            ['min-width', roomy ? `${look.waveMin}rem` : '0'],
         ]);
         css(box, [
             ['position', 'relative'],
@@ -900,11 +955,15 @@ export class Player {
         }
 
         // Beside an inline wave the wave gives up the room; controls on their own line wrap instead
-        // of spilling out of a narrow player.
+        // of spilling out of a narrow player. With zoom buttons on the line, the wave keeps its
+        // least width and the line wraps, so the buttons go under it rather than crush it.
         const line = document.createElement('div');
         css(line, [
             ['display', 'flex'],
-            ['flex-wrap', look.wavePlace === 'top' ? 'wrap' : 'nowrap'],
+            [
+                'flex-wrap',
+                look.wavePlace === 'top' || roomy ? 'wrap' : 'nowrap',
+            ],
             ['align-items', 'center'],
             ['gap', `${look.gap}rem`],
             ['min-width', '0'],
@@ -916,15 +975,27 @@ export class Player {
             this.element.prepend(line);
         }
 
+        const pieces: Layout['pieces'] = [];
+
         for (const part of this.visibleLine()) {
+            const before = line.childNodes.length;
             this.addPart(part, line, column);
+            pieces.push({
+                place: placeOf(part),
+                nodes: [...line.childNodes].slice(before),
+            });
         }
 
         const listen = this.listenButton();
 
         if (listen !== null && canSpeak()) {
-            line.append(this.listenPart(listen));
+            const node = this.listenPart(listen);
+            line.append(node);
+            pieces.push({ place: 'control', nodes: [node] });
         }
+
+        this.layout = { line, box, pieces, under: null, narrow: false };
+        this.element.removeAttribute('data-narrow');
 
         const meta = this.visibleMeta();
 
@@ -952,6 +1023,101 @@ export class Player {
         );
         this.showTime();
         this.finish();
+        this.arrange();
+    }
+
+    /**
+     * A narrow player (under the look's `narrow` width, with the wave in its line) turns into a voice
+     * note: the play button and the wave keep the line, the time goes under the wave on the left and
+     * the other controls under it on the right. The pieces built are moved, never built again, so
+     * the wave and its state stay; a moved control that had the focus gets it back.
+     */
+    private arrange(): void {
+        const layout = this.layout;
+
+        if (layout === null) {
+            return;
+        }
+
+        const { narrow: width, wavePlace } = this.look;
+        const narrow =
+            wavePlace === 'inline' &&
+            width > 0 &&
+            this.width !== null &&
+            this.width < remPixels(width);
+
+        if (narrow === layout.narrow) {
+            return;
+        }
+
+        const focused = document.activeElement;
+        layout.narrow = narrow;
+        this.element.toggleAttribute('data-narrow', narrow);
+
+        if (narrow) {
+            // The controls keep to the right; when they do not fit beside the time, they wrap under it.
+            const gap = `${this.look.gap}rem`;
+            const under = document.createElement('div');
+            const controls = document.createElement('div');
+            under.className = 'sonicframe-under';
+            controls.className = 'sonicframe-under-controls';
+            css(under, [
+                ['display', 'flex'],
+                ['flex-wrap', 'wrap'],
+                ['align-items', 'center'],
+                ['gap', gap],
+                ['min-width', '0'],
+            ]);
+            css(controls, [
+                ['display', 'flex'],
+                ['flex-wrap', 'wrap'],
+                ['justify-content', 'flex-end'],
+                ['align-items', 'center'],
+                ['gap', gap],
+                ['margin-inline-start', 'auto'],
+                ['min-width', '0'],
+            ]);
+            const nodes = (place: Place): ChildNode[] =>
+                layout.pieces
+                    .filter((piece) => piece.place === place)
+                    .flatMap((piece) => piece.nodes);
+
+            for (const node of nodes('spacer')) {
+                node.remove();
+            }
+
+            controls.append(...nodes('control'));
+            under.append(...nodes('time'), controls);
+            layout.box.after(under);
+            layout.under = under;
+        } else {
+            layout.under?.remove();
+            layout.under = null;
+            // The pieces that stayed keep their order; each moved one goes back after the piece before it.
+            let previous: ChildNode | null = null;
+
+            for (const { place, nodes } of layout.pieces) {
+                for (const node of nodes) {
+                    if (place !== 'line') {
+                        if (previous === null) {
+                            layout.line.prepend(node);
+                        } else {
+                            previous.after(node);
+                        }
+                    }
+
+                    previous = node;
+                }
+            }
+        }
+
+        if (
+            focused instanceof HTMLElement &&
+            focused !== document.activeElement &&
+            this.element.contains(focused)
+        ) {
+            focused.focus({ preventScroll: true });
+        }
     }
 
     private teardown(): void {
@@ -961,6 +1127,7 @@ export class Player {
 
         this.partCleanups = [];
         this.times = [];
+        this.layout = null;
         this.buttonRef?.destroy();
         this.volumeRef?.destroy();
         this.frameRef?.destroy();
