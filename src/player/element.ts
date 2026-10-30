@@ -12,7 +12,7 @@
 
 import type { FontChoice } from '../core/fonts';
 import type { PaletteChoice } from '../core/palettes';
-import { loadPeaks } from '../core/peaks';
+import { loadWaveform } from '../core/waveform';
 import type { WaveName } from '../types';
 import { Player, type PlayerDescription } from './player';
 
@@ -182,7 +182,8 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                 const player = new Player({
                     container: this,
                     src: this.getAttribute('src') ?? undefined,
-                    peaks: peaks === null ? undefined : () => loadPeaks(peaks),
+                    peaks:
+                        peaks === null ? undefined : () => loadWaveform(peaks),
                     theme: this.getAttribute('theme') ?? undefined,
                     palette: this.palette(),
                     wave: this.wave(),

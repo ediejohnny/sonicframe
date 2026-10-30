@@ -64,8 +64,69 @@ number of bars that fit.
   are refused.
 - `peaksFromChannel(samples, count)` computes peaks in the browser from decoded samples, for example a recording's
   preview: `peaksFromChannel(audioBuffer.getChannelData(0), 400)`.
-- `peaks` takes a list, a function returning a promise of a list (called when the frame first comes near the
-  screen), or `null` for a thin line until peaks arrive.
+- `peaks` takes a list, `{ peaks, duration }`, a function returning a promise of either (called when the frame first
+  comes near the screen), or `null` for a thin line until peaks arrive. A duration that comes with the peaks is used
+  while neither the media nor the `duration` option gives one, so a long sound shows its length before it loads.
+
+### Ready-made waveform files
+
+SonicFrame reads the files of the audiowaveform tool, binary (`.dat`) or JSON, version 1 or 2, 8 or 16 bits, any
+number of channels, and the simple list above. The format comes from the content, never from the address. A file
+also brings the sound's duration, so the wave and the time show up before the sound is loaded, and a sound of hours
+never has to be decoded in the browser.
+
+```js
+import { SonicFrame, loadWaveform } from 'sonicframe';
+
+new SonicFrame({
+    container: document.querySelector('#episode'),
+    media: document.querySelector('audio'),
+    peaks: () => loadWaveform('/episode.dat'),
+});
+```
+
+- `loadWaveform(url, options)` fetches a file, piece by piece, and reads it. The same address with the same options is
+  fetched once per page; a failed fetch is forgotten, so it can be tried again.
+- `readWaveform(input, options)` reads one you already have: its bytes (an `ArrayBuffer` or any view of one), its JSON
+  text, or JSON already parsed.
+- Both give `{ peaks, duration, sampleRate, samplesPerPeak, channels, bits, format }`, which `peaks` takes as it is.
+  `format` is `'dat'`, `'json'` (the audiowaveform JSON) or `'list'`.
+- A file whose data does not match its header, or with a value out of range, is refused with a `TypeError` or a
+  `RangeError`; a file with more points than `maxPeaks` is folded while it is read, keeping the loudest point of each
+  slice, so its size in memory stays at `maxPeaks`.
+
+| Option (reading) | Default   | What it does                                                                      |
+| ---------------- | --------- | --------------------------------------------------------------------------------- |
+| `maxPeaks`       | `20000`   | The most peaks kept; more points are folded. From 1 to 1,000,000.                 |
+| `maxBytes`       | `8000000` | A larger file is refused before it is read. From 1 to 64,000,000.                 |
+| `channel`        | `'all'`   | `'all'` keeps the loudest of every channel; a number (from 0) keeps that channel. |
+| `normalize`      | `false`   | Makes the loudest peak 1.                                                         |
+| `shared`         | `true`    | `loadWaveform` only: the same address and options are fetched once per page.      |
+| `fetcher`        | `fetch`   | `loadWaveform` only: your own `fetch`.                                            |
+
+A strange value falls back to the default; a channel the file does not have counts as `'all'`.
+
+**Writing one.** `writeWaveform(channels, options)` writes a file from decoded samples (from -1 to 1), in the
+audiowaveform format, version 2: the bytes of a `.dat` file, or the JSON as an object for `JSON.stringify`. Each point
+keeps the lowest and highest sample of its slice. It runs in the browser or in Node, and is also on
+`sonicframe/analysis`, so a server can write the files when sounds are uploaded.
+
+```js
+import { writeWaveform } from 'sonicframe/analysis';
+
+const channels = [0, 1].map((index) => audioBuffer.getChannelData(index));
+const bytes = writeWaveform(channels, { sampleRate: audioBuffer.sampleRate });
+```
+
+| Option (writing) | Default    | What it does                                                                   |
+| ---------------- | ---------- | ------------------------------------------------------------------------------ |
+| `sampleRate`     | (required) | The samples' rate, per second.                                                 |
+| `samplesPerPeak` | `256`      | Samples per point.                                                             |
+| `bits`           | `16`       | `16` or `8`.                                                                   |
+| `format`         | `'dat'`    | `'dat'` (bytes) or `'json'` (an object).                                       |
+| `channels`       | `'mix'`    | `'mix'` writes one channel, the loudest of all; `'each'` writes every channel. |
+
+A missing sample rate, no channels or channels of different lengths throw.
 
 ## Options
 
@@ -120,7 +181,7 @@ Colors take any CSS color or `var(--name, fallback)`:
 | Method                 | What it does                                                         |
 | ---------------------- | -------------------------------------------------------------------- |
 | `SonicFrame.create(o)` | Same as `new SonicFrame(o)`.                                         |
-| `setPeaks(source)`     | New peaks (a list, a loader function or `null`).                     |
+| `setPeaks(source)`     | New peaks (a list, `{ peaks, duration }`, a loader or `null`).       |
 | `bind(media)`          | Follow another media element, or none (`null`).                      |
 | `setDuration(seconds)` | The duration to use until the media knows its own.                   |
 | `setProgress(ratio)`   | The position shown (0..1) while no media is bound.                   |
@@ -134,7 +195,8 @@ Colors take any CSS color or `var(--name, fallback)`:
 | `on(event, listener)`  | Listen to an event; returns the function that stops listening.       |
 | `destroy()`            | Remove everything SonicFrame added. Safe to call twice.              |
 
-`progress` (0..1) and `duration` (seconds or `null`) are read-only properties.
+`progress` (0..1), `duration` (seconds or `null`) and `peaksDuration` (the duration the peaks came with, or `null`) are
+read-only properties.
 
 ## Events
 
@@ -350,7 +412,7 @@ gives the container back (a media element the player made is stopped, yours is l
 </script>
 ```
 
-Attributes: `src`, `peaks` (the address of a peaks file), `theme`, `palette`, `wave`, `font`, `font-src`,
+Attributes: `src`, `peaks` (the address of a waveform file: `.dat`, the audiowaveform JSON or a peaks list), `theme`, `palette`, `wave`, `font`, `font-src`,
 `font-stylesheet`, `label`, and the switches `volume` and `spectrogram`. Accessibility attributes start with `a11y-`:
 `a11y-lang` (the language of the player's words, `a11y-lang="pt-BR"`) and `a11y-description`, which turns the wave in
 words on; words in it turn on its extras: `a11y-description="keys pauses"` (also `speech`, `announce`, `button`, and

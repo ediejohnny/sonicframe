@@ -33,6 +33,7 @@ import type {
     FrameGeometry,
     Lane,
     PaintContext,
+    PeaksData,
     PeaksSource,
     Plugin,
     PluginHost,
@@ -61,11 +62,17 @@ import { schedule, setLooping, unschedule, type FrameTask } from './scheduler';
 export type SonicFrameOptions = {
     /** The element to draw in. Its size comes from the page's CSS; give it a height. */
     container: HTMLElement;
-    /** Peaks (0..1) or a function that loads them when the frame comes near the screen. */
+    /**
+     * Peaks (0..1), alone or with their duration (`{ peaks, duration }`, a waveform file's), or a
+     * function that loads them when the frame comes near the screen.
+     */
     peaks?: PeaksSource;
     /** An audio or video element to follow and control. */
     media?: HTMLMediaElement | null;
-    /** Duration in seconds, used until the media knows its own (or without media). */
+    /**
+     * Duration in seconds, used until the media knows its own (or without media). It wins over the
+     * duration the peaks came with.
+     */
     duration?: number | null;
     bar?: Partial<BarStyle>;
     /** How the sound is drawn: a name (`'line'`, `'pulse'`, `'track'`…) or its details. Bars by default. */
@@ -139,6 +146,18 @@ const ATTRIBUTES = [
     'aria-valuetext',
 ];
 
+/** The peaks of either kind of source, and the duration they came with (null for a bare list). */
+function unpack(source: readonly number[] | PeaksData | null): {
+    peaks: readonly number[] | null;
+    duration: number | null;
+} {
+    if (source !== null && 'peaks' in source) {
+        return { peaks: source.peaks, duration: source.duration ?? null };
+    }
+
+    return { peaks: source, duration: null };
+}
+
 export class SonicFrame implements PluginHost {
     readonly container: HTMLElement;
     private readonly canvas: HTMLCanvasElement;
@@ -161,7 +180,8 @@ export class SonicFrame implements PluginHost {
     private readonly colorCache = new Map<string, string>();
     private peaksData: number[] | null = null;
     private values: number[] | null = null;
-    private loader: (() => Promise<readonly number[]>) | null = null;
+    private loader: (() => Promise<readonly number[] | PeaksData>) | null =
+        null;
     private loads = 0;
     private size: Size = { width: 0, height: 0, pixelRatio: 1 };
     private near = false;
@@ -296,6 +316,11 @@ export class SonicFrame implements PluginHost {
     /** The peaks the frame drew (0..1), or null while it has none. */
     get peaks(): readonly number[] | null {
         return this.peaksData;
+    }
+
+    /** The duration the peaks came with (a waveform file's), in seconds, or null. */
+    get peaksDuration(): number | null {
+        return this.controller.peaksDuration;
     }
 
     /** The media element the frame follows, or null. */
@@ -958,7 +983,9 @@ export class SonicFrame implements PluginHost {
         this.loader = null;
         const load = this.loads;
 
-        new Promise<readonly number[]>((resolve) => resolve(loader())).then(
+        new Promise<readonly number[] | PeaksData>((resolve) =>
+            resolve(loader()),
+        ).then(
             (peaks) => {
                 if (load === this.loads && !this.destroyed) {
                     this.receive(peaks);
@@ -972,11 +999,13 @@ export class SonicFrame implements PluginHost {
         );
     }
 
-    private receive(peaks: readonly number[] | null): void {
+    private receive(source: readonly number[] | PeaksData | null): void {
+        const { peaks, duration } = unpack(source);
         this.peaksData =
             peaks === null
                 ? null
                 : peaks.map((value) => clamp01(Math.abs(value)));
+        this.controller.setPeaksDuration(duration);
         this.values = null;
         this.layoutDirty = true;
         this.appear =

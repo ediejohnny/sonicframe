@@ -79,7 +79,10 @@ export type PlayerOptions = {
     media?: HTMLMediaElement | null;
     /** The sound's address, when the player should make its own media element. */
     src?: string;
-    /** Peaks, or a function that loads them; by default they are decoded from the sound. */
+    /**
+     * Peaks, alone or with their duration (`{ peaks, duration }`), or a function that loads them;
+     * by default they are decoded from the sound.
+     */
     peaks?: PeaksSource;
     /** Duration in seconds, used until the media knows its own. */
     duration?: number | null;
@@ -542,7 +545,12 @@ export class Player {
 
     private peaksSource(): PeaksSource {
         if (this.options.peaks !== undefined) {
-            return this.frameRef?.peaks ?? this.options.peaks;
+            const frame = this.frameRef;
+
+            // A new build keeps what the old frame already has, with the duration it came with.
+            return frame?.peaks
+                ? { peaks: frame.peaks, duration: frame.peaksDuration }
+                : this.options.peaks;
         }
 
         if (this.peaks !== null) {

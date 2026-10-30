@@ -63,6 +63,24 @@ function waveOnTop(): boolean {
     );
 }
 
+describe('peaks with a duration', () => {
+    it('shows the duration a waveform file brings before the sound has one, and keeps it across a new theme', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia(),
+            peaks: { peaks: [0.5, 1], duration: 90 },
+            theme: 'bubble',
+        });
+
+        expect(player.frame.duration).toBe(90);
+
+        player.setTheme('card');
+
+        expect(player.frame.duration).toBe(90);
+        expect(player.frame.peaks).toEqual([0.5, 1]);
+    });
+});
+
 describe('themes on the player', () => {
     it('wears a theme by name: its palette, font and layout', () => {
         player = createPlayer({

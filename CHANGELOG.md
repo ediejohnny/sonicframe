@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Ready-made waveform files: `readWaveform` and `loadWaveform` read the audiowaveform formats (binary `.dat` and
+  JSON, versions 1 and 2, 8 or 16 bits, any channel or the loudest of all) and the simple peaks list, finding the
+  format in the content. A file with more points than `maxPeaks` is folded while it is read; one whose data does not
+  match its header is refused. Options: `maxPeaks`, `maxBytes`, `channel`, `normalize`, `shared` and `fetcher`.
+- `writeWaveform` writes the audiowaveform `.dat` or JSON (version 2) from decoded samples, in the browser or in Node.
+  The three are also on `sonicframe/analysis`.
+- `peaks` also takes `{ peaks, duration }` (what `loadWaveform` gives): the duration is used while neither the media
+  nor the app gives one. The frame's `peaksDuration` property.
+- The `<sonic-player>` tag reads its `peaks` address with `loadWaveform`, so it takes `.dat` files and their duration.
+
+### Changed
+
+- The tag's `peaks` file may now be up to 8 MB, and one with more than 20,000 values is folded instead of refused.
+
 ## [0.3.0] - 2026-10-29
 
 ### Added
