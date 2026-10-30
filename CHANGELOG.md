@@ -18,6 +18,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `peaks` also takes `{ peaks, duration }` (what `loadWaveform` gives): the duration is used while neither the media
   nor the app gives one. The frame's `peaksDuration` property.
 - The `<sonic-player>` tag reads its `peaks` address with `loadWaveform`, so it takes `.dat` files and their duration.
+- Zoom and scroll in the frame, off by default (`zoom: true` or `ZoomOptions`): `view`, `setView`, `zoomTo`,
+  `zoomBy`, `scrollTo` and the `viewchange` event (with what moved the view). Each way of moving it has its own
+  switch: zoom keys (`+`/`=`, `-`, `0`, or your own), the wheel with a modifier (Ctrl/⌘, Alt or none, and a
+  touchpad pinch), sideways scrolling, two fingers, following the playing position (by pages, or centered, which
+  falls back to pages with reduced motion; a scroll by the person holds it until the next seek or play), and
+  scrolling while dragging near an edge. A keyboard seek outside the view brings the view to it (`revealKeys`, on).
+  The bars of the view come from a pyramid of the peaks, so the cost follows the screen, and stay on the same piece
+  of sound while scrolling. The largest zoom is one peak per bar unless `max` says otherwise.
+- `a11y.zoom` on the frame: `announce` says the new view after a zoom by the keys, a button or two fingers, in
+  `words` of your own (English by default).
+- For plugins: `host.view`, `host.setView`, `paint.view`, `paint.ratioAt`, and `paint.xAt` through the view.
+
+### Fixed
+
+- `exportClip` with `start`/`end` draws only that range across the clip, so the played part runs over the bars it
+  plays (it used to draw the whole sound under a progress bar of the range).
 
 ### Changed
 
