@@ -44,8 +44,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   the whole sound. Hidden from screen readers unless `a11y.keys` makes it a keyboard slider (arrows, Page Up/Down,
   Home, End) with its own `a11y.label` and `a11y.words`.
 
+- The player takes `zoom` (the wave's zoom options plus `buttons`: zoom in, zoom out and back to the whole sound,
+  three new look parts `zoomIn`, `zoomOut` and `zoomReset`, placed by the look or at the end of the line, marked
+  `aria-disabled` at their limits so focus is never lost), `minimap` (its height from the look's new
+  `minimapHeight`, in rem), `a11y.zoom.announce`, `a11y.minimap.keys`, and the `viewchange` event. Their words come in
+  English and Portuguese.
+- The player's `decode`: `peaks` (1000), `peaksPerSecond` (100, with zoom on, so zooming in shows detail), and
+  `maxSeconds` and `maxBytes`, which can only lower the decoder's ceilings.
+- The tag's `zoom` attribute (`zoom="wheel scroll pinch keys follow center edges buttons"`), `zoom-max`, `minimap`
+  (`above`, `autohide`, `wheel`), `a11y-zoom="announce"`, `a11y-minimap="keys"`, and the peaks file's
+  `peaks-channel`, `peaks-max` and `peaks-normalize`. The tag dispatches `sonicframe:viewchange`.
+- `loadWaveform` and `readWaveform` are on `sonicframe/player` too.
+
 ### Fixed
 
+- A sound longer than the decoder's length ceiling is read evenly through, and the rate given back is now the rate of
+  the samples given back (it was the file's), so times computed from it stay right.
 - `exportClip` with `start`/`end` draws only that range across the clip, so the played part runs over the bars it
   plays (it used to draw the whole sound under a progress bar of the range).
 

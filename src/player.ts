@@ -1,7 +1,8 @@
 /**
  * `sonicframe/player`: a ready-made player (play button, wave, time, speed, skip, volume) with looks,
  * palettes and fonts, built on SonicFrame. Kept apart from the main entry, so an app that only draws
- * waves never loads it.
+ * waves never loads it. `loadWaveform` and `readWaveform` are here too, so a player can take a
+ * waveform file without the main entry.
  */
 
 export {
@@ -9,11 +10,20 @@ export {
     Player,
     type ButtonAnimation,
     type PlayerA11y,
+    type PlayerDecode,
     type PlayerDescription,
     type PlayerEvents,
     type PlayerListenButton,
     type PlayerOptions,
+    type PlayerZoom,
 } from './player/player';
+export {
+    loadWaveform,
+    readWaveform,
+    type LoadWaveformOptions,
+    type ReadWaveformOptions,
+    type WaveformData,
+} from './core/waveform';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
 export {
     PLAYER_LABELS,

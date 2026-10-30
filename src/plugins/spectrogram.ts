@@ -23,8 +23,12 @@ import type { PaintContext, Plugin, PluginHost } from '../types';
 /** A color map from colors, quiet to loud: any CSS color or `var(--name, fallback)`. */
 export type ColorStops = { from: string; via?: string; to: string };
 
-/** Decoded mono samples and their rate. */
-export type DecodedAudio = { samples: Float32Array; sampleRate: number };
+/** Decoded mono samples, their rate, and the whole sound's length in seconds when known. */
+export type DecodedAudio = {
+    samples: Float32Array;
+    sampleRate: number;
+    duration?: number;
+};
 
 export type SpectrogramPluginOptions = SpectrogramOptions & {
     /** Ready-made mono samples (skip decoding). */

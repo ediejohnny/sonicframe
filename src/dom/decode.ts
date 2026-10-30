@@ -1,13 +1,16 @@
 /**
- * Decoding audio to mono samples for the spectrogram, off the page's own `<audio>`. The download is
- * capped and read as a stream (stopping the moment it is too big, like `loadPeaks`), decoding uses
- * an `OfflineAudioContext` (which needs no user gesture), and the result is trimmed to a safe length.
+ * Decoding audio to mono samples for the peaks and the spectrogram, off the page's own `<audio>`.
+ * The download is capped and read as a stream (stopping the moment it is too big, like
+ * `loadPeaks`), decoding uses an `OfflineAudioContext` (which needs no user gesture), and a sound
+ * longer than the length cap is read evenly through, with the rate of the samples given back.
  */
 
 import { mixdown } from '../core/analysis';
 
-const MAX_BYTES = 50 * 1024 * 1024;
-const MAX_SECONDS = 30 * 60;
+/** The largest download decoded, in bytes (50 MiB). */
+export const MAX_DECODE_BYTES = 52_428_800;
+/** The most seconds of sound decoded; a longer sound is read evenly through (30 minutes). */
+export const MAX_DECODE_SECONDS = 1800;
 
 export async function readCapped(
     response: Response,
@@ -56,19 +59,31 @@ export async function readCapped(
     return out.buffer;
 }
 
+/** A cap the app asks for, kept at or under SonicFrame's own. */
+function lowered(value: number | undefined, ceiling: number): number {
+    return typeof value === 'number' && value > 0
+        ? Math.min(ceiling, value)
+        : ceiling;
+}
+
 /**
- * Fetches (or reads a blob) and decodes to mono samples; throws past the byte or length caps, and
- * once `signal` fires (the download stops at once; a decode cannot be cut short, so it is skipped).
+ * Fetches (or reads a blob) and decodes to mono samples; throws past the byte cap, and once
+ * `signal` fires (the download stops at once; a decode cannot be cut short, so it is skipped).
+ * `maxBytes` and `maxSeconds` can only lower SonicFrame's caps. Past `maxSeconds`, the samples are
+ * picked evenly through the whole sound, and `sampleRate` is theirs, not the file's; `duration` is
+ * always the whole sound's.
  */
 export async function decodeAudio(
     source: string | Blob,
     options: {
         maxBytes?: number;
+        maxSeconds?: number;
         sampleRate?: number;
         signal?: AbortSignal;
     } = {},
-): Promise<{ samples: Float32Array; sampleRate: number }> {
-    const maxBytes = options.maxBytes ?? MAX_BYTES;
+): Promise<{ samples: Float32Array; sampleRate: number; duration: number }> {
+    const maxBytes = lowered(options.maxBytes, MAX_DECODE_BYTES);
+    const maxSeconds = lowered(options.maxSeconds, MAX_DECODE_SECONDS);
     const rate = options.sampleRate ?? 22050;
     let data: ArrayBuffer;
 
@@ -102,8 +117,16 @@ export async function decodeAudio(
     const buffer = await context.decodeAudioData(data);
     const cap = Math.min(
         buffer.length,
-        Math.round(MAX_SECONDS * buffer.sampleRate),
+        Math.round(maxSeconds * buffer.sampleRate),
     );
+    const samples = mixdown(buffer, cap);
 
-    return { samples: mixdown(buffer, cap), sampleRate: buffer.sampleRate };
+    return {
+        samples,
+        sampleRate:
+            cap < buffer.length && buffer.duration > 0
+                ? samples.length / buffer.duration
+                : buffer.sampleRate,
+        duration: buffer.duration,
+    };
 }
