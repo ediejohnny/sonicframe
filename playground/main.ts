@@ -7,14 +7,18 @@
 
 import {
     caption,
+    formatTime,
     liveFrequency,
     markers,
+    minimap,
     PlayButton,
+    readWaveform,
     regions,
     silencesFromPeaks,
     skipSilences,
     SonicFrame,
     timeline,
+    writeWaveform,
     type BarStyle,
     type ButtonFill,
     type ButtonShape,
@@ -249,6 +253,137 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
         listeners.forEach((remove) => remove());
         stop();
     };
+}
+
+/** The switches of the zoom demo: a name on the page and what it turns on. */
+const ZOOM_SWITCHES: { name: string; key: string; on: boolean }[] = [
+    { name: 'Wheel (Ctrl)', key: 'wheel', on: true },
+    { name: 'Scroll', key: 'scroll', on: true },
+    { name: 'Two fingers', key: 'pinch', on: true },
+    { name: 'Keys', key: 'keys', on: true },
+    { name: 'Buttons', key: 'buttons', on: true },
+    { name: 'Minimap', key: 'minimap', on: true },
+    { name: 'Follow', key: 'follow', on: false },
+    { name: 'Centered', key: 'center', on: false },
+    { name: 'Edges', key: 'edgeScroll', on: true },
+    { name: 'Announce', key: 'announce', on: false },
+];
+
+/** Zoom: a player built again whenever a switch changes, each way of moving the view on or off. */
+function zoomDemo(host: HTMLElement, sound: Sound): () => void {
+    const switches = byId('zoom-switches');
+    const status = byId('zoom-status');
+    const on = new Map(ZOOM_SWITCHES.map((item) => [item.key, item.on]));
+    let stop = (): void => undefined;
+
+    const build = (): void => {
+        stop();
+        const is = (key: string): boolean => on.get(key) === true;
+        stop = player(host, sound, {
+            label: 'Zoom',
+            look: { waveHeight: 4 },
+            zoom: {
+                wheel: is('wheel'),
+                scroll: is('scroll'),
+                pinch: is('pinch'),
+                keys: is('keys'),
+                buttons: is('buttons'),
+                follow: is('follow'),
+                followType: is('center') ? 'center' : 'page',
+                edgeScroll: is('edgeScroll'),
+            },
+            minimap: is('minimap') ? { a11y: { keys: true } } : false,
+            a11y: { zoom: { announce: is('announce') } },
+            plugins: [
+                timeline(),
+                regions({
+                    items: [{ start: 5, end: 12, label: 'Verse' }],
+                    scrollIntoView: true,
+                }),
+            ],
+        });
+    };
+
+    const buttons = ZOOM_SWITCHES.map((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'button small';
+        button.textContent = item.name;
+        button.setAttribute('aria-pressed', String(item.on));
+        button.addEventListener('click', () => {
+            const next = !(on.get(item.key) === true);
+            on.set(item.key, next);
+            button.setAttribute('aria-pressed', String(next));
+            status.textContent = `${item.name} ${next ? 'on' : 'off'}.`;
+            build();
+        });
+        switches.append(button);
+
+        return button;
+    });
+
+    build();
+
+    return () => {
+        stop();
+        buttons.forEach((button) => button.remove());
+        status.textContent = '';
+    };
+}
+
+/** How long the long sound is, in seconds (one hour). */
+const LONG_SECONDS = 3600;
+
+/** Points per second of the long sound's peaks file. */
+const LONG_RATE = 100;
+
+/**
+ * A long sound with no audio: an hour of made-up speech (bursts and pauses) written as a `.dat`
+ * file by `writeWaveform`, read back by `readWaveform`, and drawn with zoom, a ruler and a minimap.
+ */
+function setupLongSound(): void {
+    const button = byId<HTMLButtonElement>('long-make');
+    const host = byId('long-wave');
+    const status = byId('long-status');
+    let frame: SonicFrame | null = null;
+
+    button.addEventListener('click', () => {
+        frame?.destroy();
+        host.replaceChildren();
+
+        const count = LONG_SECONDS * LONG_RATE;
+        const samples = new Float32Array(count);
+        let level = 0;
+
+        for (let i = 0; i < count; i++) {
+            // A burst every few seconds, quieter between them, with a slow wander.
+            if (i % 250 === 0) {
+                level = Math.random() < 0.2 ? 0.02 : 0.2 + Math.random() * 0.7;
+            }
+
+            samples[i] = (Math.random() * 2 - 1) * level;
+        }
+
+        const file = writeWaveform([samples], {
+            sampleRate: LONG_RATE,
+            samplesPerPeak: 1,
+            bits: 8,
+        });
+        const wave = readWaveform(file, { maxPeaks: count });
+
+        frame = SonicFrame.create({
+            container: host,
+            peaks: wave,
+            label: 'An hour of peaks',
+            zoom: { wheel: true, scroll: true, pinch: true, keys: true },
+            plugins: [
+                timeline({ side: 'above' }),
+                minimap({ a11y: { keys: true } }),
+            ],
+        });
+        status.textContent = `${Math.round(file.length / 1024)} KB .dat file, ${wave.peaks.length.toLocaleString('en')} peaks, ${formatTime(wave.duration ?? 0)} long. Ctrl and the wheel zoom; + and - too.`;
+        button.textContent = 'Make another hour';
+    });
 }
 
 function clipCard(): PluginCard {
@@ -530,6 +665,7 @@ function setupPage(): void {
     }
 
     mount(byId('words-player'), wordsDemo);
+    mount(byId('zoom-player'), zoomDemo);
 
     const cards = byId('plugin-cards');
 
@@ -666,6 +802,7 @@ setupHeader(() => painted.forEach((repaint) => repaint()));
 setupCopyButtons();
 setupPage();
 setupCrowd();
+setupLongSound();
 pickSound(
     byId<HTMLButtonElement>('pick'),
     byId<HTMLInputElement>('file'),

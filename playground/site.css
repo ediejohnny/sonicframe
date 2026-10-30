@@ -443,6 +443,18 @@ main.wrap {
     margin-top: 1.25rem;
 }
 
+/* A long sound: a bare wave with a ruler above and a minimap below, no player. */
+
+.long-wave {
+    position: relative;
+    height: 7rem;
+    margin-top: 1rem;
+}
+
+.long-wave:empty {
+    display: none;
+}
+
 /* Rows of players with a short name under each. */
 
 /* Two columns at most: the ten drawings fill five whole rows, with no empty place. */

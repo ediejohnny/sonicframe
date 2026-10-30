@@ -24,6 +24,7 @@
                     <a href="#drawings">Drawings</a>
                     <a href="./themes.html">Themes</a>
                     <a href="#words">In words</a>
+                    <a href="#zoom">Zoom</a>
                     <a href="#plugins">Plugins</a>
                     <a href="https://github.com/ediejohnny/sonicframe"
                         >GitHub</a
@@ -193,6 +194,57 @@ createPlayer({
     },
 });</code></pre>
                     <button class="button small" type="button">Copy</button>
+                </div>
+            </section>
+
+            <section class="section" id="zoom" aria-labelledby="zoom-title">
+                <h2 id="zoom-title">Zoom</h2>
+                <p class="lede">
+                    Get close to a word, or across an hour. Every way of moving
+                    the view has its own switch; turn them on and off here. With
+                    zoom off, nothing changes.
+                </p>
+                <div class="words">
+                    <div
+                        class="buttons"
+                        role="group"
+                        aria-label="Ways to zoom"
+                        id="zoom-switches"
+                    ></div>
+                    <div id="zoom-player"></div>
+                    <p class="note" id="zoom-status" aria-hidden="true"></p>
+                    <p class="note">
+                        Ctrl and the wheel zoom around the pointer, Shift and
+                        the wheel scroll. With the wave focused, + and - zoom
+                        and 0 shows the whole sound. Shift-drag a region past
+                        the edge to see the view follow it.
+                    </p>
+                </div>
+                <div class="code words-code">
+                    <pre><code>createPlayer({
+    container,
+    src: '/voice.mp3',
+    zoom: { wheel: true, keys: true, pinch: true, buttons: true },
+    minimap: true,
+    a11y: { zoom: { announce: true }, minimap: { keys: true } },
+});</code></pre>
+                    <button class="button small" type="button">Copy</button>
+                </div>
+            </section>
+
+            <section class="section" id="long" aria-labelledby="long-title">
+                <h2 id="long-title">A long sound</h2>
+                <p class="lede">
+                    An hour of peaks, written on this page as an audiowaveform
+                    .dat file and read back, with no audio at all. The length
+                    comes from the file, so it shows at once.
+                </p>
+                <div class="words">
+                    <button id="long-make" class="button" type="button">
+                        Make an hour
+                    </button>
+                    <div id="long-wave" class="long-wave"></div>
+                    <p class="note" id="long-status"></p>
                 </div>
             </section>
 
