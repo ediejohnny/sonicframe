@@ -221,8 +221,11 @@ export type PluginHost = {
     addLane(side: 'above' | 'below', cssPixels: number): Lane;
     /** A layer over the canvas for text and tooltips (created once, shared by plugins). */
     overlay(): HTMLElement;
-    /** Moves to a position from 0 to 1 (the bound media too). */
-    seekTo(ratio: number): void;
+    /**
+     * Moves to a position from 0 to 1 (the bound media too). A seek a key asked for passes
+     * `'keyboard'`, so the view follows it like the frame's own keys.
+     */
+    seekTo(ratio: number, source?: SeekSource): void;
     /** Plays `start`..`end` seconds of the bound media, optionally looping. */
     playRange(start: number, end: number, options?: { loop?: boolean }): void;
     /** Forgets any range being played. */

@@ -10,11 +10,19 @@ const LADDER = [
 
 const MAX_TICKS = 200;
 
-/** The step (seconds) and the moments to mark for a `duration`-second sound `width` pixels wide. */
+/** How far a moment may sit past the range and still be marked, in seconds (sums of steps are not exact). */
+const SLACK = 1e-6;
+
+/**
+ * The step (seconds) and the moments to mark for a `duration`-second sound, of which `from`..`to`
+ * seconds (the whole sound by default, or for a range that is not one) are `width` pixels wide.
+ */
 export function niceTicks(
     duration: number,
     width: number,
     minSpacing: number,
+    from: number = 0,
+    to: number = duration,
 ): { step: number; times: number[] } {
     if (
         !Number.isFinite(duration) ||
@@ -25,19 +33,27 @@ export function niceTicks(
         return { step: 0, times: [] };
     }
 
-    const fits = (step: number): boolean =>
-        (step / duration) * width >= minSpacing;
+    const range =
+        Number.isFinite(from) && Number.isFinite(to) && from < to
+            ? { start: Math.max(0, from), end: Math.min(duration, to) }
+            : { start: 0, end: duration };
+    const span = range.end - range.start;
+    const fits = (step: number): boolean => (step / span) * width >= minSpacing;
     let step = LADDER.find(fits) ?? LADDER[LADDER.length - 1];
 
     // Never more than MAX_TICKS marks: grow the step (keeping round numbers) until they fit.
-    while (duration / step > MAX_TICKS) {
+    while (span / step > MAX_TICKS) {
         step *= step < 60 ? 10 : 2;
     }
 
     const times: number[] = [];
 
-    for (let time = 0; time <= duration + 1e-6; time += step) {
-        times.push(Math.round(time * 1000) / 1000);
+    for (
+        let index = Math.max(0, Math.ceil((range.start - SLACK) / step));
+        index * step <= range.end + SLACK;
+        index++
+    ) {
+        times.push(Math.round(index * step * 1000) / 1000);
     }
 
     return { step, times };

@@ -59,6 +59,9 @@ describe('the spectrogram plugin', () => {
             () => expect(recordingOf(canvas).ops).toContain('drawImage'),
             { timeout: 3_000, interval: 20 },
         );
+
+        // The whole image, stretched over the whole wave area.
+        expect(recordingOf(canvas).images.at(-1)).toEqual([0, 0, 200, 40]);
     });
 
     it('takes its colors from the page and repaints only when they change', async () => {

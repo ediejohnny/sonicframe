@@ -88,9 +88,14 @@ export function skipSilences(
             paint.ctx.fillStyle = paint.color(dimColor);
 
             for (const silence of silences) {
-                const from =
-                    clamp01(silence.start / paint.duration) * paint.width;
-                const to = clamp01(silence.end / paint.duration) * paint.width;
+                const from = paint.xAt(silence.start / paint.duration);
+                const to = paint.xAt(silence.end / paint.duration);
+
+                // Zoomed in, a silence wholly outside the view is not drawn.
+                if (to < 0 || from > paint.width) {
+                    continue;
+                }
+
                 paint.ctx.fillRect(
                     from,
                     0,

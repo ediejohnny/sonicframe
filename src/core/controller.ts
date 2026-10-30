@@ -325,8 +325,9 @@ export class Controller {
         this.effects.invalidate();
     }
 
-    seekTo(ratio: number): void {
-        this.seek(ratio, 'api');
+    /** Seeks to a ratio of the sound; `source` says what asked (a plugin's key is `'keyboard'`). */
+    seekTo(ratio: number, source: SeekSource = 'api'): void {
+        this.seek(ratio, source);
     }
 
     /** Returns whether the press starts a drag (the shell then captures the pointer). */
