@@ -29,6 +29,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `a11y.zoom` on the frame: `announce` says the new view after a zoom by the keys, a button or two fingers, in
   `words` of your own (English by default).
 - For plugins: `host.view`, `host.setView`, `paint.view`, `paint.ratioAt`, and `paint.xAt` through the view.
+  `host.seekTo(ratio, source)` takes an optional source: a seek a key asked for passes `'keyboard'`, so the view
+  follows it.
+- The plugins follow the view: regions (bands, grab zones and labels; `scrollIntoView` brings a region chosen by R
+  into view, off by default), markers (`markerSpans` takes an optional view; M brings the marker into view), the
+  silences' shade, and the timeline, which marks the part in view down to tenths of a second and reuses its
+  elements. The spectrogram shows its part of the picture; with `detail` (off by default) it computes a sharp
+  picture of the part in view once the view rests (`detailDelay`, `detailColumns`).
 
 ### Fixed
 

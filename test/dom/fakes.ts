@@ -15,6 +15,18 @@ export type Recorded = {
     readonly paths: FakePath2D[];
     /** Every method called, in order, for coarse assertions. */
     readonly ops: string[];
+    /** Every `fillRect`, in order: its box and the `fillStyle` in force. */
+    readonly rects: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        fill: string;
+    }[];
+    /** The numbers of every `drawImage`, in order (the image itself left out). */
+    readonly images: number[][];
+    /** The pixels of every `putImageData`, in order (RGBA bytes). */
+    readonly pixels: Uint8ClampedArray[];
 };
 
 type ResizeBox = { width: number; height: number };
@@ -179,10 +191,32 @@ function createRecordingContext(): CanvasRenderingContext2D & Recorded {
     const strokes: string[] = [];
     const paths: FakePath2D[] = [];
     const ops: string[] = [];
+    const rects: Recorded['rects'] = [];
+    const images: number[][] = [];
+    const pixels: Uint8ClampedArray[] = [];
     const op =
         (name: string) =>
         (...args: unknown[]): void => {
             ops.push(name);
+
+            if (name === 'fillRect') {
+                const [x, y, width, height] = args as number[];
+                rects.push({
+                    x,
+                    y,
+                    width,
+                    height,
+                    fill: String(context.fillStyle),
+                });
+            }
+
+            if (name === 'drawImage') {
+                images.push(args.slice(1) as number[]);
+            }
+
+            if (name === 'putImageData') {
+                pixels.push((args[0] as { data: Uint8ClampedArray }).data);
+            }
 
             if (
                 (name === 'fill' || name === 'stroke') &&
@@ -207,6 +241,9 @@ function createRecordingContext(): CanvasRenderingContext2D & Recorded {
         strokes,
         paths,
         ops,
+        rects,
+        images,
+        pixels,
         canvas: null,
         fillStyle: '#000000',
         strokeStyle: '#000000',

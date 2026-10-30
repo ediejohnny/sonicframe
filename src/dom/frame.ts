@@ -62,6 +62,7 @@ import type {
     PeaksSource,
     Plugin,
     PluginHost,
+    SeekSource,
     SonicFrameEvents,
     WaveName,
     WavePoint,
@@ -548,9 +549,12 @@ export class SonicFrame implements PluginHost {
         this.controller.setProgress(ratio);
     }
 
-    /** Moves to a position from 0 to 1 (the bound media too) and emits `seek`. */
-    seekTo(ratio: number): void {
-        this.controller.seekTo(ratio);
+    /**
+     * Moves to a position from 0 to 1 (the bound media too) and emits `seek`; `source` says what
+     * asked (`'api'` by default; a plugin's key passes `'keyboard'`, so the view follows it).
+     */
+    seekTo(ratio: number, source: SeekSource = 'api'): void {
+        this.controller.seekTo(ratio, source);
     }
 
     /** Plays `start`..`end` seconds of the bound media, optionally looping. */

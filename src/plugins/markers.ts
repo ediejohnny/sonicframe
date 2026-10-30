@@ -2,15 +2,24 @@
  * Markers: lines at chosen moments of the sound (reported moments, chapters, "reply at 0:42"). Times
  * are in seconds, so they stay right when the frame resizes; nothing is drawn while the duration is
  * unknown. A marker can carry a label and a color; markers that crowd together become one pill with
- * a count. Hovering a marker shows a tooltip, a click seeks to it, and M / Shift+M step through them.
- * The 0.1.0 API (plain times, `set(times)`, `markerSpans`) still works unchanged.
+ * a count. Hovering a marker shows a tooltip, a click seeks to it, and M / Shift+M step through them
+ * (a keyboard seek, so a zoomed view follows it). Zoomed in, markers are placed through the view and
+ * those outside it are left out. The 0.1.0 API (plain times, `set(times)`, `markerSpans`) still works
+ * unchanged.
  */
 
 import { groupMarks } from '../core/clusters';
 import { clamp01, positive } from '../core/math';
 import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
-import type { PaintContext, Plugin, PluginHost, WavePoint } from '../types';
+import { FULL_VIEW, viewX, type View } from '../core/view';
+import type {
+    PaintContext,
+    Plugin,
+    PluginHost,
+    SeekSource,
+    WavePoint,
+} from '../types';
 import { sharedTooltip } from '../dom/tooltip';
 
 /** One marker: a moment in seconds, with an optional label, color and id. */
@@ -60,15 +69,22 @@ const TOOLTIP_LINES = 5;
 /** Text over the played color and the markers: the pill's count and the tooltip. */
 const ON_PROGRESS = 'var(--sonicframe-on-progress, #ffffff)';
 
+/** Whether a ratio of the sound is in `view` (its ends included). */
+function inView(ratio: number, view: View): boolean {
+    return ratio >= view.start && ratio <= view.end;
+}
+
 /**
  * Where each marker line goes, in device pixels: centered on its moment and never outside the frame.
- * Moments that are not finite numbers are skipped.
+ * Moments that are not finite numbers are skipped, and so are those outside `view` (the whole sound
+ * by default).
  */
 export function markerSpans(
     times: readonly number[],
     duration: number | null,
     width: number,
     size: number,
+    view: View = FULL_VIEW,
 ): { x: number; width: number }[] {
     const known = positive(duration);
 
@@ -79,13 +95,19 @@ export function markerSpans(
     const lineWidth = Math.max(1, Math.min(size, width));
 
     return times
-        .filter((time) => Number.isFinite(time))
+        .filter(
+            (time) =>
+                Number.isFinite(time) && inView(clamp01(time / known), view),
+        )
         .map((time) => ({
             x: Math.min(
                 width - lineWidth,
                 Math.max(
                     0,
-                    Math.round(clamp01(time / known) * width - lineWidth / 2),
+                    Math.round(
+                        viewX(clamp01(time / known), view, width) -
+                            lineWidth / 2,
+                    ),
                 ),
             ),
             width: lineWidth,
@@ -131,14 +153,33 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
             .sort((a, b) => a.time - b.time);
     }
 
+    /** The marks in `view`, sorted, and their centers across `width` through it. */
+    function placed(
+        width: number,
+        duration: number,
+        view: View,
+    ): { order: Mark[]; centers: number[] } {
+        const order = sorted().filter((mark) =>
+            inView(clamp01(mark.time / duration), view),
+        );
+
+        return {
+            order,
+            centers: order.map((mark) =>
+                viewX(clamp01(mark.time / duration), view, width),
+            ),
+        };
+    }
+
     /** Clusters of marks in CSS pixels, for hover and click; each cluster keeps its marks. */
     function clustersCss(
         width: number,
         duration: number,
     ): { from: number; to: number; marks: Mark[] }[] {
-        const order = sorted();
-        const centers = order.map(
-            (mark) => clamp01(mark.time / duration) * width,
+        const { order, centers } = placed(
+            width,
+            duration,
+            host?.view ?? FULL_VIEW,
         );
 
         return groupMarks(centers, groupPx).map((cluster) => ({
@@ -175,7 +216,11 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
             : `${formatTime(mark.time)} · ${mark.label}`;
     }
 
-    function choose(chosen: Mark[], toward: number): void {
+    function choose(
+        chosen: Mark[],
+        toward: number,
+        source: SeekSource = 'api',
+    ): void {
         const frame = host;
 
         if (frame === null || chosen.length === 0) {
@@ -190,7 +235,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                     ? mark
                     : best,
             );
-            frame.seekTo(nearest.time / duration);
+            frame.seekTo(nearest.time / duration, source);
         }
 
         frame.announce(chosen.map(label).join('; '));
@@ -232,9 +277,10 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 return;
             }
 
-            const order = sorted();
-            const centers = order.map(
-                (mark) => clamp01(mark.time / duration) * paint.width,
+            const { order, centers } = placed(
+                paint.width,
+                duration,
+                paint.view,
             );
             const clusters = groupMarks(centers, groupPx * paint.pixelRatio);
             const lineWidth = Math.max(
@@ -347,7 +393,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 return false;
             }
 
-            choose([next], next.time);
+            choose([next], next.time, 'keyboard');
 
             return true;
         },
