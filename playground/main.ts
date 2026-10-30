@@ -144,7 +144,9 @@ const mounts: { host: HTMLElement; build: Build }[] = [];
 let teardowns: (() => void)[] = [];
 let current: Sound | null = null;
 
+/** A place for something built on the page's sound; it shows the loader, at a player's height, until then. */
 function mount(host: HTMLElement, build: Build): void {
+    host.classList.add('loading');
     mounts.push({ host, build });
 }
 
@@ -159,6 +161,7 @@ function player(
     const made = createPlayer({
         container: host,
         src: sound.url,
+        preload: 'none',
         peaks: sound.peaks,
         duration: sound.duration,
         ...options,
@@ -447,6 +450,7 @@ function clipCard(): PluginCard {
             const made = createPlayer({
                 container: wave,
                 src: sound.url,
+                preload: 'none',
                 peaks: sound.peaks,
                 duration: sound.duration,
                 wave: 'line',
@@ -507,7 +511,7 @@ function buttonsCard(): PluginCard {
             const audio = document.createElement('audio');
             const row = document.createElement('div');
             const wave = document.createElement('div');
-            audio.preload = 'metadata';
+            audio.preload = 'none';
             audio.src = sound.url;
             row.className = 'buttons';
             wave.className = 'bare-wave';
@@ -688,6 +692,7 @@ function setupPage(): void {
 
     on('tag-player', (tag) => {
         mount(tag, (host, sound) => {
+            host.setAttribute('preload', 'none');
             host.setAttribute('src', sound.url);
 
             return () => host.removeAttribute('src');
@@ -749,7 +754,7 @@ function crowd(sound: Sound): () => void {
     const playHost = byId('crowd-play');
     const fps = byId('fps');
     const audio = document.createElement('audio');
-    audio.preload = 'metadata';
+    audio.preload = 'none';
     audio.src = sound.url;
     playHost.append(audio);
 
@@ -834,7 +839,11 @@ function render(sound: Sound): void {
     }
 
     current = sound;
-    teardowns = mounts.map(({ host, build }) => build(host, sound));
+    teardowns = mounts.map(({ host, build }) => {
+        host.classList.remove('loading');
+
+        return build(host, sound);
+    });
 
     if (stopCrowd !== null) {
         stopCrowd();

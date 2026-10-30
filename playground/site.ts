@@ -1,15 +1,19 @@
 /**
  * What every docs page shares: the sound, the header, the sidebar of pages, "On this page" and the
- * copy buttons. The sound is fetched and decoded once, so every player gets the same peaks and
- * duration and plays the same bytes. The header shows the version and switches the page between
- * light and dark; canvas colors are read once, so the page repaints its players after every switch.
+ * copy buttons. The sound's peaks and length come from a ready-made file, so every player gets the
+ * same ones at once and nothing is decoded; a sound the reader picks is decoded once. The header
+ * switches the page between light and dark and picks its font; canvas colors are read once, so the
+ * page repaints its players after every switch.
  */
 
-import { peaksFromChannel } from '../src/index';
+import { loadWaveform, peaksFromChannel } from '../src/index';
+import { POEM } from './docs/sounds';
 
 export type Sound = {
-    /** An object URL for the sound's bytes; each player's own `<audio>` plays it. */
+    /** The sound's address (or an object URL for a file the reader picked); each player's own `<audio>` plays it. */
     url: string;
+    /** Whether `url` is an object URL this page made, to give back with `forget`. */
+    own: boolean;
     peaks: number[];
     /** In seconds. */
     duration: number;
@@ -37,6 +41,7 @@ export async function soundFrom(blob: Blob, name: string): Promise<Sound> {
 
         return {
             url: URL.createObjectURL(blob),
+            own: true,
             peaks: peaksFromChannel(buffer.getChannelData(0), PEAKS),
             duration: buffer.duration,
             name,
@@ -46,19 +51,26 @@ export async function soundFrom(blob: Blob, name: string): Promise<Sound> {
     }
 }
 
-/** The page's own sound (see playground/sounds/CREDITS.md). */
+/**
+ * The page's own sound (see playground/sounds/CREDITS.md): its ready-made peaks and length come
+ * from a small file, and the audio itself loads only when a player plays.
+ */
 export async function bundledSound(): Promise<Sound> {
-    const response = await fetch('./sounds/little-elf.mp3');
+    const waveform = await loadWaveform(`./${POEM.peaks}`);
 
-    if (!response.ok) {
-        throw new Error(`The sound did not load (HTTP ${response.status}).`);
-    }
-
-    return soundFrom(await response.blob(), '“The Little Elf”, read by Avery');
+    return {
+        url: `./${POEM.audio}`,
+        own: false,
+        peaks: [...waveform.peaks],
+        duration: waveform.duration ?? 0,
+        name: `${POEM.title}, ${POEM.artist}`,
+    };
 }
 
 export function forget(sound: Sound): void {
-    URL.revokeObjectURL(sound.url);
+    if (sound.own) {
+        URL.revokeObjectURL(sound.url);
+    }
 }
 
 /** A button that opens a hidden file input, and the file chosen becomes the page's sound. */

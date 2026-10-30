@@ -1132,6 +1132,65 @@ html {
     font-size: 1.1875rem;
 }
 
+/*
+ * Where a player is coming: its height kept, and five square bars rising and falling in the logo's
+ * blue until the sound's peaks arrive. Still under reduced motion.
+ */
+.loading {
+    position: relative;
+    min-height: 3.5rem;
+}
+
+.loading::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.25rem;
+    height: 1.25rem;
+    background:
+        linear-gradient(var(--brand) 0 0) 0% 100%,
+        linear-gradient(var(--brand) 0 0) 25% 100%,
+        linear-gradient(var(--brand) 0 0) 50% 100%,
+        linear-gradient(var(--brand) 0 0) 75% 100%,
+        linear-gradient(var(--brand) 0 0) 100% 100%;
+    background-repeat: no-repeat;
+    background-size:
+        0.3125rem 40%,
+        0.3125rem 70%,
+        0.3125rem 100%,
+        0.3125rem 70%,
+        0.3125rem 40%;
+    content: '';
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .loading::before {
+        animation: loading-bars 0.9s ease-in-out infinite;
+    }
+}
+
+@keyframes loading-bars {
+    0%,
+    100% {
+        background-size:
+            0.3125rem 40%,
+            0.3125rem 70%,
+            0.3125rem 100%,
+            0.3125rem 70%,
+            0.3125rem 40%;
+    }
+
+    50% {
+        background-size:
+            0.3125rem 100%,
+            0.3125rem 50%,
+            0.3125rem 30%,
+            0.3125rem 90%,
+            0.3125rem 100%;
+    }
+}
+
 .stage {
     margin-top: 2.25rem;
     padding: 1rem;

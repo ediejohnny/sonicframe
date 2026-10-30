@@ -7,11 +7,12 @@
  * and copies the sounds next to the built pages.
  */
 
-import { cpSync, existsSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite-plus';
 import { PAGES, readingOrder, type DocsPage } from './pages';
+import { SOUNDS } from './sounds';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLAYGROUND = resolve(HERE, '..');
@@ -19,6 +20,9 @@ const PROJECT = resolve(PLAYGROUND, '..');
 
 const REPOSITORY = 'https://github.com/ediejohnny/sonicframe';
 const NPM = 'https://www.npmjs.com/package/sonicframe';
+
+/** The largest peaks file the dev server writes, in bytes. */
+const MAX_PEAKS_FILE = 4_000_000;
 
 /** The first year of the copyright. */
 const FIRST_YEAR = 2026;
@@ -320,12 +324,60 @@ export function docsSite(): Plugin {
             handler(html, context) {
                 const file = basename(context.filename);
 
-                return dirname(resolve(context.filename)) === PLAYGROUND
+                // A page whose name starts with an underscore is a tool for us, not a docs page.
+                return dirname(resolve(context.filename)) === PLAYGROUND &&
+                    !file.startsWith('_')
                     ? dressPage(html, file, file === '404.html' ? base : '')
                     : html;
             },
         },
         configureServer(server) {
+            // _peaks.html posts each sound's peaks here; only a listed sound's own file is written.
+            server.middlewares.use(
+                '/playground/__peaks',
+                (request, response) => {
+                    const id = new URL(
+                        request.url ?? '',
+                        'http://dev',
+                    ).searchParams.get('id');
+                    const sound = SOUNDS.find((each) => each.id === id);
+
+                    if (request.method !== 'POST' || sound === undefined) {
+                        response.statusCode = 400;
+                        response.end();
+
+                        return;
+                    }
+
+                    const chunks: Buffer[] = [];
+                    let size = 0;
+
+                    request.on('data', (chunk: Buffer) => {
+                        size += chunk.length;
+
+                        if (size > MAX_PEAKS_FILE) {
+                            response.statusCode = 413;
+                            response.end();
+                            request.destroy();
+
+                            return;
+                        }
+
+                        chunks.push(chunk);
+                    });
+                    request.on('end', () => {
+                        if (response.writableEnded) {
+                            return;
+                        }
+
+                        writeFileSync(
+                            join(PLAYGROUND, sound.peaks),
+                            Buffer.concat(chunks),
+                        );
+                        response.end(String(size));
+                    });
+                },
+            );
             server.middlewares.use((request, response, next) => {
                 if (
                     request.url
