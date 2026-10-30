@@ -572,7 +572,8 @@ Each of these is a plugin; import it and `frame.use(it)`.
   loops, `[` `]` `{` `}` nudge the edges and `Delete` removes. API: `add` (returns a copy, or `null` once `max`
   regions exist), `update`, `remove`, `clear`, `list`, `play`, `stop`, `select`, with `onChange` / `onSelect`.
   Regions are fitted to the sound once its length is known. Zoomed in, `scrollIntoView: true` brings a region chosen
-  by `R` into view.
+  by `R` into view. `snap: true` draws the bands' edges on whole device pixels: a little crisper, each edge moved by
+  less than half a pixel; off by default, the edges sit at fractions of a pixel, as they always did.
 - **`timeline({ side, size, minSpacing })`** — a ruler with labels on round seconds and minutes, in a lane above or
   below the bars; zoomed in, it marks the part in view, down to tenths of a second.
 - **`spectrogram({ source | samples, map, fftSize, columns, rows })`** — a time–frequency image, computed in the
@@ -584,7 +585,8 @@ Each of these is a plugin; import it and `frame.use(it)`.
 - **`liveFrequency({ fftSize, smoothing, bars })`** — while the sound plays, the bars dance to its spectrum (Web
   Audio), in up to 512 bands. Cross-origin media without CORS is refused with an `error`, never silenced.
 - **`skipSilences({ silences, lead, dim })`** — jumps past the quiet stretches during forward playback, landing
-  `lead` seconds (0.1 by default) before each one ends, so the next word is not clipped.
+  `lead` seconds (0.1 by default) before each one ends, so the next word is not clipped. `dim` shades them; `snap:
+  true` puts the shade's edges on whole device pixels, as for regions.
 
 ### Analysis and clips
 

@@ -55,6 +55,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   (`above`, `autohide`, `wheel`), `a11y-zoom="announce"`, `a11y-minimap="keys"`, and the peaks file's
   `peaks-channel`, `peaks-max` and `peaks-normalize`. The tag dispatches `sonicframe:viewchange`.
 - `loadWaveform` and `readWaveform` are on `sonicframe/player` too.
+- `snap` on `regions` and `skipSilences` (off by default): their edges on whole device pixels, a little crisper and
+  moved by less than half a pixel; without it they sit at fractions of a pixel, as before.
 
 ### Fixed
 

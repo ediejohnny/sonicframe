@@ -27,6 +27,20 @@ export function xAt(ratio: number, width: number): number {
     return Math.round(clamp01(ratio) * Math.max(0, width));
 }
 
+/**
+ * The device-pixel x of a ratio of the sound across `paint.width` showing `paint.view`: on a whole
+ * pixel with `snap` (as `paint.xAt` places it), at a fraction of one otherwise.
+ */
+export function placeX(
+    paint: { width: number; view: View },
+    ratio: number,
+    snap: boolean,
+): number {
+    const x = viewX(clamp01(ratio), paint.view, Math.max(0, paint.width));
+
+    return snap ? Math.round(x) : x;
+}
+
 /** Where a pointer sits along the frame, from 0 (start) to 1 (end). */
 export function ratioAt(offset: number, width: number): number {
     return width > 0 ? clamp01(offset / width) : 0;
