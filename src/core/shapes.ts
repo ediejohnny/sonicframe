@@ -7,7 +7,7 @@
  */
 
 import type { BarStyle, WaveName, WaveStyle } from '../types';
-import { layoutBars, type Bar } from './layout';
+import { layoutBars, type Bar, type BarWindow } from './layout';
 import { clamp01 } from './math';
 
 export const WAVE_NAMES: readonly WaveName[] = Object.freeze([
@@ -97,7 +97,8 @@ export function resolveWave(
 /**
  * Shapes one drawing of `values` (0..1, one per bar that fits) across `width` × `height` device
  * pixels. The bar layout gives every drawing the same density, curve, minimum height and alignment;
- * the track needs no values at all.
+ * the track needs no values at all. With a window, the values are its bars (see `BarWindow`), and the
+ * scope's swings and the pulse's beats stay on the same bars while the view scrolls.
  */
 export function waveShape(
     values: readonly number[],
@@ -106,6 +107,7 @@ export function waveShape(
     bar: BarStyle,
     wave: WaveStyle,
     pixelRatio: number,
+    window?: BarWindow,
 ): WaveShape {
     const ratio = pixelRatio > 0 ? pixelRatio : 1;
     const shape: WaveShape = {
@@ -130,7 +132,8 @@ export function waveShape(
         return shape;
     }
 
-    const bars = layoutBars(values, width, height, bar, ratio);
+    const bars = layoutBars(values, width, height, bar, ratio, window);
+    const first = window?.first ?? 0;
 
     if (bars.length === 0) {
         return shape;
@@ -163,12 +166,23 @@ export function waveShape(
             shape.smooth = wave.smooth;
             break;
         case 'scope':
-            shape.lines.push(scope(bars, width, height, shape.lineWidth));
+            shape.lines.push(
+                scope(bars, width, height, shape.lineWidth, first),
+            );
             shape.smooth = wave.smooth;
             break;
         case 'pulse':
             shape.lines.push(
-                pulse(values, bars, width, height, bar, shape.lineWidth, ratio),
+                pulse(
+                    values,
+                    bars,
+                    width,
+                    height,
+                    bar,
+                    shape.lineWidth,
+                    ratio,
+                    window,
+                ),
             );
             break;
         default:
@@ -399,12 +413,16 @@ function area(
     return { points, closed: true };
 }
 
-/** An oscilloscope trace: one line swinging above and below the middle, as far as each bar reaches. */
+/**
+ * An oscilloscope trace: one line swinging above and below the middle, as far as each bar reaches.
+ * Bar k of the row (`first` + its index) swings up when k is even.
+ */
 function scope(
     bars: readonly Bar[],
     width: number,
     height: number,
     lineWidth: number,
+    first: number,
 ): Polyline {
     const middle = height / 2;
     const reach = Math.max(0, middle - lineWidth / 2);
@@ -414,7 +432,7 @@ function scope(
         const swing = Math.min(reach, bar.height / 2);
         points.push(
             bar.x + bar.width / 2,
-            index % 2 === 0 ? middle - swing : middle + swing,
+            (first + index) % 2 === 0 ? middle - swing : middle + swing,
         );
     });
 
@@ -425,7 +443,8 @@ function scope(
 
 /**
  * A heartbeat monitor: a flat middle line that beats once every few bars, as high as the loudest
- * of them (with no minimum height, so silence stays flat).
+ * of them (with no minimum height, so silence stays flat). With a window, the beats are groups of
+ * the whole row, so each one keeps its place on the sound while the view scrolls.
  */
 function pulse(
     values: readonly number[],
@@ -435,28 +454,39 @@ function pulse(
     bar: BarStyle,
     lineWidth: number,
     ratio: number,
+    window: BarWindow | undefined,
 ): Polyline {
     const middle = height / 2;
     const reach = Math.max(0, middle - lineWidth / 2);
     const curve = bar.curve > 0 ? bar.curve : 1;
     const edges = boundaries(bars, width);
-    const slot = width / bars.length;
+    const slot = window
+        ? window.virtualWidth / Math.max(1, window.total)
+        : width / bars.length;
     const group = Math.max(1, Math.round((BEAT * ratio) / Math.max(1, slot)));
+    const first = window?.first ?? 0;
     const points = [0, middle];
 
-    for (let start = 0; start < bars.length; start += group) {
-        const end = Math.min(bars.length, start + group);
+    // Groups start at whole multiples of `group` along the row; the first one may begin off screen.
+    for (
+        let start = first - (first % group);
+        start < first + bars.length;
+        start += group
+    ) {
+        const end = Math.min(first + bars.length, start + group);
         let level = 0;
 
-        for (let index = start; index < end; index++) {
-            level = Math.max(level, clamp01(values[index]) ** curve);
+        for (let index = Math.max(start, first); index < end; index++) {
+            level = Math.max(level, clamp01(values[index - first]) ** curve);
         }
 
         const swing = level * reach;
 
         if (swing >= 0.5) {
-            const from = edges[start];
-            const span = edges[end] - from;
+            const from = window ? start * slot - window.offset : edges[start];
+            const span = window
+                ? (Math.min(start + group, window.total) - start) * slot
+                : edges[end] - from;
 
             points.push(
                 from + span * 0.35,

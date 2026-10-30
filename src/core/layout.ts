@@ -40,9 +40,46 @@ export function barMetrics(
 }
 
 /**
+ * The bars on screen of a row laid over the whole sound, `virtualWidth` device pixels wide (the width
+ * ÷ the view's size): bars `first` to `first + count - 1` of `total`, shifted left by `offset`. Bar k
+ * always covers the same piece of sound, so scrolling never makes the bars swim.
+ */
+export type BarWindow = {
+    total: number;
+    first: number;
+    count: number;
+    virtualWidth: number;
+    offset: number;
+};
+
+/** The window of bars that covers `width` device pixels showing `view` (ratios of the sound). */
+export function barWindow(
+    width: number,
+    view: { start: number; end: number },
+    bar: Pick<BarStyle, 'width' | 'gap'>,
+    pixelRatio: number,
+): BarWindow {
+    const virtualWidth = width / (view.end - view.start);
+    const metrics = barMetrics(virtualWidth, bar, pixelRatio);
+    const total = metrics.count;
+    const offset = Math.round(view.start * virtualWidth);
+    const step = total > 1 ? (virtualWidth - metrics.width) / (total - 1) : 0;
+
+    if (total <= 1 || step <= 0) {
+        return { total, first: 0, count: total, virtualWidth, offset };
+    }
+
+    const first = Math.max(0, Math.floor((offset - metrics.width) / step));
+    const last = Math.min(total - 1, Math.ceil((offset + width) / step));
+
+    return { total, first, count: last - first + 1, virtualWidth, offset };
+}
+
+/**
  * Places one bar per value (0..1) across the whole width: the first bar starts at the left edge and the
- * last one ends at the right edge. Bars never overlap; without a gap they touch, drawing one shape.
- * Centered bars keep the same parity as the height, so they are exactly symmetric.
+ * last one ends at the right edge. With a window, the values are its bars, placed on its row and
+ * shifted to the screen. Bars never overlap; without a gap they touch, drawing one shape. Centered
+ * bars keep the same parity as the height, so they are exactly symmetric.
  */
 export function layoutBars(
     values: readonly number[],
@@ -50,11 +87,15 @@ export function layoutBars(
     height: number,
     bar: BarStyle,
     pixelRatio: number,
+    window?: BarWindow,
 ): Bar[] {
-    const metrics = barMetrics(width, bar, pixelRatio);
-    const count = values.length;
+    const row = window?.virtualWidth ?? width;
+    const metrics = barMetrics(row, bar, pixelRatio);
+    const count = window?.total ?? values.length;
+    const first = window?.first ?? 0;
+    const offset = window?.offset ?? 0;
 
-    if (count === 0 || metrics.count === 0 || height <= 0) {
+    if (values.length === 0 || metrics.count === 0 || height <= 0) {
         return [];
     }
 
@@ -64,11 +105,11 @@ export function layoutBars(
         height,
         Math.max(1, Math.round(bar.minHeight * ratio)),
     );
-    const step = count > 1 ? (width - metrics.width) / (count - 1) : 0;
+    const step = count > 1 ? (row - metrics.width) / (count - 1) : 0;
     const left = (index: number): number =>
-        count > 1
-            ? Math.round(index * step)
-            : Math.round((width - metrics.width) / 2);
+        (count > 1
+            ? Math.round((first + index) * step)
+            : Math.round((row - metrics.width) / 2)) - offset;
 
     return values.map((value, index) => {
         let barHeight = Math.min(
@@ -82,7 +123,7 @@ export function layoutBars(
 
         const x = left(index);
         const barWidth =
-            metrics.gap === 0 && index < count - 1
+            metrics.gap === 0 && first + index < count - 1
                 ? Math.max(metrics.width, left(index + 1) - x)
                 : metrics.width;
 
