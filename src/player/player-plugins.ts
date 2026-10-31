@@ -8,7 +8,7 @@ import type { PlayerWords } from '../core/player/labels';
 import type { PlayerLook } from '../core/player/look';
 import { PROGRESS, WAVE } from '../core/shared/variables';
 import { remPixels } from '../dom/units';
-import type { ChaptersPlugin } from '../plugins/chapters';
+import type { ChaptersPlugin } from '../plugins/chapters-options';
 import {
     soundDescription,
     type SoundDescriptionPlugin,

@@ -50,7 +50,7 @@ import { pageLanguage } from '../dom/page-language';
 import { onSchemeChange, prefersDark } from '../dom/scheme';
 import { canSpeak } from '../dom/speak';
 import { remPixels } from '../dom/units';
-import type { ChaptersPlugin } from '../plugins/chapters';
+import type { ChaptersPlugin } from '../plugins/chapters-options';
 import type { SoundDescriptionPlugin } from '../plugins/description';
 import type {
     BarStyle,

@@ -118,6 +118,28 @@ describe('regions on the page', () => {
         expect(cursor()).toBe('copy');
     });
 
+    it('shows its labels on a new frame, as when a player builds its wave again', () => {
+        const plugin = regions({
+            items: [{ start: 8, end: 16, label: 'Intro' }],
+        });
+        mounted = mount({
+            media: fakeMedia({ duration: 40 }),
+            plugins: [plugin],
+        });
+        mounted.frame.destroy();
+        mounted.unmount();
+        mounted = mount({
+            media: fakeMedia({ duration: 40 }),
+            plugins: [plugin],
+        });
+
+        const labels = [...mounted.container.querySelectorAll('span')].filter(
+            (span) => span.textContent === 'Intro',
+        );
+
+        expect(labels).toHaveLength(1);
+    });
+
     it('plays the selected region on Enter', () => {
         const plugin: RegionsPlugin = regions({
             items: [{ start: 8, end: 12 }],

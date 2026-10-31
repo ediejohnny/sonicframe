@@ -45,19 +45,19 @@ export {
 } from './plugins/caption';
 export {
     regions,
-    type Region,
     type RegionsOptions,
     type RegionsPlugin,
 } from './plugins/regions';
+export type { Region } from './plugins/region-store';
 export { timeline, type TimelineOptions } from './plugins/timeline';
+export { chapters } from './plugins/chapters';
 export {
     CHAPTER_WORDS,
-    chapters,
-    type ChapterListLook,
     type ChaptersKeys,
     type ChaptersOptions,
     type ChaptersPlugin,
-} from './plugins/chapters';
+} from './plugins/chapters-options';
+export type { ChapterListLook } from './plugins/chapter-list';
 export type { ChapterWords, DescriptionWords } from './core/languages/words';
 export {
     minimap,

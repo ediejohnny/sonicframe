@@ -4,33 +4,24 @@
  * still scrubs), moves it by its body and resizes it by an edge, and the keyboard selects, plays,
  * loops, nudges and deletes while the frame has focus. Regions never invert or fall below a minimum
  * length (pure `normalizeRegion`), and every edge has a touch-sized grab zone (`hitRegion`). Zoomed
- * in, everything goes through the view: the bands, the grab zones and the labels.
+ * in, everything goes through the view: the bands, the grab zones and the labels. The regions are
+ * kept by `RegionStore`; the labels, the pointer and the keys are `RegionLabels`, `RegionPointer`
+ * and `RegionKeys`.
  */
 
-import { EN } from '../core/languages/en';
-import {
-    hitRegion,
-    normalizeRegion,
-    type LaidRegion,
-    type RegionPart,
-} from '../core/marks/regions';
-import { clamp01, positive } from '../core/shared/math';
-import { cleanText, fillTemplate } from '../core/shared/text';
-import { formatTime } from '../core/shared/timing';
+import { positive } from '../core/shared/math';
 import { PROGRESS, REGION } from '../core/shared/variables';
-import { FULL_VIEW, viewX } from '../core/view/view';
 import { placeX } from '../core/wave/scene';
-import { css } from '../dom/css';
-import type { Plugin, PluginHost, WavePoint } from '../types';
-
-/** A region, in seconds. */
-export type Region = {
-    id: string;
-    start: number;
-    end: number;
-    label?: string;
-    color?: string;
-};
+import type { Plugin, PluginHost } from '../types';
+import { RegionKeys } from './region-keys';
+import { RegionLabels } from './region-labels';
+import { RegionPointer } from './region-pointer';
+import {
+    regionLabel,
+    RegionStore,
+    type Region,
+    type RegionsHost,
+} from './region-store';
 
 export type RegionsOptions = {
     /** Regions to start with. */
@@ -75,95 +66,35 @@ export type RegionsPlugin = Plugin & {
     select(id: string | null): void;
 };
 
-const EDGE_PX = 12;
-const NUDGE = 0.5;
-let counter = 0;
-
 export function regions(options: RegionsOptions = {}): RegionsPlugin {
-    const create = options.create ?? 'shift-drag';
     const minLength = Math.max(0.01, options.minLength ?? 0.25);
     const bandColor = options.color ?? REGION;
     const keys = options.keys ?? true;
     const max = Math.min(200, Math.max(0, options.max ?? 200));
-
-    const scrollIntoView = options.scrollIntoView === true;
     const snap = options.snap === true;
-    const cursors = {
-        body: options.cursors?.body ?? 'grab',
-        moving: options.cursors?.moving ?? 'grabbing',
-        edge: options.cursors?.edge ?? 'ew-resize',
-    };
 
+    const store = new RegionStore(minLength, max);
+    const labels = new RegionLabels();
     let host: PluginHost | null = null;
     let stopFitting: (() => void) | null = null;
     let stopViewing: (() => void) | null = null;
-    let items: Region[] = [];
-    let selectedId: string | null = null;
-    let loop = false;
-    let drag: {
-        mode: 'create' | 'move' | 'resize';
-        id: string;
-        part?: RegionPart;
-        grab: number;
-    } | null = null;
-    let labelLayer: HTMLElement | null = null;
-    const labelSpans = new Map<string, HTMLElement>();
-
-    for (const item of options.items ?? []) {
-        addRegion(item);
-    }
 
     function duration(): number | null {
         return positive(host?.duration ?? null);
     }
 
-    function normalized(
-        start: number,
-        end: number,
-        span: number,
-    ): {
-        start: number;
-        end: number;
-    } {
-        return normalizeRegion(start, end, span, minLength);
-    }
+    function placeLabels(): void {
+        const span = duration();
 
-    /**
-     * Stores a region, or nothing (null) once `max` regions exist. Until the sound's length is known
-     * it is only ordered and kept to the minimum length; `fitToSound` fits it in later.
-     */
-    function addRegion(
-        item: Omit<Region, 'id'> & { id?: string },
-    ): Region | null {
-        if (items.length >= max) {
-            return null;
+        if (host !== null && span !== null) {
+            labels.layout(host, store.items, span);
         }
-
-        const span = duration() ?? Math.max(item.start, item.end, minLength);
-        const bounds = normalized(item.start, item.end, span);
-        const region: Region = {
-            id: item.id ?? `region-${++counter}`,
-            start: bounds.start,
-            end: bounds.end,
-            label:
-                item.label === undefined
-                    ? undefined
-                    : cleanText(item.label, 120),
-            color: item.color,
-        };
-        items = [...items, region];
-
-        return region;
-    }
-
-    function byId(id: string): Region | undefined {
-        return items.find((region) => region.id === id);
     }
 
     function changed(): void {
         host?.invalidate();
-        layoutLabels();
-        options.onChange?.(list());
+        placeLabels();
+        options.onChange?.(store.list());
     }
 
     /**
@@ -177,213 +108,50 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             return;
         }
 
-        let moved = false;
-
-        for (const region of items) {
-            const bounds = normalized(region.start, region.end, span);
-
-            if (bounds.start !== region.start || bounds.end !== region.end) {
-                region.start = bounds.start;
-                region.end = bounds.end;
-                moved = true;
-            }
-        }
-
-        if (moved) {
+        if (store.fit(span)) {
             changed();
         } else {
-            layoutLabels();
+            placeLabels();
         }
-    }
-
-    function list(): readonly Region[] {
-        return items.map((region) => ({ ...region }));
     }
 
     function select(id: string | null): void {
-        selectedId = id;
+        store.selectedId = id;
         host?.invalidate();
-        options.onSelect?.(id === null ? null : (byId(id) ?? null));
-    }
-
-    function laidCss(
-        width: number,
-        span: number,
-    ): {
-        laid: LaidRegion[];
-        ids: string[];
-    } {
-        // Topmost first: the selected region, then the newest, so a click lands on what is on top.
-        const order = [...items].reverse();
-        const ranked =
-            selectedId === null
-                ? order
-                : [
-                      ...order.filter((region) => region.id === selectedId),
-                      ...order.filter((region) => region.id !== selectedId),
-                  ];
-
-        const view = host?.view ?? FULL_VIEW;
-
-        return {
-            laid: ranked.map((region) => ({
-                start: viewX(clamp01(region.start / span), view, width),
-                end: viewX(clamp01(region.end / span), view, width),
-            })),
-            ids: ranked.map((region) => region.id),
-        };
-    }
-
-    function hitAt(point: WavePoint): {
-        id: string;
-        part: RegionPart;
-    } | null {
-        const span = duration();
-
-        if (span === null) {
-            return null;
-        }
-
-        const { laid, ids } = laidCss(point.width, span);
-        const hit = hitRegion(point.x, laid, EDGE_PX);
-
-        return hit === null ? null : { id: ids[hit.index], part: hit.part };
-    }
-
-    function layoutLabels(): void {
-        const frame = host;
-        const span = duration();
-
-        if (frame === null || span === null) {
-            return;
-        }
-
-        labelLayer ??= frame.overlay();
-
-        for (const [id, node] of labelSpans) {
-            if (byId(id)?.label === undefined) {
-                node.remove();
-                labelSpans.delete(id);
-            }
-        }
-
-        for (const region of items) {
-            if (region.label === undefined) {
-                continue;
-            }
-
-            let node = labelSpans.get(region.id);
-
-            if (node === undefined) {
-                node = document.createElement('span');
-                css(node, [
-                    ['position', 'absolute'],
-                    ['top', '0'],
-                    ['font-size', '10px'],
-                    ['padding', '0 2px'],
-                    ['pointer-events', 'none'],
-                    ['white-space', 'nowrap'],
-                    ['overflow', 'hidden'],
-                    ['max-width', '40%'],
-                    ['text-overflow', 'ellipsis'],
-                ]);
-                labelLayer.append(node);
-                labelSpans.set(region.id, node);
-            }
-
-            // Anchored at the region's start: shown while the start is in view.
-            const view = frame.view;
-            const at = clamp01(region.start / span);
-            const left = Math.round(viewX(at, view, 100) * 1000) / 1000;
-            node.textContent = region.label;
-            node.style.setProperty('left', `${left}%`);
-            node.style.setProperty(
-                'display',
-                at >= view.start && at <= view.end ? '' : 'none',
-            );
-        }
-    }
-
-    /** Zoomed in, centers the view on a region (or on its start when it is longer than the view). */
-    function reveal(region: Region): void {
-        const frame = host;
-        const span = duration();
-
-        if (frame === null || span === null) {
-            return;
-        }
-
-        const { start, end } = frame.view;
-        const size = end - start;
-        const from = clamp01(region.start / span);
-        const to = clamp01(region.end / span);
-
-        if (from >= start && to <= end) {
-            return;
-        }
-
-        const begin = to - from <= size ? (from + to) / 2 - size / 2 : from;
-        frame.setView(begin, begin + size, 'keys');
-    }
-
-    function selectStep(back: boolean): void {
-        if (items.length === 0) {
-            return;
-        }
-
-        const order = [...items].sort((a, b) => a.start - b.start);
-        const at = order.findIndex((region) => region.id === selectedId);
-        const next =
-            at < 0 ? 0 : (at + (back ? -1 : 1) + order.length) % order.length;
-        const region = order[next];
-        select(region.id);
-        announce(region);
-
-        if (scrollIntoView) {
-            reveal(region);
-        }
-    }
-
-    function announce(region: Region): void {
-        const place = fillTemplate(EN.regions.place, {
-            from: formatTime(region.start),
-            to: formatTime(region.end),
-        });
-        host?.announce(
-            region.label === undefined ? place : `${region.label}, ${place}`,
-        );
+        options.onSelect?.(id === null ? null : (store.byId(id) ?? null));
     }
 
     function play(id: string, playOptions?: { loop?: boolean }): void {
-        const region = byId(id);
+        const region = store.byId(id);
 
         if (region !== undefined) {
             host?.playRange(region.start, region.end, {
-                loop: playOptions?.loop ?? loop,
+                loop: playOptions?.loop ?? store.loop,
             });
         }
     }
 
-    function nudge(part: 'start' | 'end', by: number): void {
-        const span = duration();
+    const parts: RegionsHost = {
+        store,
+        frame: () => host,
+        duration,
+        select,
+        changed,
+        told: () => options.onChange?.(store.list()),
+        play: (id) => play(id),
+    };
+    const pointer = new RegionPointer(parts, {
+        create: options.create ?? 'shift-drag',
+        cursors: {
+            body: options.cursors?.body ?? 'grab',
+            moving: options.cursors?.moving ?? 'grabbing',
+            edge: options.cursors?.edge ?? 'ew-resize',
+        },
+    });
+    const keyboard = new RegionKeys(parts, options.scrollIntoView === true);
 
-        if (selectedId === null || span === null) {
-            return;
-        }
-
-        const region = byId(selectedId);
-
-        if (region === undefined) {
-            return;
-        }
-
-        const bounds =
-            part === 'start'
-                ? normalized(region.start + by, region.end, span)
-                : normalized(region.start, region.end + by, span);
-        region.start = bounds.start;
-        region.end = bounds.end;
-        changed();
+    for (const item of options.items ?? []) {
+        store.add(item, duration());
     }
 
     return {
@@ -391,7 +159,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         layer: 'over',
 
         add(region): Region | null {
-            const added = addRegion(region);
+            const added = store.add(region, duration());
 
             if (added === null) {
                 return null;
@@ -403,14 +171,14 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         update(id, patch): void {
-            const region = byId(id);
+            const region = store.byId(id);
             const span = duration();
 
             if (region === undefined || span === null) {
                 return;
             }
 
-            const bounds = normalized(
+            const bounds = store.normalized(
                 patch.start ?? region.start,
                 patch.end ?? region.end,
                 span,
@@ -419,10 +187,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             region.end = bounds.end;
 
             if ('label' in patch) {
-                region.label =
-                    patch.label === undefined
-                        ? undefined
-                        : cleanText(patch.label, 120);
+                region.label = regionLabel(patch.label);
             }
 
             if ('color' in patch) {
@@ -433,9 +198,9 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         remove(id): void {
-            items = items.filter((region) => region.id !== id);
+            store.remove(id);
 
-            if (selectedId === id) {
+            if (store.selectedId === id) {
                 select(null);
             }
 
@@ -443,12 +208,12 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         clear(): void {
-            items = [];
+            store.items = [];
             select(null);
             changed();
         },
 
-        list,
+        list: () => store.list(),
         play,
         stop: () => host?.stopRange(),
         select,
@@ -456,12 +221,12 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         setup(frame): void {
             host = frame;
             stopFitting = frame.on('durationchange', fitToSound);
-            stopViewing = frame.on('viewchange', layoutLabels);
+            stopViewing = frame.on('viewchange', placeLabels);
             fitToSound();
         },
 
         resize(): void {
-            layoutLabels();
+            placeLabels();
         },
 
         draw(paint): void {
@@ -473,7 +238,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
             const edge = paint.color(PROGRESS);
 
-            for (const region of items) {
+            for (const region of store.items) {
                 const from = placeX(paint, region.start / span, snap);
                 const to = placeX(paint, region.end / span, snap);
 
@@ -491,7 +256,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 );
 
                 const edgeWidth =
-                    region.id === selectedId
+                    region.id === store.selectedId
                         ? Math.max(2, Math.round(2 * paint.pixelRatio))
                         : Math.max(1, Math.round(paint.pixelRatio));
                 paint.ctx.fillStyle = edge;
@@ -501,198 +266,27 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         pointerHover(point): string | void {
-            if (point === null) {
-                return;
-            }
-
-            if (drag !== null) {
-                return drag.mode === 'move' ? cursors.moving : cursors.edge;
-            }
-
-            const hit = hitAt(point);
-
-            if (hit === null) {
-                return;
-            }
-
-            return hit.part === 'body' ? cursors.body : cursors.edge;
+            return pointer.hover(point);
         },
 
         pointerDown(point): 'take' | 'drag' | void {
-            const span = duration();
-
-            if (span === null) {
-                return;
-            }
-
-            const hit = hitAt(point);
-
-            if (hit !== null) {
-                select(hit.id);
-                drag = {
-                    mode: hit.part === 'body' ? 'move' : 'resize',
-                    id: hit.id,
-                    part: hit.part,
-                    grab: point.time ?? 0,
-                };
-
-                return 'take';
-            }
-
-            const mayCreate =
-                create === 'drag' ||
-                (create === 'shift-drag' && point.shiftKey);
-
-            if (mayCreate && items.length < max) {
-                drag = { mode: 'create', id: '', grab: point.time ?? 0 };
-
-                return 'drag';
-            }
+            return pointer.down(point);
         },
 
         pointerMove(point): void {
-            if (drag === null) {
-                return;
-            }
-
-            const span = duration();
-
-            if (span === null) {
-                return;
-            }
-
-            const at = point.time ?? 0;
-
-            if (drag.mode === 'create') {
-                if (drag.id === '') {
-                    const created = addRegion({ start: drag.grab, end: at });
-
-                    if (created === null) {
-                        drag = null;
-
-                        return;
-                    }
-
-                    drag.id = created.id;
-                    select(drag.id);
-                } else {
-                    const region = byId(drag.id);
-
-                    if (region !== undefined) {
-                        const bounds = normalized(drag.grab, at, span);
-                        region.start = bounds.start;
-                        region.end = bounds.end;
-                    }
-                }
-
-                changed();
-
-                return;
-            }
-
-            const region = byId(drag.id);
-
-            if (region === undefined) {
-                return;
-            }
-
-            if (drag.mode === 'resize') {
-                const bounds =
-                    drag.part === 'start'
-                        ? normalized(at, region.end, span)
-                        : normalized(region.start, at, span);
-                region.start = bounds.start;
-                region.end = bounds.end;
-            } else {
-                const shift = at - drag.grab;
-                const length = region.end - region.start;
-                let from = region.start + shift;
-                from = Math.max(0, Math.min(from, span - length));
-                region.start = from;
-                region.end = from + length;
-                drag.grab = at;
-            }
-
-            changed();
+            pointer.move(point);
         },
 
         pointerUp(): void {
-            if (drag !== null) {
-                options.onChange?.(list());
-                drag = null;
-            }
+            pointer.up();
         },
 
         pointerCancel(): void {
-            if (drag !== null && drag.mode === 'create' && drag.id !== '') {
-                items = items.filter((region) => region.id !== drag?.id);
-                changed();
-            }
-
-            drag = null;
+            pointer.cancel();
         },
 
         keyDown(key, modifiers): boolean {
-            if (
-                !keys ||
-                modifiers.ctrlKey ||
-                modifiers.altKey ||
-                modifiers.metaKey
-            ) {
-                return false;
-            }
-
-            // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
-            if (key.toLowerCase() === 'r') {
-                selectStep(modifiers.shiftKey === true);
-
-                return true;
-            }
-
-            if (key === 'Enter' && selectedId !== null) {
-                play(selectedId);
-
-                return true;
-            }
-
-            if ((key === 'l' || key === 'L') && selectedId !== null) {
-                loop = !loop;
-                host?.announce(loop ? EN.regions.loopOn : EN.regions.loopOff);
-
-                return true;
-            }
-
-            if (key === '[' || key === '{') {
-                nudge('start', key === '[' ? -NUDGE : NUDGE);
-
-                return selectedId !== null;
-            }
-
-            if (key === ']' || key === '}') {
-                nudge('end', key === ']' ? NUDGE : -NUDGE);
-
-                return selectedId !== null;
-            }
-
-            if (
-                (key === 'Delete' || key === 'Backspace') &&
-                selectedId !== null
-            ) {
-                items = items.filter((region) => region.id !== selectedId);
-                select(null);
-                changed();
-
-                return true;
-            }
-
-            if (key === 'Escape' && selectedId !== null) {
-                host?.stopRange();
-                select(null);
-
-                return true;
-            }
-
-            return false;
+            return keys && keyboard.down(key, modifiers);
         },
 
         destroy(): void {
@@ -700,12 +294,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             stopFitting = null;
             stopViewing?.();
             stopViewing = null;
-
-            for (const node of labelSpans.values()) {
-                node.remove();
-            }
-
-            labelSpans.clear();
+            labels.destroy();
             host = null;
         },
     };

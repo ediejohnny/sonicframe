@@ -8,11 +8,11 @@ import type { PaletteChoice } from '../core/player/palettes';
 import type { ThemeInput } from '../core/player/theme';
 import type { ZoomOptions } from '../core/view/zoom';
 import type { SonicFrameOptions } from '../dom/frame-options';
+import type { ChapterListLook } from '../plugins/chapter-list';
 import type {
-    ChapterListLook,
     ChaptersOptions,
     ChaptersPlugin,
-} from '../plugins/chapters';
+} from '../plugins/chapters-options';
 import type { SoundDescriptionOptions } from '../plugins/description';
 import type { MinimapOptions } from '../plugins/minimap';
 import type {

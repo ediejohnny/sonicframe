@@ -7,7 +7,8 @@
 import type { Chapter, ChapterInput } from '../core/chapters/chapters';
 import type { Part } from '../core/player/look';
 import { readableColors } from '../dom/tooltip';
-import { chapters, type ChaptersPlugin } from '../plugins/chapters';
+import { chapters } from '../plugins/chapters';
+import type { ChaptersPlugin } from '../plugins/chapters-options';
 import { ChapterListPart, type ListHost } from './chapter-list-part';
 import { LongName } from './long-name';
 import { iconButton } from './part-buttons';

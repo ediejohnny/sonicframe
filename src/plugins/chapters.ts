@@ -5,7 +5,9 @@
  * in an element of the app. The chapters come from a list, WebVTT or Podcasting 2.0 JSON text, or an
  * address (see `readChapters`); chapters marked out of the table of contents are left out. Text only
  * ever goes in as text, and an image or a link only from a web or relative address. The chapters
- * stay when the plugin is set up again (a player rebuilt), without fetching the file again.
+ * stay when the plugin is set up again (a player rebuilt), without fetching the file again. The lines
+ * are `ChapterLines`, the strip `ChapterLane` and the list `ChapterListView`; the options are in
+ * `chapters-options.ts`.
  */
 
 import {
@@ -15,108 +17,21 @@ import {
     nextChapter,
     readChapters,
     type Chapter,
-    type ChapterInput,
-    type LoadChaptersOptions,
 } from '../core/chapters/chapters';
-import { EN } from '../core/languages/en';
 import { mergeWords } from '../core/languages/merge-words';
-import type { ChapterWords } from '../core/languages/words';
 import { within } from '../core/shared/checked';
 import { clamp01, positive } from '../core/shared/math';
 import { fillTemplate } from '../core/shared/text';
 import { formatTime } from '../core/shared/timing';
-import { FULL_VIEW, viewX } from '../core/view/view';
-import { css } from '../dom/css';
-import { onProgressColors, sharedTooltip } from '../dom/tooltip';
-import { remPixels } from '../dom/units';
-import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
-import { ChapterListView, type ChapterListLook } from './chapter-list';
-
-export type { ChapterListLook };
-
-export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
-    ...EN.chapters,
-});
-
-/** The keys that step through the chapters while the wave has focus. */
-export type ChaptersKeys = {
-    /** The letter for the next chapter; with Shift, the previous one. `'c'` by default; false turns it off. */
-    letter?: string | false;
-    /** How far into a chapter Shift+C goes back to its own start rather than the one before, in seconds; 1 by default. */
-    backGrace?: number;
-};
-
-export type ChaptersOptions = {
-    /** The chapters, as a list. */
-    items?: readonly ChapterInput[];
-    /** The chapters as WebVTT or Podcasting 2.0 JSON text. */
-    text?: string;
-    /** The address of a WebVTT or JSON chapters file, fetched once per page. */
-    src?: string;
-    /** How `src` is fetched. */
-    load?: LoadChaptersOptions;
-    /** A line where each chapter starts. On by default. */
-    lines?: boolean;
-    /** The lines' color: any CSS color or `var(--name)`. */
-    color?: string;
-    /** The lines' width, in CSS pixels. 2 by default. */
-    width?: number;
-    /** The chapter's name in a tooltip over its line. On by default. */
-    tooltip?: boolean;
-    /** A click on a line goes to its chapter's start. On by default. */
-    snap?: boolean;
-    /** A strip with the chapters' titles over (`'above'`) or under (`'below'`) the wave; off by default. */
-    lane?: false | 'above' | 'below';
-    /** The strip's height, in rem. 1.25 by default. */
-    laneHeight?: number;
-    /** C and Shift+C (or your own letter); true by default, false turns them off. */
-    keys?: boolean | ChaptersKeys;
-    /** The chapter in the slider's value in words ("1:20 / 9:00, Chapter 2 of 5: Interview"). On by default. */
-    valueNote?: boolean;
-    /** Says the new chapter when playback enters it. Off by default. */
-    announceChange?: boolean;
-    /**
-     * An element of yours that gets the list of chapters (a `nav` with buttons: number or playing
-     * mark, picture, title, stretch); removed on destroy.
-     */
-    list?: HTMLElement | null;
-    /** A head over the list with its name and the place of the chapter playing ("2 / 8"). Off by default. */
-    header?: boolean;
-    /** How the list's items look: pictures, which pieces show, title lines, spacing. */
-    listLook?: ChapterListLook;
-    /** Pictures in the list, when a chapter has one. Off by default. */
-    images?: boolean;
-    /** Links in the list, when a chapter has one; they open in a new tab. Off by default. */
-    links?: boolean;
-    /** Your own words, over the English ones. */
-    words?: Partial<ChapterWords>;
-    /** Called when the chapter playing changes (null and -1 outside every chapter). */
-    onChange?: (chapter: Chapter | null, index: number) => void;
-    /** Called with the chapters shown whenever they change (set, loaded, cleared). */
-    onChapters?: (chapters: readonly Chapter[]) => void;
-};
-
-export type ChaptersPlugin = Plugin & {
-    /** The chapters shown (those in the table of contents), in order. */
-    readonly chapters: readonly Chapter[];
-    /** The index of the chapter playing, or -1. */
-    readonly index: number;
-    /** The chapter playing, or null. */
-    readonly current: Chapter | null;
-    /** Replaces the chapters: a list, WebVTT or JSON text, or null for none. Throws on what is not chapters. */
-    set(input: unknown): void;
-    /** Fetches a chapters file and shows it; rejects when it cannot. */
-    load(url: string): Promise<void>;
-    /** Goes to a chapter's start; false when there is no such chapter or no duration yet. */
-    go(index: number): boolean;
-    /** Goes to the next chapter; false when there is none. */
-    next(): boolean;
-    /** Goes back like a previous track: to this chapter's start, or the one before near it. */
-    previous(): boolean;
-};
-
-/** Over this many CSS pixels from a line, the pointer is not on it. */
-const SLOP = 6;
+import type { PluginHost, SeekSource } from '../types';
+import { ChapterLane, type LaneHost } from './chapter-lane';
+import { ChapterLines } from './chapter-lines';
+import { ChapterListView } from './chapter-list';
+import {
+    CHAPTER_WORDS,
+    type ChaptersOptions,
+    type ChaptersPlugin,
+} from './chapters-options';
 
 /** The longest word taken from the app, in characters. */
 const MAX_WORD = 120;
@@ -139,9 +54,6 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         Number.POSITIVE_INFINITY,
     );
     const color = options.color ?? 'var(--sonicframe-chapter, #6b7280)';
-    const withLines = options.lines !== false;
-    const withTooltip = options.tooltip !== false;
-    const snap = options.snap !== false;
     const laneHeight = within(options.laneHeight, 1.25, 0.5, 4);
 
     let all: Chapter[] = [];
@@ -149,9 +61,8 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
     let index = -1;
     let host: PluginHost | null = null;
     let started = false;
-    let lane: Lane | null = null;
+    let lane: ChapterLane | null = null;
     let view: ChapterListView | null = null;
-    let openedTooltip = false;
     let cleanups: (() => void)[] = [];
 
     function duration(): number | null {
@@ -252,65 +163,6 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         view.mark(index, played());
     }
 
-    /** The strip of titles: one box per chapter, from its start to its end, through the view. */
-    function placeLane(): void {
-        const current = host;
-
-        if (lane === null || current === null) {
-            return;
-        }
-
-        const element = lane.element;
-        const known = duration();
-        const geometry = current.geometry;
-        element.replaceChildren();
-
-        if (known === null || geometry === null) {
-            return;
-        }
-
-        const width = geometry.width / geometry.pixelRatio;
-        const view = current.view;
-        const ends = chapterEnds(shown, known);
-
-        shown.forEach((chapter, at) => {
-            const from = viewX(clamp01(chapter.start / known), view, width);
-            const to = viewX(clamp01((ends[at] ?? known) / known), view, width);
-            const left = Math.max(0, from);
-            const right = Math.min(width, to);
-
-            if (right - left < 1) {
-                return;
-            }
-
-            const box = document.createElement('span');
-            box.className = 'sonicframe-chapter-name';
-            box.textContent = chapter.title === '' ? label(at) : chapter.title;
-            box.setAttribute('dir', 'auto');
-            css(box, [
-                ['position', 'absolute'],
-                ['top', '0'],
-                ['bottom', '0'],
-                ['left', `${left}px`],
-                ['width', `${right - left}px`],
-                ['box-sizing', 'border-box'],
-                ['padding', '0 0.25rem'],
-                ['overflow', 'hidden'],
-                ['white-space', 'nowrap'],
-                ['text-overflow', 'ellipsis'],
-                ['border-left-style', 'solid'],
-                ['border-left-width', '1px'],
-                ['border-left-color', color],
-                ['font-size', '0.75rem'],
-                ['line-height', `${laneHeight}rem`],
-                ['cursor', 'pointer'],
-                ['pointer-events', 'auto'],
-            ]);
-            box.addEventListener('click', () => go(at, 'pointer'));
-            element.append(box);
-        });
-    }
-
     function refresh(): void {
         shown = all.filter((chapter) => chapter.toc);
         index = -1;
@@ -318,7 +170,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         if (current !== null) {
             buildList();
-            placeLane();
+            lane?.place();
             follow(false);
             current.updateValueText();
             current.invalidate();
@@ -363,42 +215,6 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         return at;
     }
 
-    /** The chapter whose line is under the pointer, or -1. */
-    function lineAt(point: WavePoint): number {
-        const known = duration();
-
-        if (!withLines || known === null) {
-            return -1;
-        }
-
-        const view = host?.view ?? FULL_VIEW;
-        let best = -1;
-        let distance = SLOP;
-
-        shown.forEach((chapter, at) => {
-            if (chapter.start <= 0) {
-                return;
-            }
-
-            const x = viewX(clamp01(chapter.start / known), view, point.width);
-            const away = Math.abs(x - point.x);
-
-            if (away <= distance) {
-                best = at;
-                distance = away;
-            }
-        });
-
-        return best;
-    }
-
-    function closeTooltip(): void {
-        if (openedTooltip) {
-            sharedTooltip().hide();
-            openedTooltip = false;
-        }
-    }
-
     function apply(list: Chapter[]): void {
         all = list;
         refresh();
@@ -419,6 +235,21 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             current.reportError(error);
         }
     }
+
+    const parts: LaneHost = {
+        frame: () => host,
+        duration,
+        shown: () => shown,
+        label,
+        go,
+    };
+    const lines = new ChapterLines(parts, {
+        lines: options.lines !== false,
+        color,
+        width: options.width ?? 2,
+        tooltip: options.tooltip !== false,
+        snap: options.snap !== false,
+    });
 
     return {
         name: 'chapters',
@@ -460,9 +291,13 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             host = frame;
 
             if (options.lane === 'above' || options.lane === 'below') {
-                lane = frame.addLane(options.lane, remPixels(laneHeight));
-                lane.element.setAttribute('aria-hidden', 'true');
-                css(lane.element, [['overflow', 'hidden']]);
+                lane = new ChapterLane(
+                    frame,
+                    options.lane,
+                    laneHeight,
+                    color,
+                    parts,
+                );
             }
 
             cleanups = [
@@ -472,10 +307,10 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
                     // The last chapter's end, and so its stretch, comes with the duration.
                     buildList();
                     follow(false);
-                    placeLane();
+                    lane?.place();
                 }),
-                frame.on('viewchange', () => placeLane()),
-                frame.on('resize', () => placeLane()),
+                frame.on('viewchange', () => lane?.place()),
+                frame.on('resize', () => lane?.place()),
             ];
 
             if (started) {
@@ -487,77 +322,23 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         },
 
         draw(paint): void {
-            const known = positive(paint.duration);
-
-            if (!withLines || known === null || paint.width <= 0) {
-                return;
-            }
-
-            const lineWidth = Math.max(
-                1,
-                Math.round((options.width ?? 2) * paint.pixelRatio),
-            );
-            paint.ctx.fillStyle = paint.color(color);
-
-            for (const chapter of shown) {
-                if (chapter.start <= 0 || chapter.start >= known) {
-                    continue;
-                }
-
-                const x = paint.xAt(chapter.start / known);
-
-                if (x < 0 || x > paint.width) {
-                    continue;
-                }
-
-                paint.ctx.fillRect(
-                    Math.min(
-                        paint.width - lineWidth,
-                        Math.max(0, Math.round(x - lineWidth / 2)),
-                    ),
-                    0,
-                    lineWidth,
-                    paint.height,
-                );
-            }
+            lines.draw(paint);
         },
 
         pointerHover(point): string | void {
-            const current = host;
-            const at = point === null ? -1 : lineAt(point);
-
-            if (at < 0 || current === null) {
-                closeTooltip();
-
-                return;
-            }
-
-            if (withTooltip) {
-                sharedTooltip().show(
-                    current.container,
-                    [`${formatTime(shown[at].start)} · ${label(at)}`],
-                    onProgressColors(current),
-                );
-                openedTooltip = true;
-            }
-
-            return snap ? 'pointer' : undefined;
+            return lines.hover(point);
         },
 
         pointerDown(point): 'take' | void {
-            return snap && lineAt(point) >= 0 ? 'take' : undefined;
+            return lines.down(point);
         },
 
         pointerUp(point): void {
-            const at = lineAt(point);
-
-            if (at >= 0) {
-                go(at, 'pointer');
-            }
+            lines.up(point);
         },
 
         pointerCancel(): void {
-            closeTooltip();
+            lines.close();
         },
 
         keyDown(key, modifiers): boolean {
@@ -604,7 +385,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
                 cleanup();
             }
 
-            closeTooltip();
+            lines.close();
             lane?.remove();
             lane = null;
             view?.destroy();

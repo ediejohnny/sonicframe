@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - The shared tooltip (markers, chapters, captions, a long chapter name) keeps clear of the page's scrollbars, as
   the chapters popover already did.
+- The regions' labels show again after the player builds its wave anew (a new theme, look or volume control),
+  and on any frame the same regions plugin is set up on later.
 
 ## [0.5.0] - 2026-10-31
 
