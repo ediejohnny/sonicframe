@@ -18,13 +18,12 @@ import {
     type Player,
     type ThemeName,
 } from '../src/player';
+import { copyOnClick, fitCodeBlocks, setupCodeBlocks } from './code-blocks';
 import {
     bundledSound,
     byId,
-    copyOnClick,
     forget,
     pickSound,
-    setupCopyButtons,
     setupHeader,
     type Sound,
 } from './site';
@@ -297,6 +296,8 @@ function showPick(): void {
     byId('pickbar-name').textContent = name;
     byId('picked-js').textContent = jsCode(pick);
     byId('picked-tag').textContent = tagCode(pick);
+    // New code can be wider than the screen, or no longer be.
+    fitCodeBlocks();
 }
 
 /** Lets go of the picked player: its bar and code go away. */
@@ -398,7 +399,7 @@ function use(next: Sound): void {
 
 // Every player here wears its own palette, so the page's light or dark scheme repaints nothing.
 setupHeader(() => undefined);
-setupCopyButtons();
+setupCodeBlocks();
 setupSets();
 setupToolbar();
 pickSound(

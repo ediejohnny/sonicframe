@@ -34,6 +34,7 @@ import {
     type PlayerOptions,
     type ThemeName,
 } from '../src/player';
+import { setupCodeBlocks } from './code-blocks';
 import { MUSIC } from './docs/sounds';
 import {
     bundledSound,
@@ -41,7 +42,6 @@ import {
     forget,
     pickSound,
     setupContents,
-    setupCopyButtons,
     setupHeader,
     type Sound,
 } from './site';
@@ -443,6 +443,7 @@ function clipCard(): PluginCard {
             const wave = document.createElement('div');
             const row = document.createElement('div');
             row.className = 'buttons';
+            status.setAttribute('role', 'status');
             button.type = 'button';
             button.className = 'button small';
             button.textContent = `Export the first ${CLIP_SECONDS} seconds`;
@@ -988,7 +989,7 @@ function showError(error: unknown): void {
 
 defineSonicPlayer();
 setupHeader(() => painted.forEach((repaint) => repaint()));
-setupCopyButtons();
+setupCodeBlocks();
 setupPage();
 setupDemos();
 setupContents();

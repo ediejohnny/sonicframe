@@ -1,6 +1,6 @@
 /**
- * What every docs page shares: the sound, the header, the sidebar of pages, "On this page" and the
- * copy buttons. The sound's peaks and length come from a ready-made file, so every player gets the
+ * What every docs page shares: the sound, the header, the sidebar of pages and "On this page" (the
+ * code blocks are in code-blocks.ts). The sound's peaks and length come from a ready-made file, so every player gets the
  * same ones at once and nothing is decoded; a sound the reader picks is decoded once. The header
  * switches the page between light and dark and picks its font; canvas colors are read once, so the
  * page repaints its players after every switch.
@@ -25,9 +25,6 @@ export type Sound = {
 
 /** How many peaks are decoded from a sound. */
 const PEAKS = 1000;
-
-/** How long a copy button says it copied, in milliseconds. */
-const COPIED_FOR = 1500;
 
 const SCHEME_KEY = 'sonicframe-playground-scheme';
 
@@ -159,7 +156,8 @@ const TOC_QUERY = '(min-width: 76rem)';
 
 /**
  * The sidebar of pages: on narrow screens a drawer the Menu button opens, closed by a link, the
- * backdrop or Escape.
+ * backdrop or Escape. While it is open, the page under the backdrop (the content and the footer) is
+ * inert, so neither Tab nor a screen reader wanders behind it; the header stays in reach.
  */
 function setupSidebar(): void {
     const side = document.querySelector<HTMLElement>('#side');
@@ -170,10 +168,15 @@ function setupSidebar(): void {
         return;
     }
 
+    const behind = [...document.querySelectorAll<HTMLElement>('main, #foot')];
     const setOpen = (open: boolean, restoreFocus = false): void => {
         side.classList.toggle('open', open);
         backdrop.hidden = !open;
         menu.setAttribute('aria-expanded', String(open));
+
+        for (const part of behind) {
+            part.toggleAttribute('inert', open);
+        }
 
         if (open) {
             (
@@ -379,12 +382,16 @@ function setupSearch(): void {
             links = hits.map((hit, i) => {
                 const link = document.createElement('a');
                 const where = document.createElement('span');
+                // The comma, heard only, keeps the title and the place apart in the option's name.
+                const pause = document.createElement('span');
                 link.id = `search-hit-${i}`;
                 link.href = hit.href;
                 link.setAttribute('role', 'option');
                 link.textContent = hit.title;
+                pause.className = 'visually-hidden';
+                pause.textContent = ', ';
                 where.textContent = hit.where;
-                link.append(where);
+                link.append(pause, where);
 
                 return link;
             });
@@ -567,45 +574,6 @@ function keepInSight(list: HTMLElement, link: HTMLElement): void {
         scroller.scrollTop -= box.top - item.top + SIDE_ROOM;
     } else if (item.bottom > box.bottom) {
         scroller.scrollTop += item.bottom - box.bottom + SIDE_ROOM;
-    }
-}
-
-/** Makes the button of a `.code` block copy the block's code, whatever it says at the time. */
-export function copyButton(block: HTMLElement): void {
-    const button = block.querySelector('button');
-    const code = block.querySelector('code');
-
-    if (button !== null && code !== null) {
-        copyOnClick(button, () => code.textContent ?? '');
-    }
-}
-
-/** Makes a button copy the text `text` gives at the time of the click, and say whether it did. */
-export function copyOnClick(
-    button: HTMLButtonElement,
-    text: () => string,
-): void {
-    const label = button.textContent?.trim() ?? 'Copy';
-    let timer = 0;
-    const say = (message: string): void => {
-        button.textContent = message;
-        window.clearTimeout(timer);
-        timer = window.setTimeout(() => {
-            button.textContent = label;
-        }, COPIED_FOR);
-    };
-
-    button.addEventListener('click', () => {
-        navigator.clipboard.writeText(text()).then(
-            () => say('Copied'),
-            () => say('Copy failed'),
-        );
-    });
-}
-
-export function setupCopyButtons(): void {
-    for (const block of document.querySelectorAll<HTMLElement>('.code')) {
-        copyButton(block);
     }
 }
 

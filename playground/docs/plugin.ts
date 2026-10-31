@@ -83,7 +83,7 @@ function slug(text: string): string {
 
 /**
  * Gives every `h2`/`h3` of the page's `.doc` an id (its own when it has one, else one made from its
- * words, never repeated), and lists them.
+ * words that no other element of the page holds), and lists them.
  */
 export function anchorHeadings(html: string): {
     html: string;
@@ -95,7 +95,9 @@ export function anchorHeadings(html: string): {
         return { html, headings: [] };
     }
 
-    const taken = new Set<string>();
+    const taken = new Set(
+        [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]),
+    );
     const headings: Heading[] = [];
     const body = html
         .slice(start)
@@ -220,12 +222,14 @@ function header(): string {
 <button id="menu" class="icon-button menu" type="button" aria-expanded="false" aria-controls="side">${icon(BARS_ICON)}<span class="visually-hidden">Menu</span></button>
 <a class="brand" href="./"><img src="../assets/logo.svg" alt="" width="32" height="32" /><span class="brand-name">SonicFrame</span> <span class="version">v${escape(version())}</span></a>
 <button id="search-open" class="search-open" type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K">${icon(SEARCH_ICON)}<span class="search-word">Search the docs</span><kbd aria-hidden="true">Ctrl K</kbd></button>
-<nav class="nav" aria-label="Elsewhere">
+<div class="nav">
+<nav class="elsewhere" aria-label="Elsewhere">
 <a class="icon-button" href="${REPOSITORY}">${icon(GITHUB_ICON, 'icon solid')}<span class="visually-hidden">GitHub</span></a>
 <a class="icon-button" href="${NPM}">${icon(NPM_ICON, 'icon solid npm')}<span class="visually-hidden">npm</span></a>
+</nav>
 ${fontPicker()}
 ${schemeButton()}
-</nav>
+</div>
 </div></header>`;
 }
 
@@ -270,7 +274,8 @@ function pager(here: string): string {
     const link = (page: DocsPage | undefined, rel: 'prev' | 'next'): string =>
         page === undefined
             ? '<span></span>'
-            : `<a class="pager-${rel}" href="./${page.file}" rel="${rel}"><span>${rel === 'prev' ? 'Previous' : 'Next'}</span>${escape(page.name)}</a>`;
+            : // The colon, heard only, keeps the word and the page apart in the link's name.
+              `<a class="pager-${rel}" href="./${page.file}" rel="${rel}"><span>${rel === 'prev' ? 'Previous' : 'Next'}<span class="visually-hidden">:</span></span> ${escape(page.name)}</a>`;
 
     return `<nav class="pager" aria-label="Previous and next page">${link(order[at - 1], 'prev')}${link(order[at + 1], 'next')}</nav>`;
 }
