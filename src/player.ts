@@ -9,6 +9,7 @@ export {
     createPlayer,
     Player,
     type ButtonAnimation,
+    type ChapterListLook,
     type ChaptersPlugin,
     type PlayerA11y,
     type PlayerChapterList,

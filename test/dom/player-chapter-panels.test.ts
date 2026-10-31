@@ -185,7 +185,10 @@ describe('the popover', () => {
         toggle().focus();
         toggle().click();
 
-        expect(document.activeElement?.textContent).toBe('0:25Interview');
+        expect(
+            document.activeElement?.querySelector('.sonicframe-chapter-title')
+                ?.textContent,
+        ).toBe('Interview');
 
         key('Escape');
         expect(list().hidden).toBe(true);
@@ -212,6 +215,35 @@ describe('the popover', () => {
         toggle().click();
         (list().querySelectorAll('nav button')[1] as HTMLButtonElement).click();
         expect(list().hidden).toBe(false);
+    });
+
+    it('heads a floating list with its name and place, and the list in the player only when asked', () => {
+        make({ type: 'popover' });
+        expect(
+            list().querySelector('.sonicframe-chapters-head'),
+        ).not.toBeNull();
+        player?.destroy();
+        host?.remove();
+
+        make(true);
+        expect(list().querySelector('.sonicframe-chapters-head')).toBeNull();
+        player?.destroy();
+        host?.remove();
+
+        make({ header: true });
+        expect(
+            list().querySelector('.sonicframe-chapters-head'),
+        ).not.toBeNull();
+    });
+
+    it("hands the list's own item look to the list", () => {
+        make({ look: { gap: 1 } });
+
+        expect(
+            (list().querySelector('ol') as HTMLElement).style.getPropertyValue(
+                'gap',
+            ),
+        ).toBe('1rem');
     });
 
     it("wears the player's colors", () => {

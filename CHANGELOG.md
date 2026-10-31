@@ -30,6 +30,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   motion) and `swipe` (a finger's swipe off the wave, `swipeDirection`, opens and closes it). The list can wear
   its own `palette`, `font` and `style` (corner, border, shadow, padding, text size). A list that floats adds
   its button at the end of the line when the look places none. `arrowOffset` (pure) places the arrow.
+- The chapters list's items show a number (sound bars for the chapter playing), a picture with the chapter's
+  length on it, a title in up to two lines and its stretch ("0:25 – 0:50"); the chapter playing is tinted and
+  fills a thin bar as it plays, and a head (`header`) can name the list and the playing chapter's place. All of
+  it is configurable through `listLook` (on the player, `list.look`): picture size, shape and corners, which
+  pieces show, title lines, padding, corners and gap.
 - `underStart` in the player's look (`'wave'`, the default, or `'line'`): the rows under a wave in the line start
   at the wave's left edge, or at the line's, under the play button.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.

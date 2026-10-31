@@ -53,6 +53,7 @@ export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
     CHAPTER_WORDS,
     chapters,
+    type ChapterListLook,
     type ChaptersKeys,
     type ChaptersOptions,
     type ChaptersPlugin,

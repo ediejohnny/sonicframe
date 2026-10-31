@@ -20,6 +20,7 @@ export type ListSettings = {
     width: number;
     /** In rem. */
     maxHeight: number;
+    header: boolean;
     stayOpen: boolean;
     backdrop: boolean;
     animation: boolean;
@@ -83,7 +84,14 @@ export class FloatingList {
     ) {
         const drawer = settings.type === 'drawer';
         this.show(false);
-        css(content, [['overflow-y', 'auto']]);
+        css(content, [
+            ['overflow-y', 'auto'],
+            ['scrollbar-width', 'thin'],
+            [
+                'scrollbar-color',
+                'var(--sonicframe-muted, currentColor) transparent',
+            ],
+        ]);
         css(box, [
             ['position', 'fixed'],
             ['z-index', LAYER],
@@ -223,8 +231,12 @@ export class FloatingList {
         button.title = label;
         button.textContent = '×';
         css(button, [
-            ['display', 'block'],
-            ['margin', '0 0 0.5rem auto'],
+            // In the corner, beside the list's head.
+            ['position', 'absolute'],
+            ['top', '0.75rem'],
+            ['right', '0.75rem'],
+            ['z-index', '1'],
+            ['margin', '0'],
             ['padding', '0 0.5rem'],
             ['border-width', '0'],
             ['background-color', 'transparent'],

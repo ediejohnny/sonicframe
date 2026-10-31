@@ -76,13 +76,14 @@ import {
 import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
 import {
     chapters,
+    type ChapterListLook,
     type ChaptersOptions,
     type ChaptersPlugin,
 } from '../plugins/chapters';
 import type { Chapter, ChapterInput } from '../core/chapters';
 import { FloatingList, type ListSettings } from './chapter-panel';
 
-export type { ChaptersPlugin };
+export type { ChapterListLook, ChaptersPlugin };
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -193,7 +194,7 @@ export type PlayerA11y = {
  */
 export type PlayerChapters = Omit<
     ChaptersOptions,
-    'list' | 'words' | 'onChange' | 'onChapters'
+    'list' | 'words' | 'onChange' | 'onChapters' | 'header' | 'listLook'
 > & {
     /** The list of chapters: true (in the player, under the wave) or its options. Off by default. */
     list?: boolean | PlayerChapterList;
@@ -220,6 +221,13 @@ export type PlayerChapterList = {
     width?: number;
     /** The tallest a popover grows before it scrolls, in rem: 20 by default, from 6 to 60. */
     maxHeight?: number;
+    /**
+     * A head over the list with its name and the place of the chapter playing ("2 / 8"). On by
+     * default for a popover or a drawer, off for the list in the player.
+     */
+    header?: boolean;
+    /** How the list's items look: pictures (size, shape), which pieces show, title lines, spacing. */
+    look?: ChapterListLook;
     /** A popover or a drawer stays open after a chapter is chosen. Off by default. */
     stayOpen?: boolean;
     /** A drawer dims the page behind it; a press there closes it. Off by default. */
@@ -306,6 +314,8 @@ function listSettings(list: true | PlayerChapterList): ListSettings {
         side: pick(own.side, ['left', 'right'], 'right'),
         width: size(own.width, type === 'drawer' ? 20 : 18, 10, 40),
         maxHeight: size(own.maxHeight, 20, 6, 60),
+        header:
+            typeof own.header === 'boolean' ? own.header : type !== 'inline',
         stayOpen: own.stayOpen === true,
         backdrop: own.backdrop === true,
         animation: own.animation === true,
@@ -941,6 +951,8 @@ export class Player {
         return chapters({
             ...own,
             list: content,
+            header: this.list?.header === true,
+            listLook: typeof list === 'object' ? list.look : undefined,
             words: {
                 chapter: labels.chapter,
                 list: labels.chapters,
