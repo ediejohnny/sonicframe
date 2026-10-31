@@ -735,6 +735,7 @@ function on(id: string, use: (element: HTMLElement) => void): void {
  * The home page's music: one track, drawn at random on each visit, shows its ready-made peaks and
  * loads nothing more until someone presses play. When a track ends the next one plays, and the
  * tracks go round for as long as the page is open. The player itself stays, so focus stays on it.
+ * The lock screen and the media keys show the track and step to the one before or after.
  */
 function musicPlayer(host: HTMLElement): void {
     const line = document.getElementById('now-playing');
@@ -744,8 +745,19 @@ function musicPlayer(host: HTMLElement): void {
     let index = Math.floor(Math.random() * MUSIC.length);
     let made: ReturnType<typeof createPlayer> | null = null;
 
+    /** Plays the track `by` places away, going round. */
+    const step = (by: number): void => {
+        index = (index + by + MUSIC.length) % MUSIC.length;
+        show(true).catch((error: unknown) => console.error(error));
+    };
+
     const show = async (play: boolean): Promise<void> => {
         const track = MUSIC[index];
+        // The media controls show the title alone, without the quotes of the credit line.
+        const details = {
+            title: track.title.replace(/^“|”$/g, ''),
+            artist: track.artist,
+        };
         const waveform = await loadWaveform(`./${track.peaks}`);
         audio.src = `./${track.audio}`;
 
@@ -767,6 +779,11 @@ function musicPlayer(host: HTMLElement): void {
                     fontSize: 0.9375,
                 },
                 plugins: [timeline()],
+                mediaSession: {
+                    ...details,
+                    onPrevious: () => step(-1),
+                    onNext: () => step(1),
+                },
             });
             created.on('error', (error) => console.error(error));
             painted.add(() => created.frame.refresh());
@@ -774,6 +791,7 @@ function musicPlayer(host: HTMLElement): void {
         } else {
             made.frame.setPeaks(waveform.peaks);
             made.frame.setDuration(waveform.duration);
+            made.mediaSession?.set(details);
         }
 
         if (line !== null) {
@@ -785,10 +803,7 @@ function musicPlayer(host: HTMLElement): void {
         }
     };
 
-    audio.addEventListener('ended', () => {
-        index = (index + 1) % MUSIC.length;
-        show(true).catch((error: unknown) => console.error(error));
-    });
+    audio.addEventListener('ended', () => step(1));
     show(false).catch((error: unknown) => {
         console.error(error);
 

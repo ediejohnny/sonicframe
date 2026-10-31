@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Lock screen and media keys · SonicFrame</title>
+        <meta
+            name="description"
+            content="Show the sound on the lock screen, in the notification and in the browser's media controls, and let the media keys play, pause, skip and step through chapters."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Lock screen and media keys</h1>
+                <p class="lede">
+                    The system's own controls for a player: the lock screen and
+                    the notification on a phone, the media keys and the
+                    browser's media controls on a computer. They show the
+                    sound's title, artist and picture, and play, pause, skip and
+                    seek it. Off until you turn it on.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Turning it on</h2>
+                    <p>
+                        <code>mediaSession: true</code> names the sound after
+                        the player's <code>label</code>; give your own words and
+                        pictures instead. The controls only learn about the
+                        sound once it plays.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/sounds/little-elf.mp3',
+    label: 'The Little Elf',
+    mediaSession: {
+        artist: 'John Kendrick Bangs',
+        album: 'Poems',
+        artwork: [
+            { src: '/covers/elf-96.png', sizes: '96x96', type: 'image/png' },
+            { src: '/covers/elf-512.png', sizes: '512x512', type: 'image/png' },
+        ],
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-label="The Little Elf"
+                        data-options='{"look":{"underStart":"line","line":["play","back","wave","forward","time"]},"mediaSession":{"artist":"John Kendrick Bangs","album":"Poems"}}'
+                    ></div>
+                    <p>
+                        Play it, then open your browser's media controls (in
+                        Chrome, the music note in the toolbar) or press a media
+                        key on the keyboard.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>What the controls do</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Control</th>
+                                    <th>What happens</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Play, pause</td>
+                                    <td>
+                                        Plays or pauses this player's sound. A
+                                        play the browser refuses becomes the
+                                        <code>error</code> event.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Skip back, skip forward</td>
+                                    <td>
+                                        Moves the step the controls ask for, or
+                                        the player's <code>look.skip</code>
+                                        seconds (10 on a frame).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Seek</td>
+                                    <td>
+                                        Goes to the time chosen on the controls'
+                                        own bar, quickly while it is dragged
+                                        when the browser can.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Stop</td>
+                                    <td>Pauses and goes back to the start.</td>
+                                </tr>
+                                <tr>
+                                    <td>Previous, next track</td>
+                                    <td>
+                                        The chapter before and after, or your
+                                        own <code>onPrevious</code> and
+                                        <code>onNext</code>. Without them, the
+                                        controls leave these buttons out.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        <code>actions</code> picks the controls offered, from
+                        <code>'play'</code>, <code>'pause'</code>,
+                        <code>'seekbackward'</code>, <code>'seekforward'</code>,
+                        <code>'seekto'</code> and <code>'stop'</code>; all six
+                        by default.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>One sound at a time</h2>
+                    <p>
+                        A page has one set of system controls. The player that
+                        played last owns them; the others leave them alone until
+                        they play. When the owner goes, the controls are
+                        cleared.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Chapters</h2>
+                    <p>
+                        A player with chapters hands them to the controls:
+                        previous and next track step through them, and browsers
+                        that list chapters (Chrome, Edge) show them with their
+                        pictures. <code>chapters: false</code> leaves them out;
+                        your own <code>onPrevious</code> and
+                        <code>onNext</code> win over them.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-label="The Little Elf"
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt"},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter"]},"mediaSession":{"artist":"John Kendrick Bangs"}}'
+                    ></div>
+                </section>
+
+                <section class="section">
+                    <h2>Changing the track</h2>
+                    <p>
+                        A player that plays one sound after another tells the
+                        controls with <code>set</code>; the details left out
+                        stay. The music on the
+                        <a href="./index.html">home page</a> does this, and its
+                        previous and next track change the song.
+                    </p>
+                    <div class="code">
+                        <pre><code>const player = createPlayer({
+    container,
+    media: audio,
+    mediaSession: {
+        title: tracks[0].title,
+        artist: tracks[0].artist,
+        onPrevious: () => play(index - 1),
+        onNext: () => play(index + 1),
+    },
+});
+
+function play(at) {
+    index = (at + tracks.length) % tracks.length;
+    audio.src = tracks[index].src;
+    player.mediaSession.set({ title: tracks[index].title, artist: tracks[index].artist });
+    audio.play();
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>player.mediaSession</code> is
+                        <code>null</code> while the option is off;
+                        <code>active</code> says whether this player owns the
+                        controls now.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>On a frame</h2>
+                    <p>
+                        The same controls are a plugin, for a frame of your own.
+                        Chapters reach it through <code>set</code>.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { chapters, mediaSession } from 'sonicframe';
+
+const marks = chapters({ src: '/chapters.vtt', onChapters: (list) => controls.set({ chapters: list }) });
+const controls = mediaSession({
+    title: 'Episode 12',
+    onPrevious: () => marks.previous(),
+    onNext: () => marks.next(),
+});
+
+frame.use(marks);
+frame.use(controls);</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>On the tag</h2>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player
+    src="/sounds/little-elf.mp3"
+    media-session
+    media-title="The Little Elf"
+    media-artist="John Kendrick Bangs"
+    media-artwork="/covers/elf-512.png"
+&gt;&lt;/sonic-player&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Without <code>media-title</code>, the title is the
+                        <code>label</code>. A changed <code>media-</code>
+                        attribute shows at once, and the sound keeps playing.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>title</code></td>
+                                    <td>the player's <code>label</code></td>
+                                    <td>The sound's name.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>artist</code></td>
+                                    <td></td>
+                                    <td>Who made it.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>album</code></td>
+                                    <td></td>
+                                    <td>What it belongs to.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>artwork</code></td>
+                                    <td></td>
+                                    <td>
+                                        One picture's address, or a list of
+                                        <code>{ src, sizes, type }</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>seekOffset</code></td>
+                                    <td>
+                                        <code>look.skip</code> (10 on a frame)
+                                    </td>
+                                    <td>
+                                        Seconds a skip moves when the controls
+                                        give no step, from 1 to 120; or a
+                                        function asked at each skip.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>actions</code></td>
+                                    <td>all six</td>
+                                    <td>The controls offered.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onPrevious</code></td>
+                                    <td>the chapter before</td>
+                                    <td>Called by previous track.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>onNext</code></td>
+                                    <td>the chapter after</td>
+                                    <td>Called by next track.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>chapters</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        On a player: hand its chapters to the
+                                        controls. On the plugin: the chapters
+                                        themselves.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>What reaches the system</h2>
+                    <ul>
+                        <li>
+                            Words in one clean line of at most 120 characters,
+                            without control or direction characters.
+                        </li>
+                        <li>
+                            At most eight pictures, each from a web, relative or
+                            <code>blob:</code> address; sizes and type only when
+                            well formed.
+                        </li>
+                        <li>
+                            The position only when the sound has a known length,
+                            so a live recording sends none.
+                        </li>
+                    </ul>
+                    <p>
+                        Where the browser has no media session, nothing happens
+                        and the player plays as always.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

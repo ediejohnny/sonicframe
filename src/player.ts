@@ -16,7 +16,10 @@ export type {
     PlayerDecode,
     PlayerDescription,
     PlayerEvents,
+    MediaSessionOptions,
+    MediaSessionPlugin,
     PlayerListenButton,
+    PlayerMediaSession,
     PlayerOptions,
     PlayerZoom,
 } from './player/player/player-options';

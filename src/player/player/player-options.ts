@@ -14,6 +14,10 @@ import type {
     ChaptersPlugin,
 } from '../../plugins/chapters/chapters-options';
 import type { SoundDescriptionOptions } from '../../plugins/description/description';
+import type {
+    MediaSessionOptions,
+    MediaSessionPlugin,
+} from '../../plugins/media-session/media-session';
 import type { MinimapOptions } from '../../plugins/minimap/minimap';
 import type {
     BarStyle,
@@ -24,7 +28,12 @@ import type {
     WaveStyle,
 } from '../../types';
 
-export type { ChapterListLook, ChaptersPlugin };
+export type {
+    ChapterListLook,
+    ChaptersPlugin,
+    MediaSessionOptions,
+    MediaSessionPlugin,
+};
 
 export type PlayerOptions = {
     /** The element the player is added to. */
@@ -80,6 +89,12 @@ export type PlayerOptions = {
      * buttons to the previous and next chapter and a button that opens the list. Off by default.
      */
     chapters?: string | readonly ChapterInput[] | PlayerChapters;
+    /**
+     * The system's media controls (the lock screen, the notification, the media keys; see
+     * `mediaSession`): true, or the plugin's options plus `chapters`. The title is the player's
+     * `label` and a skip moves the look's `skip` seconds, unless given. Off by default.
+     */
+    mediaSession?: boolean | PlayerMediaSession;
     /** How a sound is decoded for its peaks, when none are given. */
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
@@ -204,6 +219,16 @@ export type PlayerChapterListStyle = {
     padding?: number;
     /** Text size, in rem, from 0.5 to 2. */
     fontSize?: number;
+};
+
+/** The media controls on a player: the plugin's options, plus whether they follow its chapters. */
+export type PlayerMediaSession = Omit<MediaSessionOptions, 'chapters'> & {
+    /**
+     * With the player's chapters, the controls list them and the previous and next track go to the
+     * chapter before and after (the app's `onPrevious` and `onNext` win). On by default; false
+     * leaves the chapters out.
+     */
+    chapters?: boolean;
 };
 
 /** The player's zoom: the wave's zoom options, plus its buttons. */

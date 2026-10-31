@@ -38,6 +38,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The tag's `background-` attributes: `background-color`, `background-gradient`, `background-image`,
   `background-options`, `background-angle`, `background-blur`, `background-opacity`, `background-effects`,
   `background-animation` and `background-duration`.
+- The lock screen and the media keys: `mediaSession()`, a plugin for the system's media controls, and the
+  player's `mediaSession` option, off by default. The controls show the title (the player's `label` unless
+  given), artist, album and pictures, and play, pause, skip (the controls' own step, or `look.skip`), seek and
+  stop; previous and next track go to your `onPrevious`/`onNext` or, on a player with chapters, to the chapter
+  before and after, and browsers that list chapters show them. The media that played last owns the page's
+  controls, and the others leave them alone. Words are cleaned, pictures come only from web, relative or
+  `blob:` addresses (at most eight), and the position is sent only for a sound of known length. On the tag:
+  `media-session`, `media-title`, `media-artist`, `media-album` and `media-artwork`, changed without stopping
+  the sound. A new docs page, "Lock screen and media keys".
 
 ### Changed
 

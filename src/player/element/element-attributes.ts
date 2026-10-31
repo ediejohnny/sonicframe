@@ -14,9 +14,11 @@ import type {
     PlayerA11y,
     PlayerChapters,
     PlayerDescription,
+    PlayerMediaSession,
     PlayerOptions,
     PlayerZoom,
 } from '../player/player-options';
+import type { MediaSessionDetails } from '../../core/session/media-session';
 import { backgroundLookOf } from './background-attributes';
 
 /** The words of an attribute, lowercase. */
@@ -149,6 +151,31 @@ function chaptersOf(
     };
 }
 
+/**
+ * What the system's media controls show, from `media-title` (or `label`), `media-artist`,
+ * `media-album` and `media-artwork` (one picture's address); each one missing is empty.
+ */
+export function sessionDetailsOf(
+    element: Element,
+): Omit<MediaSessionDetails, 'chapters'> {
+    return {
+        title:
+            element.getAttribute('media-title') ??
+            element.getAttribute('label') ??
+            '',
+        artist: element.getAttribute('media-artist') ?? '',
+        album: element.getAttribute('media-album') ?? '',
+        artwork: element.getAttribute('media-artwork') ?? [],
+    };
+}
+
+/** The media controls: on with `media-session`, showing the `media-` attributes. */
+function sessionOf(element: Element): PlayerMediaSession | undefined {
+    return element.hasAttribute('media-session')
+        ? sessionDetailsOf(element)
+        : undefined;
+}
+
 export function paletteOf(element: Element): PaletteChoice | undefined {
     return (element.getAttribute('palette') ?? undefined) as
         | PaletteChoice
@@ -229,6 +256,7 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
             element.getAttribute('chapters'),
             element.getAttribute('chapter-options'),
         ),
+        mediaSession: sessionOf(element),
         a11y: a11yOf(element),
         look: backgroundLookOf(element),
     };

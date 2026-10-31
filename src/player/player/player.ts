@@ -5,13 +5,14 @@
  * CSS can still override one color; sizes are in rem. Given only a sound address, the player makes
  * its own media element and decodes the peaks when it first comes near the screen. Its words are
  * English unless the app picks another language or its own labels; the description of the sound in
- * words, the zoom (with its buttons), the minimap and the chapters are off until the app asks for them.
+ * words, the zoom (with its buttons), the minimap, the chapters and the system's media controls are
+ * off until the app asks for them.
  *
  * The player holds its own life: its choices and theme, the wave it builds and builds again, and its
  * events. Its collaborators do the rest: the sound decoded once (`PlayerSound`), the plugins it adds
  * (`player-plugins`), the main line (`PlayerLayout`), the times (`TimeParts`), the buttons
- * (`part-buttons`, `listen-button`), the chapters (`ChapterParts`) and the box and colors
- * (`player-paint`). It stays one file because the build ties every collaborator to the player's
+ * (`part-buttons`, `listen-button`), the chapters (`ChapterParts`), the media controls
+ * (`PlayerSession`) and the box and colors (`player-paint`). It stays one file because the build ties every collaborator to the player's
  * state; split further, that state would only be handed around.
  */
 
@@ -56,6 +57,7 @@ import { onSchemeChange, prefersDark } from '../../dom/shared/scheme';
 import { remPixels } from '../../dom/shared/units';
 import type { ChaptersPlugin } from '../../plugins/chapters/chapters-options';
 import type { SoundDescriptionPlugin } from '../../plugins/description/description';
+import type { MediaSessionPlugin } from '../../plugins/media-session/media-session';
 import type {
     BarStyle,
     PeaksSource,
@@ -76,6 +78,7 @@ import type { PlayerEvents, PlayerOptions } from './player-options';
 import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, wearPalette } from './player-paint';
 import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
+import { PlayerSession } from './player-session';
 import { PlayerSound } from './player-sound';
 
 /** The zoom buttons the player adds at the end of the line when the look places none. */
@@ -127,6 +130,7 @@ export class Player {
     private readonly sound: PlayerSound;
     private readonly backdrop: PlayerBackdrop;
     private readonly chapterParts: ChapterParts;
+    private readonly session: PlayerSession;
     private readonly times = new TimeParts();
     private partCleanups: (() => void)[] = [];
     private layout: PlayerLayout | null = null;
@@ -187,9 +191,14 @@ export class Player {
             reportError: this.reportError,
             changed: (chapter, index) =>
                 this.events.emit('chapterchange', chapter, index),
+            listed: (chapters) => this.session.listed(chapters),
         };
         this.sound = new PlayerSound(options, this.media, this.abort.signal);
         this.chapterParts = new ChapterParts(options.chapters, this.host);
+        this.session = new PlayerSession(options, {
+            look: () => this.look,
+            chapters: this.chapterParts.plugin,
+        });
         this.backdrop = new PlayerBackdrop(
             this.element,
             this.media,
@@ -236,6 +245,11 @@ export class Player {
     /** The chapters plugin (to set, load or step through the chapters), or null while they are off. */
     get chapters(): ChaptersPlugin | null {
         return this.chapterParts.plugin;
+    }
+
+    /** The system's media controls (to change what they show), or null while they are off. */
+    get mediaSession(): MediaSessionPlugin | null {
+        return this.session.plugin;
     }
 
     /** Listens to the wave's events; returns the function that stops listening. */
@@ -474,6 +488,7 @@ export class Player {
             words: this.words,
             media: this.media,
             chapters: this.chapterParts.plugin,
+            session: this.session.plugin,
             decoded: () => this.sound.decoded(),
             described: (text) => this.events.emit('description', text),
         });

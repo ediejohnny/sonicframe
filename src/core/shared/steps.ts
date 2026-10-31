@@ -1,7 +1,19 @@
 /**
- * Stepping through starts in a sound (the parts of a description, chapters), the way a player's next
- * and previous track buttons do.
+ * Stepping through a sound: through its starts (the parts of a description, chapters), the way a
+ * player's next and previous track buttons do, and by a skip of some seconds.
  */
+
+/**
+ * Where a skip of `seconds` (back when negative) from `now` lands, as a share of a sound of
+ * `duration` seconds, kept from 0 to 1.
+ */
+export function skipRatio(
+    now: number,
+    seconds: number,
+    duration: number,
+): number {
+    return Math.min(1, Math.max(0, (now + seconds) / duration));
+}
 
 /** In seconds: a seek can land this much before the time it asked for. */
 export const LANDING = 0.05;
