@@ -13,9 +13,6 @@ let mounted: Mounted | null = null;
 
 afterEach(() => {
     sharedTooltip().hide();
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
     vi.useRealTimers();
 });
 
@@ -27,6 +24,21 @@ function fire(target: EventTarget, type: string, pointerType = 'mouse'): void {
     target.dispatchEvent(
         Object.assign(new Event(type, { bubbles: true }), { pointerType }),
     );
+}
+
+/** The line of a frame with a caption longer than it shows. */
+function longLine(): HTMLElement {
+    mounted = mount({
+        plugins: [caption({ text: 'a longer caption to show' })],
+    });
+
+    return line() as HTMLElement;
+}
+
+/** The pointer comes over `target` and leaves it. */
+function passOver(target: HTMLElement): void {
+    fire(target, 'pointerenter');
+    fire(target, 'pointerleave');
 }
 
 describe('the caption plugin', () => {
@@ -135,20 +147,16 @@ describe('the caption plugin', () => {
     });
 
     it('opens the tooltip on hover and is lazy until then', () => {
-        const plugin = caption({ text: 'a longer caption to show' });
-        mounted = mount({ plugins: [plugin] });
+        const shown = longLine();
 
         expect(sharedTooltip().open).toBe(false);
 
-        fire(line() as HTMLElement, 'pointerenter');
+        fire(shown, 'pointerenter');
         expect(sharedTooltip().open).toBe(true);
     });
 
     it('closes the tooltip on Escape', () => {
-        const plugin = caption({ text: 'a longer caption to show' });
-        mounted = mount({ plugins: [plugin] });
-
-        fire(line() as HTMLElement, 'pointerenter');
+        fire(longLine(), 'pointerenter');
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 
         expect(sharedTooltip().open).toBe(false);
@@ -156,11 +164,7 @@ describe('the caption plugin', () => {
 
     it('stays open while the pointer rests on the tooltip', () => {
         vi.useFakeTimers();
-        const plugin = caption({ text: 'a longer caption to show' });
-        mounted = mount({ plugins: [plugin] });
-
-        fire(line() as HTMLElement, 'pointerenter');
-        fire(line() as HTMLElement, 'pointerleave');
+        passOver(longLine());
         fire(sharedTooltip().element, 'pointerenter');
         vi.advanceTimersByTime(300);
 
@@ -169,24 +173,19 @@ describe('the caption plugin', () => {
 
     it('closes after the pointer leaves both the caption and the tooltip', () => {
         vi.useFakeTimers();
-        const plugin = caption({ text: 'a longer caption to show' });
-        mounted = mount({ plugins: [plugin] });
-
-        fire(line() as HTMLElement, 'pointerenter');
-        fire(line() as HTMLElement, 'pointerleave');
+        passOver(longLine());
         vi.advanceTimersByTime(300);
 
         expect(sharedTooltip().open).toBe(false);
     });
 
     it('toggles the tooltip on a tap', () => {
-        const plugin = caption({ text: 'a longer caption to show' });
-        mounted = mount({ plugins: [plugin] });
+        const shown = longLine();
 
-        fire(line() as HTMLElement, 'pointerup', 'touch');
+        fire(shown, 'pointerup', 'touch');
         expect(sharedTooltip().open).toBe(true);
 
-        fire(line() as HTMLElement, 'pointerup', 'touch');
+        fire(shown, 'pointerup', 'touch');
         expect(sharedTooltip().open).toBe(false);
     });
 });

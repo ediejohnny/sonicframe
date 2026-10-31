@@ -11,25 +11,15 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createPlayer, type Player } from '../../../src/player';
 import { triggerResize, triggerVisible } from '../../support/fakes';
 import { boxOf, fakeMedia } from '../../support/helpers';
+import { cleanUp, container, host } from './player-harness';
 
 let player: Player | null = null;
-let host: HTMLElement | null = null;
 
 afterEach(() => {
     player?.destroy();
-    host?.remove();
     player = null;
-    host = null;
-    vi.unstubAllGlobals();
+    cleanUp();
 });
-
-function container(): HTMLElement {
-    host = document.createElement('div');
-    document.body.append(host);
-    boxOf(host, { left: 0, top: 0, width: 320, height: 48 });
-
-    return host;
-}
 
 const PEAKS = Array.from({ length: 2000 }, (_, i) => (i % 9) / 9);
 

@@ -5,7 +5,7 @@
  */
 
 import { vi } from 'vite-plus/test';
-import { boxOf } from '../../support/helpers';
+import { pageHost } from '../../support/helpers';
 
 export let host: HTMLElement | null = null;
 
@@ -41,10 +41,9 @@ export function surface(): string {
     return root().style.getPropertyValue('--sonicframe-surface');
 }
 
+/** A new 320 × 48 host on the page, now the current one. */
 export function container(): HTMLElement {
-    host = document.createElement('div');
-    document.body.append(host);
-    boxOf(host, { left: 0, top: 0, width: 320, height: 48 });
+    host = pageHost({ left: 0, top: 0, width: 320, height: 48 });
 
     return host;
 }

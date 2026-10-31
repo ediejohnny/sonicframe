@@ -3,21 +3,16 @@
  * are set explicitly and the recording context confirms the played bars take `progressHover`.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
+import { recordingOf } from '../../support/fakes';
 import {
-    recordingOf,
-    triggerResize,
-    triggerVisible,
-} from '../../support/fakes';
-import { mount, nextFrame, type Mounted } from '../../support/helpers';
+    drawnHalfway,
+    mount,
+    nextFrame,
+    type Mounted,
+} from '../../support/helpers';
 
 let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 function movePointer(target: HTMLElement, clientX: number): void {
     target.dispatchEvent(
@@ -29,13 +24,7 @@ function movePointer(target: HTMLElement, clientX: number): void {
 }
 
 async function draw(): Promise<string[]> {
-    const frame = mounted as Mounted;
-    triggerResize(frame.canvas, { width: 200, height: 40 });
-    triggerVisible(frame.canvas, true);
-    frame.frame.setProgress(0.5);
-    await nextFrame();
-
-    return recordingOf(frame.canvas).fills;
+    return (await drawnHalfway(mounted as Mounted)).fills;
 }
 
 describe('hover colors', () => {

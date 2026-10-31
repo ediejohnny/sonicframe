@@ -8,9 +8,10 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { defineSonicPlayer } from '../../../src/player';
-import { triggerResize, triggerVisible } from '../../support/fakes';
+import { playTo } from '../../support/events';
+import { triggerResize } from '../../support/fakes';
+import { showTag } from '../../support/helpers';
 import {
-    at,
     CHAPTER_LINE,
     cleanUp,
     host,
@@ -28,7 +29,7 @@ afterEach(cleanUp);
 describe('chapters on the player', () => {
     it('is off by default: no chapter parts even where the look names them, and no C key', () => {
         const { media } = make({ look: CHAPTER_LINE });
-        at(media, 10);
+        playTo(media, 10);
         press('c');
 
         expect(media.currentTime).toBe(10);
@@ -41,11 +42,11 @@ describe('chapters on the player', () => {
 
     it("takes a list, steps with C and says the chapter in the slider's value", () => {
         const { media } = make({ chapters: ITEMS });
-        at(media, 10);
+        playTo(media, 10);
         press('c');
 
         expect(media.currentTime).toBe(25);
-        at(media, 30);
+        playTo(media, 30);
         expect(slider().getAttribute('aria-valuetext')).toBe(
             '0:30 / 1:40, Chapter 2 of 3: Interview',
         );
@@ -53,7 +54,7 @@ describe('chapters on the player', () => {
 
     it("speaks the player's language", () => {
         const { media } = make({ chapters: ITEMS, a11y: { lang: 'pt' } });
-        at(media, 30);
+        playTo(media, 30);
 
         expect(slider().getAttribute('aria-valuetext')).toBe(
             '0:30 de 1:40, Capítulo 2 de 3: Interview',
@@ -121,7 +122,7 @@ describe('chapters on the player', () => {
 
         expect(now.textContent).toBe('Intro');
         expect(now.getAttribute('aria-hidden')).toBe('true');
-        at(media, 60);
+        playTo(media, 60);
         expect(now.textContent).toBe('Songs');
     });
 
@@ -133,13 +134,13 @@ describe('chapters on the player', () => {
         expect(previous.getAttribute('aria-label')).toBe('Previous chapter');
         expect(next.getAttribute('aria-label')).toBe('Next chapter');
 
-        at(media, 30);
+        playTo(media, 30);
         next.click();
         expect(media.currentTime).toBe(50);
-        at(media, 60);
+        playTo(media, 60);
         previous.click();
         expect(media.currentTime).toBe(50);
-        at(media, 50.5);
+        playTo(media, 50.5);
         previous.click();
         expect(media.currentTime).toBe(25);
     });
@@ -310,7 +311,7 @@ describe('chapters on the player', () => {
             { start: 80, title: 'End' },
         ]);
         made.setTheme('bubble');
-        at(media, 90);
+        playTo(media, 90);
 
         expect(slider().getAttribute('aria-valuetext')).toBe(
             '1:30 / 1:40, Chapter 2 of 2: End',
@@ -331,9 +332,9 @@ describe('chapters on the player', () => {
             changes.push([chapter?.title ?? null, index]),
         );
 
-        at(media, 30);
-        at(media, 31);
-        at(media, 55);
+        playTo(media, 30);
+        playTo(media, 31);
+        playTo(media, 55);
 
         expect(changes).toEqual([
             ['Interview', 1],
@@ -381,10 +382,7 @@ describe('chapters on the tag', () => {
             changes.push((event as CustomEvent<unknown[]>).detail[1]),
         );
         keep(element);
-        document.body.append(element);
-        const canvas = element.querySelector('canvas') as HTMLCanvasElement;
-        triggerResize(canvas, { width: 200, height: 40 });
-        triggerVisible(canvas, true);
+        showTag(element);
 
         await vi.waitFor(() =>
             expect(element.querySelectorAll('nav button')).toHaveLength(2),

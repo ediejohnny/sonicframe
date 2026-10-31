@@ -10,6 +10,7 @@ import {
     type Player,
     type PlayerOptions,
 } from '../../../src/player';
+import { pressKey } from '../../support/events';
 import { boxOf, fakeMedia } from '../../support/helpers';
 
 export let player: Player | null = null;
@@ -63,15 +64,9 @@ export function slider(): HTMLElement {
     ) as HTMLElement;
 }
 
+/** Presses `key` on the player's slider. */
 export function press(key: string, shiftKey = false): void {
-    slider().dispatchEvent(
-        new KeyboardEvent('keydown', { key, shiftKey, bubbles: true }),
-    );
-}
-
-export function at(media: Media, time: number): void {
-    media.currentTime = time;
-    media.fire('timeupdate');
+    pressKey(slider(), key, { shiftKey });
 }
 
 export function part(name: string): HTMLElement | null {

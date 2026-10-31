@@ -4,34 +4,22 @@
  * of drawing repaints, and a new canvas size repaints at once, never showing a blank canvas.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
+import { recordingOf, triggerResize, type Recorded } from '../../support/fakes';
 import {
-    recordingOf,
-    triggerResize,
-    triggerVisible,
-    type Recorded,
-} from '../../support/fakes';
-import { mount, nextFrame, type Mounted } from '../../support/helpers';
+    drawnHalfway,
+    mount,
+    nextFrame,
+    type Mounted,
+} from '../../support/helpers';
 
 let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 const PEAKS = Array.from({ length: 100 }, (_, i) => (i % 10) / 10);
 const COLORS = { wave: '#cccccc', progress: '#2f6fdb', hover: null };
 
-async function draw(): Promise<Recorded> {
-    const frame = mounted as Mounted;
-    triggerResize(frame.canvas, { width: 200, height: 40 });
-    triggerVisible(frame.canvas, true);
-    frame.frame.setProgress(0.5);
-    await nextFrame();
-
-    return recordingOf(frame.canvas);
+function draw(): Promise<Recorded> {
+    return drawnHalfway(mounted as Mounted);
 }
 
 describe('wave drawings', () => {

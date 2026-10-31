@@ -5,7 +5,7 @@
  * the part in view when asked.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import {
     markers,
     regions,
@@ -14,73 +14,62 @@ import {
     timeline,
     type Plugin,
 } from '../../../src/index';
-import {
-    recordingOf,
-    triggerResize,
-    triggerVisible,
-} from '../../support/fakes';
+import { firePointer, pressKey } from '../../support/events';
+import { recordingOf } from '../../support/fakes';
 import {
     fakeMedia,
-    mount,
+    mountShown,
     nextFrame,
+    takeOff,
     type Mounted,
 } from '../../support/helpers';
 
-let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
-
 /** A 200 × 40 frame of a 100-second sound, zoom on, with pixels and on screen. */
 function shown(plugins: Plugin[], zoom: object = {}): Mounted {
-    mounted = mount({
+    return mountShown({
         zoom: { keys: true, ...zoom },
         media: fakeMedia({ duration: 100 }),
         plugins,
         animate: false,
     });
-    triggerResize(mounted.canvas, { width: 200, height: 40 });
-    triggerVisible(mounted.canvas, true);
-
-    return mounted;
 }
 
-function key(target: HTMLElement, name: string): void {
-    target.dispatchEvent(
-        new KeyboardEvent('keydown', {
-            key: name,
-            bubbles: true,
-            cancelable: true,
-        }),
-    );
-}
+/** Paints the frame once more and gives the boxes that painting drew in one color. */
+async function repainted(
+    { frame, canvas }: Mounted,
+    fill: string,
+): Promise<{ x: number; width: number }[]> {
+    await nextFrame();
+    const from = recordingOf(canvas).rects.length;
+    frame.invalidate();
+    await nextFrame();
 
-function pointer(type: string, clientX: number): Event {
-    return Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
-        clientX,
-        clientY: 10,
-        pointerId: 1,
-        pointerType: 'mouse',
-        isPrimary: true,
-        button: 0,
-        shiftKey: false,
-    });
-}
-
-/** The boxes painted since `from` in one color. */
-function painted(canvas: HTMLCanvasElement, fill: string, from = 0) {
     return recordingOf(canvas)
         .rects.slice(from)
         .filter((rect) => rect.fill === fill)
         .map(({ x, width }) => ({ x, width }));
 }
 
+/** The one box `plugin` paints in red on a frame of its own, taken off right after. */
+async function onlyBox(plugin: Plugin): Promise<{ x: number; width: number }> {
+    const mounted = shown([plugin]);
+    const [rect] = await repainted(mounted, 'red');
+    takeOff(mounted);
+
+    return rect;
+}
+
+/** The boxes `plugin` paints in red with the view on 50 s to 75 s of the 100. */
+function redInView(plugin: Plugin): Promise<{ x: number; width: number }[]> {
+    const mounted = shown([plugin]);
+    mounted.frame.setView(0.5, 0.75);
+
+    return repainted(mounted, 'red');
+}
+
 describe('regions in a view', () => {
     it('draws a region through the view, and none outside it', async () => {
-        const { frame, canvas } = shown([
+        const boxes = await redInView(
             regions({
                 items: [
                     { start: 55, end: 60 },
@@ -89,37 +78,21 @@ describe('regions in a view', () => {
                 color: 'red',
                 snap: true,
             }),
-        ]);
-        frame.setView(0.5, 0.75);
-        await nextFrame();
-        const from = recordingOf(canvas).rects.length;
-        frame.invalidate();
-        await nextFrame();
+        );
 
-        expect(painted(canvas, 'red', from)).toEqual([{ x: 40, width: 40 }]);
+        expect(boxes).toEqual([{ x: 40, width: 40 }]);
     });
 
     it('draws at fractions of a pixel, as it always did, unless told to snap to whole pixels', async () => {
         // 55.3 s to 60 s of 100 s across 200 px: from 110.6 px, 9.4 px wide; snapped, 111 and 9.
-        const band = async (snap?: boolean) => {
-            const { canvas, frame } = shown([
+        const band = (snap?: boolean) =>
+            onlyBox(
                 regions({
                     items: [{ start: 55.3, end: 60 }],
                     color: 'red',
                     snap,
                 }),
-            ]);
-            await nextFrame();
-            const from = recordingOf(canvas).rects.length;
-            frame.invalidate();
-            await nextFrame();
-            const [rect] = painted(canvas, 'red', from);
-            frame.destroy();
-            mounted?.unmount();
-            mounted = null;
-
-            return rect;
-        };
+            );
 
         const fractional = await band(undefined);
         expect(fractional.x).toBeCloseTo(110.6, 9);
@@ -132,11 +105,11 @@ describe('regions in a view', () => {
             regions({ items: [{ start: 55, end: 60 }] }),
         ]);
 
-        container.dispatchEvent(pointer('pointermove', 60));
+        firePointer(container, 'pointermove', 60);
         expect(container.style.getPropertyValue('cursor')).not.toBe('grab');
 
         frame.setView(0.5, 0.75);
-        container.dispatchEvent(pointer('pointermove', 60));
+        firePointer(container, 'pointermove', 60);
         expect(container.style.getPropertyValue('cursor')).toBe('grab');
     });
 
@@ -163,7 +136,7 @@ describe('regions in a view', () => {
         ]);
         one.frame.setView(0, 0.25);
 
-        key(one.container, 'r');
+        pressKey(one.container, 'r');
 
         // Centered on 57.5 s: 45 s to 70 s.
         expect(one.frame.view.start).toBeCloseTo(0.45, 12);
@@ -174,7 +147,7 @@ describe('regions in a view', () => {
         const other = shown([regions({ items: [{ start: 55, end: 60 }] })]);
         other.frame.setView(0, 0.25);
 
-        key(other.container, 'r');
+        pressKey(other.container, 'r');
 
         expect(other.frame.view.start).toBe(0);
     });
@@ -182,16 +155,11 @@ describe('regions in a view', () => {
 
 describe('markers in a view', () => {
     it('draws the markers in view only, through it', async () => {
-        const { frame, canvas } = shown([
+        const boxes = await redInView(
             markers({ times: [55, 10], color: 'red', width: 2 }),
-        ]);
-        frame.setView(0.5, 0.75);
-        await nextFrame();
-        const from = recordingOf(canvas).rects.length;
-        frame.invalidate();
-        await nextFrame();
+        );
 
-        expect(painted(canvas, 'red', from)).toEqual([{ x: 39, width: 2 }]);
+        expect(boxes).toEqual([{ x: 39, width: 2 }]);
     });
 
     it('seeks to a marker clicked through the view', () => {
@@ -200,8 +168,8 @@ describe('markers in a view', () => {
         frame.setView(0.5, 0.75);
 
         // 3 px off the marker (55.375 s): it still lands on the marker's own moment.
-        container.dispatchEvent(pointer('pointerdown', 43));
-        container.dispatchEvent(pointer('pointerup', 43));
+        firePointer(container, 'pointerdown', 43);
+        firePointer(container, 'pointerup', 43);
 
         expect(media.currentTime).toBeCloseTo(55, 9);
     });
@@ -210,7 +178,7 @@ describe('markers in a view', () => {
         const { frame, container } = shown([markers({ times: [80] })]);
         frame.setView(0, 0.25);
 
-        key(container, 'm');
+        pressKey(container, 'm');
 
         expect(frame.view.start).toBeCloseTo(0.75, 12);
         expect(frame.view.end).toBe(1);
@@ -219,44 +187,28 @@ describe('markers in a view', () => {
 
 describe('the silences in a view', () => {
     it('shades the silences through the view', async () => {
-        const { frame, canvas } = shown([
+        const boxes = await redInView(
             skipSilences({
                 silences: [{ start: 55, end: 60 }],
                 dim: true,
                 dimColor: 'red',
                 snap: true,
             }),
-        ]);
-        frame.setView(0.5, 0.75);
-        await nextFrame();
-        const from = recordingOf(canvas).rects.length;
-        frame.invalidate();
-        await nextFrame();
+        );
 
-        expect(painted(canvas, 'red', from)).toEqual([{ x: 40, width: 40 }]);
+        expect(boxes).toEqual([{ x: 40, width: 40 }]);
     });
 
     it('shades at fractions of a pixel, as it always did, unless told to snap to whole pixels', async () => {
-        const shade = async (snap?: boolean) => {
-            const { canvas, frame } = shown([
+        const shade = (snap?: boolean) =>
+            onlyBox(
                 skipSilences({
                     silences: [{ start: 55.3, end: 60 }],
                     dim: true,
                     dimColor: 'red',
                     snap,
                 }),
-            ]);
-            await nextFrame();
-            const from = recordingOf(canvas).rects.length;
-            frame.invalidate();
-            await nextFrame();
-            const [rect] = painted(canvas, 'red', from);
-            frame.destroy();
-            mounted?.unmount();
-            mounted = null;
-
-            return rect;
-        };
+            );
 
         const fractional = await shade(undefined);
         expect(fractional.x).toBeCloseTo(110.6, 9);

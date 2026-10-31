@@ -11,10 +11,6 @@ let mounted: Mounted | null = null;
 const cleanups: (() => void)[] = [];
 
 afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-
     for (const cleanup of cleanups.splice(0)) {
         cleanup();
     }

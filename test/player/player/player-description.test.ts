@@ -5,7 +5,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createPlayer, type Player } from '../../../src/player';
-import { fakeMedia } from '../../support/helpers';
+import { fakeMedia, stubMedia } from '../../support/helpers';
+import { NOTE } from '../../support/sounds';
 import { cleanUp, container, host, labelOf, within } from './player-harness';
 
 let player: Player | null = null;
@@ -14,17 +15,6 @@ afterEach(() => {
     player?.destroy();
     player = null;
     cleanUp();
-});
-
-/** 33 seconds: sound to 20 s with a loud spot at 12 s, a 4-second pause, then sound to the end. */
-const NOTE = Array.from({ length: 330 }, (_, index) => {
-    const time = index / 10;
-
-    if (time >= 20 && time < 24) {
-        return 0;
-    }
-
-    return time >= 11.75 && time < 12.45 ? 1 : 0.5;
 });
 
 /** An animation started on an element: its keyframes, and whether it was cancelled. */
@@ -242,11 +232,7 @@ describe('the wave in words on the player', () => {
 
         player.destroy();
         host?.remove();
-        vi.stubGlobal('matchMedia', (query: string) => ({
-            matches: query.includes('reduce'),
-            addEventListener: () => undefined,
-            removeEventListener: () => undefined,
-        }));
+        stubMedia((query) => query.includes('reduce'));
         player = createPlayer({
             container: container(),
             media: fakeMedia({ duration: 33 }),

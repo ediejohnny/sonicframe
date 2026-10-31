@@ -3,17 +3,11 @@
  * arrive or change, and the notes plugins add to the slider's value in words.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import type { Plugin, PluginHost } from '../../../src/index';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
 
 let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 describe('peaks arriving', () => {
     it('tells listeners when the peaks load, change or go', async () => {

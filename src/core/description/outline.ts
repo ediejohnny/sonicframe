@@ -7,6 +7,7 @@
 
 import { silencesFromPeaks, type Silence } from '../analysis/analysis';
 import { normalize, resample } from '../peaks/peaks';
+import { within } from '../shared/checked';
 import { positive } from '../shared/math';
 import { LANDING, stepIndex } from '../shared/steps';
 
@@ -185,7 +186,7 @@ export function outlineSound(
 
     const step = duration / values.length;
     // At most 0.45: a quiet stretch closes above twice the threshold, which the loudest peak (1) is.
-    const quiet = Math.min(0.45, Math.max(0.001, options.threshold ?? 0.06));
+    const quiet = within(options.threshold, 0.06, 0.001, 0.45);
     const minPause =
         positive(options.minPause) ??
         Math.min(5, Math.max(0.75, duration * 0.03));

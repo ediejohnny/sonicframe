@@ -38,12 +38,9 @@ const contexts = new WeakMap<
     CanvasRenderingContext2D & Recorded
 >();
 
-class FakeResizeObserver {
-    private readonly targets = new Set<Element>();
-
-    constructor(private readonly callback: ResizeObserverCallback) {
-        resizeObservers.add(this);
-    }
+/** The elements an observer watches, as both observers keep them. */
+class Watching {
+    protected readonly targets = new Set<Element>();
 
     observe(target: Element): void {
         this.targets.add(target);
@@ -55,6 +52,17 @@ class FakeResizeObserver {
 
     disconnect(): void {
         this.targets.clear();
+    }
+}
+
+class FakeResizeObserver extends Watching {
+    constructor(private readonly callback: ResizeObserverCallback) {
+        super();
+        resizeObservers.add(this);
+    }
+
+    override disconnect(): void {
+        super.disconnect();
         resizeObservers.delete(this);
     }
 
@@ -75,23 +83,14 @@ class FakeResizeObserver {
     }
 }
 
-class FakeIntersectionObserver {
-    private readonly targets = new Set<Element>();
-
+class FakeIntersectionObserver extends Watching {
     constructor(private readonly callback: IntersectionObserverCallback) {
+        super();
         visibilityObservers.add(this);
     }
 
-    observe(target: Element): void {
-        this.targets.add(target);
-    }
-
-    unobserve(target: Element): void {
-        this.targets.delete(target);
-    }
-
-    disconnect(): void {
-        this.targets.clear();
+    override disconnect(): void {
+        super.disconnect();
         visibilityObservers.delete(this);
     }
 

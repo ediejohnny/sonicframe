@@ -3,6 +3,7 @@ import {
     barMetrics,
     barWindow,
     layoutBars,
+    type BarWindow,
 } from '../../../src/core/wave/layout';
 import { MAX_CELLS } from '../../../src/core/wave/pieces';
 import {
@@ -14,6 +15,7 @@ import {
     type WaveShape,
 } from '../../../src/core/wave/shapes';
 import type { BarStyle, WaveName } from '../../../src/types';
+import { wave } from './wave-harness';
 
 const BAR: BarStyle = {
     width: 3,
@@ -24,11 +26,26 @@ const BAR: BarStyle = {
     curve: 1,
 };
 
-function wave(count: number): number[] {
-    return Array.from(
-        { length: count },
-        (_, i) => Math.abs(Math.sin(i * 0.37)) * 0.9 + 0.05,
+/**
+ * A row of full bars over 300 × 40, zoomed 4× from `start`, drawn as `style`: its first line's
+ * points and the window it was drawn through.
+ */
+function inView(
+    style: WaveName,
+    start: number,
+): { grid: BarWindow; points: number[] } {
+    const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
+    const drawn = waveShape(
+        Array.from({ length: grid.count }, () => 1),
+        300,
+        40,
+        BAR,
+        { ...DEFAULT_WAVE, style },
+        1,
+        grid,
     );
+
+    return { grid, points: drawn.lines[0].points };
 }
 
 /** Shapes a drawing as a frame does: one value per bar that fits. */
@@ -206,17 +223,8 @@ describe('waveShape', () => {
     it('keeps the scope swinging up on the even bars of the whole row while the view scrolls', () => {
         // At 4× over 300 px, the row has many bars; two scroll positions share some of them.
         const swings = (start: number): Map<number, boolean> => {
-            const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
-            const drawn = waveShape(
-                Array.from({ length: grid.count }, () => 1),
-                300,
-                40,
-                BAR,
-                { ...DEFAULT_WAVE, style: 'scope' },
-                1,
-                grid,
-            );
-            const ys = drawn.lines[0].points.filter((_, i) => i % 2 === 1);
+            const { grid, points } = inView('scope', start);
+            const ys = points.filter((_, i) => i % 2 === 1);
 
             // The trace starts and ends on the middle line; between them, one point per bar.
             return new Map(
@@ -235,17 +243,7 @@ describe('waveShape', () => {
 
     it('keeps each pulse beat on the same piece of sound while the view scrolls', () => {
         const beats = (start: number): number[] => {
-            const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
-            const drawn = waveShape(
-                Array.from({ length: grid.count }, () => 1),
-                300,
-                40,
-                BAR,
-                { ...DEFAULT_WAVE, style: 'pulse' },
-                1,
-                grid,
-            );
-            const points = drawn.lines[0].points;
+            const { grid, points } = inView('pulse', start);
             const tops: number[] = [];
 
             // Each beat's top is its lowest y; its x, on the whole row, is x + the window's offset.
@@ -266,18 +264,9 @@ describe('waveShape', () => {
 
     it('puts each pulse beat in the middle of its group of the whole row, even the one cut by the edge', () => {
         for (const start of [0.3, 0.3013, 0.62]) {
-            const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
+            const { grid, points } = inView('pulse', start);
             const slot = grid.virtualWidth / grid.total;
             const group = Math.max(1, Math.round(12 / slot));
-            const points = waveShape(
-                Array.from({ length: grid.count }, () => 1),
-                300,
-                40,
-                BAR,
-                { ...DEFAULT_WAVE, style: 'pulse' },
-                1,
-                grid,
-            ).lines[0].points;
 
             for (let i = 1; i < points.length; i += 2) {
                 if (points[i] < 19) {

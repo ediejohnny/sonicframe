@@ -7,8 +7,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { defineSonicPlayer, PALETTES } from '../../../src/player';
-import { triggerResize, triggerVisible } from '../../support/fakes';
-import { boxOf } from '../../support/helpers';
+import { triggerResize } from '../../support/fakes';
+import { boxOf, showTag } from '../../support/helpers';
 
 const made: HTMLElement[] = [];
 
@@ -163,10 +163,7 @@ describe('the <sonic-player> tag', () => {
         element.addEventListener('sonicframe:durationchange', (event) =>
             durations.push((event as CustomEvent<unknown[]>).detail[0]),
         );
-        document.body.append(element);
-        const canvas = element.querySelector('canvas') as HTMLCanvasElement;
-        triggerResize(canvas, { width: 200, height: 40 });
-        triggerVisible(canvas, true);
+        showTag(element);
 
         await vi.waitFor(() => expect(durations).toEqual([45]));
         expect(fetch.mock.calls.map((call) => call[0])).toEqual(['/long.dat']);
@@ -323,10 +320,7 @@ describe('the <sonic-player> tag', () => {
             element.addEventListener('sonicframe:peakschange', (event) =>
                 peaks.push((event as CustomEvent<unknown[]>).detail[0]),
             );
-            document.body.append(element);
-            const canvas = element.querySelector('canvas') as HTMLCanvasElement;
-            triggerResize(canvas, { width: 200, height: 40 });
-            triggerVisible(canvas, true);
+            showTag(element);
             await vi.waitFor(() =>
                 expect(Array.isArray(peaks.at(-1))).toBe(true),
             );

@@ -20,7 +20,11 @@ import { positive } from '../../core/shared/math';
 import { formatTime } from '../../core/shared/timing';
 import { ON_PROGRESS } from '../../core/shared/variables';
 import { FULL_VIEW } from '../../core/view/view';
-import { onProgressColors, sharedTooltip } from '../../dom/shared/tooltip';
+import {
+    sharedTooltip,
+    tooltipColors,
+    type TooltipA11y,
+} from '../../dom/shared/tooltip';
 import type {
     PaintContext,
     Plugin,
@@ -53,6 +57,7 @@ export type MarkersOptions = {
     backGrace?: number;
     /** Called when a marker or a group is chosen (click or keyboard). */
     onSelect?: (marks: Mark[]) => void;
+    a11y?: TooltipA11y;
 };
 
 export type MarkersPlugin = Plugin & {
@@ -69,7 +74,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const groupPx = Math.max(0, options.group ?? 12);
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
-    const max = Math.min(MAX_MARKS, Math.max(0, options.max ?? MAX_MARKS));
+    const max = within(options.max, MAX_MARKS, 0, MAX_MARKS);
     // Never under a hundredth of a second, so a marker just landed on is never chosen again.
     const backGrace = within(
         options.backGrace,
@@ -255,7 +260,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 sharedTooltip().show(
                     frame.container,
                     lines,
-                    onProgressColors(frame),
+                    tooltipColors(frame, options.a11y),
                 );
                 openedTooltip = true;
             }

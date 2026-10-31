@@ -4,30 +4,20 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { chapters, type Plugin } from '../../../src/index';
-import { mount, type Mounted } from '../../support/helpers';
-import { at, plugin, showFrame, type Media } from './chapters-harness';
-
-let mounted: Mounted | null = null;
+import { chapters } from '../../../src/index';
+import { playTo } from '../../support/events';
+import { mount, takeOff } from '../../support/helpers';
+import { plugin, showFrame } from './chapters-harness';
 
 afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
     document.querySelector('[role="status"]')?.replaceChildren();
 });
-
-function shown(plugins: Plugin[], media?: Media): Mounted & { media: Media } {
-    const frame = showFrame(plugins, media);
-    mounted = frame;
-
-    return frame;
-}
 
 describe('the list', () => {
     it('lists the chapters as buttons in a named nav, marks the current one, and goes there on a click', () => {
         const list = document.createElement('div');
-        const { media } = shown([plugin({ list })]);
+        const shown = showFrame([plugin({ list })]);
+        const { media } = shown;
         const nav = list.querySelector('nav');
         const buttons = [...list.querySelectorAll('button')];
 
@@ -46,13 +36,13 @@ describe('the list', () => {
         expect(buttons[2].getAttribute('aria-current')).toBe('true');
         expect(buttons[0].hasAttribute('aria-current')).toBe(false);
 
-        mounted?.frame.destroy();
+        shown.frame.destroy();
         expect(list.childElementCount).toBe(0);
     });
 
     it("says each chapter's stretch, and marks the one playing instead of its number", () => {
         const list = document.createElement('div');
-        shown([plugin({ list })]);
+        showFrame([plugin({ list })]);
         const buttons = [...list.querySelectorAll('button')];
         const text = (button: Element, name: string) =>
             button.querySelector(`.sonicframe-chapter-${name}`)?.textContent;
@@ -78,7 +68,7 @@ describe('the list', () => {
 
     it('gives the last stretch its end once the duration arrives', () => {
         const list = document.createElement('div');
-        mounted = mount({ plugins: [plugin({ list })], animate: false });
+        const mounted = mount({ plugins: [plugin({ list })], animate: false });
         const last = () =>
             [...list.querySelectorAll('.sonicframe-chapter-span')].at(-1)
                 ?.textContent;
@@ -90,8 +80,8 @@ describe('the list', () => {
 
     it('tints the chapter playing and fills its bar as it plays', () => {
         const list = document.createElement('div');
-        const { media } = shown([plugin({ list })]);
-        at(media, 30);
+        const { media } = showFrame([plugin({ list })]);
+        playTo(media, 30);
         const buttons = [...list.querySelectorAll('button')];
         const fill = buttons[1].querySelector(
             '.sonicframe-chapter-progress',
@@ -112,13 +102,12 @@ describe('the list', () => {
 
     it('heads the list with its name and the place of the chapter playing, when asked', () => {
         const plain = document.createElement('div');
-        shown([plugin({ list: plain })]);
+        const first = showFrame([plugin({ list: plain })]);
         expect(plain.querySelector('.sonicframe-chapters-head')).toBeNull();
-        mounted?.frame.destroy();
-        mounted?.unmount();
+        takeOff(first);
 
         const list = document.createElement('div');
-        const { media } = shown([plugin({ list, header: true })]);
+        const { media } = showFrame([plugin({ list, header: true })]);
         const head = list.querySelector(
             '.sonicframe-chapters-head',
         ) as HTMLElement;
@@ -129,7 +118,7 @@ describe('the list', () => {
         expect(
             head.querySelector('.sonicframe-chapters-place')?.textContent,
         ).toBe('1 / 3');
-        at(media, 30);
+        playTo(media, 30);
         expect(
             head.querySelector('.sonicframe-chapters-place')?.textContent,
         ).toBe('2 / 3');
@@ -137,7 +126,7 @@ describe('the list', () => {
 
     it('takes its own look: picture size and shape, which pieces show, title lines and spacing', () => {
         const list = document.createElement('div');
-        const { media } = shown([
+        const { media } = showFrame([
             chapters({
                 items: [
                     { start: 0, title: 'A', image: '/a.png' },
@@ -161,7 +150,7 @@ describe('the list', () => {
                 },
             }),
         ]);
-        at(media, 5);
+        playTo(media, 5);
         const button = list.querySelector('button') as HTMLElement;
         const thumb = list.querySelector(
             '.sonicframe-chapter-thumb',
@@ -195,7 +184,7 @@ describe('the list', () => {
 
     it('keeps the number but not the playing mark, and keeps sizes in range', () => {
         const list = document.createElement('div');
-        shown([
+        showFrame([
             chapters({
                 items: [{ start: 0, title: 'A', image: '/a.png' }],
                 list,
@@ -236,14 +225,13 @@ describe('the list', () => {
             },
         ];
         const plain = document.createElement('div');
-        shown([chapters({ items, list: plain })]);
+        const first = showFrame([chapters({ items, list: plain })]);
         expect(plain.querySelector('img')).toBeNull();
         expect(plain.querySelector('a')).toBeNull();
-        mounted?.frame.destroy();
-        mounted?.unmount();
+        takeOff(first);
 
         const rich = document.createElement('div');
-        shown([chapters({ items, list: rich, images: true, links: true })]);
+        showFrame([chapters({ items, list: rich, images: true, links: true })]);
         const links = rich.querySelectorAll('a');
 
         expect(rich.querySelector('img')?.getAttribute('src')).toBe(

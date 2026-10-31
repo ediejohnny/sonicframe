@@ -3,57 +3,40 @@
  * ticks on round seconds.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { timeline } from '../../../src/index';
-import { triggerResize, triggerVisible } from '../../support/fakes';
-import { fakeMedia, mount, type Mounted } from '../../support/helpers';
+import { describe, expect, it } from 'vite-plus/test';
+import { timeline, type SonicFrameOptions } from '../../../src/index';
+import { fakeMedia, mountShown, type Mounted } from '../../support/helpers';
 
-let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
+/** A 300 × 40 frame with a timeline, sized and on screen. */
+function ruled(options: Partial<SonicFrameOptions>): Mounted {
+    return mountShown(
+        { ...options, plugins: [timeline()] },
+        { left: 0, top: 0, width: 300, height: 40 },
+    );
+}
 
 describe('the timeline plugin', () => {
     it('lays out labelled ticks once sized', () => {
-        const media = fakeMedia({ duration: 60 });
-        mounted = mount(
-            { media, lazy: false, plugins: [timeline()] },
-            { left: 0, top: 0, width: 300, height: 40 },
-        );
+        const { container } = ruled({
+            media: fakeMedia({ duration: 60 }),
+            lazy: false,
+        });
 
-        triggerResize(mounted.canvas, { width: 300, height: 40 });
-        triggerVisible(mounted.canvas, true);
-
-        expect(mounted.container.textContent).toContain('0:10');
+        expect(container.textContent).toContain('0:10');
     });
 
     it('fills the ruler of a lazy frame sized far from the screen once it comes near', () => {
-        const media = fakeMedia({ duration: 60 });
-        mounted = mount(
-            { media, plugins: [timeline()] },
-            { left: 0, top: 0, width: 300, height: 40 },
-        );
+        const { container } = ruled({ media: fakeMedia({ duration: 60 }) });
 
-        triggerResize(mounted.canvas, { width: 300, height: 40 });
-        triggerVisible(mounted.canvas, true);
-
-        expect(mounted.container.textContent).toContain('0:10');
+        expect(container.textContent).toContain('0:10');
     });
 
     it('redraws the ruler when the duration changes while the position stays put', () => {
-        mounted = mount(
-            { duration: 60, lazy: false, plugins: [timeline()] },
-            { left: 0, top: 0, width: 300, height: 40 },
-        );
-        triggerResize(mounted.canvas, { width: 300, height: 40 });
-        triggerVisible(mounted.canvas, true);
+        const { container, frame } = ruled({ duration: 60, lazy: false });
 
-        mounted.frame.setDuration(600);
+        frame.setDuration(600);
 
-        expect(mounted.container.textContent).toContain('10:00');
-        expect(mounted.container.textContent).not.toContain('0:50');
+        expect(container.textContent).toContain('10:00');
+        expect(container.textContent).not.toContain('0:50');
     });
 });

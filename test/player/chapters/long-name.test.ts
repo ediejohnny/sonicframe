@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
 import type { PlayerOptions } from '../../../src/player';
 import { triggerResize, triggerVisible } from '../../support/fakes';
-import { boxOf } from '../../support/helpers';
+import { boxOf, stubMedia } from '../../support/helpers';
 import { cleanUp, host, ITEMS, make, part, player } from './chapters-harness';
 
 afterEach(cleanUp);
@@ -176,11 +176,7 @@ describe('a chapter name too long for its room', () => {
     });
 
     it('never walks for someone who asked for less motion', () => {
-        vi.stubGlobal('matchMedia', (query: string) => ({
-            matches: query.includes('reduce'),
-            addEventListener: () => undefined,
-            removeEventListener: () => undefined,
-        }));
+        stubMedia((query) => query.includes('reduce'));
         const started = walks();
         named({ marquee: true }, 160);
 

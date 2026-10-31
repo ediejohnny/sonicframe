@@ -16,9 +16,6 @@ let mounted: Mounted | null = null;
 const realFetch = globalThis.fetch;
 
 afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
     globalThis.fetch = realFetch;
 });
 

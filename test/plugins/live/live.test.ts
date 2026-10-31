@@ -3,7 +3,7 @@
  * error rather than muting playback, and setValues overrides the bars.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import { liveFrequency } from '../../../src/index';
 import {
     recordingOf,
@@ -18,12 +18,6 @@ import {
 } from '../../support/helpers';
 
 let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 describe('live frequency', () => {
     it('reports an error when it cannot tap the audio', () => {

@@ -10,6 +10,7 @@ import {
     readWaveform,
     type WaveformFetcher,
 } from '../../../src/core/peaks/read-waveform';
+import { serve } from '../../support/responses';
 import { dat, loudest, text } from './waveform-files';
 
 /** Point i lands in slice floor(i × count ÷ length); each slice keeps its loudest point. */
@@ -24,34 +25,12 @@ function fold(values: readonly number[], count: number): number[] {
     );
 }
 
+/** A response that streams `bytes` in two pieces, the first one 7 bytes long. */
 function respond(
     bytes: Uint8Array,
     options: { status?: number; length?: number; stream?: boolean } = {},
 ): WaveformFetcher {
-    const status = options.status ?? 200;
-
-    return () =>
-        Promise.resolve({
-            ok: status >= 200 && status < 300,
-            status,
-            headers: {
-                get: (name: string) =>
-                    name === 'content-length' && options.length !== undefined
-                        ? String(options.length)
-                        : null,
-            },
-            body:
-                options.stream === false
-                    ? null
-                    : new ReadableStream<Uint8Array>({
-                          start(controller) {
-                              controller.enqueue(bytes.slice(0, 7));
-                              controller.enqueue(bytes.slice(7));
-                              controller.close();
-                          },
-                      }),
-            arrayBuffer: () => Promise.resolve(bytes.slice().buffer),
-        });
+    return serve(bytes, { split: 7, ...options });
 }
 
 describe('readWaveform: options', () => {

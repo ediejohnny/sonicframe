@@ -5,12 +5,34 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { defineSonicPlayer } from '../../../src/player';
-import { boxOf } from '../../support/helpers';
+import { defineSonicPlayer, type PlayerChapterList } from '../../../src/player';
+import { boxOf, stubMedia } from '../../support/helpers';
 import { cleanUp, host, keep, player } from './chapters-harness';
 import { key, list, make, px, sizes, toggle, touch } from './panels-harness';
 
 afterEach(cleanUp);
+
+/**
+ * A player whose list is the drawer `form`, laid out before it opens: the drawer runs from 160 to
+ * 480 inside a 1 px border (from 1 to 479 within it); the list in it runs from 17 to 463, past 16
+ * px of padding; the close button is 28 px square. Returns the drawer and its close button.
+ */
+function drawer(form: PlayerChapterList): {
+    box: HTMLElement;
+    close: HTMLElement;
+} {
+    make(form);
+    const box = list();
+    const close = box.querySelector('.sonicframe-chapter-close') as HTMLElement;
+    const scroll = box.querySelector(
+        '.sonicframe-chapter-scroll',
+    ) as HTMLElement;
+    boxOf(box, { left: 160, top: 0, width: 320, height: 600 });
+    boxOf(scroll, { left: 177, top: 17, width: 286, height: 566 });
+    boxOf(close, { left: 0, top: 0, width: 28, height: 28 });
+
+    return { box, close };
+}
 
 describe('the popover', () => {
     it('opens over the page under its button, inside the edges, with the arrow at the button', () => {
@@ -192,23 +214,11 @@ describe('the drawer', () => {
     });
 
     it("lines the drawer's close button up with the list's head and the list's right edge", () => {
-        make({ type: 'drawer' });
-        const box = list();
-        const close = box.querySelector(
-            '.sonicframe-chapter-close',
-        ) as HTMLElement;
-        const scroll = box.querySelector(
-            '.sonicframe-chapter-scroll',
-        ) as HTMLElement;
+        const { box, close } = drawer({ type: 'drawer' });
         const name = box.querySelector('.sonicframe-chapters-head')
             ?.firstElementChild as HTMLElement;
-        // The drawer runs from 160 to 480 inside a 1 px border (from 1 to 479 within it); the
-        // list in it runs from 17 to 463, past 16 px of padding; the head's name runs from 21
-        // to 43, its middle at 32; the button is 28 px square.
-        boxOf(box, { left: 160, top: 0, width: 320, height: 600 });
-        boxOf(scroll, { left: 177, top: 17, width: 286, height: 566 });
+        // The head's name runs from 21 to 43, its middle at 32.
         boxOf(name, { left: 185, top: 21, width: 60, height: 22 });
-        boxOf(close, { left: 0, top: 0, width: 28, height: 28 });
         toggle().click();
 
         // Middle at 32 → top edge at 18, which is 17 under the border's inside; right edge at
@@ -218,17 +228,7 @@ describe('the drawer', () => {
     });
 
     it('keeps the close button in the corner of the list itself when the drawer has no head', () => {
-        make({ type: 'drawer', header: false });
-        const box = list();
-        const close = box.querySelector(
-            '.sonicframe-chapter-close',
-        ) as HTMLElement;
-        const scroll = box.querySelector(
-            '.sonicframe-chapter-scroll',
-        ) as HTMLElement;
-        boxOf(box, { left: 160, top: 0, width: 320, height: 600 });
-        boxOf(scroll, { left: 177, top: 17, width: 286, height: 566 });
-        boxOf(close, { left: 0, top: 0, width: 28, height: 28 });
+        const { close } = drawer({ type: 'drawer', header: false });
         toggle().click();
 
         expect(px(close, 'top')).toBe(16);
@@ -324,12 +324,7 @@ describe('every form', () => {
     it('moves only when asked, and never for people who asked for less motion', () => {
         const animate = vi.fn(() => ({ finished: Promise.resolve() }));
         const still = (reduce: boolean) =>
-            vi.stubGlobal('matchMedia', (query: string) => ({
-                matches: reduce && query.includes('reduce'),
-                media: query,
-                addEventListener: () => undefined,
-                removeEventListener: () => undefined,
-            }));
+            stubMedia((query) => reduce && query.includes('reduce'));
 
         still(false);
         make({ type: 'popover' });

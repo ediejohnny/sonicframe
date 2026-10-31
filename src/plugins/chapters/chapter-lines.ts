@@ -8,7 +8,11 @@ import type { Chapter } from '../../core/chapters/chapters';
 import { clamp01, positive } from '../../core/shared/math';
 import { formatTime } from '../../core/shared/timing';
 import { FULL_VIEW, viewX } from '../../core/view/view';
-import { onProgressColors, sharedTooltip } from '../../dom/shared/tooltip';
+import {
+    sharedTooltip,
+    tooltipColors,
+    type TooltipA11y,
+} from '../../dom/shared/tooltip';
 import type { PaintContext, WavePoint } from '../../types';
 import type { LaneHost } from './chapter-lane';
 
@@ -24,6 +28,7 @@ export type LinesSettings = {
     width: number;
     tooltip: boolean;
     snap: boolean;
+    a11y: TooltipA11y | undefined;
 };
 
 export class ChapterLines {
@@ -87,7 +92,7 @@ export class ChapterLines {
             sharedTooltip().show(
                 current.container,
                 [`${formatTime(chapter.start)} · ${this.host.label(at)}`],
-                onProgressColors(current),
+                tooltipColors(current, this.settings.a11y),
             );
             this.openedTooltip = true;
         }

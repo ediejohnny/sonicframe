@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `a11y.tooltip.readable` for `markers()` and `chapters()` (and so the player's `chapters`; on the tag, the
+  word `readable` in `chapter-options`): the tooltip's text in black or white, whichever reads on its color
+  (4.5:1), as the caption and the long chapter name already do. Off by default: the page's color for text on
+  the played color (`--sonicframe-on-progress`), as before.
+
 ### Changed
 
 - The README keeps only the logo, the badges and one picture of the player; every theme, palette and drawing is
@@ -18,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   the chapters popover already did.
 - The regions' labels show again after the player builds its wave anew (a new theme, look or volume control),
   and on any frame the same regions plugin is set up on later.
+- A `max` that is not a number (`NaN`, a string) falls back to the default: every marker is kept (up to 2000)
+  instead of none, and the regions stay capped at 200 instead of unlimited. The same goes for the `threshold` of
+  `soundDescription()` and `outlineSound` (0.06), which found no pauses before.
 
 ## [0.5.0] - 2026-10-31
 

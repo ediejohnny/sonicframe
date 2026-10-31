@@ -103,7 +103,8 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
  * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
  * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
  * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
- * `above`, `announce`, `images`, `links`, `no-keys` and `no-lines`; any other word is ignored.
+ * `above`, `announce`, `images`, `links`, `no-keys`, `no-lines` and `readable` (the tooltip's text
+ * in black or white, whichever reads); any other word is ignored.
  */
 function chaptersOf(
     src: string | null,
@@ -143,6 +144,7 @@ function chaptersOf(
         links: words.has('links'),
         keys: !words.has('no-keys'),
         lines: !words.has('no-lines'),
+        a11y: { tooltip: { readable: words.has('readable') } },
     };
 }
 

@@ -1,6 +1,6 @@
 /**
  * The chapters plugin's tests share a sound of four chapters (one out of the contents), a frame of
- * it on screen, and the keys, the pointer and the live region a person meets.
+ * it on screen, and what the page's live region says.
  */
 
 import {
@@ -9,8 +9,7 @@ import {
     type ChaptersPlugin,
     type Plugin,
 } from '../../../src/index';
-import { triggerResize, triggerVisible } from '../../support/fakes';
-import { fakeMedia, mount, type Mounted } from '../../support/helpers';
+import { fakeMedia, mountShown, type Mounted } from '../../support/helpers';
 
 export type Media = ReturnType<typeof fakeMedia>;
 
@@ -26,49 +25,12 @@ export function showFrame(
     plugins: Plugin[],
     media: Media = fakeMedia({ duration: 100 }),
 ): Mounted & { media: Media } {
-    const mounted = mount({ media, plugins, animate: false });
-    triggerResize(mounted.canvas, { width: 200, height: 40 });
-    triggerVisible(mounted.canvas, true);
-
-    return { ...mounted, media };
-}
-
-export function press(
-    target: HTMLElement,
-    key: string,
-    shiftKey = false,
-): void {
-    target.dispatchEvent(
-        new KeyboardEvent('keydown', { key, shiftKey, bubbles: true }),
-    );
-}
-
-export function pointer(
-    target: HTMLElement,
-    type: string,
-    clientX: number,
-): void {
-    target.dispatchEvent(
-        Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
-            clientX,
-            clientY: 10,
-            pointerId: 1,
-            isPrimary: true,
-            button: 0,
-            pointerType: 'mouse',
-            shiftKey: false,
-        }),
-    );
+    return { ...mountShown({ media, plugins, animate: false }), media };
 }
 
 /** What the page's live region says now. */
 export function said(): string {
     return document.querySelector('[role="status"]')?.textContent ?? '';
-}
-
-export function at(media: Media, time: number): void {
-    media.currentTime = time;
-    media.fire('timeupdate');
 }
 
 export function plugin(options: ChaptersOptions = {}): ChaptersPlugin {

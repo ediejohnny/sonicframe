@@ -5,8 +5,9 @@
  * sound, and it paints the played part only when asked.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import { minimap, type MinimapOptions } from '../../../src/index';
+import { pointerEvent, pressKey, wheel } from '../../support/events';
 import {
     recordingOf,
     triggerResize,
@@ -14,19 +15,13 @@ import {
 } from '../../support/fakes';
 import {
     boxOf,
+    clickAt,
     fakeMedia,
     mount,
     nextFrame,
+    takeOff,
     type Mounted,
 } from '../../support/helpers';
-
-let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 /** A 200 px wide frame of a 100-second sound with a minimap, zoom on. */
 function shown(options: MinimapOptions = {}): {
@@ -34,7 +29,7 @@ function shown(options: MinimapOptions = {}): {
     strip: HTMLElement;
     map: HTMLCanvasElement;
 } {
-    mounted = mount(
+    const mounted = mount(
         {
             zoom: true,
             media: fakeMedia({ duration: 100 }),
@@ -61,26 +56,9 @@ function shown(options: MinimapOptions = {}): {
     return { mounted, strip, map };
 }
 
+/** A pointer event at `clientX` on the strip's height (it runs from 40 to 64). */
 function pointer(type: string, clientX: number): Event {
-    return Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
-        clientX,
-        clientY: 50,
-        pointerId: 1,
-        pointerType: 'mouse',
-        isPrimary: true,
-        button: 0,
-    });
-}
-
-function key(target: HTMLElement, name: string): KeyboardEvent {
-    const event = new KeyboardEvent('keydown', {
-        key: name,
-        bubbles: true,
-        cancelable: true,
-    });
-    target.dispatchEvent(event);
-
-    return event;
+    return pointerEvent(type, clientX, { clientY: 50 });
 }
 
 describe('the minimap strip', () => {
@@ -99,8 +77,7 @@ describe('the minimap strip', () => {
         expect(below.map.style.getPropertyValue('height')).toBe('24px');
         expect(below.map.style.getPropertyValue('margin-top')).toBe('4px');
 
-        below.mounted.frame.destroy();
-        below.mounted.unmount();
+        takeOff(below.mounted);
         const above = shown({ side: 'above', gap: 10, height: 20 });
 
         expect(above.strip.style.getPropertyValue('height')).toBe('30px');
@@ -108,8 +85,7 @@ describe('the minimap strip', () => {
         expect(above.map.style.getPropertyValue('margin-bottom')).toBe('10px');
         expect(above.map.style.getPropertyValue('margin-top')).toBe('');
 
-        above.mounted.frame.destroy();
-        above.mounted.unmount();
+        takeOff(above.mounted);
         const none = shown({ gap: -3 });
 
         expect(none.strip.style.getPropertyValue('height')).toBe('24px');
@@ -150,8 +126,7 @@ describe('the minimap strip', () => {
 
         expect(recordingOf(played.map).fills).toContain('lime');
 
-        played.mounted.frame.destroy();
-        played.mounted.unmount();
+        takeOff(played.mounted);
         const plain = shown({ colors: { progress: 'lime' }, progress: false });
         plain.mounted.frame.seekTo(0.5);
         await nextFrame();
@@ -180,8 +155,7 @@ describe('moving the view from the minimap', () => {
         const { mounted: frame, strip } = shown();
         frame.frame.setView(0, 0.25);
 
-        strip.dispatchEvent(pointer('pointerdown', 100));
-        strip.dispatchEvent(pointer('pointerup', 100));
+        clickAt(strip, 100);
 
         expect(frame.frame.view.start).toBeCloseTo(0.375, 12);
         expect(frame.frame.view.end).toBeCloseTo(0.625, 12);
@@ -216,8 +190,7 @@ describe('moving the view from the minimap', () => {
 
         expect(still.strip.style.getPropertyValue('cursor')).toBe('default');
 
-        still.mounted.frame.destroy();
-        still.mounted.unmount();
+        takeOff(still.mounted);
         const own = shown({
             cursors: { box: 'move', moving: 'copy', beside: 'crosshair' },
         });
@@ -239,8 +212,7 @@ describe('moving the view from the minimap', () => {
         const { mounted: frame, strip } = shown();
         frame.frame.setView(0, 0.25);
 
-        strip.dispatchEvent(pointer('pointerdown', 100));
-        strip.dispatchEvent(pointer('pointerup', 100));
+        clickAt(strip, 100);
 
         expect(frame.frame.progress).toBe(0);
     });
@@ -272,27 +244,17 @@ describe('moving the view from the minimap', () => {
     });
 
     it('zooms with the wheel around the pointer only when switched on', () => {
-        const wheel = (strip: HTMLElement): WheelEvent => {
-            const event = new WheelEvent('wheel', {
-                deltaY: -100,
-                bubbles: true,
-                cancelable: true,
-            });
-            Object.defineProperty(event, 'clientX', { value: 50 });
-            strip.dispatchEvent(event);
-
-            return event;
-        };
+        const turn = (strip: HTMLElement): WheelEvent =>
+            wheel(strip, { deltaY: -100, clientX: 50 });
         const off = shown();
 
-        expect(wheel(off.strip).defaultPrevented).toBe(false);
+        expect(turn(off.strip).defaultPrevented).toBe(false);
         expect(off.mounted.frame.view.level).toBe(1);
 
-        off.mounted.frame.destroy();
-        off.mounted.unmount();
+        takeOff(off.mounted);
         const on = shown({ controls: { wheel: true } });
 
-        expect(wheel(on.strip).defaultPrevented).toBe(true);
+        expect(turn(on.strip).defaultPrevented).toBe(true);
         expect(on.mounted.frame.view.level).toBeGreaterThan(1);
         // 25% of the sound stays under the pointer.
         const { start, end } = on.mounted.frame.view;
@@ -326,16 +288,16 @@ describe('the minimap as a keyboard slider', () => {
         );
         expect(strip.getAttribute('aria-valuenow')).toBe('33');
 
-        expect(key(strip, 'ArrowRight').defaultPrevented).toBe(true);
+        expect(pressKey(strip, 'ArrowRight').defaultPrevented).toBe(true);
         expect(frame.frame.view.start).toBeCloseTo(0.3125, 12);
 
-        key(strip, 'PageDown');
+        pressKey(strip, 'PageDown');
         expect(frame.frame.view.start).toBeCloseTo(0.5625, 12);
 
-        key(strip, 'Home');
+        pressKey(strip, 'Home');
         expect(frame.frame.view.start).toBe(0);
 
-        key(strip, 'End');
+        pressKey(strip, 'End');
         expect(frame.frame.view.end).toBe(1);
         expect(strip.getAttribute('aria-valuenow')).toBe('100');
 

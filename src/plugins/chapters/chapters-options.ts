@@ -7,6 +7,7 @@ import type {
 } from '../../core/chapters/chapters';
 import { EN } from '../../core/languages/en';
 import type { ChapterWords } from '../../core/languages/words';
+import type { TooltipA11y } from '../../dom/shared/tooltip';
 import type { Plugin } from '../../types';
 import type { ChapterListLook } from './chapter-list-look';
 
@@ -70,6 +71,7 @@ export type ChaptersOptions = {
     onChange?: (chapter: Chapter | null, index: number) => void;
     /** Called with the chapters shown whenever they change (set, loaded, cleared). */
     onChapters?: (chapters: readonly Chapter[]) => void;
+    a11y?: TooltipA11y;
 };
 
 export type ChaptersPlugin = Plugin & {

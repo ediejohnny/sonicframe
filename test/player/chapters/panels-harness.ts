@@ -9,6 +9,7 @@ import type {
     PlayerChapterList,
     PlayerOptions,
 } from '../../../src/player';
+import { pressKey } from '../../support/events';
 import { boxOf } from '../../support/helpers';
 import {
     host,
@@ -54,10 +55,11 @@ export function px(element: HTMLElement, name: string): number {
     return parseFloat(element.style.getPropertyValue(name));
 }
 
+/** Presses `name` on whatever has the focus. */
 export function key(name: string): void {
-    document.activeElement?.dispatchEvent(
-        new KeyboardEvent('keydown', { key: name, bubbles: true }),
-    );
+    if (document.activeElement !== null) {
+        pressKey(document.activeElement, name);
+    }
 }
 
 export function touch(
