@@ -7,6 +7,106 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
+### Added
+
+- Chapters. `readChapters` reads WebVTT (`kind="chapters"`, as the specification's parser reads it), the
+  Podcasting 2.0 JSON chapters (text or parsed) or a list, from the content; `loadChapters` fetches a file once
+  per page; `chapterAt`, `chapterEnds` and `nextChapter` answer which chapter plays, where it ends and where a
+  step lands. All are on `sonicframe` and `sonicframe/analysis`. Read as untrusted: at most 512 KB and 1000
+  chapters, titles cleaned to one line of 120 characters, pictures and links kept only from web or relative
+  addresses (`safeUrl`, now exported).
+- The `chapters()` plugin: a line where each chapter starts (`--sonicframe-chapter`), its name in the tooltip, a
+  click on a line to go there, C and Shift+C (configurable, with a back grace like a previous track) that say
+  where they landed, and the chapter in the slider's value in words. Off until asked: saying the chapter
+  playback enters, a strip of titles above or below the wave, and a list (`nav` with `aria-current`) in an
+  element of the app, with pictures and links only when asked.
+- The player's `chapters` option (an address, a list or the plugin's options, plus `list`), off
+  by default, with words in English and Portuguese; the look parts `chapter`, `prevChapter`, `nextChapter` and
+  `chapters` (the list's button), shown only with chapters; `player.chapters`; and the `chapterchange` event.
+- The player's chapters list takes options (`list: true` is still the list in the player): `type` `'popover'`
+  (a box over the page under its button, kept inside the window, with an arrow at the button; `placement`) or
+  `'drawer'` (a panel along the page's `side`, with a close button and an optional `backdrop`), `width`,
+  `maxHeight`, `open`, `stayOpen`, and off by default: `animation` (`'fade'` or `'slide'`, never with reduced
+  motion) and `swipe` (a finger's swipe off the wave, `swipeDirection`, opens and closes it). The list can wear
+  its own `palette`, `font` and `style` (corner, border, shadow, padding, text size). A list that floats adds
+  its button at the end of the line when the look places none. `arrowOffset` (pure) places the arrow.
+- The chapters list's items show a number (sound bars for the chapter playing), a picture with the chapter's
+  length on it, a title in up to two lines and its stretch ("0:25 – 0:50"); the chapter playing is tinted and
+  fills a thin bar as it plays, and a head (`header`) can name the list and the playing chapter's place. All of
+  it is configurable through `listLook` (on the player, `list.look`): picture size, shape and corners, which
+  pieces show, title lines, padding, corners and gap.
+- `underStart` in the player's look (`'wave'`, the default, or `'line'`): the rows under a wave in the line start
+  at the wave's left edge, or at the line's, under the play button.
+- Long chapter names in the player's look, off by default: `nameOverflow` (`'ellipsis'`, the default, `'fade'`
+  with `nameFade` rem and `nameFadeStart`, a fade at the start while the name walks, or `'clip'`), `nameTooltip`
+  (the whole name under the mouse), and `marquee`: the name walks across its room as an endless strip, its copy
+  `marqueeGap` behind and coming to rest where it started (`marqueeType: 'loop'`), or back to its start
+  (`'restart'`), or back and forth (`'bounce'`), at `marqueeSpeed`, resting `marqueePause`, stopping under the
+  mouse (`marqueeHoverPause`), never with reduced motion. `metaWrap` lets the row
+  under the wave break in two, the parts after a spacer together on the far side; by default it keeps one line.
+- The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
+- The docs' Chapters page, with a WebVTT and a JSON example, and an upgrade guide from 0.4 to 0.5.
+- `frame.time`: where the sound is, in seconds. The media's own time, or, before the media loads
+  (`preload="none"`), where a seek will start it, while the media itself still says 0.
+- `formatPosition(time, duration)`: a position for a clock. A seek can land a hair before the time it
+  asked for (an MP3 asked for 0:15 can start at 14.998), so a position within 50 ms of the next second
+  shows that second, never past the duration; `formatTime` cuts it to the second before.
+
+### Changed
+
+- The docs' Installation page now starts from the latest version: the CDN address carries no version (unpkg sends
+  it on to the latest version's own address, so an entry and its pieces always match), and the source code comes
+  from a plain `git clone` of `main` or its zip. A "Want a specific version?" part under each shows the same with
+  `x.y.z`, to fill in with the version's numbers.
+- The size ceiling of each entry rises from 96 KB to 128 KB (gzip, unminified, comments and chunks included).
+- The keyboard focus ring of a control with a border of its own (the player's speed button, an outlined play
+  button) now lies on that border instead of 2 px around it: one line, not a border and a ring side by side.
+  Controls without a border keep the ring 2 px out, where their own fill cannot hide it.
+- The docs' header is icons without borders, all of one size: the menu, the search (a box with a magnifying
+  glass on wide screens), GitHub's and npm's marks in their own colors, the font and a moon or a sun for the
+  scheme; each is named for screen readers, and the version is plain text. The font is chosen in a panel where
+  every name is written in its own font (it was a select cut short on a phone). Keyboard focus on the docs is one
+  ring, on a control's own edge.
+
+### Fixed
+
+- The parts beside a wave in the player's line (the play button, the time) sat lower than the bars whenever a
+  plugin added a strip above or below them, or rows sat under the wave: the line centered them on the wave's
+  whole box or column. They now line up with the bars' middle, moved by `translate` alone.
+- Centered on short bars at the top of their box (a strip of titles under them), the play button stuck out of
+  the player's line into its padding. The wave's box now takes a margin by the overshoot.
+- The chapters popover's arrow sat one border-width off its button's middle, and its border stayed 1 px whatever
+  the list's `style.border`; the drawer's close button sat above the list's head and off its right edge. Both now
+  line up, measured when the list opens.
+- With `preload="none"`, a seek before play left the player's time at 0:00 while the wave showed the place
+  chosen, and the skip buttons started from 0:00. Both now go by the frame's time.
+- A step to a whole second could land a hair before it (in floating point, 5 / 77 × 77 is 4.999…), so the time
+  and the slider's words showed one second less (0:04 for 0:05). Every time the frame works out from a ratio
+  (the seek itself, its event, `timeupdate` and the slider's words) is now kept to the microsecond.
+- The browser itself can land a seek a hair short: an MP3 asked for 0:15 before it loaded started at 14.998,
+  and the player's time and the slider's words said 0:14 from then on. They now write the position with
+  `formatPosition`.
+- The fade between docs pages never ran on the published site, and every move logged an uncaught
+  `InvalidStateError`: the build put the stylesheet after the page's first script, so the arriving page read as
+  not opting in. The stylesheets now come first, and a fade the browser skips on its own (a second click before
+  the first page arrived) is no longer reported as an error.
+- The docs' search said its words and its keys as one ("Search the docsCtrl K"), and once something was typed
+  it took Escape twice to close. Its keys are said by `aria-keyshortcuts` only, and one Escape closes it.
+- The docs, for people who cannot see the page:
+    - **Search results:** each one says its title and its place apart ("Zoom and scroll, Long sounds", not "Zoom and
+      scrollLong sounds").
+    - **Previous and Next:** said the same way ("Previous: Overview").
+    - **Menu on a phone:** while it is open, Tab and screen readers stay in the header and the list of pages,
+      instead of wandering into the page behind it.
+    - **Copy buttons:** each is described by the heading over its code, and "Copied." is said aloud.
+    - **Wide code blocks:** a block wider than the screen can be scrolled from the keyboard.
+    - **"On this page":** the link to a heading whose words the page already used as an address (the Words page's
+      "Keys") now reaches that heading.
+    - **Header:** the font and scheme switches left the landmark of links to other sites.
+    - **Status lines:** the one-hour sound's status and the clip export's are said aloud.
+
 ## [0.4.1] - 2026-10-31
 
 ### Added

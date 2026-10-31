@@ -173,6 +173,110 @@
                                     <td>A small line under the wave.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>metaWrap</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Short of room, the small line keeps one
+                                        line and a chapter's name gives up its
+                                        room. <code>true</code> breaks it in two
+                                        instead, the parts after a spacer going
+                                        together to the far side of the second.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameOverflow</code></td>
+                                    <td><code>'ellipsis'</code></td>
+                                    <td>
+                                        How a chapter's name too long for its
+                                        room ends: an ellipsis,
+                                        <code>'fade'</code> (it fades out,
+                                        saying there is more) or
+                                        <code>'clip'</code> (cut where the room
+                                        ends).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameFade</code></td>
+                                    <td><code>1.5</code></td>
+                                    <td>
+                                        How wide that fade is (rem, 0.25 to 6).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameFadeStart</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        With the fade, a walking name fades at
+                                        its start too while it is off its start;
+                                        at rest the start stays sharp.
+                                        <code>false</code> keeps a sharp cut
+                                        there.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameTooltip</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A long name shows in full in a tooltip
+                                        while the mouse is on it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marquee</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A long name walks across its room, as
+                                        <code>marqueeType</code> says. Never
+                                        when the system asks for less motion.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeType</code></td>
+                                    <td><code>'loop'</code></td>
+                                    <td>
+                                        How the name goes round: an endless
+                                        strip, its copy following it and coming
+                                        to rest where it started;
+                                        <code>'restart'</code>, back to its
+                                        start once its end shows; or
+                                        <code>'bounce'</code>, walking back.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeGap</code></td>
+                                    <td><code>2.5</code></td>
+                                    <td>
+                                        In a loop, the space between the name
+                                        and its copy (rem, 0.5 to 10).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeHoverPause</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The name stops walking while the mouse
+                                        is on it and goes on when it leaves.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeSpeed</code></td>
+                                    <td><code>2</code></td>
+                                    <td>
+                                        How fast it walks (rem a second, 0.25 to
+                                        20).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueePause</code></td>
+                                    <td><code>1500</code></td>
+                                    <td>
+                                        How long it rests before it walks; in
+                                        <code>'restart'</code> and
+                                        <code>'bounce'</code>, at its end too
+                                        (milliseconds, 0 to 10000).
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>wavePlace</code></td>
                                     <td><code>'inline'</code></td>
                                     <td>
@@ -202,6 +306,18 @@
                                         after the wave or a spacer, and on the
                                         right under a voice note's wave; to the
                                         start everywhere else.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>underStart</code></td>
+                                    <td><code>'wave'</code></td>
+                                    <td>
+                                        Where the rows under a wave in the line
+                                        start (the small line, a voice note's
+                                        time, the chapters list): at the wave's
+                                        left edge, or <code>'line'</code>, under
+                                        the play button, so the button and the
+                                        wave read as one block.
                                     </td>
                                 </tr>
                                 <tr>

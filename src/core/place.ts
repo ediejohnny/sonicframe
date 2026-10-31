@@ -1,7 +1,7 @@
 /**
- * Where a tooltip sits next to the thing it describes, kept pure so the maths are tested in Node. It
- * prefers one side, flips to the other when there is no room, centers on the anchor and never lets
- * the tooltip leave the viewport.
+ * Where a tooltip or a floating box sits next to the thing it describes, kept pure so the maths are
+ * tested in Node. It prefers one side, flips to the other when there is no room, centers on the
+ * anchor and never lets the box leave the viewport; an arrow on the box still points at the anchor.
  */
 
 export type Side = 'above' | 'below';
@@ -20,6 +20,28 @@ export type PlaceOptions = {
 
 function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(value, Math.max(min, max)));
+}
+
+/**
+ * Where an arrow on a box points at its anchor, as an x from the box's left edge: at the anchor's
+ * middle, kept `inset` away from the box's ends (so it never sits on a rounded corner), and in the
+ * box's middle when the box is too narrow for that.
+ */
+export function arrowOffset(
+    anchor: Pick<Rect, 'left' | 'width'>,
+    boxLeft: number,
+    boxWidth: number,
+    inset: number,
+): number {
+    if (boxWidth < inset * 2) {
+        return boxWidth / 2;
+    }
+
+    return clamp(
+        anchor.left + anchor.width / 2 - boxLeft,
+        inset,
+        boxWidth - inset,
+    );
 }
 
 /** Places a `tip`-sized tooltip against `anchor` within `viewport`. */

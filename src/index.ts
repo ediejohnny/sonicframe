@@ -51,6 +51,15 @@ export {
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
+    CHAPTER_WORDS,
+    chapters,
+    type ChapterListLook,
+    type ChaptersKeys,
+    type ChaptersOptions,
+    type ChaptersPlugin,
+    type ChapterWords,
+} from './plugins/chapters';
+export {
     minimap,
     MINIMAP_WORDS,
     type MinimapOptions,
@@ -138,6 +147,19 @@ export {
     type WaveformResponse,
     type WriteWaveformOptions,
 } from './core/waveform';
+export {
+    chapterAt,
+    chapterEnds,
+    loadChapters,
+    MAX_CHAPTERS,
+    nextChapter,
+    readChapters,
+    type Chapter,
+    type ChapterInput,
+    type ChaptersFetcher,
+    type LoadChaptersOptions,
+} from './core/chapters';
+export { safeUrl } from './core/url';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
 export type { View, ViewState } from './core/view';
 export {
@@ -148,7 +170,7 @@ export {
     type ZoomOptions,
     type ZoomWords,
 } from './core/zoom';
-export { formatTime } from './core/timing';
+export { formatPosition, formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
 export type {
     BarStyle,
@@ -169,4 +191,4 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '0.4.1';
+export const VERSION: string = '0.5.0';

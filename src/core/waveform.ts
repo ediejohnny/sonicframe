@@ -5,6 +5,7 @@
  * decoded samples. Nothing here touches the page.
  */
 
+import { readCapped, type FetchedResponse } from './fetch';
 import { clamp01 } from './math';
 import { MAX_PEAKS, normalize as normalizePeaks } from './peaks';
 
@@ -40,15 +41,7 @@ export type ReadWaveformOptions = {
 };
 
 /** The part of a `fetch` response that `loadWaveform` reads. */
-export type WaveformResponse = {
-    ok: boolean;
-    status: number;
-    headers?: { get(name: string): string | null };
-    /** Read piece by piece, so an oversized file is dropped as soon as it passes `maxBytes`. */
-    body?: ReadableStream<Uint8Array> | null;
-    /** Used when there is no body stream. */
-    arrayBuffer(): Promise<ArrayBuffer>;
-};
+export type WaveformResponse = FetchedResponse;
 
 /** The part of `fetch` that `loadWaveform` uses, so tests and apps can bring their own. */
 export type WaveformFetcher = (url: string) => Promise<WaveformResponse>;
@@ -493,57 +486,6 @@ export function readWaveform(
     return read(input, settings(options));
 }
 
-/** The response's bytes, refusing them once they pass `maxBytes`. */
-async function readCapped(
-    response: WaveformResponse,
-    maxBytes: number,
-): Promise<Uint8Array> {
-    if (Number(response.headers?.get('content-length')) > maxBytes) {
-        throw tooLarge();
-    }
-
-    if (!response.body) {
-        const buffer = await response.arrayBuffer();
-
-        if (buffer.byteLength > maxBytes) {
-            throw tooLarge();
-        }
-
-        return new Uint8Array(buffer);
-    }
-
-    const reader = response.body.getReader();
-    const pieces: Uint8Array[] = [];
-    let size = 0;
-
-    for (;;) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        size += value.byteLength;
-
-        if (size > maxBytes) {
-            void reader.cancel();
-            throw tooLarge();
-        }
-
-        pieces.push(value);
-    }
-
-    const bytes = new Uint8Array(size);
-    let offset = 0;
-
-    for (const piece of pieces) {
-        bytes.set(piece, offset);
-        offset += piece.byteLength;
-    }
-
-    return bytes;
-}
-
 const loading = new Map<string, Promise<WaveformData>>();
 
 /**
@@ -566,7 +508,7 @@ export function loadWaveform(
             }
 
             return read(
-                await readCapped(response, resolved.maxBytes),
+                await readCapped(response, resolved.maxBytes, tooLarge),
                 resolved,
             );
         });

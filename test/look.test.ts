@@ -128,6 +128,120 @@ describe('resolveLook', () => {
         ).toBe('auto');
     });
 
+    it('starts the rows under the wave at the wave by default, at the line when asked, and nowhere else', () => {
+        expect(DEFAULT_LOOK.underStart).toBe('wave');
+        expect(
+            resolveLook(DEFAULT_LOOK, { underStart: 'line' }).underStart,
+        ).toBe('line');
+        expect(
+            resolveLook(DEFAULT_LOOK, { underStart: 'left' as never })
+                .underStart,
+        ).toBe('wave');
+    });
+
+    it('keeps the small line on one line unless asked to let it break', () => {
+        expect(DEFAULT_LOOK.metaWrap).toBe(false);
+        expect(resolveLook(DEFAULT_LOOK, { metaWrap: true }).metaWrap).toBe(
+            true,
+        );
+        expect(
+            resolveLook(DEFAULT_LOOK, { metaWrap: 1 as never }).metaWrap,
+        ).toBe(false);
+    });
+
+    it('ends a long name in an ellipsis unless the look asks for a fade or a cut, with a fade in range', () => {
+        expect(DEFAULT_LOOK.nameOverflow).toBe('ellipsis');
+        expect(DEFAULT_LOOK.nameFade).toBe(1.5);
+        expect(DEFAULT_LOOK.nameTooltip).toBe(false);
+        expect(DEFAULT_LOOK.nameFadeStart).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameFadeStart: false }).nameFadeStart,
+        ).toBe(false);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameFadeStart: 0 as never })
+                .nameFadeStart,
+        ).toBe(true);
+
+        for (const end of ['fade', 'clip'] as const) {
+            expect(
+                resolveLook(DEFAULT_LOOK, { nameOverflow: end }).nameOverflow,
+            ).toBe(end);
+        }
+
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameOverflow: 'blur' as never })
+                .nameOverflow,
+        ).toBe('ellipsis');
+        expect(resolveLook(DEFAULT_LOOK, { nameFade: 3 }).nameFade).toBe(3);
+        expect(resolveLook(DEFAULT_LOOK, { nameFade: 0 }).nameFade).toBe(0.25);
+        expect(resolveLook(DEFAULT_LOOK, { nameFade: 40 }).nameFade).toBe(6);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameTooltip: true }).nameTooltip,
+        ).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameTooltip: 'on' as never })
+                .nameTooltip,
+        ).toBe(false);
+    });
+
+    it('keeps a long name still unless asked to walk it, at a speed and pauses in range', () => {
+        expect(DEFAULT_LOOK.marquee).toBe(false);
+        expect(DEFAULT_LOOK.marqueeSpeed).toBe(2);
+        expect(DEFAULT_LOOK.marqueePause).toBe(1500);
+        expect(DEFAULT_LOOK.marqueeType).toBe('loop');
+
+        for (const type of ['restart', 'bounce'] as const) {
+            expect(
+                resolveLook(DEFAULT_LOOK, { marqueeType: type }).marqueeType,
+            ).toBe(type);
+        }
+
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeType: 'spin' as never })
+                .marqueeType,
+        ).toBe('loop');
+        expect(DEFAULT_LOOK.marqueeHoverPause).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeHoverPause: false })
+                .marqueeHoverPause,
+        ).toBe(false);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeHoverPause: 'no' as never })
+                .marqueeHoverPause,
+        ).toBe(true);
+        expect(DEFAULT_LOOK.marqueeGap).toBe(2.5);
+        expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 4 }).marqueeGap).toBe(4);
+        expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 0 }).marqueeGap).toBe(
+            0.5,
+        );
+        expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 99 }).marqueeGap).toBe(
+            10,
+        );
+        expect(resolveLook(DEFAULT_LOOK, { marquee: true }).marquee).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marquee: 'yes' as never }).marquee,
+        ).toBe(false);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeSpeed: 5 }).marqueeSpeed,
+        ).toBe(5);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeSpeed: 0 }).marqueeSpeed,
+        ).toBe(0.25);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeSpeed: 99 }).marqueeSpeed,
+        ).toBe(20);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueePause: 0 }).marqueePause,
+        ).toBe(0);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueePause: 60000 }).marqueePause,
+        ).toBe(10000);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueePause: Number.NaN })
+                .marqueePause,
+        ).toBe(1500);
+    });
+
     it('reads the voice note’s part lists, keeping known parts only', () => {
         expect(DEFAULT_LOOK.narrowLine).toEqual(['play', 'wave', 'slot']);
         expect(DEFAULT_LOOK.narrowStart).toEqual([
@@ -174,6 +288,13 @@ describe('timeText', () => {
         expect(timeText('duration', 5, 40)).toBe('0:40');
         expect(timeText('both', 5, 40)).toBe('0:05 / 0:40');
         expect(timeText('both', null, null)).toBe('0:00 / 0:00');
+    });
+
+    it('shows a position a seek left 2 ms short of a second as that second', () => {
+        expect(timeText('both', 14.998, 33)).toBe('0:15 / 0:33');
+        expect(timeText('elapsed', 14.998, 33)).toBe('0:15');
+        expect(timeText('remaining', 14.998, 33)).toBe('-0:18');
+        expect(timeText('elapsed', 59.97, 59.97)).toBe('0:59');
     });
 });
 

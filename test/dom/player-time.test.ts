@@ -2,10 +2,11 @@
  * The time keeps the room of the longest time the sound can show, so its digits never change the
  * wave's width as the sound plays (a narrower digit used to shrink the time, resize the wave and
  * blank its canvas for a frame). The text sits toward the wave's far side or the near one, by its
- * place or by the look's `timeAlign`.
+ * place or by the look's `timeAlign`. Before the sound loads, it tells where a seek will start it.
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
+import type { Part } from '../../src/core/look';
 import { createPlayer, type Player } from '../../src/player';
 import { boxOf, fakeMedia } from './helpers';
 import { triggerResize } from './fakes';
@@ -146,5 +147,65 @@ describe('where the time sits in its room', () => {
             'center',
             'center',
         ]);
+    });
+});
+
+describe('the time where a seek landed', () => {
+    it('shows a position the media landed 2 ms short of a second as that second, in the time and the slider', () => {
+        // An MP3 asked for 0:15 before it loaded started at 14.998 (measured in Chrome).
+        const media = make({}, 33);
+        media.currentTime = 14.998;
+        media.fire('timeupdate');
+
+        expect(read(times()[0]).text).toBe('0:15 / 0:33');
+        expect(
+            host
+                ?.querySelector('[role="slider"]')
+                ?.getAttribute('aria-valuetext'),
+        ).toBe('0:15 / 0:33');
+    });
+});
+
+describe('the time before the sound loads', () => {
+    /**
+     * A 77-second sound whose media has loaded nothing yet (`preload="none"`): a seek waits in the
+     * wave until play, and the media still says 0. Returns the wave, a slider.
+     */
+    function unloaded(line: Part[]): HTMLElement {
+        host = document.createElement('div');
+        document.body.append(host);
+        boxOf(host, { left: 0, top: 0, width: 640, height: 48 });
+        player = createPlayer({
+            container: host,
+            media: fakeMedia({ readyState: 0 }),
+            peaks: PEAKS,
+            duration: 77,
+            look: { line },
+        });
+
+        return host.querySelector('[role="slider"]') as HTMLElement;
+    }
+
+    function press(slider: HTMLElement, key: string): void {
+        slider.dispatchEvent(
+            new KeyboardEvent('keydown', { key, bubbles: true }),
+        );
+    }
+
+    it('shows where a seek made before play will start the sound', () => {
+        const slider = unloaded(['play', 'wave', 'time']);
+
+        press(slider, 'ArrowRight');
+
+        expect(read(times()[0]).text).toBe('0:05 / 1:17');
+    });
+
+    it('skips from where that seek will start the sound, not from its beginning', () => {
+        const slider = unloaded(['play', 'wave', 'forward', 'time']);
+
+        press(slider, 'ArrowRight');
+        host?.querySelector<HTMLButtonElement>('.sonicframe-forward')?.click();
+
+        expect(read(times()[0]).text).toBe('0:15 / 1:17');
     });
 });

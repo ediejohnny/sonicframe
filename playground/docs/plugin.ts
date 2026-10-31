@@ -83,7 +83,7 @@ function slug(text: string): string {
 
 /**
  * Gives every `h2`/`h3` of the page's `.doc` an id (its own when it has one, else one made from its
- * words, never repeated), and lists them.
+ * words that no other element of the page holds), and lists them.
  */
 export function anchorHeadings(html: string): {
     html: string;
@@ -95,7 +95,9 @@ export function anchorHeadings(html: string): {
         return { html, headings: [] };
     }
 
-    const taken = new Set<string>();
+    const taken = new Set(
+        [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]),
+    );
     const headings: Heading[] = [];
     const body = html
         .slice(start)
@@ -144,22 +146,90 @@ function early(): string {
     return `<script>try{var r=document.documentElement,s=localStorage.getItem('${SCHEME_KEY}'),f=localStorage.getItem('${FONT_KEY}');if(s==='light'||s==='dark')r.dataset.theme=s;if(f)r.dataset.font=f}catch(e){}</script>`;
 }
 
-function header(): string {
-    const fonts = FONTS.map(
-        (font) => `<option value="${font.name}">${escape(font.label)}</option>`,
+/**
+ * The fade between pages is all CSS (`@view-transition` in site.css). The browser skips it when a
+ * second click cuts the first page's way short, or the window changes size on the way, and rejects
+ * the transition's promises; nothing waits on them, so they are marked as handled instead of being
+ * reported as uncaught errors. Listening before the first paint catches the arriving page's too.
+ */
+export function quietTransitions(): string {
+    return `<script>(function(){function q(e){var t=e.viewTransition;if(t){t.ready.catch(function(){});t.finished.catch(function(){})}}addEventListener('pageswap',q);addEventListener('pagereveal',q)})()</script>`;
+}
+
+/*
+ * The header's icons, drawn on a 24-unit grid. site.css strokes them 2 units wide with round ends,
+ * or fills the marks of other sites (`solid`).
+ */
+
+/** Three bars, 16 wide. */
+const BARS_ICON = '<path d="M4 6.5h16M4 12h16M4 17.5h16" />';
+
+/** A magnifying glass: a ring 13 wide and its handle, down to the right. */
+const SEARCH_ICON =
+    '<circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.25 15.25 20 20" />';
+
+/** A capital A and a small a, side by side on one baseline. */
+const FONT_ICON =
+    '<path d="M1.5 20 6.75 4 12 20M3.47 14h6.56M21 12.5V20" /><circle cx="17.5" cy="16" r="3.5" />';
+
+/** A moon: a circle 16 wide, cut by one 14 wide, up and to the right. */
+const MOON_ICON =
+    '<path d="M19.77 13.9A8 8 0 1 1 10.1 4.23A7 7 0 0 0 19.77 13.9Z" />';
+
+/** A sun: a ring 8 wide and eight rays, 7 to 9.5 from its middle, every 45 degrees. */
+const SUN_ICON =
+    '<circle cx="12" cy="12" r="4" /><path d="M19 12h2.5M16.95 16.95l1.77 1.77M12 19v2.5M7.05 16.95l-1.77 1.77M5 12H2.5M7.05 7.05 5.28 5.28M12 5V2.5M16.95 7.05l1.77-1.77" />';
+
+/** GitHub's mark, drawn on its own 16-unit grid and laid over 2 to 22. */
+const GITHUB_ICON =
+    '<path transform="translate(2 2) scale(1.25)" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z" />';
+
+/** npm's mark in its colors (site.css): a square 18 wide, and its n with a wide stem on the left. */
+const NPM_ICON =
+    '<path class="npm-box" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" /><path class="npm-n" d="M6.5 6.5v11H12V9.25h2.75v8.25h2.75v-11Z" />';
+
+/** An icon from the shapes above, hidden from screen readers: its control is named by words. */
+function icon(shapes: string, kind = 'icon'): string {
+    return `<svg class="${kind}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${shapes}</svg>`;
+}
+
+/**
+ * The font picker: a button with the font icon, named by the font in use, and the panel it opens, a
+ * group of radio buttons named Font, each name written in its own font by site.css. The site's
+ * script (font-picker.ts) checks the font in use and wires it.
+ */
+export function fontPicker(): string {
+    const options = FONTS.map(
+        (font) =>
+            `<label class="font-option" data-font="${font.name}"><input type="radio" name="site-font" value="${font.name}" />${escape(font.label)}</label>`,
     ).join('');
 
+    return `<div class="font-pick"><button id="font-open" class="icon-button font-open" type="button" aria-expanded="false" aria-controls="font-panel">${icon(FONT_ICON)}<span class="font-name visually-hidden">Font: ${escape(FONTS[0].label)}</span></button><div class="font-panel" id="font-panel" hidden><fieldset><legend>Font</legend>${options}</fieldset></div></div>`;
+}
+
+/**
+ * The scheme switch: a moon on the light page and a sun on the dark one, the scheme a press brings
+ * (site.css shows the right one before the first paint). For screen readers it is the toggle "Dark",
+ * pressed while the page is dark.
+ */
+export function schemeButton(): string {
+    return `<button id="scheme" class="icon-button scheme" type="button" aria-pressed="false">${icon(MOON_ICON, 'icon moon')}${icon(SUN_ICON, 'icon sun')}<span class="visually-hidden">Dark</span></button>`;
+}
+
+function header(): string {
     return `<a class="skip" href="#main">Skip to the content</a>
 <header class="top"><div class="wrap">
-<button id="menu" class="button small menu" type="button" aria-expanded="false" aria-controls="side">Menu</button>
+<button id="menu" class="icon-button menu" type="button" aria-expanded="false" aria-controls="side">${icon(BARS_ICON)}<span class="visually-hidden">Menu</span></button>
 <a class="brand" href="./"><img src="../assets/logo.svg" alt="" width="32" height="32" /><span class="brand-name">SonicFrame</span> <span class="version">v${escape(version())}</span></a>
-<button id="search-open" class="search-open" type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"><span>Search the docs</span><kbd>Ctrl K</kbd></button>
-<nav class="nav" aria-label="Elsewhere">
-<a class="far" href="${REPOSITORY}">GitHub</a>
-<a class="far" href="${NPM}">npm</a>
-<label class="font-pick"><span>Font</span><select id="site-font">${fonts}</select></label>
-<button id="scheme" class="button small" type="button" aria-pressed="false">Dark</button>
+<button id="search-open" class="search-open" type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K">${icon(SEARCH_ICON)}<span class="search-word">Search the docs</span><kbd aria-hidden="true">Ctrl K</kbd></button>
+<div class="nav">
+<nav class="elsewhere" aria-label="Elsewhere">
+<a class="icon-button" href="${REPOSITORY}">${icon(GITHUB_ICON, 'icon solid')}<span class="visually-hidden">GitHub</span></a>
+<a class="icon-button" href="${NPM}">${icon(NPM_ICON, 'icon solid npm')}<span class="visually-hidden">npm</span></a>
 </nav>
+${fontPicker()}
+${schemeButton()}
+</div>
 </div></header>`;
 }
 
@@ -204,7 +274,8 @@ function pager(here: string): string {
     const link = (page: DocsPage | undefined, rel: 'prev' | 'next'): string =>
         page === undefined
             ? '<span></span>'
-            : `<a class="pager-${rel}" href="./${page.file}" rel="${rel}"><span>${rel === 'prev' ? 'Previous' : 'Next'}</span>${escape(page.name)}</a>`;
+            : // The colon, heard only, keeps the word and the page apart in the link's name.
+              `<a class="pager-${rel}" href="./${page.file}" rel="${rel}"><span>${rel === 'prev' ? 'Previous' : 'Next'}<span class="visually-hidden">:</span></span> ${escape(page.name)}</a>`;
 
     return `<nav class="pager" aria-label="Previous and next page">${link(order[at - 1], 'prev')}${link(order[at + 1], 'next')}</nav>`;
 }
@@ -247,7 +318,8 @@ export function dressPage(html: string, file: string, base = ''): string {
     const head = `${anchor}<meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
 <link rel="stylesheet" href="./site.css" />
-${early()}`;
+${early()}
+${quietTransitions()}`;
 
     return anchored
         .replace('</title>', `</title>\n${head}`)
@@ -258,6 +330,35 @@ ${early()}`;
         )
         .replace('<div class="doc">', `${contents(headings)}<div class="doc">`)
         .replace('</main>', `${pager(file)}</main></div>\n${footer()}`);
+}
+
+/**
+ * Puts a page's stylesheets ahead of every script in its head, in their order. The build moves the
+ * bundled stylesheet to the end of the head, after the early script; Chrome then reads the page as
+ * opting out of the fade between pages (`@view-transition` lives in site.css) before the sheet is
+ * known, skips the fade and reports an uncaught InvalidStateError.
+ */
+export function stylesFirst(html: string): string {
+    const end = html.indexOf('</head>');
+    const script = html.indexOf('<script');
+
+    // Past the head, the slice below is empty and nothing moves.
+    if (end < 0 || script < 0) {
+        return html;
+    }
+
+    const sheets: string[] = [];
+    const rest = html
+        .slice(script, end)
+        .replace(/<link rel="stylesheet"[^>]*>\s*/g, (link) => {
+            sheets.push(link.trim());
+
+            return '';
+        });
+
+    return sheets.length === 0
+        ? html
+        : `${html.slice(0, script)}${sheets.join('\n')}\n${rest}${html.slice(end)}`;
 }
 
 function pageHtml(file: string): string {
@@ -309,7 +410,21 @@ export function docsInputs(): Record<string, string> {
     );
 }
 
-export function docsSite(): Plugin {
+/**
+ * The docs site's steps: the pages, dressed before Vite reads them, with the dev server's extras and
+ * the files the build adds; then, once Vite has written a page, its stylesheets ahead of every script.
+ */
+export function docsSite(): Plugin[] {
+    return [
+        docsPages(),
+        {
+            name: 'sonicframe-docs-styles-first',
+            transformIndexHtml: { order: 'post', handler: stylesFirst },
+        },
+    ];
+}
+
+function docsPages(): Plugin {
     let outDir = '';
     let base = '';
 

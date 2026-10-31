@@ -113,6 +113,49 @@ describe('seeking', () => {
         expect(controller.progress).toBe(0.5);
     });
 
+    it('lands an arrow-key step on the very second asked for, and says so', () => {
+        // In floating point, 5 / 77 * 77 is 4.999…: the step must not lose its second on the way.
+        const { controller, media, seeks } = setup();
+        loaded(media, 77);
+        controller.bind(media);
+
+        controller.key('ArrowRight');
+
+        expect(media.seeks).toEqual([5]);
+        expect(seeks()).toEqual([
+            { ratio: 5 / 77, time: 5, source: 'keyboard' },
+        ]);
+    });
+
+    it('tells where a seek waiting for the metadata will land, then the media’s own time', () => {
+        const { controller, media, fire } = setup();
+        controller.setDuration(77);
+        controller.bind(media);
+
+        controller.key('ArrowRight');
+
+        expect(media.seeks).toEqual([]);
+        expect(controller.time).toBe(5);
+
+        loaded(media, 77);
+        fire('loadedmetadata');
+        media.advance(6.25);
+
+        expect(media.seeks).toEqual([5]);
+        expect(controller.time).toBe(6.25);
+    });
+
+    it('tells the position set without media, and no time while the duration is unknown', () => {
+        const { controller } = setup();
+
+        expect(controller.time).toBeNull();
+
+        controller.setDuration(20);
+        controller.setProgress(0.5);
+
+        expect(controller.time).toBe(10);
+    });
+
     it('uses the hint for media without a real duration (browser recordings)', () => {
         const { controller, media } = setup();
         controller.bind(media);
@@ -333,6 +376,33 @@ describe('announcements', () => {
         expect(timeupdates().slice(before)).toEqual([
             ['timeupdate', [5, 0.05]],
         ]);
+    });
+
+    it('says a whole second the media is at as that very second', () => {
+        // In floating point, 5 / 77 * 77 is 4.999…, which a person would read as 0:04.
+        const { controller, media, fire, events, aria } = setup();
+        loaded(media, 77);
+        controller.bind(media);
+
+        media.advance(5);
+        fire('timeupdate');
+
+        expect(events.filter(([name]) => name === 'timeupdate').at(-1)).toEqual(
+            ['timeupdate', [5, 5 / 77]],
+        );
+        expect(aria.at(-1)?.text).toBe('0:05 / 1:17');
+    });
+
+    it('says a position a seek left 2 ms short of a second as that second', () => {
+        // An MP3 asked for 0:15 before it loaded started at 14.998 (measured in Chrome).
+        const { controller, media, fire, aria } = setup();
+        loaded(media, 33);
+        controller.bind(media);
+
+        media.advance(14.998);
+        fire('timeupdate');
+
+        expect(aria.at(-1)?.text).toBe('0:15 / 0:33');
     });
 
     it('uses the app own words for the position', () => {

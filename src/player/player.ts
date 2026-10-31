@@ -6,13 +6,14 @@
  * from colors read back as numbers, never from a raw page value. Given only a sound address, the
  * player makes its own media element and decodes the peaks when it first comes near the screen. Its
  * words are English unless the app picks another language or its own labels; the description of the
- * sound in words, the zoom (with its buttons) and the minimap are off until the app asks for them.
+ * sound in words, the zoom (with its buttons), the minimap and the chapters are off until the app
+ * asks for them.
  */
 
 import { hideFocusRing, showFocusRing } from '../controls/focus';
 import { PlayButton } from '../controls/play-button';
 import { VolumeControl } from '../controls/volume';
-import { rgbaString, type Rgba } from '../core/color';
+import { readableText, rgbaString, type Rgba } from '../core/color';
 import { Emitter } from '../core/emitter';
 import { resolveFont, type FontChoice } from '../core/fonts';
 import {
@@ -59,6 +60,9 @@ import type {
 import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
 import { prefersReducedMotion } from '../dom/motion';
+import type { TooltipColors } from '../dom/tooltip';
+import { remPixels } from '../dom/units';
+import { LongName } from './long-name';
 import { pageLanguage } from '../dom/page-language';
 import { observeSize } from '../dom/observe';
 import { canSpeak } from '../dom/speak';
@@ -73,6 +77,16 @@ import {
     type DecodedAudio,
 } from '../plugins/spectrogram';
 import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
+import {
+    chapters,
+    type ChapterListLook,
+    type ChaptersOptions,
+    type ChaptersPlugin,
+} from '../plugins/chapters';
+import type { Chapter, ChapterInput } from '../core/chapters';
+import { FloatingList, type ListSettings } from './chapter-panel';
+
+export type { ChapterListLook, ChaptersPlugin };
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -124,6 +138,12 @@ export type PlayerOptions = {
     zoom?: boolean | PlayerZoom;
     /** A minimap strip under the wave, its height from the look (`minimapHeight`). Off by default. */
     minimap?: boolean | MinimapOptions;
+    /**
+     * Chapters on the wave (see `chapters`): the address of a WebVTT or JSON chapters file, a list,
+     * or the plugin's options plus `list`. The look can place the chapter playing,
+     * buttons to the previous and next chapter and a button that opens the list. Off by default.
+     */
+    chapters?: string | readonly ChapterInput[] | PlayerChapters;
     /** How a sound is decoded for its peaks, when none are given. */
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
@@ -170,6 +190,147 @@ export type PlayerA11y = {
      */
     minimap?: { keys?: boolean };
 };
+
+/**
+ * The player's chapters: the plugin's options (its words come from the player's language and
+ * labels), plus a list inside the player.
+ */
+export type PlayerChapters = Omit<
+    ChaptersOptions,
+    'list' | 'words' | 'onChange' | 'onChapters' | 'header' | 'listLook'
+> & {
+    /** The list of chapters: true (in the player, under the wave) or its options. Off by default. */
+    list?: boolean | PlayerChapterList;
+};
+
+/** How the player's list of chapters shows and looks; every extra is off by default. */
+export type PlayerChapterList = {
+    /**
+     * `'inline'` (the default: in the player, under the wave), `'popover'` (a box over the page,
+     * pointing at the `chapters` button) or `'drawer'` (a panel along a side of the page). The two
+     * that float add the `chapters` button at the end of the line when the look places none.
+     */
+    type?: 'inline' | 'popover' | 'drawer';
+    /**
+     * In the player, whether the list starts open when the look has a `chapters` button; without
+     * that button it always shows. Closed by default.
+     */
+    open?: boolean;
+    /** Where a popover opens: `'auto'` (the default: under its button, over it without room), `'above'`, `'below'`. */
+    placement?: 'auto' | 'above' | 'below';
+    /** The page's side a drawer opens on: `'right'` (the default) or `'left'`. */
+    side?: 'left' | 'right';
+    /** The width of a popover or a drawer, in rem: 18 and 20 by default, from 10 to 40. */
+    width?: number;
+    /** The tallest a popover grows before it scrolls, in rem: 20 by default, from 6 to 60. */
+    maxHeight?: number;
+    /**
+     * A head over the list with its name and the place of the chapter playing ("2 / 8"). On by
+     * default for a popover or a drawer, off for the list in the player.
+     */
+    header?: boolean;
+    /** How the list's items look: pictures (size, shape), which pieces show, title lines, spacing. */
+    look?: ChapterListLook;
+    /** A popover or a drawer stays open after a chapter is chosen. Off by default. */
+    stayOpen?: boolean;
+    /** A drawer dims the page behind it; a press there closes it. Off by default. */
+    backdrop?: boolean;
+    /** A popover or a drawer moves in as it opens, never for people who asked for less motion. Off by default. */
+    animation?: boolean;
+    /** `'fade'` (the default) or `'slide'`. */
+    animationType?: 'fade' | 'slide';
+    /** A finger swiping on the player, off the wave, opens the list; the other way closes it. Off by default. */
+    swipe?: boolean;
+    /** The swipe that opens the list: `'up'` (the default), `'down'`, `'left'` or `'right'`. */
+    swipeDirection?: 'up' | 'down' | 'left' | 'right';
+    /**
+     * The list's own palette, as the player's `palette` takes it (a name, `'auto'` or your colors);
+     * the player's colors by default.
+     */
+    palette?: PaletteChoice;
+    /** The list's own font, as the player's `font` takes it; the player's by default. */
+    font?: FontChoice;
+    /** The list's own box; each one left out keeps the list's default. */
+    style?: PlayerChapterListStyle;
+};
+
+/** The list's own box. */
+export type PlayerChapterListStyle = {
+    /** Corner radius, in rem, from 0 to 4. */
+    corner?: number;
+    /** Border width, in CSS pixels, from 0 to 4. */
+    border?: number;
+    /** `'none'`, `'soft'`, `'hard'` (offset, in the text color) or `'glow'` (in the played color). */
+    shadow?: 'none' | 'soft' | 'hard' | 'glow';
+    /** Space inside the list, in rem, from 0 to 3. */
+    padding?: number;
+    /** Text size, in rem, from 0.5 to 2. */
+    fontSize?: number;
+};
+
+/**
+ * A box shadow by name, for the player and its list: none, a soft one, a hard offset one in the
+ * text color or a glow in the played color, built from the palette's colors read as numbers.
+ */
+function shadowOf(
+    kind: 'none' | 'soft' | 'hard' | 'glow',
+    palette: Palette,
+): string {
+    switch (kind) {
+        case 'soft':
+            return '0 0.0625rem 0.25rem rgba(0, 0, 0, 0.12), 0 0.25rem 1rem rgba(0, 0, 0, 0.08)';
+        case 'hard':
+            return `0.25rem 0.25rem 0 ${withAlpha(readColor(palette.text), 1)}`;
+        case 'glow':
+            return `0 0 1rem ${withAlpha(readColor(palette.progress), 0.45)}`;
+        default:
+            return 'none';
+    }
+}
+
+/** The list's options checked: unknown names fall back, sizes stay in range. */
+function listSettings(list: true | PlayerChapterList): ListSettings {
+    const own: PlayerChapterList = list === true ? {} : list;
+    const pick = <Value extends string>(
+        value: unknown,
+        allowed: readonly Value[],
+        fallback: Value,
+    ): Value =>
+        (allowed as readonly unknown[]).includes(value)
+            ? (value as Value)
+            : fallback;
+    const size = (
+        value: unknown,
+        fallback: number,
+        min: number,
+        max: number,
+    ): number =>
+        typeof value === 'number' && Number.isFinite(value)
+            ? Math.min(max, Math.max(min, value))
+            : fallback;
+    const type = pick(own.type, ['inline', 'popover', 'drawer'], 'inline');
+
+    return {
+        type,
+        open: own.open === true,
+        placement: pick(own.placement, ['auto', 'above', 'below'], 'auto'),
+        side: pick(own.side, ['left', 'right'], 'right'),
+        width: size(own.width, type === 'drawer' ? 20 : 18, 10, 40),
+        maxHeight: size(own.maxHeight, 20, 6, 60),
+        header:
+            typeof own.header === 'boolean' ? own.header : type !== 'inline',
+        stayOpen: own.stayOpen === true,
+        backdrop: own.backdrop === true,
+        animation: own.animation === true,
+        animationType: pick(own.animationType, ['fade', 'slide'], 'fade'),
+        swipe: own.swipe === true,
+        swipeDirection: pick(
+            own.swipeDirection,
+            ['up', 'down', 'left', 'right'],
+            'up',
+        ),
+    };
+}
 
 /** The player's zoom: the wave's zoom options, plus its buttons. */
 export type PlayerZoom = ZoomOptions & {
@@ -267,20 +428,9 @@ function count(
         : fallback;
 }
 
-/** CSS pixels in `rem` of the page's root text size. */
-function remPixels(rem: number): number {
-    const root = parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-    );
-
-    return rem * (root > 0 ? root : 16);
-}
-
 /**
  * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
- * 
-arrowLine names), goes under the wave on the left (what 
-arrowStart names) or on the right
+ * `narrowLine` names), goes under the wave on the left (what `narrowStart` names) or on the right
  * (everything else), or is left out (the look's spacers).
  */
 type Place = 'line' | 'start' | 'end' | 'spacer';
@@ -295,6 +445,32 @@ function placeOf(part: Part, look: PlayerLook): Place {
     }
 
     return look.narrowStart.includes(part) ? 'start' : 'end';
+}
+
+/**
+ * The far side of a row under the wave that may break: its parts stay together, with the row's
+ * gap, and keep to the far side on whichever line the group lands.
+ */
+function farGroup(): HTMLElement {
+    const group = document.createElement('div');
+    css(group, [
+        ['display', 'flex'],
+        ['flex-wrap', 'nowrap'],
+        ['align-items', 'center'],
+        ['gap', '0.5rem'],
+        ['margin-left', 'auto'],
+    ]);
+
+    return group;
+}
+
+/** The vertical shift, in pixels, a part was given to meet the bars; 0 when it has none. */
+function givenShift(part: HTMLElement): number {
+    return (
+        parseFloat(
+            part.style.getPropertyValue('translate').split(' ')[1] ?? '',
+        ) || 0
+    );
 }
 
 /** The side of its room a time's text keeps to; `auto` in the look picks one by the time's place. */
@@ -347,6 +523,35 @@ const SKIP_ICONS = {
     forward: 'M3.5 6v12l8-6zM12.5 6v12l8-6z',
 } as const;
 
+/** Previous and next chapter (a bar and a triangle each), and the list of chapters. */
+const CHAPTER_ICONS = {
+    prevChapter: 'M6 6h2v12H6zm3.5 6L18 6v12z',
+    nextChapter: 'M16 6h2v12h-2zM6 6l8.5 6L6 18z',
+    chapters:
+        'M4 6h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zM4 16h2v2H4zm4 0h12v2H8z',
+} as const;
+
+/** The parts that show only when the player has chapters. */
+const CHAPTER_PARTS: readonly Part[] = [
+    'chapter',
+    'prevChapter',
+    'nextChapter',
+    'chapters',
+];
+
+let chapterLists = 0;
+
+/** The swipes that open the list: along which axis, and which way (-1 up or left, 1 down or right). */
+const SWIPES = {
+    up: { axis: 'y', sign: -1 },
+    down: { axis: 'y', sign: 1 },
+    left: { axis: 'x', sign: -1 },
+    right: { axis: 'x', sign: 1 },
+} as const;
+
+/** The shortest swipe that counts, in rem. */
+const SWIPE_REM = 3;
+
 /** A speech bubble, for the button that reads the description aloud. */
 const LISTEN_ICON =
     'M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z';
@@ -364,9 +569,13 @@ const FORWARDED = [
     'error',
 ] as const;
 
-/** The frame's events, plus the description's new text (or null) when it is on. */
+/**
+ * The frame's events, plus the description's new text (or null) when it is on, and the chapter
+ * playing when the player has chapters (null and -1 outside every chapter).
+ */
 export type PlayerEvents = SonicFrameEvents & {
     description: [text: string | null];
+    chapterchange: [chapter: Chapter | null, index: number];
 };
 
 function css(
@@ -435,6 +644,23 @@ export class Player {
     private volumeRef: VolumeControl | null = null;
     private descriptionRef: SoundDescriptionPlugin | null = null;
     private readonly words: PlayerWords;
+    /** The chapters plugin, made once so the chapters outlive every rebuild; null while off. */
+    private readonly chaptersRef: ChaptersPlugin | null;
+    /** The list of chapters, or null without one. */
+    private chapterList: HTMLElement | null = null;
+    private list: ListSettings | null = null;
+    /** The list's own palette, font and box, as the app gave them (an unknown palette dropped). */
+    private listOwn: Pick<PlayerChapterList, 'palette' | 'font' | 'style'> = {};
+    /** The list floating over the page (a popover or a drawer), or null for the list in the player. */
+    private floating: FloatingList | null = null;
+    private listOpen = false;
+    /** The list's button pressed last: a floating list points at it. */
+    private listPressed: HTMLButtonElement | null = null;
+    /** Where a finger came down off the wave, for the swipe that opens the list. */
+    private swipeStart: { id: number; x: number; y: number } | null = null;
+    /** The built parts that show the chapter playing, and the buttons that open the list. */
+    private chapterNames: LongName[] = [];
+    private listButtons: HTMLButtonElement[] = [];
     private times: TimePart[] = [];
     private partCleanups: (() => void)[] = [];
     private layout: Layout | null = null;
@@ -467,6 +693,7 @@ export class Player {
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
             a11y.labels,
         );
+        this.chaptersRef = this.makeChapters();
 
         this.element = document.createElement('div');
         this.element.className = 'sonicframe-player';
@@ -481,6 +708,8 @@ export class Player {
             this.element.setAttribute('lang', this.words.locale);
         }
 
+        this.floating = this.makeFloating();
+        this.listenSwipe();
         this.ownMedia = !options.media && typeof options.src === 'string';
         this.media = options.media ?? (this.ownMedia ? this.makeMedia() : null);
 
@@ -495,6 +724,8 @@ export class Player {
         this.stopSize = observeSize(this.element, (size) => {
             this.width = size.width / size.pixelRatio;
             this.arrange();
+            this.alignToBars();
+            this.fitNames();
         });
     }
 
@@ -516,6 +747,11 @@ export class Player {
     /** The sound in words, or null while it is off or not known yet. */
     get description(): string | null {
         return this.descriptionRef?.text ?? null;
+    }
+
+    /** The chapters plugin (to set, load or step through the chapters), or null while they are off. */
+    get chapters(): ChaptersPlugin | null {
+        return this.chaptersRef;
     }
 
     /** Listens to the wave's events; returns the function that stops listening. */
@@ -605,6 +841,7 @@ export class Player {
         this.stopScheme?.();
         this.stopSize();
         this.teardown();
+        this.floating?.destroy();
 
         if (this.ownMedia && this.media !== null) {
             this.media.pause();
@@ -675,18 +912,328 @@ export class Player {
         return typeof zoom === 'object' && zoom.buttons === true;
     }
 
-    /** A part the options allow: the volume and the zoom buttons only when they are on. */
+    /**
+     * A part the options allow: the volume and the zoom buttons only when they are on, the chapter
+     * parts only with chapters, and the list's button only with the list.
+     */
     private allowed(part: Part): boolean {
         if (part === 'volume') {
             return this.showVolume;
         }
 
+        if (part === 'chapters') {
+            return this.chapterList !== null;
+        }
+
+        if (CHAPTER_PARTS.includes(part)) {
+            return this.chaptersRef !== null;
+        }
+
         return ZOOM_PARTS.includes(part) ? this.zoomButtons() : true;
     }
 
+    /** The chapters plugin with the player's words and list, or null while chapters are off. */
+    private makeChapters(): ChaptersPlugin | null {
+        const asked = this.options.chapters;
+
+        if (!asked) {
+            return null;
+        }
+
+        const settings: PlayerChapters =
+            typeof asked === 'string'
+                ? { src: asked }
+                : Array.isArray(asked)
+                  ? { items: asked as readonly ChapterInput[] }
+                  : (asked as PlayerChapters);
+        const { list, ...own } = settings;
+        const labels = this.words.labels;
+
+        // The list's box; a floating one holds an inner part that scrolls, so its arrow can poke out.
+        let content: HTMLElement | null = null;
+
+        if (list === true || (typeof list === 'object' && list !== null)) {
+            const box = document.createElement('div');
+            box.className = 'sonicframe-chapter-list';
+            box.id = `sonicframe-chapter-list-${++chapterLists}`;
+            this.chapterList = box;
+            this.list = listSettings(list);
+            this.listOwn = this.checkedLook(list === true ? {} : list);
+            this.listOpen = this.list.open;
+            content = box;
+
+            if (this.list.type !== 'inline') {
+                content = document.createElement('div');
+                content.className = 'sonicframe-chapter-scroll';
+                box.append(content);
+            }
+        }
+
+        return chapters({
+            ...own,
+            list: content,
+            header: this.list?.header === true,
+            listLook: typeof list === 'object' ? list.look : undefined,
+            words: {
+                chapter: labels.chapter,
+                list: labels.chapters,
+                none: labels.noChapter,
+                link: labels.chapterLink,
+            },
+            onChange: (chapter, index) => {
+                this.showChapter();
+                this.events.emit('chapterchange', chapter, index);
+            },
+            onChapters: () => this.showChapter(),
+        });
+    }
+
     /**
-     * The parts the options allow: placed by the look, or at the end of the line (the volume, then
-     * the zoom buttons) when the look places none of them.
+     * The list floating over the page (a popover or a drawer), made once for the player's life; null
+     * for the list in the player, or without a list.
+     */
+    private makeFloating(): FloatingList | null {
+        const box = this.chapterList;
+        const list = this.list;
+
+        if (box === null || list === null || list.type === 'inline') {
+            return null;
+        }
+
+        return new FloatingList(
+            box,
+            box.querySelector<HTMLElement>('.sonicframe-chapter-scroll') ?? box,
+            list,
+            this.element,
+            (element) => this.dressList(element),
+            this.words.labels.closeChapters,
+            (focusBack) => {
+                this.listOpen = false;
+                this.showList();
+
+                if (focusBack) {
+                    this.listAnchor()?.focus({ preventScroll: true });
+                }
+            },
+        );
+    }
+
+    /**
+     * With `swipe`, a finger swiping off the wave opens the list one way and closes it the other.
+     * The parts off the wave let the page pan only across the swipe (see `swipeZones`), so the swipe
+     * reaches the player, and the wave keeps its own way of moving.
+     */
+    private listenSwipe(): void {
+        const list = this.list;
+
+        if (list === null || !list.swipe) {
+            return;
+        }
+
+        const signal = this.abort.signal;
+        const onWave = (target: EventTarget | null): boolean =>
+            target instanceof Node &&
+            (this.layout?.box.contains(target) ?? false);
+
+        this.element.addEventListener(
+            'pointerdown',
+            (event) => {
+                this.swipeStart =
+                    event.pointerType === 'touch' && !onWave(event.target)
+                        ? {
+                              id: event.pointerId,
+                              x: event.clientX,
+                              y: event.clientY,
+                          }
+                        : null;
+            },
+            { signal },
+        );
+        this.element.addEventListener(
+            'pointercancel',
+            () => {
+                this.swipeStart = null;
+            },
+            { signal },
+        );
+        this.element.addEventListener(
+            'pointerup',
+            (event) => {
+                const start = this.swipeStart;
+                this.swipeStart = null;
+
+                if (start === null || start.id !== event.pointerId) {
+                    return;
+                }
+
+                const along = SWIPES[list.swipeDirection];
+                const dx = event.clientX - start.x;
+                const dy = event.clientY - start.y;
+                const main = along.axis === 'x' ? dx : dy;
+                const across = along.axis === 'x' ? dy : dx;
+
+                if (
+                    Math.abs(main) < remPixels(SWIPE_REM) ||
+                    Math.abs(main) <= Math.abs(across)
+                ) {
+                    return;
+                }
+
+                this.setListOpen(Math.sign(main) === along.sign);
+            },
+            { signal },
+        );
+    }
+
+    /**
+     * The parts off the wave, where a swipe starts: the line's other parts and the rows under the
+     * wave. Each lets the page pan only across the swipe.
+     */
+    private swipeZones(layout: Layout): void {
+        const list = this.list;
+
+        if (list === null || !list.swipe) {
+            return;
+        }
+
+        const column = layout.box.parentElement as HTMLElement;
+        const zones = [
+            ...[...layout.line.children].filter((part) => part !== column),
+            ...[...column.children].filter((row) => row !== layout.box),
+        ] as HTMLElement[];
+        const pan =
+            SWIPES[list.swipeDirection].axis === 'x' ? 'pan-y' : 'pan-x';
+
+        for (const zone of zones) {
+            zone.style.setProperty('touch-action', pan);
+        }
+    }
+
+    /** The list's own look with an unknown palette name reported once and dropped. */
+    private checkedLook(
+        list: PlayerChapterList,
+    ): Pick<PlayerChapterList, 'palette' | 'font' | 'style'> {
+        const { palette, font, style } = list;
+
+        if (
+            typeof palette === 'string' &&
+            palette !== 'auto' &&
+            palette !== 'default' &&
+            pickPalette(palette, false) === null
+        ) {
+            this.later(
+                new Error(
+                    `sonicframe: unknown palette "${cleanText(palette, 40)}"`,
+                ),
+            );
+
+            return { font, style };
+        }
+
+        return { palette, font, style };
+    }
+
+    /**
+     * Lays the list's own palette, font and box over its defaults (the player's colors and font, which
+     * it inherits in the player and copies when it floats). Colors go through the palette's variables;
+     * shadows are built from colors read as numbers.
+     */
+    private dressList(box: HTMLElement): void {
+        const { palette: choice, font, style = {} } = this.listOwn;
+        let palette: Palette | null = null;
+
+        if (typeof choice === 'object' && choice !== null) {
+            palette = cleanPalette(choice);
+        } else if (choice === 'auto') {
+            palette = pickPalette(
+                'auto',
+                typeof window.matchMedia === 'function' &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches,
+            );
+        } else if (choice !== undefined && choice !== 'default') {
+            palette = pickPalette(choice, false);
+        }
+
+        if (palette !== null) {
+            for (const [name, value] of paletteVariables(palette)) {
+                box.style.setProperty(name, value);
+            }
+        }
+
+        if (font !== undefined) {
+            const resolved = resolveFont(font, this.look.font);
+            box.style.setProperty('font-family', resolved.family);
+
+            if (resolved.load !== null) {
+                loadFont(resolved.load).catch((error: unknown) =>
+                    this.frameRef?.reportError(error),
+                );
+            }
+        }
+
+        const size = (
+            value: unknown,
+            min: number,
+            max: number,
+        ): number | null =>
+            typeof value === 'number' && Number.isFinite(value)
+                ? Math.min(max, Math.max(min, value))
+                : null;
+        const corner = size(style.corner, 0, 4);
+        const border = size(style.border, 0, 4);
+        const padding = size(style.padding, 0, 3);
+        const fontSize = size(style.fontSize, 0.5, 2);
+        const shadow: unknown = style.shadow;
+
+        if (corner !== null) {
+            box.style.setProperty('border-radius', `${corner}rem`);
+        }
+
+        if (border !== null) {
+            box.style.setProperty('border-width', `${border}px`);
+            box.style.setProperty('border-style', 'solid');
+        }
+
+        if (padding !== null) {
+            box.style.setProperty('padding', `${padding}rem`);
+        }
+
+        if (fontSize !== null) {
+            box.style.setProperty('font-size', `${fontSize}rem`);
+        }
+
+        if (
+            shadow === 'none' ||
+            shadow === 'soft' ||
+            shadow === 'hard' ||
+            shadow === 'glow'
+        ) {
+            box.style.setProperty(
+                'box-shadow',
+                shadowOf(shadow, palette ?? this.colors),
+            );
+        }
+    }
+
+    /** The list's button that opened it last, or the first one. */
+    private listAnchor(): HTMLButtonElement | null {
+        return this.listPressed !== null &&
+            this.listButtons.includes(this.listPressed)
+            ? this.listPressed
+            : (this.listButtons[0] ?? null);
+    }
+
+    /** Opens or closes the list, from a swipe or the app. */
+    private setListOpen(open: boolean): void {
+        if (this.chapterList !== null && open !== this.listOpen) {
+            this.listOpen = open;
+            this.showList();
+        }
+    }
+
+    /**
+     * The parts the options allow: placed by the look, or at the end of the line (the volume, the
+     * zoom buttons, then the list's button for a list that floats) when the look places none of them.
      */
     private visibleLine(): Part[] {
         const { line, meta } = this.look;
@@ -700,6 +1247,11 @@ export class Player {
 
         if (this.zoomButtons() && !ZOOM_PARTS.some(placed)) {
             extra.push(...ZOOM_PARTS);
+        }
+
+        // A list over the page opens only from its button, so it always has one.
+        if (this.floating !== null && !placed('chapters')) {
+            extra.push('chapters');
         }
 
         return [...line.filter((part) => this.allowed(part)), ...extra];
@@ -819,11 +1371,15 @@ export class Player {
     }
 
     /**
-     * The app's plugins, with a spectrogram in the palette's colors first and the description last,
-     * each only when asked.
+     * The app's plugins, with a spectrogram in the palette's colors first, then the chapters, the
+     * minimap and the description last, each only when asked.
      */
     private plugins(): Plugin[] {
         const plugins = [...(this.options.plugins ?? [])];
+
+        if (this.chaptersRef !== null) {
+            plugins.push(this.chaptersRef);
+        }
 
         if (this.options.spectrogram && this.media !== null) {
             plugins.unshift(
@@ -1033,19 +1589,44 @@ export class Player {
                 ['font-size', '0.85em'],
                 ['color', 'var(--sonicframe-muted, currentColor)'],
             ]);
+
+            // One line by default: a chapter's name takes the room left and gives it up first.
+            // With `metaWrap`, a row short of room breaks in two instead, the parts after the
+            // spacer going as one group that never breaks, kept to the far side of its line.
+            const wraps = this.look.metaWrap;
+
+            if (wraps) {
+                css(row, [['flex-wrap', 'wrap']]);
+            }
+
             column.append(row);
             let metaSide: Side = 'start';
+            let target: HTMLElement = row;
 
             for (const part of meta) {
-                this.addPart(part, row, column, {
+                this.addPart(part, target, column, {
                     side: metaSide,
                     narrowSide: null,
                 });
 
                 if (part === 'spacer') {
                     metaSide = 'end';
+
+                    if (wraps) {
+                        target = farGroup();
+                        row.append(target);
+                    }
                 }
             }
+        }
+
+        // The list in the player goes under the wave, on its left edge like the row under it (see
+        // `placeRows`), otherwise under everything; a floating list stays on the page's body.
+        if (this.chapterList !== null && this.floating === null) {
+            (this.listUnderWave() ? column : this.element).append(
+                this.chapterList,
+            );
+            this.dressList(this.chapterList);
         }
 
         const sync = (): void => this.showTime();
@@ -1055,9 +1636,168 @@ export class Player {
             frame.on('seek', sync),
         );
         this.showTime();
+        this.showChapter();
+        this.showList();
         this.finish();
         this.alignTimes();
         this.arrange();
+
+        if (this.layout !== null) {
+            this.placeRows(this.layout, this.layout.narrow);
+            this.swipeZones(this.layout);
+        }
+
+        // The bars move when the wave resizes or a strip comes or goes; a name's room changes too.
+        this.partCleanups.push(
+            frame.on('resize', () => {
+                this.alignToBars();
+                this.fitNames();
+            }),
+        );
+        this.alignToBars();
+    }
+
+    /**
+     * Lines up the parts beside a wave in the line with the bars themselves. The line centers its
+     * parts on the wave's box, which also holds the strips plugins stack above and below the bars,
+     * or on the whole column when rows sit under the wave; each part is moved by `translate` alone,
+     * so nothing around it moves. A part centered on bars near the line's edge would stick out of
+     * the line, into the player's padding; the wave's box then takes a margin on that side, by the
+     * overshoot, which moves the bars in until every part fits. The box, not its column: with
+     * `underStart: 'line'` the column is `display: contents` and takes no margin.
+     */
+    private alignToBars(): void {
+        const layout = this.layout;
+        const canvas = layout?.box.querySelector('canvas') ?? null;
+
+        if (
+            layout === null ||
+            canvas === null ||
+            this.look.wavePlace !== 'inline'
+        ) {
+            return;
+        }
+
+        const column = layout.box.parentElement;
+        const parts = [...layout.line.children].filter(
+            (part): part is HTMLElement =>
+                part !== column &&
+                part instanceof HTMLElement &&
+                part.getBoundingClientRect().height > 0,
+        );
+        const shifts = this.barShifts(canvas, parts);
+
+        if (shifts === null) {
+            return;
+        }
+
+        if (column?.parentElement === layout.line) {
+            const line = layout.line.getBoundingClientRect();
+
+            if (
+                line.height > 0 &&
+                this.fitBars(layout.box, line, parts, shifts)
+            ) {
+                // The bars moved: measure them again.
+                this.applyShifts(
+                    parts,
+                    this.barShifts(canvas, parts) ?? shifts,
+                );
+
+                return;
+            }
+        }
+
+        this.applyShifts(parts, shifts);
+    }
+
+    /**
+     * How far each part must move, from where it sits now, for its middle to meet the bars'
+     * middle, in whole pixels; `null` while the bars have no height.
+     */
+    private barShifts(
+        canvas: HTMLCanvasElement,
+        parts: readonly HTMLElement[],
+    ): number[] | null {
+        const bars = canvas.getBoundingClientRect();
+
+        if (bars.height <= 0) {
+            return null;
+        }
+
+        const middle = bars.top + bars.height / 2;
+
+        return parts.map((part) => {
+            const rect = part.getBoundingClientRect();
+
+            return Math.round(middle - (rect.top + rect.height / 2));
+        });
+    }
+
+    /** Moves each part by its shift, on top of the shift it was given last time. */
+    private applyShifts(
+        parts: readonly HTMLElement[],
+        shifts: readonly number[],
+    ): void {
+        parts.forEach((part, index) => {
+            const shift = Math.round(givenShift(part) + (shifts[index] ?? 0));
+            part.style.setProperty('translate', `0px ${shift}px`);
+        });
+    }
+
+    /**
+     * Gives the wave's box the margins that keep every shifted part inside the line, and says
+     * whether they changed. The margins already given count: the overshoot measured now is added
+     * to them, and a part with room to spare takes them back, never below 0.
+     */
+    private fitBars(
+        box: HTMLElement,
+        line: DOMRect,
+        parts: readonly HTMLElement[],
+        shifts: readonly number[],
+    ): boolean {
+        let overTop = Number.NEGATIVE_INFINITY;
+        let overBottom = Number.NEGATIVE_INFINITY;
+
+        parts.forEach((part, index) => {
+            const rect = part.getBoundingClientRect();
+            const shift = shifts[index] ?? 0;
+            overTop = Math.max(overTop, line.top - (rect.top + shift));
+            overBottom = Math.max(
+                overBottom,
+                rect.bottom + shift - line.bottom,
+            );
+        });
+
+        const margin = (side: 'top' | 'bottom', over: number): boolean => {
+            const name = `margin-${side}`;
+            const given = parseFloat(box.style.getPropertyValue(name)) || 0;
+            const next =
+                over === Number.NEGATIVE_INFINITY
+                    ? 0
+                    : Math.max(0, Math.round(given + over));
+            box.style.setProperty(name, `${next}px`);
+
+            return next !== given;
+        };
+
+        const top = margin('top', overTop);
+        const bottom = margin('bottom', overBottom);
+
+        return top || bottom;
+    }
+
+    /**
+     * Whether the chapters list goes under the wave, in its column: a list in the player with the
+     * wave in the line, unless zoom buttons share the line (that line wraps, which a grid cannot).
+     */
+    private listUnderWave(): boolean {
+        return (
+            this.chapterList !== null &&
+            this.floating === null &&
+            this.look.wavePlace === 'inline' &&
+            !this.zoomOnLine()
+        );
     }
 
     /**
@@ -1147,7 +1887,7 @@ export class Player {
             }
         }
 
-        this.placeVoiceNote(layout, narrow);
+        this.placeRows(layout, narrow);
         this.alignTimes();
 
         if (
@@ -1160,11 +1900,13 @@ export class Player {
     }
 
     /**
-     * The voice note's line is a grid: its first row holds the line's parts and the wave, each one
-     * centered on the wave, and the rows under the wave keep to the wave's column. Outside the voice
-     * note the line is the flexible row it was built as.
+     * A voice note's line, the line of a player with its chapters list under the wave, and one whose
+     * rows under the wave start at the line (`underStart`) are a grid: its first row holds the line's
+     * parts and the wave, and the rows under the wave (the small line, the list) keep to the wave's
+     * column, or span the whole line from under the play button, so opening the list never moves
+     * the parts beside the wave. Otherwise the line is the flexible row it was built as.
      */
-    private placeVoiceNote(layout: Layout, narrow: boolean): void {
+    private placeRows(layout: Layout, narrow: boolean): void {
         const { line, box } = layout;
         const column = box.parentElement as HTMLElement;
         const parts = [...line.children] as HTMLElement[];
@@ -1172,8 +1914,13 @@ export class Player {
             (row) => row !== box,
         ) as HTMLElement[];
         const placed = [...parts, box, ...below];
+        const fromLine =
+            this.look.underStart === 'line' &&
+            this.look.wavePlace === 'inline' &&
+            below.length > 0 &&
+            !this.zoomOnLine();
 
-        if (!narrow) {
+        if (!narrow && !this.listUnderWave() && !fromLine) {
             css(line, [
                 ['display', 'flex'],
                 ['gap', `${this.look.gap}rem`],
@@ -1219,7 +1966,10 @@ export class Player {
         below.forEach((row, index) =>
             css(row, [
                 ['grid-row', `${index + 2}`],
-                ['grid-column', wave],
+                [
+                    'grid-column',
+                    this.look.underStart === 'line' ? '1 / -1' : wave,
+                ],
             ]),
         );
     }
@@ -1231,6 +1981,12 @@ export class Player {
 
         this.partCleanups = [];
         this.times = [];
+        for (const name of this.chapterNames) {
+            name.destroy();
+        }
+
+        this.chapterNames = [];
+        this.listButtons = [];
         this.layout = null;
         this.buttonRef?.destroy();
         this.volumeRef?.destroy();
@@ -1307,6 +2063,16 @@ export class Player {
             case 'zoomReset':
                 target.append(this.zoomPart(part));
                 break;
+            case 'chapter':
+                target.append(this.chapterPart());
+                break;
+            case 'prevChapter':
+            case 'nextChapter':
+                target.append(this.chapterButton(part));
+                break;
+            case 'chapters':
+                target.append(this.listButton());
+                break;
             case 'slot':
                 if (this.options.slot) {
                     target.append(this.options.slot);
@@ -1369,6 +2135,10 @@ export class Player {
         }
     }
 
+    /**
+     * Writes where the sound is. The frame's time, never the media's own: before the media loads
+     * (`preload="none"`) a seek waits in the frame, and the media still says 0.
+     */
     private showTime(): void {
         const frame = this.frameRef;
 
@@ -1377,12 +2147,7 @@ export class Player {
         }
 
         const duration = frame.duration;
-        const time =
-            this.media !== null
-                ? this.media.currentTime
-                : duration === null
-                  ? null
-                  : frame.progress * duration;
+        const time = frame.time;
 
         for (const { text, mold, format } of this.times) {
             const longest = timeMold(format, time, duration);
@@ -1522,7 +2287,8 @@ export class Player {
                 return;
             }
 
-            const now = this.media?.currentTime ?? frame.progress * duration;
+            // From where the sound is, or will start once a seek waiting for it to load lands.
+            const now = frame.time ?? 0;
             const target = now + (direction === 'back' ? -seconds : seconds);
             frame.seekTo(Math.min(1, Math.max(0, target / duration)));
         });
@@ -1596,6 +2362,135 @@ export class Player {
         show();
 
         return button;
+    }
+
+    /** The chapter playing, by name, in a room that may be too short for it (see `LongName`). */
+    private chapterPart(): HTMLElement {
+        const name = new LongName(this.look, () => this.tooltipColors());
+        this.chapterNames.push(name);
+
+        return name.element;
+    }
+
+    /** The page's tooltip in the played color, its text readable on it. */
+    private tooltipColors(): TooltipColors {
+        const background =
+            this.frameRef?.color('var(--sonicframe-progress, #2f6fdb)') ||
+            '#2f6fdb';
+
+        return {
+            background,
+            text: readableText(
+                readColor(background) ?? [47, 111, 219, 1],
+                [255, 255, 255, 1],
+            ),
+        };
+    }
+
+    /** Fits each chapter's name to its room: its end, its walk (see `LongName`). */
+    private fitNames(): void {
+        for (const name of this.chapterNames) {
+            name.fit();
+        }
+    }
+
+    /** Shows the chapter playing in the parts that name it: its title, or its place when untitled. */
+    private showChapter(): void {
+        const plugin = this.chaptersRef;
+        const chapter = plugin?.current ?? null;
+        const text =
+            plugin === null || chapter === null
+                ? ''
+                : chapter.title ||
+                  this.words.say('chapter', {
+                      index: String(plugin.index + 1),
+                      count: String(plugin.chapters.length),
+                  });
+
+        for (const name of this.chapterNames) {
+            name.text = text;
+        }
+
+        this.fitNames();
+    }
+
+    /** A button to the previous chapter (like a previous track) or the next one; says when there is none. */
+    private chapterButton(
+        part: 'prevChapter' | 'nextChapter',
+    ): HTMLButtonElement {
+        const button = this.iconButton(
+            part === 'prevChapter'
+                ? 'sonicframe-prev-chapter'
+                : 'sonicframe-next-chapter',
+            CHAPTER_ICONS[part],
+            this.words.labels[
+                part === 'prevChapter' ? 'previousChapter' : 'nextChapter'
+            ],
+        );
+
+        button.addEventListener('click', () => {
+            const plugin = this.chaptersRef;
+            const moved =
+                part === 'prevChapter' ? plugin?.previous() : plugin?.next();
+
+            if (moved === false) {
+                this.frameRef?.announce(this.words.labels.noChapter);
+            }
+        });
+
+        return button;
+    }
+
+    /** The button that opens and closes the list of chapters, in the player or over the page. */
+    private listButton(): HTMLButtonElement {
+        const button = this.iconButton(
+            'sonicframe-chapters-toggle',
+            CHAPTER_ICONS.chapters,
+            this.words.labels.chapters,
+        );
+
+        if (this.chapterList !== null) {
+            button.setAttribute('aria-controls', this.chapterList.id);
+        }
+
+        button.addEventListener('click', () => {
+            this.listPressed = button;
+            this.setListOpen(!this.listOpen);
+        });
+        this.listButtons.push(button);
+
+        return button;
+    }
+
+    /**
+     * Shows the list when it is open: over the page against its button when it floats; in the player,
+     * also always when no button can open it.
+     */
+    private showList(): void {
+        const list = this.chapterList;
+
+        if (list === null) {
+            return;
+        }
+
+        const floating = this.floating;
+        const anchor = this.listAnchor();
+        const shown =
+            floating === null
+                ? this.listButtons.length === 0 || this.listOpen
+                : this.listOpen && anchor !== null;
+
+        if (floating === null) {
+            list.hidden = !shown;
+        } else if (shown && anchor !== null) {
+            floating.open(anchor);
+        } else {
+            floating.close();
+        }
+
+        for (const button of this.listButtons) {
+            button.setAttribute('aria-expanded', String(shown));
+        }
     }
 
     /**
@@ -1746,21 +2641,12 @@ export class Player {
         const look = this.look;
         const palette = this.colors;
         let surface = 'var(--sonicframe-surface, transparent)';
-        let shadow = 'none';
+        const shadow = shadowOf(look.shadow, palette);
 
         if (look.surface === 'none') {
             surface = 'transparent';
         } else if (look.surface === 'glass') {
             surface = withAlpha(readColor(palette.surface), 0.72);
-        }
-
-        if (look.shadow === 'soft') {
-            shadow =
-                '0 0.0625rem 0.25rem rgba(0, 0, 0, 0.12), 0 0.25rem 1rem rgba(0, 0, 0, 0.08)';
-        } else if (look.shadow === 'hard') {
-            shadow = `0.25rem 0.25rem 0 ${withAlpha(readColor(palette.text), 1)}`;
-        } else if (look.shadow === 'glow') {
-            shadow = `0 0 1rem ${withAlpha(readColor(palette.progress), 0.45)}`;
         }
 
         css(this.element, [

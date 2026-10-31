@@ -8,7 +8,7 @@ import type { ValueText } from './controller';
 import { localeFor, resolveLanguage, type Language } from './language';
 import { clamp01 } from './math';
 import { cleanText, fillTemplate } from './text';
-import { formatTime } from './timing';
+import { formatPosition, formatTime } from './timing';
 
 /** What the player says. `{name}` marks are filled in. */
 export type PlayerLabels = {
@@ -45,6 +45,18 @@ export type PlayerLabels = {
     minimap: string;
     /** The minimap's value: `{from}`, `{to}`, `{total}`. */
     minimapValue: string;
+    /** A chapter's place: `{index}`, `{count}`; its title follows after a colon. */
+    chapter: string;
+    /** The list of chapters, and the button that opens it. */
+    chapters: string;
+    /** Said when a step finds no chapter that way. */
+    noChapter: string;
+    /** The text of a chapter's link in the list. */
+    chapterLink: string;
+    previousChapter: string;
+    nextChapter: string;
+    /** The button that closes the chapters drawer. */
+    closeChapters: string;
 };
 
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
@@ -70,6 +82,13 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             zoomView: 'Zoom {level}×, {from} to {to}',
             minimap: 'Visible part',
             minimapValue: '{from} to {to} of {total}',
+            chapter: 'Chapter {index} of {count}',
+            chapters: 'Chapters',
+            noChapter: 'No more chapters',
+            chapterLink: 'Link',
+            previousChapter: 'Previous chapter',
+            nextChapter: 'Next chapter',
+            closeChapters: 'Close the chapters',
         }),
         pt: Object.freeze({
             player: 'Player de áudio',
@@ -92,6 +111,13 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             zoomView: 'Zoom {level}×, de {from} a {to}',
             minimap: 'Parte visível',
             minimapValue: '{from} a {to} de {total}',
+            chapter: 'Capítulo {index} de {count}',
+            chapters: 'Capítulos',
+            noChapter: 'Não há mais capítulos',
+            chapterLink: 'Link',
+            previousChapter: 'Capítulo anterior',
+            nextChapter: 'Próximo capítulo',
+            closeChapters: 'Fechar os capítulos',
         }),
     });
 
@@ -144,7 +170,7 @@ export function playerWords(
         valueText: (time, ratio, duration) =>
             time !== null && duration !== null
                 ? fillTemplate(labels.value, {
-                      time: formatTime(time),
+                      time: formatPosition(time, duration),
                       duration: formatTime(duration),
                   })
                 : `${Math.round(clamp01(ratio) * 100)}%`,

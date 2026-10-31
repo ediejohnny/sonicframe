@@ -9,6 +9,7 @@
  * start with `a11y-`: `a11y-lang` is the language of the player's words, and the description is off
  * unless `a11y-description` is there. Zoom is off unless `zoom` is there; its words turn on its
  * ways, and `minimap` adds the strip. The `peaks-` attributes say how the peaks file is read.
+ * `chapters` takes the address of a chapters file, and `chapter-options` its extras.
  */
 
 import type { FontChoice } from '../core/fonts';
@@ -19,6 +20,7 @@ import type { WaveName } from '../types';
 import {
     Player,
     type PlayerA11y,
+    type PlayerChapters,
     type PlayerDescription,
     type PlayerOptions,
     type PlayerZoom,
@@ -44,6 +46,8 @@ export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
     'zoom',
     'zoom-max',
     'minimap',
+    'chapters',
+    'chapter-options',
     'a11y-lang',
     'a11y-description',
     'a11y-zoom',
@@ -63,6 +67,8 @@ const REBUILD = new Set([
     'zoom',
     'zoom-max',
     'minimap',
+    'chapters',
+    'chapter-options',
     'a11y-lang',
     'a11y-description',
     'a11y-zoom',
@@ -80,6 +86,7 @@ const EVENTS = [
     'viewchange',
     'error',
     'description',
+    'chapterchange',
 ] as const;
 
 /** The words of an attribute, lowercase. */
@@ -160,6 +167,53 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
               }
             : false,
         announceWhenReady: words.has('announce'),
+    };
+}
+
+/**
+ * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
+ * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
+ * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
+ * `above`, `announce`, `images`, `links`, `no-keys` and `no-lines`; any other word is ignored.
+ */
+function chaptersOf(
+    src: string | null,
+    value: string | null,
+): PlayerChapters | undefined {
+    if (src === null) {
+        return undefined;
+    }
+
+    const words = wordsOf(value ?? '');
+
+    return {
+        src,
+        list: words.has('list')
+            ? {
+                  type: words.has('drawer')
+                      ? 'drawer'
+                      : words.has('popover')
+                        ? 'popover'
+                        : 'inline',
+                  open: words.has('open'),
+                  side: words.has('left') ? 'left' : 'right',
+                  stayOpen: words.has('stay'),
+                  backdrop: words.has('backdrop'),
+                  animation: words.has('animation'),
+                  animationType: words.has('slide') ? 'slide' : 'fade',
+                  swipe: words.has('swipe'),
+              }
+            : false,
+        lane: words.has('above')
+            ? 'above'
+            : words.has('lane')
+              ? 'below'
+              : false,
+        announceChange: words.has('announce'),
+        images: words.has('images'),
+        links: words.has('links'),
+        keys: !words.has('no-keys'),
+        lines: !words.has('no-lines'),
     };
 }
 
@@ -319,6 +373,10 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                         this.getAttribute('zoom-max'),
                     ),
                     minimap: minimapOf(this.getAttribute('minimap')),
+                    chapters: chaptersOf(
+                        this.getAttribute('chapters'),
+                        this.getAttribute('chapter-options'),
+                    ),
                     a11y: this.a11y(),
                 });
 
