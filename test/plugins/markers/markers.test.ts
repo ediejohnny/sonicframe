@@ -122,6 +122,37 @@ describe('markers on the page', () => {
         expect(sharedTooltip().open).toBe(true);
     });
 
+    it("lists five crowded markers and says how many more, in the frame's language or the app's words", () => {
+        const lastLine = (
+            lang: string | undefined,
+            options: MarkersOptions = {},
+            count = 8,
+        ): string | null => {
+            const marks = Array.from({ length: count }, (_, at) => ({
+                time: 5 + at / (count * 2),
+            }));
+            const { container } = mount({
+                media: fakeMedia({ duration: 40 }),
+                a11y: { lang },
+                plugins: [markers({ marks, ...options })],
+            });
+            firePointer(container, 'pointermove', 26);
+            const lines = sharedTooltip().element.children;
+
+            expect(lines).toHaveLength(6);
+
+            return lines[5].textContent;
+        };
+
+        expect(lastLine(undefined)).toBe('and 3 more');
+        expect(lastLine('pt-BR')).toBe('e mais 3');
+        expect(lastLine('fr')).toBe('et 3 de plus');
+        expect(lastLine('es', { words: { more: '+{count}' } })).toBe('+3');
+        // The count is written as the language writes numbers.
+        expect(lastLine(undefined, {}, 1008)).toBe('and 1,003 more');
+        expect(lastLine('pt-BR', {}, 1008)).toBe('e mais 1.003');
+    });
+
     it('groups markers by the usual 12 px when group is not a number', () => {
         for (const group of [Number.NaN, '0' as unknown as number]) {
             expect(crowdedLines({ group })).toBe(2);

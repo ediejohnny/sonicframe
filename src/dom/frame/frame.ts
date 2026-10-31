@@ -15,7 +15,7 @@ import {
     MEDIA_EVENTS,
     type MediaEventType,
 } from '../../core/frame/media-events';
-import { EN } from '../../core/languages/en';
+import { wordsFor } from '../../core/languages/language';
 import { Emitter } from '../../core/shared/emitter';
 import { finiteOr } from '../../core/shared/checked';
 import { clamp01 } from '../../core/shared/math';
@@ -29,7 +29,7 @@ import {
 import {
     MAX_ZOOM,
     resolveZoom,
-    ZOOM_WORDS,
+    zoomWords,
     type ViewSource,
 } from '../../core/view/zoom';
 import { barMetrics } from '../../core/wave/layout';
@@ -51,6 +51,7 @@ import type {
     WaveStyle,
 } from '../../types';
 import { announce } from '../a11y/announce';
+import { chosenLanguage } from '../a11y/page-language';
 import { exportClip, type ClipOptions } from '../clip/clip';
 import { css } from '../shared/css';
 import { prefersReducedMotion } from '../shared/motion';
@@ -87,6 +88,8 @@ function unpack(source: readonly number[] | PeaksData | null): {
 
 export class SonicFrame implements PluginHost {
     readonly container: HTMLElement;
+    /** The language tag the wave and its plugins speak. */
+    readonly lang: string;
     private readonly canvas: HTMLCanvasElement;
     private readonly context: CanvasRenderingContext2D | null;
     private readonly controller: Controller;
@@ -148,10 +151,11 @@ export class SonicFrame implements PluginHost {
             ...options.colors,
         });
         this.task = { render: (now) => this.render(now) };
+        this.lang = chosenLanguage(options.a11y?.lang, this.container);
         this.restoreContainer = prepareContainer(
             this.container,
             this.interact,
-            options.label ?? EN.frame.position,
+            options.label ?? wordsFor(this.lang).frame.position,
         );
 
         this.canvas = document.createElement('canvas');
@@ -186,7 +190,7 @@ export class SonicFrame implements PluginHost {
                 },
             },
             options.a11y?.zoom?.announce === true,
-            { ...ZOOM_WORDS, ...options.a11y?.zoom?.words },
+            { ...zoomWords(this.lang), ...options.a11y?.zoom?.words },
         );
 
         this.controller = new Controller(

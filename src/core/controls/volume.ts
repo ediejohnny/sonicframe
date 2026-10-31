@@ -66,9 +66,13 @@ export function volumeAfterKey(
     }
 }
 
-/** The level in words: `'40%'`, or `'muted'`. */
-export function volumeText(volume: number, muted: boolean): string {
-    return muted ? EN.volume.muted : `${Math.round(clampLevel(volume) * 100)}%`;
+/** The level in words: `'40%'`, or the word for muted (`'muted'` in English). */
+export function volumeText(
+    volume: number,
+    muted: boolean,
+    mutedWord: string = EN.volume.muted,
+): string {
+    return muted ? mutedWord : `${Math.round(clampLevel(volume) * 100)}%`;
 }
 
 /** The level to bring back when unmuting: the one the media had, or half if it was silent. */

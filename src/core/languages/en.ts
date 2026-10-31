@@ -1,4 +1,7 @@
-/** English: SonicFrame's own words, and what every piece says unless the app picks another language. */
+/**
+ * English as spoken in the United States (`en`, `en-US`): SonicFrame's own words, what every piece
+ * says unless the app picks another language, and the model every other language file follows.
+ */
 
 import type { Words } from './words';
 
@@ -28,6 +31,9 @@ export const EN: Words = {
         list: 'Chapters',
         none: 'No more chapters',
         link: 'Link',
+    },
+    markers: {
+        more: 'and {count} more',
     },
     regions: {
         place: '{from} to {to}',

@@ -44,7 +44,13 @@ export {
     type SoundOutline,
     type SoundPart,
 } from './core/description/outline';
-export type { DescriptionWords } from './core/languages/words';
+export type { DescriptionWords, Words } from './core/languages/words';
+export {
+    LANGUAGE_NAMES,
+    registerLanguage,
+    type Language,
+} from './core/languages/language';
+export { languageProblems } from './core/languages/language-check';
 export {
     loadWaveform,
     readWaveform,

@@ -65,7 +65,7 @@ export type ChaptersOptions = {
     images?: boolean;
     /** Links in the list, when a chapter has one; they open in a new tab. Off by default. */
     links?: boolean;
-    /** Your own words, over the English ones. */
+    /** Your own words, over those of the frame's language. */
     words?: Partial<ChapterWords>;
     /** Called when the chapter playing changes (null and -1 outside every chapter). */
     onChange?: (chapter: Chapter | null, index: number) => void;

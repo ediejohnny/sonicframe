@@ -107,8 +107,10 @@ export type PlayerOptions = {
 /** The player's accessibility options, grouped by place; everything that adds behaviour is off by default. */
 export type PlayerA11y = {
     /**
-     * The language of the accessible names, the wave's value in words and the description: `'en'` (the
-     * default), `'pt'`, or `'auto'` (the page's language). Given, it also marks the player with it.
+     * The language of the accessible names, the wave's value in words, the description and the
+     * plugins: `'en'` (the default), `'pt'` (the Portuguese of Brazil), `'pt-PT'`, `'es'`, `'fr'`, a
+     * registered one (`registerLanguage`), or `'auto'` (the page's language). A tag with a region finds
+     * its language (`'es-MX'` speaks Spanish). Given, it also marks the player with it.
      */
     lang?: string;
     /** Your own accessible names and words, over the language's. */

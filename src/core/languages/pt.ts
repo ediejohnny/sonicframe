@@ -1,4 +1,4 @@
-/** Portuguese, for `pt` and every tag that starts with it (`pt-BR`, `pt-PT`). */
+/** Portuguese as spoken in Brazil: `pt`, `pt-BR` and every other `pt-` tag but `pt-PT`. */
 
 import type { Words } from './words';
 
@@ -28,6 +28,9 @@ export const PT: Words = {
         list: 'Capítulos',
         none: 'Não há mais capítulos',
         link: 'Link',
+    },
+    markers: {
+        more: 'e mais {count}',
     },
     regions: {
         place: 'de {from} a {to}',

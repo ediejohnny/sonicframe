@@ -51,6 +51,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'accessibility.html', name: 'Overview' },
             { file: 'keyboard.html', name: 'Keyboard' },
             { file: 'announcements.html', name: 'Screen readers' },
+            { file: 'languages.html', name: 'Languages' },
             { file: 'words.html', name: 'The wave in words' },
             { file: 'captions.html', name: 'Captions' },
             { file: 'motion.html', name: 'Motion' },

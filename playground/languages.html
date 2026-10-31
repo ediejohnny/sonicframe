@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Languages · SonicFrame</title>
+        <meta
+            name="description"
+            content="The languages SonicFrame speaks (English, Portuguese, Spanish and French), how to pick one, and how to bring your own."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Languages</h1>
+                <p class="lede">
+                    Every word SonicFrame says (the names of the controls, the
+                    wave's value, the announcements and the wave in words) comes
+                    in five languages, or in one you bring.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Built in</h2>
+                    <p>
+                        English is the default. A tag finds its language the BCP
+                        47 way: the whole tag first, then shorter and shorter,
+                        so <code>'es-MX'</code> speaks Spanish and
+                        <code>'pt-PT-x-old'</code> European Portuguese. Any
+                        other tag speaks English.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tag</th>
+                                    <th>Language</th>
+                                    <th>Also found by</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>'en'</code></td>
+                                    <td>
+                                        English, as spoken in the United States
+                                    </td>
+                                    <td>
+                                        <code>'en-US'</code>,
+                                        <code>'en-GB'</code>…
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'pt'</code></td>
+                                    <td>Portuguese, as spoken in Brazil</td>
+                                    <td>
+                                        <code>'pt-BR'</code> and every other
+                                        <code>pt-</code> tag but
+                                        <code>'pt-PT'</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'pt-PT'</code></td>
+                                    <td>Portuguese, as spoken in Portugal</td>
+                                    <td>Its longer tags</td>
+                                </tr>
+                                <tr>
+                                    <td><code>'es'</code></td>
+                                    <td>Spanish</td>
+                                    <td>
+                                        <code>'es-ES'</code>,
+                                        <code>'es-MX'</code>,
+                                        <code>'es-419'</code>…
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'fr'</code></td>
+                                    <td>French</td>
+                                    <td>
+                                        <code>'fr-FR'</code>,
+                                        <code>'fr-CA'</code>…
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        <code>LANGUAGE_NAMES</code> lists them. Numbers are
+                        written the way the tag writes them ("1,5×" in
+                        Portuguese), and so are the lengths in the wave in words
+                        ("33 secondes").
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Picking one</h2>
+                    <p>
+                        <code>a11y.lang</code> picks the language of each piece;
+                        <code>'auto'</code> takes the page's. Given to the
+                        player, it also marks the player with <code>lang</code>,
+                        so a screen reader speaks with a voice of that language.
+                    </p>
+                    <div class="code">
+                        <pre><code>// The player, with its plugins and the wave in words.
+createPlayer({ container, src, a11y: { lang: 'es' } });
+
+// The tag: &lt;sonic-player src="/note.ogg" a11y-lang="fr"&gt;&lt;/sonic-player&gt;
+
+// A wave of your own: its plugins speak its language.
+new SonicFrame({ container, media, a11y: { lang: 'pt-PT' }, plugins: [regions()] });
+
+// The controls on their own.
+PlayButton.create({ container, media, a11y: { lang: 'auto' } });
+VolumeControl.create({ container, media, a11y: { lang: 'auto' } });
+
+// The wave in words, written ahead on a server.
+describeSound(outline, { lang: 'fr' });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"a11y":{"lang":"es"},"look":{"line":["play","back","wave","forward","time","speed"]}}'
+                        data-label="Un reproductor en español"
+                    ></div>
+                    <p>
+                        This player's buttons are named in Spanish: inspect
+                        them, or tab through them with a screen reader on.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Your own words</h2>
+                    <p>
+                        Any phrase can be replaced over the language's: the
+                        player's <code>a11y.labels</code> (see
+                        <a href="./announcements.html">Screen readers</a>), the
+                        controls' <code>labels</code>, and the
+                        <code>words</code> of the markers, the chapters, the
+                        regions (<code>a11y.words</code>), the minimap and the
+                        wave in words.
+                    </p>
+                    <div class="code">
+                        <pre><code>markers({ marks, words: { more: '+{count}' } });
+regions({ a11y: { words: { loopOn: 'repeating' } } });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Bringing a whole language</h2>
+                    <p>
+                        <code>registerLanguage(tag, words)</code> teaches
+                        SonicFrame a language at run time, before the players
+                        are made; every piece whose tag finds it speaks it. The
+                        words must be whole, every phrase of English with the
+                        same marks, and each phrase is cleaned to one safe line.
+                        It returns <code>false</code> for a built-in tag, a tag
+                        that is not BCP 47, words with a problem, or past a
+                        hundred languages; <code>languageProblems(words)</code>
+                        says what is wrong.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { languageProblems, registerLanguage, type Words } from 'sonicframe';
+
+const ja: Words = {
+    frame: { position: '…' },
+    playButton: { play: '…', pause: '…' },
+    // …every other group of English, each phrase in Japanese
+};
+
+if (!registerLanguage('ja', ja)) {
+    console.warn(languageProblems(ja));
+}
+
+createPlayer({ container, src, a11y: { lang: 'ja-JP' } });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        The groups and their phrases are those of the
+                        <code>Words</code> type; the English file,
+                        <code>src/core/languages/en.ts</code>, is the model.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Adding a language to SonicFrame</h2>
+                    <p>
+                        A language for everyone is one file and one line, sent
+                        as a pull request. The tests check it by themselves.
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/blob/main/CONTRIBUTING.md#adding-a-language"
+                            >Adding a language</a
+                        >
+                        walks through it. These docs stay in English.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>In a plugin</h2>
+                    <p>
+                        A plugin reads the frame's tag in
+                        <code>host.lang</code> (<code>'en'</code> unless the app
+                        picks one) to choose its own words. See the
+                        <a href="./plugin-api.html">Plugin API</a>.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

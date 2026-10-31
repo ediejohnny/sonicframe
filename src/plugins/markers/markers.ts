@@ -8,6 +8,9 @@
  * unchanged.
  */
 
+import { localeFor, wordsFor } from '../../core/languages/language';
+import { mergeWords } from '../../core/languages/merge-words';
+import type { MarkerWords } from '../../core/languages/words';
 import { groupMarks } from '../../core/marks/clusters';
 import {
     placeMarks,
@@ -17,6 +20,7 @@ import {
 } from '../../core/marks/markers';
 import { finiteOr, within } from '../../core/shared/checked';
 import { positive } from '../../core/shared/math';
+import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
 import { ON_PROGRESS } from '../../core/shared/variables';
 import { FULL_VIEW } from '../../core/view/view';
@@ -57,6 +61,8 @@ export type MarkersOptions = {
     backGrace?: number;
     /** Called when a marker or a group is chosen (click or keyboard). */
     onSelect?: (marks: Mark[]) => void;
+    /** Your own words, over those of the frame's language. */
+    words?: Partial<MarkerWords>;
     a11y?: TooltipA11y;
 };
 
@@ -69,6 +75,9 @@ export type MarkersPlugin = Plugin & {
 
 const MAX_MARKS = 2000;
 const TOOLTIP_LINES = 5;
+
+/** The longest word taken from the app, in characters. */
+const MAX_WORD = 120;
 
 export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const groupPx = within(options.group, 12, 0, Number.POSITIVE_INFINITY);
@@ -91,6 +100,17 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     );
     let host: PluginHost | null = null;
     let openedTooltip = false;
+
+    /** The tooltip's last line, for `count` markers left out, in the frame's language. */
+    function more(frame: PluginHost, count: number): string {
+        const own = options.words;
+        const words = mergeWords(wordsFor(frame.lang).markers, own, MAX_WORD);
+        const locale = localeFor(frame.lang, own !== undefined);
+
+        return fillTemplate(words.more, {
+            count: new Intl.NumberFormat(locale).format(count),
+        });
+    }
 
     /** Clusters of marks in CSS pixels, for hover and click; each cluster keeps its marks. */
     function clustersCss(
@@ -247,14 +267,15 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
             }
 
             const lines = cluster.marks.slice(0, TOOLTIP_LINES).map(label);
-
-            if (cluster.marks.length > TOOLTIP_LINES) {
-                lines.push(`and ${cluster.marks.length - TOOLTIP_LINES} more`);
-            }
-
             const frame = host;
 
             if (frame !== null) {
+                if (cluster.marks.length > TOOLTIP_LINES) {
+                    lines.push(
+                        more(frame, cluster.marks.length - TOOLTIP_LINES),
+                    );
+                }
+
                 sharedTooltip().show(
                     frame.container,
                     lines,

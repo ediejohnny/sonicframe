@@ -23,6 +23,8 @@ export type PlayerLabels = {
     mute: string;
     unmute: string;
     volume: string;
+    /** The volume slider's value while muted. */
+    muted: string;
     /** The button that reads the description with the browser's voice. */
     listen: string;
     /** The same button while the voice reads. */
@@ -114,6 +116,22 @@ export type ChapterWords = {
     link: string;
 };
 
+/** What the markers plugin says. `{name}` marks are filled in. */
+export type MarkerWords = {
+    /** The tooltip's last line when it lists only some of a group's markers: `{count}` left out. */
+    more: string;
+};
+
+/** What the regions plugin says. `{name}` marks are filled in. */
+export type RegionWords = {
+    /** Where a region is, said when R selects it (after its label): `{from}`, `{to}`. */
+    place: string;
+    /** Said when L turns the loop on. */
+    loopOn: string;
+    /** Said when L turns the loop off. */
+    loopOff: string;
+};
+
 /** The player's labels that the pieces it is built of bring. */
 type Borrowed =
     | 'play'
@@ -121,6 +139,7 @@ type Borrowed =
     | 'mute'
     | 'unmute'
     | 'volume'
+    | 'muted'
     | 'zoomView'
     | 'minimap'
     | 'minimapValue'
@@ -162,14 +181,8 @@ export type Words = {
         value: string;
     };
     chapters: ChapterWords;
-    regions: {
-        /** Where a region is, said when R selects it (after its label): `{from}`, `{to}`. */
-        place: string;
-        /** Said when L turns the loop on. */
-        loopOn: string;
-        /** Said when L turns the loop off. */
-        loopOff: string;
-    };
+    markers: MarkerWords;
+    regions: RegionWords;
     description: DescriptionWords;
     /** The ready-made player's own words; it borrows the rest of its labels from the pieces above. */
     player: Omit<PlayerLabels, Borrowed>;

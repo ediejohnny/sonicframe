@@ -488,6 +488,7 @@ export class Player {
             zoom: this.options.zoom ?? this.options.frame?.zoom,
             a11y: {
                 ...frameA11y,
+                lang: frameA11y?.lang ?? words.locale,
                 zoom: {
                     ...frameA11y?.zoom,
                     announce:
@@ -810,6 +811,7 @@ export class Player {
                         mute: this.words.labels.mute,
                         unmute: this.words.labels.unmute,
                         volume: this.words.labels.volume,
+                        muted: this.words.labels.muted,
                     },
                 });
                 break;

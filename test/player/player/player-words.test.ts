@@ -69,6 +69,59 @@ describe("the player's words", () => {
         expect(labelOf('.sonicframe-speed')).toBe('Velocidade 1,5×');
     });
 
+    it('speaks European Portuguese, Spanish and French, a tag with a region finding its language', () => {
+        const names: [string, string, string, string][] = [
+            ['pt-PT', 'Leitor de áudio', 'Recuar 10 segundos', 'silenciado'],
+            [
+                'es-MX',
+                'Reproductor de audio',
+                'Retroceder 10 segundos',
+                'silenciado',
+            ],
+            ['fr-CA', 'Lecteur audio', 'Reculer de 10 secondes', 'son coupé'],
+        ];
+
+        for (const [lang, name, back, muted] of names) {
+            player = createPlayer({
+                container: container(),
+                media: fakeMedia({ duration: 33 }),
+                look: { line: ['back', 'play', 'wave'] },
+                volume: true,
+                a11y: { lang },
+            });
+            within('.sonicframe-volume-button').click();
+
+            expect(labelOf('.sonicframe-player'), lang).toBe(name);
+            expect(labelOf('.sonicframe-back'), lang).toBe(back);
+            expect(
+                within('.sonicframe-volume-bar').getAttribute('aria-valuetext'),
+                lang,
+            ).toBe(muted);
+
+            player.destroy();
+            cleanUp();
+        }
+
+        player = null;
+    });
+
+    it("gives the app's plugins its language", () => {
+        const seen: string[] = [];
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            a11y: { lang: 'fr-CA' },
+            plugins: [
+                {
+                    name: 'listener',
+                    setup: (host) => void seen.push(host.lang),
+                },
+            ],
+        });
+
+        expect(seen.at(-1)).toBe('fr-CA');
+    });
+
     it("follows the page's language with 'auto'", () => {
         document.documentElement.setAttribute('lang', 'pt-BR');
         player = createPlayer({
@@ -115,6 +168,20 @@ describe('the <sonic-player> tag', () => {
             within('[role="slider"] span[hidden]').getAttribute('lang'),
         ).toBe('pt-BR');
         expect(host.querySelector('img')).toBeNull();
+    });
+
+    it('takes a language with a region', () => {
+        defineSonicPlayer();
+        const host = document.createElement('sonic-player');
+        keep(host);
+        host.setAttribute('src', 'note.ogg');
+        host.setAttribute('a11y-lang', 'es-MX');
+        document.body.append(host);
+
+        expect(labelOf('.sonicframe-play')).toBe('Reproducir');
+        expect(
+            host.querySelector('.sonicframe-player')?.getAttribute('lang'),
+        ).toBe('es-MX');
     });
 
     it('has no description without the attribute', () => {

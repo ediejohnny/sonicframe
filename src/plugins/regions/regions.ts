@@ -9,6 +9,7 @@
  * and `RegionKeys`.
  */
 
+import type { RegionWords } from '../../core/languages/words';
 import { within } from '../../core/shared/checked';
 import { positive } from '../../core/shared/math';
 import { PROGRESS, REGION } from '../../core/shared/variables';
@@ -53,6 +54,11 @@ export type RegionsOptions = {
      * it, `'ew-resize'` over its edges and while resizing or drawing one.
      */
     cursors?: { body?: string; moving?: string; edge?: string };
+    /** Accessibility options. */
+    a11y?: {
+        /** Your own words said by the keys, over those of the frame's language. */
+        words?: Partial<RegionWords>;
+    };
 };
 
 export type RegionsPlugin = Plugin & {
@@ -154,7 +160,11 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             edge: options.cursors?.edge ?? 'ew-resize',
         },
     });
-    const keyboard = new RegionKeys(parts, options.scrollIntoView === true);
+    const keyboard = new RegionKeys(
+        parts,
+        options.scrollIntoView === true,
+        options.a11y?.words,
+    );
 
     for (const item of options.items ?? []) {
         store.add(item, duration());
