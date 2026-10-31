@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+
 ### Added
 
 - Ready-made waveform files: `readWaveform` and `loadWaveform` read the audiowaveform formats (binary `.dat` and
