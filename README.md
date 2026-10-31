@@ -56,7 +56,7 @@ Zoom, scroll and a minimap, with ready-made peaks files, so an hour of audio ope
 <td valign="top">
 <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/themes.svg" alt="" width="20" height="20">
 <strong>A whole player in one line</strong><br>
-25 themes, 8 palettes and 10 drawings, from JavaScript or as an HTML tag.
+24 themes, 8 palettes and 10 drawings, from JavaScript or as an HTML tag.
 </td>
 </tr>
 </table>
@@ -178,6 +178,8 @@ Every option, method, event and attribute is in the
 ![Plugins on the wave: two markers, a region named Verse, a timeline, a caption with badges, a spectrogram under a line, and live frequency bars](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/plugins.png)
 
 ![The bubble and pill themes, each in all eight palettes](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/gallery.png)
+
+<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/narrow.png" alt="On a phone the player turns into a voice note: the play button beside the wave, the time under the wave on the left, and the speed and zoom buttons on its right" width="360">
 
 ## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/browsers.svg" alt="" width="24" height="24"> Browser support
 
