@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   the chapters popover already did.
 - The regions' labels show again after the player builds its wave anew (a new theme, look or volume control),
   and on any frame the same regions plugin is set up on later.
+- A `max` that is not a number (`NaN`, a string) falls back to the default: every marker is kept (up to 2000)
+  instead of none, and the regions stay capped at 200 instead of unlimited. The same goes for the `threshold` of
+  `soundDescription()` and `outlineSound` (0.06), which found no pauses before.
 
 ## [0.5.0] - 2026-10-31
 

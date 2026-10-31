@@ -9,6 +9,7 @@
  * and `RegionKeys`.
  */
 
+import { within } from '../../core/shared/checked';
 import { positive } from '../../core/shared/math';
 import { PROGRESS, REGION } from '../../core/shared/variables';
 import { placeX } from '../../core/wave/scene';
@@ -70,7 +71,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const minLength = Math.max(0.01, options.minLength ?? 0.25);
     const bandColor = options.color ?? REGION;
     const keys = options.keys ?? true;
-    const max = Math.min(200, Math.max(0, options.max ?? 200));
+    const max = within(options.max, 200, 0, 200);
     const snap = options.snap === true;
 
     const store = new RegionStore(minLength, max);

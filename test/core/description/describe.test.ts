@@ -94,6 +94,16 @@ describe('outlining a sound', () => {
         expect(outline?.parts).toHaveLength(1);
     });
 
+    it('reads quiet by the usual share when the threshold is not a number', () => {
+        for (const threshold of [Number.NaN, '0.3' as unknown as number]) {
+            const outline = outlineSound(NOTE, 33, { threshold });
+
+            expect(outline?.pauses).toHaveLength(1);
+            expect(outline?.pauses[0].start).toBeCloseTo(20, 5);
+            expect(outline?.pauses[0].end).toBeCloseTo(24, 5);
+        }
+    });
+
     it('tells a sound that grows from one that fades and one that stays even', () => {
         const grows = outlineSound(
             peaksOf(60, 600, (time) => 0.2 + (0.8 * time) / 59.9),

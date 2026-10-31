@@ -232,4 +232,19 @@ describe('regions on the page', () => {
         expect(plugin.add({ start: 3, end: 4 })).toBeNull();
         expect(plugin.list()).toHaveLength(1);
     });
+
+    it('keeps at most 200 regions when max is not a number', () => {
+        const plugin = regions({ max: Number.NaN });
+        mounted = mount({
+            media: fakeMedia({ duration: 400 }),
+            plugins: [plugin],
+        });
+
+        for (let start = 0; start < 200; start++) {
+            plugin.add({ start, end: start + 0.5 });
+        }
+
+        expect(plugin.list()).toHaveLength(200);
+        expect(plugin.add({ start: 300, end: 301 })).toBeNull();
+    });
 });

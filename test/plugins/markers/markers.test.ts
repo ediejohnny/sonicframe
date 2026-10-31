@@ -165,4 +165,13 @@ describe('markers plugin', () => {
         expect(plugin.times).toEqual([2, 3]);
         expect(invalidated).toBe(1);
     });
+
+    it('keeps every marker when max is not a number', () => {
+        const times = [5, 10, 15];
+
+        expect(markers({ times, max: Number.NaN }).times).toEqual(times);
+        expect(markers({ times, max: '2' as unknown as number }).times).toEqual(
+            times,
+        );
+    });
 });

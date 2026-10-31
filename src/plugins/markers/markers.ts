@@ -69,7 +69,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const groupPx = Math.max(0, options.group ?? 12);
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
-    const max = Math.min(MAX_MARKS, Math.max(0, options.max ?? MAX_MARKS));
+    const max = within(options.max, MAX_MARKS, 0, MAX_MARKS);
     // Never under a hundredth of a second, so a marker just landed on is never chosen again.
     const backGrace = within(
         options.backGrace,
