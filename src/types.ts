@@ -1,6 +1,6 @@
-import type { KeyModifiers } from './core/keys';
-import type { ViewState } from './core/view';
-import type { ViewSource } from './core/zoom';
+import type { KeyModifiers } from './core/frame/keys';
+import type { ViewState } from './core/view/view';
+import type { ViewSource } from './core/view/zoom';
 
 /** Peaks with the duration they came with, as `readWaveform` and `loadWaveform` give them. */
 export type PeaksData = {

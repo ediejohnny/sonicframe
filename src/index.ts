@@ -3,80 +3,79 @@
  * https://www.npmjs.com/package/sonicframe (MIT)
  */
 
+export { SonicFrame } from './dom/frame/frame';
 export {
     DEFAULT_BAR,
     DEFAULT_COLORS,
-    SonicFrame,
     type SonicFrameA11y,
     type SonicFrameOptions,
-} from './dom/frame';
+} from './dom/frame/frame-options';
 export {
     DEFAULT_BUTTON_COLORS,
     PlayButton,
     type PlayButtonEvents,
     type PlayButtonOptions,
-} from './controls/play-button';
+} from './controls/play/play-button';
 export type {
     ButtonColors,
     ButtonFill,
     ButtonLook,
     ButtonShape,
-} from './core/button';
+} from './core/controls/button';
 export {
     DEFAULT_VOLUME_COLORS,
     VolumeControl,
     type VolumeColors,
     type VolumeControlEvents,
     type VolumeControlOptions,
-} from './controls/volume';
+} from './controls/volume/volume';
+export { markerSpans, type Mark } from './core/marks/markers';
 export {
     markers,
-    markerSpans,
-    type Mark,
     type MarkersOptions,
     type MarkersPlugin,
-} from './plugins/markers';
+} from './plugins/markers/markers';
 export {
     caption,
     type CaptionOptions,
     type CaptionPlugin,
     type TooltipContent,
     type TooltipSection,
-} from './plugins/caption';
+} from './plugins/caption/caption';
 export {
     regions,
-    type Region,
     type RegionsOptions,
     type RegionsPlugin,
-} from './plugins/regions';
-export { timeline, type TimelineOptions } from './plugins/timeline';
+} from './plugins/regions/regions';
+export type { Region } from './plugins/regions/region-store';
+export { timeline, type TimelineOptions } from './plugins/timeline/timeline';
+export { chapters } from './plugins/chapters/chapters';
 export {
     CHAPTER_WORDS,
-    chapters,
-    type ChapterListLook,
     type ChaptersKeys,
     type ChaptersOptions,
     type ChaptersPlugin,
-    type ChapterWords,
-} from './plugins/chapters';
+} from './plugins/chapters/chapters-options';
+export type { ChapterListLook } from './plugins/chapters/chapter-list-look';
+export type { ChapterWords, DescriptionWords } from './core/languages/words';
 export {
     minimap,
     MINIMAP_WORDS,
     type MinimapOptions,
     type MinimapWords,
-} from './plugins/minimap';
+} from './plugins/minimap/minimap';
 export {
     soundDescription,
     type SoundDescriptionKeys,
     type SoundDescriptionOptions,
     type SoundDescriptionPlugin,
-} from './plugins/description';
-export type { SpeechOptions } from './dom/speak';
+} from './plugins/description/description';
+export type { SpeechOptions } from './dom/a11y/speak';
 export {
     skipSilences,
     type SkipSilencesOptions,
     type SkipSilencesPlugin,
-} from './plugins/skip-silences';
+} from './plugins/skip-silences/skip-silences';
 export {
     findSilences,
     levels,
@@ -86,45 +85,50 @@ export {
     silencesFromPeaks,
     type ChannelSource,
     type Silence,
-} from './core/analysis';
+} from './core/analysis/analysis';
 export {
     DESCRIPTION_WORDS,
     describeSound,
+    soundWords,
+    type DescribeOptions,
+    type SoundWords,
+} from './core/description/describe';
+export {
     nextPart,
     outlineSound,
     partAt,
     silenceAt,
-    soundWords,
-    type DescribeOptions,
-    type DescriptionWords,
     type OutlineOptions,
     type SoundLevel,
     type SoundOutline,
     type SoundPart,
-    type SoundWords,
-} from './core/describe';
+} from './core/description/outline';
 export {
     spectrogram,
     type ColorStops,
     type DecodedAudio,
     type SpectrogramPluginOptions,
-} from './plugins/spectrogram';
+} from './plugins/spectrogram/spectrogram';
 export {
     createSpectrogram,
     type SpectrogramJob,
     type SpectrogramOptions,
-} from './core/spectrogram';
-export { buildColormap, colormap, type ColormapName } from './core/colormap';
-export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
-export { frequencyBands, MAX_BANDS } from './core/bands';
-export { canTapMedia } from './core/origin';
-export { exportClip, type ClipOptions } from './dom/clip';
+} from './core/analysis/spectrogram';
+export {
+    buildColormap,
+    colormap,
+    type ColormapName,
+} from './core/analysis/colormap';
+export { liveFrequency, type LiveFrequencyOptions } from './plugins/live/live';
+export { frequencyBands, MAX_BANDS } from './core/analysis/bands';
+export { canTapMedia } from './core/analysis/origin';
+export { exportClip, type ClipOptions } from './dom/clip/clip';
 export {
     clipPlan,
     DEFAULT_CLIP_TYPES,
     DEFAULT_MAX_SOURCE_SECONDS,
     pickMimeType,
-} from './core/clip';
+} from './core/wave/clip';
 export {
     loadPeaks,
     MAX_PEAKS,
@@ -133,20 +137,24 @@ export {
     readPeaks,
     resample,
     type PeaksFetcher,
-} from './core/peaks';
+} from './core/peaks/peaks';
 export {
     loadWaveform,
     readWaveform,
-    writeWaveform,
     type LoadWaveformOptions,
-    type ReadWaveformOptions,
-    type WaveformData,
     type WaveformFetcher,
-    type WaveformFormat,
-    type WaveformJson,
     type WaveformResponse,
+} from './core/peaks/read-waveform';
+export type {
+    ReadWaveformOptions,
+    WaveformData,
+    WaveformFormat,
+} from './core/peaks/waveform';
+export {
+    writeWaveform,
+    type WaveformJson,
     type WriteWaveformOptions,
-} from './core/waveform';
+} from './core/peaks/write-waveform';
 export {
     chapterAt,
     chapterEnds,
@@ -158,10 +166,10 @@ export {
     type ChapterInput,
     type ChaptersFetcher,
     type LoadChaptersOptions,
-} from './core/chapters';
-export { safeUrl } from './core/url';
-export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
-export type { View, ViewState } from './core/view';
+} from './core/chapters/chapters';
+export { safeUrl } from './core/shared/url';
+export { DEFAULT_WAVE, WAVE_NAMES } from './core/wave/shapes';
+export type { View, ViewState } from './core/view/view';
 export {
     MAX_ZOOM,
     ZOOM_WORDS,
@@ -169,9 +177,9 @@ export {
     type ZoomKey,
     type ZoomOptions,
     type ZoomWords,
-} from './core/zoom';
-export { formatPosition, formatTime } from './core/timing';
-export type { ValueText } from './core/controller';
+} from './core/view/zoom';
+export { formatPosition, formatTime } from './core/shared/timing';
+export type { ValueText } from './core/frame/controller';
 export type {
     BarStyle,
     Colors,

@@ -5,58 +5,56 @@
  * waveform file without the main entry.
  */
 
-export {
-    createPlayer,
-    Player,
-    type ButtonAnimation,
-    type ChapterListLook,
-    type ChaptersPlugin,
-    type PlayerA11y,
-    type PlayerChapterList,
-    type PlayerChapters,
-    type PlayerDecode,
-    type PlayerDescription,
-    type PlayerEvents,
-    type PlayerListenButton,
-    type PlayerOptions,
-    type PlayerZoom,
-} from './player/player';
+export { createPlayer, Player } from './player/player/player';
+export type {
+    ButtonAnimation,
+    ChapterListLook,
+    ChaptersPlugin,
+    PlayerA11y,
+    PlayerChapterList,
+    PlayerChapters,
+    PlayerDecode,
+    PlayerDescription,
+    PlayerEvents,
+    PlayerListenButton,
+    PlayerOptions,
+    PlayerZoom,
+} from './player/player/player-options';
 export {
     loadWaveform,
     readWaveform,
     type LoadWaveformOptions,
-    type ReadWaveformOptions,
-    type WaveformData,
-} from './core/waveform';
+} from './core/peaks/read-waveform';
+export type { ReadWaveformOptions, WaveformData } from './core/peaks/waveform';
 export {
     loadChapters,
     readChapters,
     type Chapter,
     type ChapterInput,
     type LoadChaptersOptions,
-} from './core/chapters';
-export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
+} from './core/chapters/chapters';
+export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element/element';
+export type { PlayerLabels } from './core/languages/words';
 export {
     PLAYER_LABELS,
     playerWords,
-    type PlayerLabels,
     type PlayerWords,
-} from './core/labels';
+} from './core/player/labels';
 export {
     DEFAULT_LOOK,
     PART_NAMES,
     resolveLook,
     type Part,
     type PlayerLook,
-} from './core/look';
+} from './core/player/look';
 export {
     defineTheme,
     findTheme,
     registerTheme,
     type Theme,
     type ThemeInput,
-} from './core/theme';
-export { THEME_NAMES, THEMES, type ThemeName } from './core/themes';
+} from './core/player/theme';
+export { THEME_NAMES, THEMES, type ThemeName } from './core/player/themes';
 export {
     DEFAULT_PALETTE,
     PALETTE_NAMES,
@@ -66,7 +64,7 @@ export {
     type Palette,
     type PaletteChoice,
     type PaletteName,
-} from './core/palettes';
+} from './core/player/palettes';
 export {
     FONT_NAMES,
     FONT_STACKS,
@@ -75,4 +73,4 @@ export {
     type FontChoice,
     type FontName,
     type FontSource,
-} from './core/fonts';
+} from './core/player/fonts';

@@ -29,7 +29,7 @@
     --moon: block;
     --sun: none;
 
-    /* The library's own font stacks (src/core/fonts.ts); the reader picks one in the header. */
+    /* The library's own font stacks (src/core/player/fonts.ts); the reader picks one in the header. */
     --stack-system:
         system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
         sans-serif;

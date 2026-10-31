@@ -11,9 +11,10 @@ export default defineConfig({
         port: 5174,
         strictPort: true,
     },
-    // Two test projects: the pure core runs in Node (fast, no DOM), and the page layer runs under
-    // happy-dom with the stand-ins from test/dom/setup.ts. Core tests stay flat in test/; page tests
-    // live under test/dom/, so the globs keep them apart without fighting Vitest's default excludes.
+    // Two test projects. test/ mirrors src/, each test beside its subject: the pure core
+    // (test/core/) and the tests of the whole package (test/*.test.ts) run in Node, fast and with no
+    // DOM; every other layer and the docs site run under happy-dom with the stand-ins from
+    // test/support/setup.ts.
     test: {
         projects: [
             {
@@ -21,7 +22,7 @@ export default defineConfig({
                 test: {
                     name: 'core',
                     environment: 'node',
-                    include: ['test/*.test.ts'],
+                    include: ['test/*.test.ts', 'test/core/**/*.test.ts'],
                 },
             },
             {
@@ -29,8 +30,10 @@ export default defineConfig({
                 test: {
                     name: 'dom',
                     environment: 'happy-dom',
-                    include: ['test/dom/**/*.test.ts'],
-                    setupFiles: ['./test/dom/setup.ts'],
+                    include: [
+                        'test/{dom,controls,plugins,player,site}/**/*.test.ts',
+                    ],
+                    setupFiles: ['./test/support/setup.ts'],
                 },
             },
         ],
