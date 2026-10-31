@@ -1634,6 +1634,19 @@ html {
     text-underline-offset: 0.15em;
 }
 
+/* Under the sounds' credits, a faint strip of square wave bars: the site's only ornament. */
+.foot-sound::after {
+    display: block;
+    width: min(100%, 12rem);
+    height: 0.625rem;
+    margin-top: 1.25rem;
+    background: var(--brand);
+    content: '';
+    opacity: 0.45;
+    -webkit-mask: url('./bars.svg') left center / auto 100% repeat-x;
+    mask: url('./bars.svg') left center / auto 100% repeat-x;
+}
+
 .foot-bottom {
     display: flex;
     flex-wrap: wrap;
