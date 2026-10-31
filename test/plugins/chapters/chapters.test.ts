@@ -6,48 +6,20 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
-import {
-    chapters,
-    type ChaptersFetcher,
-    type Plugin,
-} from '../../../src/index';
+import { chapters, type ChaptersFetcher } from '../../../src/index';
+import { firePointer, playTo, pressKey } from '../../support/events';
 import { recordingOf } from '../../support/fakes';
-import {
-    fakeMedia,
-    mount,
-    nextFrame,
-    type Mounted,
-} from '../../support/helpers';
-import {
-    at,
-    plugin,
-    pointer,
-    press,
-    said,
-    showFrame,
-    type Media,
-} from './chapters-harness';
-
-let mounted: Mounted | null = null;
+import { fakeMedia, mount, nextFrame, takeOff } from '../../support/helpers';
+import { plugin, said, showFrame } from './chapters-harness';
 
 afterEach(() => {
     sharedTooltip().hide();
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
     document.querySelector('[role="status"]')?.replaceChildren();
 });
 
-function shown(plugins: Plugin[], media?: Media): Mounted & { media: Media } {
-    const frame = showFrame(plugins, media);
-    mounted = frame;
-
-    return frame;
-}
-
 describe('chapters on the wave', () => {
     it('draws a line where each chapter in the contents starts, none at the very start', async () => {
-        const { canvas, frame } = shown([plugin()]);
+        const { canvas, frame } = showFrame([plugin()]);
         await nextFrame();
         const from = recordingOf(canvas).rects.length;
         frame.invalidate();
@@ -66,7 +38,7 @@ describe('chapters on the wave', () => {
     });
 
     it('draws no line with lines off', async () => {
-        const { canvas, frame } = shown([plugin({ lines: false })]);
+        const { canvas, frame } = showFrame([plugin({ lines: false })]);
         frame.invalidate();
         await nextFrame();
 
@@ -76,48 +48,48 @@ describe('chapters on the wave', () => {
     });
 
     it("goes to a chapter's start when its line is clicked, and names it on hover", () => {
-        const { container, media } = shown([plugin()]);
+        const { container, media } = showFrame([plugin()]);
 
-        pointer(container, 'pointermove', 52);
+        firePointer(container, 'pointermove', 52);
         expect(sharedTooltip().element.textContent).toBe(
             '0:25 · Chapter 2 of 3: Interview',
         );
 
-        pointer(container, 'pointerdown', 52);
-        pointer(container, 'pointerup', 52);
+        firePointer(container, 'pointerdown', 52);
+        firePointer(container, 'pointerup', 52);
         expect(media.currentTime).toBe(25);
     });
 
     it('still seeks normally away from the lines, and with snap off', () => {
-        const { container, media } = shown([plugin({ snap: false })]);
+        const { container, media } = showFrame([plugin({ snap: false })]);
 
-        pointer(container, 'pointerdown', 52);
-        pointer(container, 'pointerup', 52);
+        firePointer(container, 'pointerdown', 52);
+        firePointer(container, 'pointerup', 52);
         expect(media.currentTime).toBe(26);
     });
 });
 
 describe('the keys', () => {
     it('steps to the next chapter with C and says where it landed', () => {
-        const { container, media } = shown([plugin()]);
-        at(media, 10);
+        const { container, media } = showFrame([plugin()]);
+        playTo(media, 10);
 
-        press(container, 'c');
+        pressKey(container, 'c');
         expect(media.currentTime).toBe(25);
         expect(said()).toBe('Chapter 2 of 3: Interview, 0:25');
 
-        press(container, 'C');
+        pressKey(container, 'C');
         expect(media.currentTime).toBe(50);
         expect(said()).toBe('Chapter 3 of 3, 0:50');
 
-        press(container, 'c');
+        pressKey(container, 'c');
         expect(media.currentTime).toBe(50);
         expect(said()).toBe('No more chapters');
     });
 
     it('steps from the position shown while the sound has not loaded yet (preload none)', () => {
         const changes: number[] = [];
-        mounted = mount({
+        const mounted = mount({
             media: fakeMedia({ readyState: 0 }),
             duration: 100,
             animate: false,
@@ -126,8 +98,8 @@ describe('the keys', () => {
             ],
         });
 
-        press(mounted.container, 'c');
-        press(mounted.container, 'c');
+        pressKey(mounted.container, 'c');
+        pressKey(mounted.container, 'c');
 
         expect(mounted.frame.progress).toBe(0.5);
         expect(said()).toBe('Chapter 3 of 3, 0:50');
@@ -135,55 +107,54 @@ describe('the keys', () => {
     });
 
     it('goes back with Shift+C like a previous track, by the Shift key and not the case', () => {
-        const { container, media } = shown([plugin()]);
+        const { container, media } = showFrame([plugin()]);
 
-        at(media, 25.5);
-        press(container, 'c', true);
+        playTo(media, 25.5);
+        pressKey(container, 'c', { shiftKey: true });
         expect(media.currentTime).toBe(0);
 
-        at(media, 40);
-        press(container, 'C', true);
+        playTo(media, 40);
+        pressKey(container, 'C', { shiftKey: true });
         expect(media.currentTime).toBe(25);
     });
 
     it('takes its own letter and grace, or none', () => {
-        const own = shown([
+        const own = showFrame([
             plugin({
                 keys: { letter: 'N', backGrace: 0 },
                 words: { none: 'Fim' },
             }),
         ]);
-        at(own.media, 25.5);
-        press(own.container, 'c');
+        playTo(own.media, 25.5);
+        pressKey(own.container, 'c');
         expect(own.media.currentTime).toBe(25.5);
-        press(own.container, 'n', true);
+        pressKey(own.container, 'n', { shiftKey: true });
         expect(own.media.currentTime).toBe(25);
-        at(own.media, 60);
-        press(own.container, 'n');
+        playTo(own.media, 60);
+        pressKey(own.container, 'n');
         expect(said()).toBe('Fim');
         own.frame.destroy();
         own.unmount();
 
-        const off = shown([plugin({ keys: false })]);
-        at(off.media, 10);
-        press(off.container, 'c');
+        const off = showFrame([plugin({ keys: false })]);
+        playTo(off.media, 10);
+        pressKey(off.container, 'c');
         expect(off.media.currentTime).toBe(10);
     });
 });
 
 describe('what a screen reader hears', () => {
     it("adds the chapter to the slider's value, and nothing with valueNote off", () => {
-        const { container, media } = shown([plugin()]);
-        at(media, 30);
+        const on = showFrame([plugin()]);
+        playTo(on.media, 30);
 
-        expect(container.getAttribute('aria-valuetext')).toBe(
+        expect(on.container.getAttribute('aria-valuetext')).toBe(
             '0:30 / 1:40, Chapter 2 of 3: Interview',
         );
 
-        mounted?.frame.destroy();
-        mounted?.unmount();
-        const off = shown([plugin({ valueNote: false })]);
-        at(off.media, 30);
+        takeOff(on);
+        const off = showFrame([plugin({ valueNote: false })]);
+        playTo(off.media, 30);
         expect(off.container.getAttribute('aria-valuetext')).toBe(
             '0:30 / 1:40',
         );
@@ -192,7 +163,7 @@ describe('what a screen reader hears', () => {
     it('says a chapter playback enters only when asked, and tells the app every change', () => {
         const changes: [string | null, number][] = [];
         const media = fakeMedia({ duration: 100, paused: false });
-        shown(
+        const told = showFrame(
             [
                 plugin({
                     announceChange: true,
@@ -203,26 +174,25 @@ describe('what a screen reader hears', () => {
             media,
         );
 
-        at(media, 30);
+        playTo(media, 30);
         expect(said()).toBe('Chapter 2 of 3: Interview');
         expect(changes).toEqual([
             ['Intro', 0],
             ['Interview', 1],
         ]);
 
-        mounted?.frame.destroy();
-        mounted?.unmount();
+        takeOff(told);
         document.querySelector('[role="status"]')?.replaceChildren();
         const quiet = fakeMedia({ duration: 100, paused: false });
-        shown([plugin()], quiet);
-        at(quiet, 30);
+        showFrame([plugin()], quiet);
+        playTo(quiet, 30);
         expect(said()).toBe('');
     });
 });
 
 describe('the strip of titles', () => {
     it('puts each title over its stretch, hidden from screen readers', () => {
-        const { container } = shown([plugin({ lane: 'below' })]);
+        const { container } = showFrame([plugin({ lane: 'below' })]);
         const boxes = [
             ...container.querySelectorAll<HTMLElement>(
                 '.sonicframe-chapter-name',
@@ -273,17 +243,16 @@ describe('where the chapters come from', () => {
             src: '/a.vtt',
             load: { fetcher: vtt(calls), shared: false },
         });
-        shown([own]);
+        const first = showFrame([own]);
         await nextFrame();
         expect(own.chapters.map((chapter) => chapter.title)).toEqual([
             'One',
             'Two',
         ]);
 
-        mounted?.frame.destroy();
-        mounted?.unmount();
-        const { container, media } = shown([own]);
-        at(media, 40);
+        takeOff(first);
+        const { container, media } = showFrame([own]);
+        playTo(media, 40);
 
         expect(calls.count).toBe(1);
         expect(container.getAttribute('aria-valuetext')).toBe(
@@ -305,7 +274,7 @@ describe('where the chapters come from', () => {
                     }),
             },
         });
-        const { frame } = shown([own]);
+        const { frame } = showFrame([own]);
         frame.on('error', (error) => errors.push(error));
         await nextFrame();
 
@@ -316,8 +285,8 @@ describe('where the chapters come from', () => {
 
     it('replaces, clears and refuses through set()', () => {
         const own = plugin();
-        const { container, media } = shown([own]);
-        at(media, 30);
+        const { container, media } = showFrame([own]);
+        playTo(media, 30);
 
         // The value in words changes at once, without waiting for playback to move.
         own.set('WEBVTT\n\n00:00.000 --> 01:40.000\nAll of it');
@@ -332,7 +301,7 @@ describe('where the chapters come from', () => {
 
     it('goes to a chapter, the next and the previous through its API', () => {
         const own = plugin();
-        const { media } = shown([own]);
+        const { media } = showFrame([own]);
 
         expect(own.go(1)).toBe(true);
         expect(media.currentTime).toBe(25);

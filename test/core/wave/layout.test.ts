@@ -5,8 +5,10 @@ import {
     barWindow,
     layoutBars,
     type Bar,
+    type BarWindow,
 } from '../../../src/core/wave/layout';
 import type { BarStyle } from '../../../src/types';
+import { wave } from './wave-harness';
 
 const STYLE: BarStyle = {
     width: 2,
@@ -19,11 +21,31 @@ const STYLE: BarStyle = {
 
 const RATIOS = [1, 1.25, 1.5, 2, 3];
 
-function wave(count: number): number[] {
-    return Array.from(
-        { length: count },
-        (_, i) => Math.abs(Math.sin(i * 0.37)) * 0.9 + 0.05,
-    );
+/** Any frame width in CSS pixels, pixel ratio and zoom level, and where the view sits (0 to 1). */
+const VIEWED = [
+    fc.integer({ min: 40, max: 900 }),
+    fc.constantFrom(...RATIOS),
+    fc.double({ min: 1, max: 64, noNaN: true }),
+    fc.double({ min: 0, max: 1, noNaN: true }),
+] as const;
+
+/**
+ * The bars of a frame `width` device pixels wide, 30 tall, whose view of `span` of the sound sits
+ * `at` of the way along it (0 at the start, 1 at the end), and the window they were laid through.
+ */
+function laidInView(
+    width: number,
+    ratio: number,
+    span: number,
+    at: number,
+): { grid: BarWindow; bars: Bar[] } {
+    const start = at * (1 - span);
+    const grid = barWindow(width, { start, end: start + span }, STYLE, ratio);
+
+    return {
+        grid,
+        bars: layoutBars(wave(grid.count), width, 30, STYLE, ratio, grid),
+    };
 }
 
 /** Lays out as a frame does: as many values as bars fit. */
@@ -201,29 +223,16 @@ describe('barWindow', () => {
     it('keeps every bar on the same piece of sound while the view scrolls (the bars never swim)', () => {
         fc.assert(
             fc.property(
-                fc.integer({ min: 40, max: 900 }),
-                fc.constantFrom(...RATIOS),
-                fc.double({ min: 1, max: 64, noNaN: true }),
-                fc.double({ min: 0, max: 1, noNaN: true }),
+                ...VIEWED,
                 fc.double({ min: 0, max: 1, noNaN: true }),
                 (cssWidth, ratio, level, a, b) => {
                     const width = Math.round(cssWidth * ratio);
-                    const span = 1 / level;
                     const place = (at: number): Map<number, number> => {
-                        const start = at * (1 - span);
-                        const grid = barWindow(
+                        const { grid, bars } = laidInView(
                             width,
-                            { start, end: start + span },
-                            STYLE,
                             ratio,
-                        );
-                        const bars = layoutBars(
-                            wave(grid.count),
-                            width,
-                            30,
-                            STYLE,
-                            ratio,
-                            grid,
+                            1 / level,
+                            at,
                         );
 
                         // Each bar by its place in the whole grid, at its x on the whole sound.
@@ -298,45 +307,22 @@ describe('barWindow', () => {
 
     it('covers the screen from edge to edge with the bars it lays, and lays none far outside', () => {
         fc.assert(
-            fc.property(
-                fc.integer({ min: 40, max: 900 }),
-                fc.constantFrom(...RATIOS),
-                fc.double({ min: 1, max: 64, noNaN: true }),
-                fc.double({ min: 0, max: 1, noNaN: true }),
-                (cssWidth, ratio, level, at) => {
-                    const width = Math.round(cssWidth * ratio);
-                    const span = 1 / level;
-                    const start = at * (1 - span);
-                    const grid = barWindow(
-                        width,
-                        { start, end: start + span },
-                        STYLE,
-                        ratio,
-                    );
-                    const bars = layoutBars(
-                        wave(grid.count),
-                        width,
-                        30,
-                        STYLE,
-                        ratio,
-                        grid,
-                    );
-                    const step =
-                        barMetrics(width, STYLE, ratio).width +
-                        barMetrics(width, STYLE, ratio).gap;
+            fc.property(...VIEWED, (cssWidth, ratio, level, at) => {
+                const width = Math.round(cssWidth * ratio);
+                const { grid, bars } = laidInView(width, ratio, 1 / level, at);
+                const step =
+                    barMetrics(width, STYLE, ratio).width +
+                    barMetrics(width, STYLE, ratio).gap;
 
-                    expect(bars.length).toBe(grid.count);
-                    expect(grid.first === 0 || bars[0].x <= 0).toBe(true);
-                    expect(
-                        grid.first + grid.count === grid.total ||
-                            bars.at(-1)!.x + bars.at(-1)!.width >= width,
-                    ).toBe(true);
-                    expect(bars[0].x + bars[0].width).toBeGreaterThan(
-                        -2 * step,
-                    );
-                    expect(bars.at(-1)!.x).toBeLessThan(width + 2 * step);
-                },
-            ),
+                expect(bars.length).toBe(grid.count);
+                expect(grid.first === 0 || bars[0].x <= 0).toBe(true);
+                expect(
+                    grid.first + grid.count === grid.total ||
+                        bars.at(-1)!.x + bars.at(-1)!.width >= width,
+                ).toBe(true);
+                expect(bars[0].x + bars[0].width).toBeGreaterThan(-2 * step);
+                expect(bars.at(-1)!.x).toBeLessThan(width + 2 * step);
+            }),
         );
     });
 });

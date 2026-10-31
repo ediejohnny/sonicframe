@@ -3,137 +3,109 @@
  * region, and Delete removes it.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { regions, type Region, type RegionsPlugin } from '../../../src/index';
+import { describe, expect, it } from 'vite-plus/test';
+import {
+    regions,
+    type Region,
+    type RegionsOptions,
+    type RegionsPlugin,
+} from '../../../src/index';
+import { firePointer, pressKey } from '../../support/events';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
 
-let mounted: Mounted | null = null;
+/** A frame of a sound `duration` seconds long with the regions plugin, its media and the plugin. */
+function shown(
+    options: RegionsOptions = {},
+    duration = 40,
+): Mounted & { media: ReturnType<typeof fakeMedia>; plugin: RegionsPlugin } {
+    const plugin = regions(options);
+    const media = fakeMedia({ duration });
 
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
-
-function pointer(
-    target: HTMLElement,
-    type: string,
-    clientX: number,
-    shiftKey = false,
-): void {
-    target.dispatchEvent(
-        Object.assign(new Event(type, { bubbles: true }), {
-            clientX,
-            clientY: 0,
-            pointerId: 1,
-            isPrimary: true,
-            button: 0,
-            pointerType: 'mouse',
-            shiftKey,
-        }),
-    );
+    return { ...mount({ media, plugins: [plugin] }), media, plugin };
 }
 
-function press(target: HTMLElement, key: string, shiftKey = false): void {
-    target.dispatchEvent(
-        new KeyboardEvent('keydown', { key, shiftKey, bubbles: true }),
-    );
+/** The mouse cursor the frame shows now. */
+function cursorOf(container: HTMLElement): string {
+    return container.style.getPropertyValue('cursor');
 }
 
 describe('regions on the page', () => {
     it('creates a region on a Shift-drag', () => {
-        const plugin: RegionsPlugin = regions();
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({ media, plugins: [plugin] });
+        const { container, media, plugin } = shown();
 
-        pointer(mounted.container, 'pointerdown', 40, true);
-        pointer(mounted.container, 'pointermove', 100, true);
-        pointer(mounted.container, 'pointerup', 100, true);
+        firePointer(container, 'pointerdown', 40, { shiftKey: true });
+        firePointer(container, 'pointermove', 100, { shiftKey: true });
+        firePointer(container, 'pointerup', 100, { shiftKey: true });
 
         expect(plugin.list()).toHaveLength(1);
         expect(media.currentTime).toBe(0);
     });
 
     it('still scrubs on a plain drag', () => {
-        const plugin: RegionsPlugin = regions();
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({ media, plugins: [plugin] });
+        const { container, media, plugin } = shown();
 
-        pointer(mounted.container, 'pointerdown', 40);
-        pointer(mounted.container, 'pointermove', 100);
-        pointer(mounted.container, 'pointerup', 100);
+        firePointer(container, 'pointerdown', 40);
+        firePointer(container, 'pointermove', 100);
+        firePointer(container, 'pointerup', 100);
 
         expect(plugin.list()).toHaveLength(0);
         expect(media.currentTime).toBe(20);
     });
 
     it('shows an open hand over a region, a closed one while moving it, and the open one after', () => {
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({
-            media,
-            plugins: [regions({ items: [{ start: 8, end: 16 }] })],
-        });
-        const cursor = (): string =>
-            mounted?.container.style.getPropertyValue('cursor') ?? '';
+        const { container, media } = shown({ items: [{ start: 8, end: 16 }] });
 
         // 8 s to 16 s of 40 s across 200 px: 40 px to 80 px, its edges 12 px wide.
-        pointer(mounted.container, 'pointermove', 60);
-        expect(cursor()).toBe('grab');
+        firePointer(container, 'pointermove', 60);
+        expect(cursorOf(container)).toBe('grab');
 
-        pointer(mounted.container, 'pointerdown', 60);
-        expect(cursor()).toBe('grabbing');
+        firePointer(container, 'pointerdown', 60);
+        expect(cursorOf(container)).toBe('grabbing');
 
-        pointer(mounted.container, 'pointermove', 70);
-        expect(cursor()).toBe('grabbing');
+        firePointer(container, 'pointermove', 70);
+        expect(cursorOf(container)).toBe('grabbing');
 
-        pointer(mounted.container, 'pointerup', 70);
-        expect(cursor()).toBe('grab');
+        firePointer(container, 'pointerup', 70);
+        expect(cursorOf(container)).toBe('grab');
         expect(media.currentTime).toBe(0);
     });
 
     it('takes your own cursors', () => {
-        mounted = mount({
-            media: fakeMedia({ duration: 40 }),
-            plugins: [
-                regions({
-                    items: [{ start: 8, end: 16 }],
-                    cursors: {
-                        body: 'move',
-                        moving: 'copy',
-                        edge: 'col-resize',
-                    },
-                }),
-            ],
+        const { container } = shown({
+            items: [{ start: 8, end: 16 }],
+            cursors: {
+                body: 'move',
+                moving: 'copy',
+                edge: 'col-resize',
+            },
         });
-        const cursor = (): string =>
-            mounted?.container.style.getPropertyValue('cursor') ?? '';
 
-        pointer(mounted.container, 'pointermove', 40);
-        expect(cursor()).toBe('col-resize');
+        firePointer(container, 'pointermove', 40);
+        expect(cursorOf(container)).toBe('col-resize');
 
-        pointer(mounted.container, 'pointermove', 60);
-        expect(cursor()).toBe('move');
+        firePointer(container, 'pointermove', 60);
+        expect(cursorOf(container)).toBe('move');
 
-        pointer(mounted.container, 'pointerdown', 60);
-        expect(cursor()).toBe('copy');
+        firePointer(container, 'pointerdown', 60);
+        expect(cursorOf(container)).toBe('copy');
     });
 
     it('shows its labels on a new frame, as when a player builds its wave again', () => {
         const plugin = regions({
             items: [{ start: 8, end: 16, label: 'Intro' }],
         });
-        mounted = mount({
+        const first = mount({
             media: fakeMedia({ duration: 40 }),
             plugins: [plugin],
         });
-        mounted.frame.destroy();
-        mounted.unmount();
-        mounted = mount({
+        first.frame.destroy();
+        first.unmount();
+        const second = mount({
             media: fakeMedia({ duration: 40 }),
             plugins: [plugin],
         });
 
-        const labels = [...mounted.container.querySelectorAll('span')].filter(
+        const labels = [...second.container.querySelectorAll('span')].filter(
             (span) => span.textContent === 'Intro',
         );
 
@@ -141,23 +113,19 @@ describe('regions on the page', () => {
     });
 
     it('plays the selected region on Enter', () => {
-        const plugin: RegionsPlugin = regions({
+        const { container, media, plugin } = shown({
             items: [{ start: 8, end: 12 }],
         });
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({ media, plugins: [plugin] });
 
         plugin.select(plugin.list()[0].id);
-        mounted.container.dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
-        );
+        pressKey(container, 'Enter');
 
         expect(media.currentTime).toBe(8);
     });
 
     it('steps by the Shift key, not the letter case, so Caps Lock changes nothing', () => {
         const selected: (number | undefined)[] = [];
-        const plugin: RegionsPlugin = regions({
+        const { container, plugin } = shown({
             items: [
                 { start: 2, end: 4 },
                 { start: 8, end: 12 },
@@ -165,44 +133,34 @@ describe('regions on the page', () => {
             ],
             onSelect: (region) => selected.push(region?.start),
         });
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({ media, plugins: [plugin] });
 
         plugin.select(plugin.list()[0].id);
-        press(mounted.container, 'R');
+        pressKey(container, 'R');
         expect(selected.at(-1)).toBe(8);
 
-        press(mounted.container, 'r', true);
+        pressKey(container, 'r', { shiftKey: true });
         expect(selected.at(-1)).toBe(2);
     });
 
     it('removes the selected region on Delete', () => {
-        const plugin: RegionsPlugin = regions({
-            items: [{ start: 8, end: 12 }],
-        });
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({ media, plugins: [plugin] });
+        const { container, plugin } = shown({ items: [{ start: 8, end: 12 }] });
 
         plugin.select(plugin.list()[0].id);
-        mounted.container.dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }),
-        );
+        pressKey(container, 'Delete');
 
         expect(plugin.list()).toHaveLength(0);
     });
 
     it('shows a region added after setup right away, and reports it', () => {
         const changes: (readonly Region[])[] = [];
-        const plugin = regions({ onChange: (list) => changes.push(list) });
-        mounted = mount({
-            media: fakeMedia({ duration: 40 }),
-            plugins: [plugin],
+        const { container, plugin } = shown({
+            onChange: (list) => changes.push(list),
         });
 
         plugin.add({ start: 4, end: 8, label: 'intro' });
 
         expect(changes).toHaveLength(1);
-        expect(mounted.container.textContent).toContain('intro');
+        expect(container.textContent).toContain('intro');
     });
 
     it('fits regions given up front to the sound once its length is known', () => {
@@ -211,22 +169,18 @@ describe('regions on the page', () => {
             items: [{ start: 20, end: 50 }],
             onChange: (list) => changes.push(list),
         });
-        mounted = mount({ plugins: [plugin] });
+        const { frame } = mount({ plugins: [plugin] });
 
         expect(plugin.list()[0]).toMatchObject({ start: 20, end: 50 });
 
-        mounted.frame.setDuration(30);
+        frame.setDuration(30);
 
         expect(plugin.list()[0]).toMatchObject({ start: 20, end: 30 });
         expect(changes.at(-1)?.[0]).toMatchObject({ start: 20, end: 30 });
     });
 
     it('returns null, not a region it did not keep, once max is reached', () => {
-        const plugin = regions({ max: 1 });
-        mounted = mount({
-            media: fakeMedia({ duration: 40 }),
-            plugins: [plugin],
-        });
+        const { plugin } = shown({ max: 1 });
 
         expect(plugin.add({ start: 1, end: 2 })).not.toBeNull();
         expect(plugin.add({ start: 3, end: 4 })).toBeNull();
@@ -234,11 +188,7 @@ describe('regions on the page', () => {
     });
 
     it('keeps at most 200 regions when max is not a number', () => {
-        const plugin = regions({ max: Number.NaN });
-        mounted = mount({
-            media: fakeMedia({ duration: 400 }),
-            plugins: [plugin],
-        });
+        const { plugin } = shown({ max: Number.NaN }, 400);
 
         for (let start = 0; start < 200; start++) {
             plugin.add({ start, end: start + 0.5 });

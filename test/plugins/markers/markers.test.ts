@@ -5,147 +5,107 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
-import { markers } from '../../../src/index';
+import { markers, type MarkersOptions } from '../../../src/index';
 import type { PluginHost } from '../../../src/types';
+import { firePointer, playTo, pressKey } from '../../support/events';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
-
-let mounted: Mounted | null = null;
 
 afterEach(() => {
     sharedTooltip().hide();
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
 });
 
-function pointer(target: HTMLElement, type: string, clientX: number): void {
-    target.dispatchEvent(
-        Object.assign(new Event(type, { bubbles: true }), {
-            clientX,
-            clientY: 0,
-            pointerId: 1,
-            isPrimary: true,
-            button: 0,
-            pointerType: 'mouse',
-            shiftKey: false,
-        }),
-    );
-}
+/** A frame of a 40-second sound with markers at 10, 20 and 30 s, and its media. */
+function marked(
+    options: MarkersOptions = {},
+): Mounted & { media: ReturnType<typeof fakeMedia> } {
+    const media = fakeMedia({ duration: 40 });
+    const mounted = mount({
+        media,
+        plugins: [
+            markers({
+                marks: [{ time: 10 }, { time: 20 }, { time: 30 }],
+                ...options,
+            }),
+        ],
+    });
 
-function press(target: HTMLElement, key: string, shiftKey = false): void {
-    target.dispatchEvent(
-        new KeyboardEvent('keydown', { key, shiftKey, bubbles: true }),
-    );
-}
-
-/** Moves the media to `time` the way playback does, with a timeupdate. */
-function at(media: ReturnType<typeof fakeMedia>, time: number): void {
-    media.currentTime = time;
-    media.fire('timeupdate');
+    return { ...mounted, media };
 }
 
 describe('markers on the page', () => {
     it('seeks to a marker when it is clicked', () => {
         const media = fakeMedia({ duration: 40 });
-        mounted = mount({
+        const { container } = mount({
             media,
             plugins: [markers({ marks: [{ time: 10, label: 'reply' }] })],
         });
 
         // 10s of 40s across 200px is x = 50.
-        pointer(mounted.container, 'pointerdown', 50);
-        pointer(mounted.container, 'pointerup', 50);
+        firePointer(container, 'pointerdown', 50);
+        firePointer(container, 'pointerup', 50);
 
         expect(media.currentTime).toBe(10);
     });
 
     it('still seeks normally when the click is away from any marker', () => {
         const media = fakeMedia({ duration: 40 });
-        mounted = mount({
+        const { container } = mount({
             media,
             plugins: [markers({ marks: [{ time: 10 }] })],
         });
 
-        pointer(mounted.container, 'pointerdown', 150);
-        pointer(mounted.container, 'pointerup', 150);
+        firePointer(container, 'pointerdown', 150);
+        firePointer(container, 'pointerup', 150);
 
         expect(media.currentTime).toBe(30);
     });
 
     it('steps to the next marker with M', () => {
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({
-            media,
-            plugins: [markers({ marks: [{ time: 10 }, { time: 20 }] })],
-        });
+        const { container, media } = marked();
 
-        mounted.container.dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'm', bubbles: true }),
-        );
+        pressKey(container, 'm');
 
         expect(media.currentTime).toBe(10);
     });
 
     it('goes by the Shift key, not the letter case, so Caps Lock changes nothing', () => {
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({
-            media,
-            plugins: [
-                markers({ marks: [{ time: 10 }, { time: 20 }, { time: 30 }] }),
-            ],
-        });
+        const { container, media } = marked();
 
-        press(mounted.container, 'M');
-        press(mounted.container, 'M');
+        pressKey(container, 'M');
+        pressKey(container, 'M');
         expect(media.currentTime).toBe(20);
 
-        press(mounted.container, 'm', true);
+        pressKey(container, 'm', { shiftKey: true });
         expect(media.currentTime).toBe(10);
     });
 
     it('goes back past a marker left less than a second ago, else to its start', () => {
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({
-            media,
-            plugins: [
-                markers({ marks: [{ time: 10 }, { time: 20 }, { time: 30 }] }),
-            ],
-        });
+        const { container, media } = marked();
 
-        at(media, 20.5);
-        press(mounted.container, 'm', true);
+        playTo(media, 20.5);
+        pressKey(container, 'm', { shiftKey: true });
         expect(media.currentTime).toBe(10);
 
-        at(media, 25);
-        press(mounted.container, 'm', true);
+        playTo(media, 25);
+        pressKey(container, 'm', { shiftKey: true });
         expect(media.currentTime).toBe(20);
     });
 
     it('lands on the marker just left when backGrace is 0', () => {
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({
-            media,
-            plugins: [
-                markers({
-                    marks: [{ time: 10 }, { time: 20 }, { time: 30 }],
-                    backGrace: 0,
-                }),
-            ],
-        });
+        const { container, media } = marked({ backGrace: 0 });
 
-        at(media, 20.5);
-        press(mounted.container, 'm', true);
+        playTo(media, 20.5);
+        pressKey(container, 'm', { shiftKey: true });
         expect(media.currentTime).toBe(20);
     });
 
     it('shows a tooltip for crowded markers on hover', () => {
-        const media = fakeMedia({ duration: 40 });
-        mounted = mount({
-            media,
+        const { container } = mount({
+            media: fakeMedia({ duration: 40 }),
             plugins: [markers({ marks: [{ time: 5 }, { time: 5.4 }] })],
         });
 
-        pointer(mounted.container, 'pointermove', 26);
+        firePointer(container, 'pointermove', 26);
 
         expect(sharedTooltip().open).toBe(true);
         expect(sharedTooltip().element.childElementCount).toBe(2);

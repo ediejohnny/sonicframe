@@ -14,6 +14,7 @@ import {
     readChapters,
     type ChaptersFetcher,
 } from '../../../src/core/chapters/chapters';
+import { serve } from '../../support/responses';
 import { starts, titles } from './chapter-fields';
 
 /** A response that streams `text` as UTF-8 in two pieces. */
@@ -21,28 +22,7 @@ function respond(
     text: string,
     options: { status?: number; length?: number } = {},
 ): ChaptersFetcher {
-    const bytes = new TextEncoder().encode(text);
-    const status = options.status ?? 200;
-
-    return () =>
-        Promise.resolve({
-            ok: status >= 200 && status < 300,
-            status,
-            headers: {
-                get: (name: string) =>
-                    name === 'content-length' && options.length !== undefined
-                        ? String(options.length)
-                        : null,
-            },
-            body: new ReadableStream<Uint8Array>({
-                start(controller) {
-                    controller.enqueue(bytes.slice(0, 5));
-                    controller.enqueue(bytes.slice(5));
-                    controller.close();
-                },
-            }),
-            arrayBuffer: () => Promise.resolve(bytes.slice().buffer),
-        });
+    return serve(new TextEncoder().encode(text), options);
 }
 
 describe('readChapters: Podcasting 2.0 JSON', () => {

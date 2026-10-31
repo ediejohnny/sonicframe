@@ -5,38 +5,29 @@
  * place or by the look's `timeAlign`. Before the sound loads, it tells where a seek will start it.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import type { Part } from '../../../src/core/player/look';
-import { createPlayer, type Player } from '../../../src/player';
+import { createPlayer } from '../../../src/player';
 import { triggerResize } from '../../support/fakes';
-import { boxOf, fakeMedia } from '../../support/helpers';
+import { afterTest, fakeMedia, pageHost } from '../../support/helpers';
+import { STEPS } from '../../support/sounds';
 
-let player: Player | null = null;
 let host: HTMLElement | null = null;
-
-afterEach(() => {
-    player?.destroy();
-    host?.remove();
-    player = null;
-    host = null;
-});
-
-const PEAKS = Array.from({ length: 200 }, (_, i) => (i % 7) / 7);
 
 function make(
     look: Record<string, unknown> = {},
     duration = 123,
 ): ReturnType<typeof fakeMedia> {
-    host = document.createElement('div');
-    document.body.append(host);
-    boxOf(host, { left: 0, top: 0, width: 640, height: 48 });
+    host = pageHost({ left: 0, top: 0, width: 640, height: 48 });
     const media = fakeMedia({ duration });
-    player = createPlayer({
-        container: host,
-        media,
-        peaks: PEAKS,
-        look: { line: ['play', 'wave', 'time'], ...look },
-    });
+    afterTest(
+        createPlayer({
+            container: host,
+            media,
+            peaks: STEPS,
+            look: { line: ['play', 'wave', 'time'], ...look },
+        }),
+    );
 
     return media;
 }
@@ -172,16 +163,16 @@ describe('the time before the sound loads', () => {
      * wave until play, and the media still says 0. Returns the wave, a slider.
      */
     function unloaded(line: Part[]): HTMLElement {
-        host = document.createElement('div');
-        document.body.append(host);
-        boxOf(host, { left: 0, top: 0, width: 640, height: 48 });
-        player = createPlayer({
-            container: host,
-            media: fakeMedia({ readyState: 0 }),
-            peaks: PEAKS,
-            duration: 77,
-            look: { line },
-        });
+        host = pageHost({ left: 0, top: 0, width: 640, height: 48 });
+        afterTest(
+            createPlayer({
+                container: host,
+                media: fakeMedia({ readyState: 0 }),
+                peaks: STEPS,
+                duration: 77,
+                look: { line },
+            }),
+        );
 
         return host.querySelector('[role="slider"]') as HTMLElement;
     }

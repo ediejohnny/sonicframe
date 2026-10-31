@@ -9,7 +9,8 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { setupCodeBlocks } from '../../playground/code-blocks';
 import { dressPage } from '../../playground/docs/plugin';
 import { setupHeader } from '../../playground/site';
-import { nextFrame } from '../support/helpers';
+import { nextFrame, stubMedia } from '../support/helpers';
+import { nameOf } from './site-harness';
 
 const PAGE = [
     '<html><head><title>Markers</title></head><body><main class="content">',
@@ -26,12 +27,7 @@ afterEach(() => {
 
 /** The Markers page as the build writes it, with the screen as wide as `wide` says. */
 function mountPage(wide = true): void {
-    vi.stubGlobal('matchMedia', (query: string) => ({
-        matches: query.includes('min-width') ? wide : false,
-        media: query,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-    }));
+    stubMedia((query) => query.includes('min-width') && wide);
     // Without the stylesheet: happy-dom would try to fetch it.
     const page = new DOMParser().parseFromString(
         dressPage(PAGE, 'markers.html').replace(
@@ -53,17 +49,6 @@ function find<Found extends HTMLElement = HTMLElement>(
     }
 
     return element;
-}
-
-/** What a screen reader says for an element: its words, without what is hidden from it. */
-function nameOf(element: Element | null): string {
-    const copy = element?.cloneNode(true) as Element | undefined;
-
-    for (const hidden of copy?.querySelectorAll('[aria-hidden="true"]') ?? []) {
-        hidden.remove();
-    }
-
-    return (copy?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 describe('the drawer of pages', () => {

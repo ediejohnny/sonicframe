@@ -9,7 +9,7 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createPlayer, PALETTES, type Player } from '../../../src/player';
 import { triggerResize, triggerVisible } from '../../support/fakes';
-import { fakeMedia, nextFrame } from '../../support/helpers';
+import { fakeMedia, nextFrame, stubMedia } from '../../support/helpers';
 import { cleanUp, container, host, root, surface } from './player-harness';
 
 let player: Player | null = null;
@@ -19,6 +19,24 @@ afterEach(() => {
     player = null;
     cleanUp();
 });
+
+/**
+ * A player of a 40-second sound that brings the font `family` from `src`, with `face` standing in
+ * for `FontFace` and a page that takes any font.
+ */
+function withFont(face: unknown, family: string, src: string): Player {
+    vi.stubGlobal('FontFace', face);
+    Object.defineProperty(document, 'fonts', {
+        configurable: true,
+        value: { add: (): void => undefined },
+    });
+
+    return createPlayer({
+        container: container(),
+        media: fakeMedia({ duration: 40 }),
+        font: { family, src },
+    });
+}
 
 describe('peaks with a duration', () => {
     it('shows the duration a waveform file brings before the sound has one, and keeps it across a new theme', () => {
@@ -125,11 +143,7 @@ describe('the player', () => {
     });
 
     it('wears the dark palette from the start, for the auto palette, when the system is dark', () => {
-        vi.stubGlobal('matchMedia', (query: string) => ({
-            matches: query.includes('dark'),
-            addEventListener: (): void => undefined,
-            removeEventListener: (): void => undefined,
-        }));
+        stubMedia((query) => query.includes('dark'));
 
         player = createPlayer({
             container: container(),
@@ -228,8 +242,7 @@ describe('the player', () => {
 
     it('loads a font the app brings, quoted, with the system stack behind it', async () => {
         const faces: string[] = [];
-        vi.stubGlobal(
-            'FontFace',
+        player = withFont(
             class {
                 constructor(family: string, source: string) {
                     faces.push(`${family} ${source}`);
@@ -239,17 +252,9 @@ describe('the player', () => {
                     return Promise.resolve();
                 }
             },
+            'Brand',
+            '/fonts/brand.woff2',
         );
-        Object.defineProperty(document, 'fonts', {
-            configurable: true,
-            value: { add: (): void => undefined },
-        });
-
-        player = createPlayer({
-            container: container(),
-            media: fakeMedia({ duration: 40 }),
-            font: { family: 'Brand', src: '/fonts/brand.woff2' },
-        });
         await Promise.resolve();
 
         // The browser may drop the quotes of a one-word name when it reads the value back.
@@ -261,24 +266,15 @@ describe('the player', () => {
 
     it('tells the app when a font it brings cannot load', async () => {
         const failure = new Error('font file missing');
-        vi.stubGlobal(
-            'FontFace',
+        player = withFont(
             class {
                 load(): Promise<void> {
                     return Promise.reject(failure);
                 }
             },
+            'Missing',
+            '/fonts/missing.woff2',
         );
-        Object.defineProperty(document, 'fonts', {
-            configurable: true,
-            value: { add: (): void => undefined },
-        });
-
-        player = createPlayer({
-            container: container(),
-            media: fakeMedia({ duration: 40 }),
-            font: { family: 'Missing', src: '/fonts/missing.woff2' },
-        });
         const errors: unknown[] = [];
         player.on('error', (error) => errors.push(error));
         await new Promise((resolve) => setTimeout(resolve, 0));

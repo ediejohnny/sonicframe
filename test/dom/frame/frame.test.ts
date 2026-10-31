@@ -3,16 +3,10 @@
  * media it follows. If this runs, happy-dom, the fakes and the mount helper are wired correctly.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import { clickAt, fakeMedia, mount, type Mounted } from '../../support/helpers';
 
 let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 describe('pointer seeking in the page', () => {
     it('a click at 25% seeks the media to 25% of its duration', () => {

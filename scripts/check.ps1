@@ -26,11 +26,12 @@ Write-Host '[2/8] Types'
 & .\node_modules\.bin\tsc.cmd --noEmit
 Assert-Success 'tsc'
 
-# A stretch of 50 tokens or more found twice in the library fails: what repeats
-# becomes one shared piece. A repetition kept on purpose is wrapped in
+# A stretch of 50 tokens or more found twice in the library or its tests fails:
+# what repeats becomes one shared piece (for the tests, in `test/support` or a
+# `*-harness.ts` beside them). A repetition kept on purpose is wrapped in
 # `jscpd:ignore-start` / `jscpd:ignore-end` comments that say why.
 Write-Host '[3/8] Copied code'
-& .\node_modules\.bin\jscpd.cmd src --format typescript --min-tokens 50 --exit-code 1 --no-colors
+& .\node_modules\.bin\jscpd.cmd src test --format typescript --min-tokens 50 --exit-code 1 --no-colors
 Assert-Success 'jscpd'
 
 Write-Host '[4/8] Tests'

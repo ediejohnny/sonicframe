@@ -1,10 +1,36 @@
 /**
  * Helpers for the page-level tests, which run under happy-dom (see `test/support/setup.ts`). They mount a
  * real `SonicFrame` in a detached element, give that element a size the layout can read (happy-dom
- * reports zeros otherwise), drive pointer and media events, and clean up after themselves.
+ * reports zeros otherwise), drive pointer and media events, and clean up after themselves: whatever
+ * they put on the page is taken off after each test (`cleanPage`, run by the setup).
  */
 
+import { vi } from 'vite-plus/test';
 import { SonicFrame, type SonicFrameOptions } from '../../src/index';
+import { firePointer } from './events';
+import {
+    recordingOf,
+    triggerResize,
+    triggerVisible,
+    type Recorded,
+} from './fakes';
+
+/** What to undo after the test, last made first. */
+const leftovers: (() => void)[] = [];
+
+/** Undoes everything the helpers put on the page during the test: frames, players and hosts. */
+export function cleanPage(): void {
+    for (const undo of leftovers.splice(0).reverse()) {
+        undo();
+    }
+}
+
+/** Destroys `made` (a player, say) after the test; returns it. */
+export function afterTest<Made extends { destroy(): void }>(made: Made): Made {
+    leftovers.push(() => made.destroy());
+
+    return made;
+}
 
 /** A box in CSS pixels, as `getBoundingClientRect` returns it. */
 export type Box = { left: number; top: number; width: number; height: number };
@@ -35,16 +61,26 @@ export function boxOf(element: Element, box: Box): void {
     element.getBoundingClientRect = (): DOMRect => rect;
 }
 
-/** Mounts a frame on `document.body` and sizes its canvas, so pointer maths have a box to work with. */
+/** An element of size `box` on `document.body`, taken off after the test. */
+export function pageHost(box: Box): HTMLElement {
+    const host = document.createElement('div');
+    document.body.append(host);
+    boxOf(host, box);
+    leftovers.push(() => host.remove());
+
+    return host;
+}
+
+/**
+ * Mounts a frame on `document.body` and sizes its canvas, so pointer maths have a box to work with;
+ * after the test, the frame is destroyed and taken off.
+ */
 export function mount(
     options?: Partial<SonicFrameOptions>,
     box: Box = { left: 0, top: 0, width: 200, height: 40 },
 ): Mounted {
-    const container = document.createElement('div');
-    document.body.append(container);
-    boxOf(container, box);
-
-    const frame = new SonicFrame({ container, ...options });
+    const container = pageHost(box);
+    const frame = afterTest(new SonicFrame({ container, ...options }));
     const canvas = container.querySelector('canvas');
 
     if (canvas === null) {
@@ -61,24 +97,59 @@ export function mount(
     };
 }
 
-/** A pointer event carrying only what the frame reads; dispatched on the element it listens on. */
-function pointer(type: string, clientX: number): Event {
-    const event = new Event(type, { bubbles: true, cancelable: true });
+/** Mounts a frame (see `mount`) with pixels of its box's size and on screen, so it draws. */
+export function mountShown(
+    options?: Partial<SonicFrameOptions>,
+    box: Box = { left: 0, top: 0, width: 200, height: 40 },
+): Mounted {
+    const mounted = mount(options, box);
+    triggerResize(mounted.canvas, { width: box.width, height: box.height });
+    triggerVisible(mounted.canvas, true);
 
-    return Object.assign(event, {
-        clientX,
-        clientY: 0,
-        pointerId: 1,
-        pointerType: 'mouse',
-        isPrimary: true,
-        button: 0,
-    });
+    return mounted;
+}
+
+/** Stands in for `matchMedia`: a query matches when `matches` says so (until `vi.unstubAllGlobals`). */
+export function stubMedia(matches: (query: string) => boolean): void {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+        matches: matches(query),
+        media: query,
+        addEventListener: (): void => undefined,
+        removeEventListener: (): void => undefined,
+    }));
+}
+
+/**
+ * Gives a mounted frame pixels (200 × 40) and the screen, puts its position at the middle and waits
+ * for the picture; returns what its canvas recorded.
+ */
+export async function drawnHalfway(mounted: Mounted): Promise<Recorded> {
+    triggerResize(mounted.canvas, { width: 200, height: 40 });
+    triggerVisible(mounted.canvas, true);
+    mounted.frame.setProgress(0.5);
+    await nextFrame();
+
+    return recordingOf(mounted.canvas);
+}
+
+/** Puts a tag on the page and gives its wave's canvas pixels (200 × 40) and the screen. */
+export function showTag(element: HTMLElement): void {
+    document.body.append(element);
+    const canvas = element.querySelector('canvas') as HTMLCanvasElement;
+    triggerResize(canvas, { width: 200, height: 40 });
+    triggerVisible(canvas, true);
+}
+
+/** Destroys a mounted frame and takes it off the page now, before the test ends (to mount another). */
+export function takeOff(mounted: Mounted): void {
+    mounted.frame.destroy();
+    mounted.unmount();
 }
 
 /** Presses and releases at `clientX`, i.e. a click that seeks to that position. */
 export function clickAt(target: HTMLElement, clientX: number): void {
-    target.dispatchEvent(pointer('pointerdown', clientX));
-    target.dispatchEvent(pointer('pointerup', clientX));
+    firePointer(target, 'pointerdown', clientX);
+    firePointer(target, 'pointerup', clientX);
 }
 
 /** Presses, moves across the given positions, then releases (a drag that seeks once, on release). */
@@ -87,13 +158,13 @@ export function dragAcross(
     from: number,
     through: readonly number[],
 ): void {
-    target.dispatchEvent(pointer('pointerdown', from));
+    firePointer(target, 'pointerdown', from);
 
     for (const x of through) {
-        target.dispatchEvent(pointer('pointermove', x));
+        firePointer(target, 'pointermove', x);
     }
 
-    target.dispatchEvent(pointer('pointerup', through.at(-1) ?? from));
+    firePointer(target, 'pointerup', through.at(-1) ?? from);
 }
 
 /** The media surface a frame follows: an `EventTarget` with the few fields the controller reads. */

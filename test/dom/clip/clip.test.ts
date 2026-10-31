@@ -18,12 +18,6 @@ import { mount, fakeMedia, type Mounted } from '../../support/helpers';
 
 let mounted: Mounted | null = null;
 
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
-
 describe('frame.exportClip', () => {
     it('rejects when the browser cannot record', async () => {
         mounted = mount({

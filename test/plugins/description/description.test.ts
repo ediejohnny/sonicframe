@@ -8,25 +8,12 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { soundDescription } from '../../../src/index';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
+import { NOTE } from '../../support/sounds';
 
 let mounted: Mounted | null = null;
 
 afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
     document.documentElement.removeAttribute('lang');
-});
-
-/** 33 seconds: sound to 20 s with a loud spot at 12 s, a 4-second pause, then sound to the end. */
-const NOTE = Array.from({ length: 330 }, (_, index) => {
-    const time = index / 10;
-
-    if (time >= 20 && time < 24) {
-        return 0;
-    }
-
-    return time >= 11.75 && time < 12.45 ? 1 : 0.5;
 });
 
 const ENGLISH =

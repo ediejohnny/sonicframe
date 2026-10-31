@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from 'vite-plus/test';
 import { dressPage } from '../../playground/docs/plugin';
+import { nameOf } from './site-harness';
 
 /** A page as the build reads it, with its own `<main>`. */
 function dressed(main: string): Document {
@@ -19,17 +20,6 @@ function dressed(main: string): Document {
         ),
         'text/html',
     );
-}
-
-/** What a screen reader says for an element: its words, without what is hidden from it. */
-function nameOf(element: Element | null): string {
-    const copy = element?.cloneNode(true) as Element | undefined;
-
-    for (const hidden of copy?.querySelectorAll('[aria-hidden="true"]') ?? []) {
-        hidden.remove();
-    }
-
-    return (copy?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 describe('a dressed docs page', () => {

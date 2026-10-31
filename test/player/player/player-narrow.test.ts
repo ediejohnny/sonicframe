@@ -5,35 +5,27 @@
  * keeps it on one line at any width.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import { createPlayer, type Player } from '../../../src/player';
 import { triggerResize } from '../../support/fakes';
-import { boxOf, fakeMedia } from '../../support/helpers';
+import { afterTest, fakeMedia, pageHost } from '../../support/helpers';
+import { STEPS } from '../../support/sounds';
 
 let player: Player | null = null;
 let host: HTMLElement | null = null;
 
-afterEach(() => {
-    player?.destroy();
-    host?.remove();
-    player = null;
-    host = null;
-});
-
-const PEAKS = Array.from({ length: 200 }, (_, i) => (i % 7) / 7);
-
 function make(look: Record<string, unknown> = {}): Player {
-    host = document.createElement('div');
-    document.body.append(host);
-    boxOf(host, { left: 0, top: 0, width: 320, height: 48 });
+    host = pageHost({ left: 0, top: 0, width: 320, height: 48 });
 
-    return createPlayer({
-        container: host,
-        media: fakeMedia({ duration: 60 }),
-        peaks: PEAKS,
-        zoom: { buttons: true },
-        look: { line: ['play', 'wave', 'time', 'speed'], ...look },
-    });
+    return afterTest(
+        createPlayer({
+            container: host,
+            media: fakeMedia({ duration: 60 }),
+            peaks: STEPS,
+            zoom: { buttons: true },
+            look: { line: ['play', 'wave', 'time', 'speed'], ...look },
+        }),
+    );
 }
 
 function root(): HTMLElement {

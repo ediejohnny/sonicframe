@@ -3,18 +3,12 @@
  * and the frame tells listeners and plugins when the wave area changes size.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import type { FrameGeometry, Plugin } from '../../../src/index';
 import { triggerResize } from '../../support/fakes';
 import { clickAt, fakeMedia, mount, type Mounted } from '../../support/helpers';
 
 let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
 
 describe('lanes around the bars', () => {
     it('insets the canvas to make room for a lane below', () => {

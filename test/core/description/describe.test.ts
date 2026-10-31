@@ -13,6 +13,7 @@ import {
     localeFor,
     resolveLanguage,
 } from '../../../src/core/languages/language';
+import { NOTE } from '../../support/sounds';
 
 /** Peaks every `step` seconds over `duration`, from a function of the time. */
 function peaksOf(
@@ -25,14 +26,11 @@ function peaksOf(
     );
 }
 
-/** 33 seconds: sound to 20 s with a loud spot at 12 s, a 4-second pause, then sound to the end. */
-const NOTE = peaksOf(33, 330, (time) => {
-    if (time >= 20 && time < 24) {
-        return 0;
-    }
+/** A minute that grows from 0.2 to 1, ten peaks a second. */
+const GROWS = peaksOf(60, 600, (time) => 0.2 + (0.8 * time) / 59.9);
 
-    return time >= 11.75 && time < 12.45 ? 1 : 0.5;
-});
+/** A minute that fades from 1 to 0.2, ten peaks a second. */
+const FADES = peaksOf(60, 600, (time) => 1 - (0.8 * time) / 59.9);
 
 describe('outlining a sound', () => {
     it('finds the parts, the pause between them and the loud spot', () => {
@@ -105,14 +103,8 @@ describe('outlining a sound', () => {
     });
 
     it('tells a sound that grows from one that fades and one that stays even', () => {
-        const grows = outlineSound(
-            peaksOf(60, 600, (time) => 0.2 + (0.8 * time) / 59.9),
-            60,
-        );
-        const fades = outlineSound(
-            peaksOf(60, 600, (time) => 1 - (0.8 * time) / 59.9),
-            60,
-        );
+        const grows = outlineSound(GROWS, 60);
+        const fades = outlineSound(FADES, 60);
         const even = outlineSound(
             peaksOf(60, 600, () => 0.5),
             60,
@@ -235,14 +227,8 @@ describe('the wave in words', () => {
     });
 
     it('says when a sound grows or fades', () => {
-        const grows = outlineSound(
-            peaksOf(60, 600, (time) => 0.2 + (0.8 * time) / 59.9),
-            60,
-        );
-        const fades = outlineSound(
-            peaksOf(60, 600, (time) => 1 - (0.8 * time) / 59.9),
-            60,
-        );
+        const grows = outlineSound(GROWS, 60);
+        const fades = outlineSound(FADES, 60);
 
         expect(grows && describeSound(grows)).toBe(
             '1 minute. Continuous sound. Gets louder toward the end. Loudest at 59 seconds.',

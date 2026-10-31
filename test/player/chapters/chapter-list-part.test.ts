@@ -3,8 +3,9 @@
  * in every form.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { FONT_STACKS, PALETTES } from '../../../src/player';
+import { stubMedia } from '../../support/helpers';
 import { cleanUp, host, player } from './chapters-harness';
 import { list, make, sizes, toggle } from './panels-harness';
 
@@ -96,11 +97,7 @@ describe("the list's own look", () => {
     });
 
     it('wears the dark palette, with its own palette on auto, while the system is dark', () => {
-        vi.stubGlobal('matchMedia', (query: string) => ({
-            matches: query.includes('dark'),
-            addEventListener: (): void => undefined,
-            removeEventListener: (): void => undefined,
-        }));
+        stubMedia((query) => query.includes('dark'));
         make({ type: 'popover', palette: 'auto' });
         sizes({ left: 100, top: 100 });
         toggle().click();

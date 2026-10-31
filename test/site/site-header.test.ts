@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from 'vite-plus/test';
 import { dressPage } from '../../playground/docs/plugin';
+import { nameOf } from './site-harness';
 
 const PAGE =
     '<html><head><title>Page</title></head><body><main class="content"><div class="doc"><h2>Part</h2></div></main></body></html>';
@@ -20,17 +21,6 @@ function header(): HTMLElement {
     return new DOMParser()
         .parseFromString(html, 'text/html')
         .querySelector('header.top') as HTMLElement;
-}
-
-/** What a screen reader says for a control: its words, without what is hidden from it. */
-function nameOf(control: Element | null): string {
-    const copy = control?.cloneNode(true) as Element | undefined;
-
-    for (const hidden of copy?.querySelectorAll('[aria-hidden="true"]') ?? []) {
-        hidden.remove();
-    }
-
-    return (copy?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 describe('the docs header', () => {

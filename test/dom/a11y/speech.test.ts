@@ -7,6 +7,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { soundDescription } from '../../../src/index';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
+import { NOTE } from '../../support/sounds';
 
 type Voice = {
     name: string;
@@ -52,16 +53,6 @@ class FakeSynthesis extends EventTarget {
     }
 }
 
-const NOTE = Array.from({ length: 330 }, (_, index) => {
-    const time = index / 10;
-
-    if (time >= 20 && time < 24) {
-        return 0;
-    }
-
-    return time >= 11.75 && time < 12.45 ? 1 : 0.5;
-});
-
 const VOICES: Voice[] = [
     { name: 'Online pt', lang: 'pt-BR', localService: false, default: false },
     { name: 'Maria', lang: 'pt-BR', localService: true, default: false },
@@ -82,9 +73,6 @@ function install(): void {
 beforeEach(() => install());
 
 afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
     Reflect.deleteProperty(globalThis, 'speechSynthesis');
     Reflect.deleteProperty(globalThis, 'SpeechSynthesisUtterance');
 });

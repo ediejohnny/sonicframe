@@ -3,30 +3,16 @@
  * shows only while the position is in it; plugins get the view.
  */
 
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it } from 'vite-plus/test';
 import type { PaintContext, ViewState } from '../../../src/index';
 import { recordingOf } from '../../support/fakes';
-import { nextFrame, type Mounted } from '../../support/helpers';
-import { HALVES, lastBars, showFrame } from './zoom-harness';
-
-let mounted: Mounted | null = null;
-
-afterEach(() => {
-    mounted?.frame.destroy();
-    mounted?.unmount();
-    mounted = null;
-});
-
-function shown(options: Parameters<typeof showFrame>[0]): Mounted {
-    mounted = showFrame(options);
-
-    return mounted;
-}
+import { mountShown, nextFrame } from '../../support/helpers';
+import { HALVES, lastBars } from './zoom-harness';
 
 describe('what the frame draws with a view', () => {
     it('draws the bars of the view only, from the detail of the peaks', async () => {
         // No growing bars, so every picture shows the peaks at their height.
-        const { frame, canvas } = shown({
+        const { frame, canvas } = mountShown({
             zoom: true,
             peaks: HALVES,
             animate: false,
@@ -55,13 +41,15 @@ describe('what the frame draws with a view', () => {
     });
 
     it('draws the same picture as without zoom while the whole sound is in view', async () => {
-        const plain = shown({ peaks: HALVES.map((v, i) => v * ((i % 7) / 7)) });
+        const plain = mountShown({
+            peaks: HALVES.map((v, i) => v * ((i % 7) / 7)),
+        });
         await nextFrame();
         const before = lastBars(plain.canvas);
         plain.frame.destroy();
         plain.unmount();
 
-        const { canvas } = shown({
+        const { canvas } = mountShown({
             zoom: true,
             peaks: HALVES.map((v, i) => v * ((i % 7) / 7)),
         });
@@ -71,7 +59,7 @@ describe('what the frame draws with a view', () => {
     });
 
     it('shows the cursor only while the position is in view', async () => {
-        const { frame, canvas } = shown({
+        const { frame, canvas } = mountShown({
             zoom: { view: { start: 0.5, end: 1 } },
             peaks: HALVES,
             colors: { cursor: 'red' },
@@ -92,7 +80,7 @@ describe('what the frame draws with a view', () => {
 
     it('gives plugins the view, with xAt and ratioAt through it', async () => {
         const seen: { view: ViewState; x: number; ratio: number }[] = [];
-        const { frame } = shown({ zoom: true, peaks: HALVES });
+        const { frame } = mountShown({ zoom: true, peaks: HALVES });
         frame.use({
             name: 'probe',
             draw: (paint: PaintContext) =>
