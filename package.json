@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "sonicframe",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "Audio visualization and interaction framework for the web.",
     "keywords": [
         "audio",
@@ -58,6 +58,6 @@
         "fast-check": "4.10.2",
         "happy-dom": "^21.0.4",
         "typescript": "^7.0.2",
-        "vite-plus": "1.1.0"
+        "vite-plus": "1.4.0"
     }
 }

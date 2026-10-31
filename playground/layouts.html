@@ -40,6 +40,15 @@
                         data-demo="player"
                         data-options='{"look":{"line":["play","wave"],"meta":["elapsed","spacer","speed"]}}'
                     ></div>
+                    <p>
+                        Each time keeps the room of the longest time the sound
+                        can show (<code>2:03</code> keeps the room of
+                        <code>0:00</code>), so the parts beside it never move as
+                        it counts. <code>timeAlign</code> says where the text
+                        sits in that room. The shown text is
+                        <code>.sonicframe-time-text</code>, inside the
+                        <code>.sonicframe-time</code> part.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -179,6 +188,20 @@
                                         <code>'remaining'</code>,
                                         <code>'duration'</code> or
                                         <code>'both'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeAlign</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        Where a time's text sits in the room it
+                                        keeps: <code>'start'</code>,
+                                        <code>'center'</code> or
+                                        <code>'end'</code>.
+                                        <code>'auto'</code> keeps to the end
+                                        after the wave or a spacer, and on the
+                                        right under a voice note's wave; to the
+                                        start everywhere else.
                                     </td>
                                 </tr>
                                 <tr>

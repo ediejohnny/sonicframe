@@ -166,7 +166,10 @@ describe('a narrow player', () => {
         const under = root().querySelector('.sonicframe-under');
 
         expect(under?.previousElementSibling).toBe(player.frame.container);
-        expect(under?.nextElementSibling?.textContent).toBe('1:00');
+        expect(
+            under?.nextElementSibling?.querySelector('.sonicframe-time-text')
+                ?.textContent,
+        ).toBe('1:00');
     });
 
     it('grows back into one line, in the look’s order', () => {

@@ -67,6 +67,10 @@ Zoom, scroll and a minimap, with ready-made peaks files, so an hour of audio ope
 npm install sonicframe
 ```
 
+No package manager? Load it from a CDN, or
+[build it from the source code](https://ediejohnny.github.io/sonicframe/installation.html#from-the-source-code) and
+copy the files into your site.
+
 ## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/quickstart.svg" alt="" width="24" height="24"> Quick start
 
 In JavaScript:

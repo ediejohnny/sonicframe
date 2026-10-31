@@ -24,6 +24,7 @@ import {
     DEFAULT_LOOK,
     nextSpeed,
     speedText,
+    timeMold,
     timeText,
     type Part,
     type PlayerLook,
@@ -296,6 +297,21 @@ function placeOf(part: Part, look: PlayerLook): Place {
     return look.narrowStart.includes(part) ? 'start' : 'end';
 }
 
+/** The side of its room a time's text keeps to; `auto` in the look picks one by the time's place. */
+type Side = 'start' | 'end';
+
+/**
+ * A built time: the text shown, the hidden mold that holds its room, how it reads, and the side
+ * `auto` keeps to on one line (`side`) and in a voice note (`narrowSide`, null when it stays put).
+ */
+type TimePart = {
+    text: HTMLElement;
+    mold: HTMLElement;
+    format: PlayerLook['time'];
+    side: Side;
+    narrowSide: Side | null;
+};
+
 /** The built main line, kept so a narrow player can move its pieces without building again. */
 type Layout = {
     line: HTMLElement;
@@ -419,7 +435,7 @@ export class Player {
     private volumeRef: VolumeControl | null = null;
     private descriptionRef: SoundDescriptionPlugin | null = null;
     private readonly words: PlayerWords;
-    private times: [HTMLElement, PlayerLook['time']][] = [];
+    private times: TimePart[] = [];
     private partCleanups: (() => void)[] = [];
     private layout: Layout | null = null;
     /** The player's width in CSS pixels, once measured. */
@@ -978,14 +994,21 @@ export class Player {
         }
 
         const pieces: Layout['pieces'] = [];
+        // A part after the wave or a spacer sits on the row's far side.
+        let side: Side = 'start';
 
         for (const part of this.visibleLine()) {
             const before = line.childNodes.length;
-            this.addPart(part, line, column);
-            pieces.push({
-                place: placeOf(part, look),
-                nodes: [...line.childNodes].slice(before),
+            const place = placeOf(part, look);
+            this.addPart(part, line, column, {
+                side,
+                narrowSide: place === 'start' || place === 'end' ? place : null,
             });
+            pieces.push({ place, nodes: [...line.childNodes].slice(before) });
+
+            if (part === 'wave' || part === 'spacer') {
+                side = 'end';
+            }
         }
 
         const listen = this.listenButton();
@@ -1011,9 +1034,17 @@ export class Player {
                 ['color', 'var(--sonicframe-muted, currentColor)'],
             ]);
             column.append(row);
+            let metaSide: Side = 'start';
 
             for (const part of meta) {
-                this.addPart(part, row, column);
+                this.addPart(part, row, column, {
+                    side: metaSide,
+                    narrowSide: null,
+                });
+
+                if (part === 'spacer') {
+                    metaSide = 'end';
+                }
             }
         }
 
@@ -1025,6 +1056,7 @@ export class Player {
         );
         this.showTime();
         this.finish();
+        this.alignTimes();
         this.arrange();
     }
 
@@ -1116,6 +1148,7 @@ export class Player {
         }
 
         this.placeVoiceNote(layout, narrow);
+        this.alignTimes();
 
         if (
             focused instanceof HTMLElement &&
@@ -1220,6 +1253,7 @@ export class Player {
         part: Part,
         target: HTMLElement,
         column: HTMLElement,
+        sides: Pick<TimePart, 'side' | 'narrowSide'>,
     ): void {
         const look = this.look;
 
@@ -1245,7 +1279,7 @@ export class Player {
             case 'remaining':
             case 'duration':
                 target.append(
-                    this.timePart(part === 'time' ? look.time : part),
+                    this.timePart(part === 'time' ? look.time : part, sides),
                 );
                 break;
             case 'speed':
@@ -1286,19 +1320,53 @@ export class Player {
         }
     }
 
-    private timePart(format: PlayerLook['time']): HTMLElement {
+    /**
+     * A time keeps the room of the longest time the sound can show: the text and a hidden mold of
+     * that longest time share one grid cell. Digits are not all as wide in every font (even with
+     * tabular figures), so without the mold the time would change width as it counts and move the
+     * wave beside it.
+     */
+    private timePart(
+        format: PlayerLook['time'],
+        sides: Pick<TimePart, 'side' | 'narrowSide'>,
+    ): HTMLElement {
         const time = document.createElement('span');
+        const text = document.createElement('span');
+        const mold = document.createElement('span');
         time.className = 'sonicframe-time';
+        text.className = 'sonicframe-time-text';
+        mold.className = 'sonicframe-time-mold';
         // The wave is a slider that already speaks the position.
         time.setAttribute('aria-hidden', 'true');
         css(time, [
+            ['display', 'inline-grid'],
             ['white-space', 'nowrap'],
             ['flex-shrink', '0'],
             ['color', 'var(--sonicframe-muted, currentColor)'],
         ]);
-        this.times.push([time, format]);
+        css(text, [['grid-area', '1 / 1']]);
+        css(mold, [
+            ['grid-area', '1 / 1'],
+            ['visibility', 'hidden'],
+        ]);
+        time.append(text, mold);
+        this.times.push({ text, mold, format, ...sides });
 
         return time;
+    }
+
+    /** Puts each time's text on the side of its room the look asks for, or the one its place gives. */
+    private alignTimes(): void {
+        const narrow = this.layout?.narrow === true;
+        const align = this.look.timeAlign;
+
+        for (const { text, side, narrowSide } of this.times) {
+            const auto = narrow && narrowSide !== null ? narrowSide : side;
+            text.style.setProperty(
+                'justify-self',
+                align === 'auto' ? auto : align,
+            );
+        }
     }
 
     private showTime(): void {
@@ -1316,8 +1384,14 @@ export class Player {
                   ? null
                   : frame.progress * duration;
 
-        for (const [element, format] of this.times) {
-            element.textContent = timeText(format, time, duration);
+        for (const { text, mold, format } of this.times) {
+            const longest = timeMold(format, time, duration);
+            text.textContent = timeText(format, time, duration);
+
+            // The mold changes only with the duration's form, not on every tick.
+            if (mold.textContent !== longest) {
+                mold.textContent = longest;
+            }
         }
     }
 

@@ -7,6 +7,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-31
+
+### Added
+
+- `timeAlign` in the player's look (`'auto'`, `'start'`, `'center'` or `'end'`): where a time's text sits in the
+  room it keeps. `'auto'` keeps to the end after the wave or a spacer, and on the right under a voice note's wave;
+  to the start everywhere else.
+
+### Fixed
+
+- A player with the time beside the wave blinked now and then while playing, and its bars shifted a little each
+  time. Digits are not all as wide in every font, even with tabular figures (in Segoe UI Semibold the 7 is
+  narrower), so the time changed width as it counted and resized the wave. Each time now keeps the room of the
+  longest time the sound can show, with a hidden mold of that time beside the shown text.
+- A frame whose size changed showed a blank canvas for one frame (a new canvas size clears it, and the repaint
+  waited for the next animation frame). It now repaints at once, before the page is painted, which also stops the
+  wave blinking while the window is resized.
+
+### Changed
+
+- The time part holds its text in `.sonicframe-time-text`, next to the hidden mold `.sonicframe-time-mold`; read
+  the shown time from `.sonicframe-time-text`.
+- The docs' Installation page teaches building from the source code, for sites that use no package manager: get the version's
+  tag, build with Node, copy the whole `dist/` folder with the license, and import by path or through an import map
+  (with the hash a strict Content-Security-Policy needs), plus the TypeScript `paths`.
+
+### Security
+
+- The build and test tools move to vite-plus 1.4.0, which fixes GHSA-p458-7748-mcp3 (Vitest's own servers could
+  serve protected files such as `.env`). Only the machine building the project was ever concerned, and only with
+  those servers on; the published package has no dependencies and was never affected.
+
 ## [0.4.0] - 2026-10-30
 
 ### Added

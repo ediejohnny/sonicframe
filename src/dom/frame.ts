@@ -1556,6 +1556,12 @@ export class SonicFrame implements PluginHost {
         this.relayoutLanes();
         this.allocate();
         this.notifyResize();
+
+        // A new canvas size clears its pixels. Sizes arrive after layout and before the page is
+        // painted, so painting now shows the new wave in this very frame instead of a blank one.
+        if (this.allocated) {
+            this.render(performance.now());
+        }
     }
 
     /** Re-places the lanes and insets the canvas and the overlay for the container's current height. */

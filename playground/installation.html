@@ -5,7 +5,7 @@
         <title>Installation · SonicFrame</title>
         <meta
             name="description"
-            content="Install SonicFrame from npm or a CDN, and pick the entry point you need."
+            content="Install SonicFrame from npm, a CDN or its source code, and pick the entry point you need."
         />
     </head>
     <body>
@@ -14,7 +14,8 @@
                 <h1>Installation</h1>
                 <p class="lede">
                     One package, no dependencies, three entry points. Install it
-                    with your package manager, or load it straight from a CDN.
+                    with your package manager, load it straight from a CDN, or
+                    build it from its source code.
                 </p>
             </div>
 
@@ -116,7 +117,7 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
                     </p>
                     <div class="code">
                         <pre><code>&lt;script type="module"&gt;
-    import { createPlayer } from 'https://cdn.jsdelivr.net/npm/sonicframe@0.4.0/dist/player.js';
+    import { createPlayer } from 'https://cdn.jsdelivr.net/npm/sonicframe@0.4.1/dist/player.js';
 
     createPlayer({
         container: document.querySelector('#player'),
@@ -132,6 +133,128 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
                         needed. SonicFrame sets no inline styles, runs no
                         <code>eval</code> and starts no blob workers.
                     </div>
+                </section>
+
+                <section class="section">
+                    <h2>From the source code</h2>
+                    <p>
+                        Rather not use a package manager in your project? Build
+                        SonicFrame from its source once and copy the result into
+                        your site. Your site then loads plain files of its own,
+                        and nothing from npm goes into it.
+                    </p>
+                    <p>
+                        To build, you need
+                        <a href="https://nodejs.org/">Node.js</a> 22 (22.18 or
+                        later), 24 (24.11 or later) or 26 and up. Git is
+                        optional. Node brings npm along, which only fetches the
+                        build tools into the source folder.
+                    </p>
+
+                    <h3>1. Get the code</h3>
+                    <p>Clone the version you want, by its tag:</p>
+                    <div class="code">
+                        <pre><code>git clone --depth 1 --branch v0.4.1 https://github.com/ediejohnny/sonicframe.git
+cd sonicframe</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        No Git? Open the project's
+                        <a href="https://github.com/ediejohnny/sonicframe/tags"
+                            >tags on GitHub</a
+                        >, download the zip of the version and unzip it.
+                    </p>
+
+                    <h3>2. Build it</h3>
+                    <div class="code">
+                        <pre><code>npm ci
+npm run build</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>npm ci</code> installs the exact build tools the
+                        project pins, inside its folder.
+                        <code>npm run build</code> writes the library to
+                        <code>dist/</code>. To see the tests pass first, run
+                        <code>npm test</code>.
+                    </p>
+
+                    <h3>3. Copy the files into your site</h3>
+                    <p>
+                        Copy the whole <code>dist/</code> folder into your site,
+                        with the <code>LICENSE</code> file next to it (the MIT
+                        license asks to keep its notice with the code); for
+                        example, as <code>vendor/sonicframe/</code>. Keep the
+                        folder whole: the entry files import shared pieces whose
+                        names change with every build.
+                    </p>
+
+                    <h3>4. Import it</h3>
+                    <p>Import the files by their path:</p>
+                    <div class="code">
+                        <pre><code>&lt;div id="player"&gt;&lt;/div&gt;
+
+&lt;script type="module"&gt;
+    import { createPlayer } from './vendor/sonicframe/player.js';
+
+    createPlayer({
+        container: document.querySelector('#player'),
+        src: '/voice.mp3',
+    });
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        To keep the imports these docs use, such as
+                        <code>'sonicframe/player'</code>, add an import map
+                        before your first module:
+                    </p>
+                    <div class="code">
+                        <pre><code>&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "sonicframe": "/vendor/sonicframe/index.js",
+        "sonicframe/player": "/vendor/sonicframe/player.js",
+        "sonicframe/analysis": "/vendor/sonicframe/analysis.js"
+    }
+}
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="callout warn">
+                        <strong>With a strict Content-Security-Policy</strong>
+                        An import map is an inline script, so
+                        <code>script-src</code> needs its hash
+                        (<code>'sha256-…'</code>). Imports by path, from your
+                        own module files, need nothing more.
+                    </div>
+                    <p>
+                        With TypeScript, point the names at the types in the
+                        folder:
+                    </p>
+                    <div class="code">
+                        <pre><code>{
+    "compilerOptions": {
+        "paths": {
+            "sonicframe": ["./vendor/sonicframe/index.d.ts"],
+            "sonicframe/player": ["./vendor/sonicframe/player.d.ts"],
+            "sonicframe/analysis": ["./vendor/sonicframe/analysis.d.ts"]
+        }
+    }
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+
+                    <h3>Updating</h3>
+                    <p>
+                        Get the new version's tag, build again and replace the
+                        whole folder. The
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/blob/main/CHANGELOG.md"
+                            >changelog</a
+                        >
+                        says what changed.
+                    </p>
                 </section>
 
                 <section class="section">
