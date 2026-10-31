@@ -6,7 +6,8 @@
  * from colors read back as numbers, never from a raw page value. Given only a sound address, the
  * player makes its own media element and decodes the peaks when it first comes near the screen. Its
  * words are English unless the app picks another language or its own labels; the description of the
- * sound in words, the zoom (with its buttons) and the minimap are off until the app asks for them.
+ * sound in words, the zoom (with its buttons), the minimap and the chapters are off until the app
+ * asks for them.
  */
 
 import { hideFocusRing, showFocusRing } from '../controls/focus';
@@ -73,6 +74,14 @@ import {
     type DecodedAudio,
 } from '../plugins/spectrogram';
 import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
+import {
+    chapters,
+    type ChaptersOptions,
+    type ChaptersPlugin,
+} from '../plugins/chapters';
+import type { Chapter, ChapterInput } from '../core/chapters';
+
+export type { ChaptersPlugin };
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -124,6 +133,12 @@ export type PlayerOptions = {
     zoom?: boolean | PlayerZoom;
     /** A minimap strip under the wave, its height from the look (`minimapHeight`). Off by default. */
     minimap?: boolean | MinimapOptions;
+    /**
+     * Chapters on the wave (see `chapters`): the address of a WebVTT or JSON chapters file, a list,
+     * or the plugin's options plus `list` and `listOpen`. The look can place the chapter playing,
+     * buttons to the previous and next chapter and a button that opens the list. Off by default.
+     */
+    chapters?: string | readonly ChapterInput[] | PlayerChapters;
     /** How a sound is decoded for its peaks, when none are given. */
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
@@ -169,6 +184,23 @@ export type PlayerA11y = {
      * Off by default: the minimap is hidden from screen readers.
      */
     minimap?: { keys?: boolean };
+};
+
+/**
+ * The player's chapters: the plugin's options (its words come from the player's language and
+ * labels), plus a list inside the player.
+ */
+export type PlayerChapters = Omit<
+    ChaptersOptions,
+    'list' | 'words' | 'onChange' | 'onChapters'
+> & {
+    /** The list of chapters inside the player, under the wave. Off by default. */
+    list?: boolean;
+    /**
+     * Whether the list starts open when the look has a `chapters` button to open it; without that
+     * button the list always shows. Closed by default.
+     */
+    listOpen?: boolean;
 };
 
 /** The player's zoom: the wave's zoom options, plus its buttons. */
@@ -278,9 +310,7 @@ function remPixels(rem: number): number {
 
 /**
  * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
- * 
-arrowLine names), goes under the wave on the left (what 
-arrowStart names) or on the right
+ * `narrowLine` names), goes under the wave on the left (what `narrowStart` names) or on the right
  * (everything else), or is left out (the look's spacers).
  */
 type Place = 'line' | 'start' | 'end' | 'spacer';
@@ -347,6 +377,24 @@ const SKIP_ICONS = {
     forward: 'M3.5 6v12l8-6zM12.5 6v12l8-6z',
 } as const;
 
+/** Previous and next chapter (a bar and a triangle each), and the list of chapters. */
+const CHAPTER_ICONS = {
+    prevChapter: 'M6 6h2v12H6zm3.5 6L18 6v12z',
+    nextChapter: 'M16 6h2v12h-2zM6 6l8.5 6L6 18z',
+    chapters:
+        'M4 6h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zM4 16h2v2H4zm4 0h12v2H8z',
+} as const;
+
+/** The parts that show only when the player has chapters. */
+const CHAPTER_PARTS: readonly Part[] = [
+    'chapter',
+    'prevChapter',
+    'nextChapter',
+    'chapters',
+];
+
+let chapterLists = 0;
+
 /** A speech bubble, for the button that reads the description aloud. */
 const LISTEN_ICON =
     'M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z';
@@ -364,9 +412,13 @@ const FORWARDED = [
     'error',
 ] as const;
 
-/** The frame's events, plus the description's new text (or null) when it is on. */
+/**
+ * The frame's events, plus the description's new text (or null) when it is on, and the chapter
+ * playing when the player has chapters (null and -1 outside every chapter).
+ */
 export type PlayerEvents = SonicFrameEvents & {
     description: [text: string | null];
+    chapterchange: [chapter: Chapter | null, index: number];
 };
 
 function css(
@@ -435,6 +487,14 @@ export class Player {
     private volumeRef: VolumeControl | null = null;
     private descriptionRef: SoundDescriptionPlugin | null = null;
     private readonly words: PlayerWords;
+    /** The chapters plugin, made once so the chapters outlive every rebuild; null while off. */
+    private readonly chaptersRef: ChaptersPlugin | null;
+    /** The list of chapters inside the player, or null without one. */
+    private chapterList: HTMLElement | null = null;
+    private listOpen = false;
+    /** The built parts that show the chapter playing, and the buttons that open the list. */
+    private chapterNames: HTMLElement[] = [];
+    private listButtons: HTMLButtonElement[] = [];
     private times: TimePart[] = [];
     private partCleanups: (() => void)[] = [];
     private layout: Layout | null = null;
@@ -467,6 +527,7 @@ export class Player {
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
             a11y.labels,
         );
+        this.chaptersRef = this.makeChapters();
 
         this.element = document.createElement('div');
         this.element.className = 'sonicframe-player';
@@ -516,6 +577,11 @@ export class Player {
     /** The sound in words, or null while it is off or not known yet. */
     get description(): string | null {
         return this.descriptionRef?.text ?? null;
+    }
+
+    /** The chapters plugin (to set, load or step through the chapters), or null while they are off. */
+    get chapters(): ChaptersPlugin | null {
+        return this.chaptersRef;
     }
 
     /** Listens to the wave's events; returns the function that stops listening. */
@@ -675,13 +741,67 @@ export class Player {
         return typeof zoom === 'object' && zoom.buttons === true;
     }
 
-    /** A part the options allow: the volume and the zoom buttons only when they are on. */
+    /**
+     * A part the options allow: the volume and the zoom buttons only when they are on, the chapter
+     * parts only with chapters, and the list's button only with the list.
+     */
     private allowed(part: Part): boolean {
         if (part === 'volume') {
             return this.showVolume;
         }
 
+        if (part === 'chapters') {
+            return this.chapterList !== null;
+        }
+
+        if (CHAPTER_PARTS.includes(part)) {
+            return this.chaptersRef !== null;
+        }
+
         return ZOOM_PARTS.includes(part) ? this.zoomButtons() : true;
+    }
+
+    /** The chapters plugin with the player's words and list, or null while chapters are off. */
+    private makeChapters(): ChaptersPlugin | null {
+        const asked = this.options.chapters;
+
+        if (!asked) {
+            return null;
+        }
+
+        const settings: PlayerChapters =
+            typeof asked === 'string'
+                ? { src: asked }
+                : Array.isArray(asked)
+                  ? { items: asked as readonly ChapterInput[] }
+                  : (asked as PlayerChapters);
+        const { list, listOpen, ...own } = settings;
+        const labels = this.words.labels;
+
+        if (list === true) {
+            const box = document.createElement('div');
+            box.className = 'sonicframe-chapter-list';
+            box.id = `sonicframe-chapter-list-${++chapterLists}`;
+            this.chapterList = box;
+        }
+
+        this.listOpen = listOpen === true;
+
+        return chapters({
+            ...own,
+            list: this.chapterList,
+            words: {
+                chapter: labels.chapter,
+                list: labels.chapters,
+                none: labels.noChapter,
+                link: labels.chapterLink,
+            },
+            onChange: (chapter, index) => {
+                this.showChapter();
+                this.events.emit('chapterchange', chapter, index);
+            },
+            onChapters: () => this.showChapter(),
+        });
     }
 
     /**
@@ -819,11 +939,15 @@ export class Player {
     }
 
     /**
-     * The app's plugins, with a spectrogram in the palette's colors first and the description last,
-     * each only when asked.
+     * The app's plugins, with a spectrogram in the palette's colors first, then the chapters, the
+     * minimap and the description last, each only when asked.
      */
     private plugins(): Plugin[] {
         const plugins = [...(this.options.plugins ?? [])];
+
+        if (this.chaptersRef !== null) {
+            plugins.push(this.chaptersRef);
+        }
 
         if (this.options.spectrogram && this.media !== null) {
             plugins.unshift(
@@ -1048,6 +1172,10 @@ export class Player {
             }
         }
 
+        if (this.chapterList !== null) {
+            this.element.append(this.chapterList);
+        }
+
         const sync = (): void => this.showTime();
         this.partCleanups.push(
             frame.on('timeupdate', sync),
@@ -1055,6 +1183,8 @@ export class Player {
             frame.on('seek', sync),
         );
         this.showTime();
+        this.showChapter();
+        this.showList();
         this.finish();
         this.alignTimes();
         this.arrange();
@@ -1231,6 +1361,8 @@ export class Player {
 
         this.partCleanups = [];
         this.times = [];
+        this.chapterNames = [];
+        this.listButtons = [];
         this.layout = null;
         this.buttonRef?.destroy();
         this.volumeRef?.destroy();
@@ -1306,6 +1438,16 @@ export class Player {
             case 'zoomOut':
             case 'zoomReset':
                 target.append(this.zoomPart(part));
+                break;
+            case 'chapter':
+                target.append(this.chapterPart());
+                break;
+            case 'prevChapter':
+            case 'nextChapter':
+                target.append(this.chapterButton(part));
+                break;
+            case 'chapters':
+                target.append(this.listButton());
                 break;
             case 'slot':
                 if (this.options.slot) {
@@ -1596,6 +1738,106 @@ export class Player {
         show();
 
         return button;
+    }
+
+    /** The chapter playing, by name; hidden from screen readers, since the slider's value says it. */
+    private chapterPart(): HTMLElement {
+        const name = document.createElement('span');
+        name.className = 'sonicframe-chapter-now';
+        name.setAttribute('aria-hidden', 'true');
+        name.setAttribute('dir', 'auto');
+        css(name, [
+            ['min-width', '0'],
+            ['flex', '0 1 auto'],
+            ['overflow', 'hidden'],
+            ['white-space', 'nowrap'],
+            ['text-overflow', 'ellipsis'],
+        ]);
+        this.chapterNames.push(name);
+
+        return name;
+    }
+
+    /** Shows the chapter playing in the parts that name it: its title, or its place when untitled. */
+    private showChapter(): void {
+        const plugin = this.chaptersRef;
+        const chapter = plugin?.current ?? null;
+        const text =
+            plugin === null || chapter === null
+                ? ''
+                : chapter.title ||
+                  this.words.say('chapter', {
+                      index: String(plugin.index + 1),
+                      count: String(plugin.chapters.length),
+                  });
+
+        for (const name of this.chapterNames) {
+            name.textContent = text;
+        }
+    }
+
+    /** A button to the previous chapter (like a previous track) or the next one; says when there is none. */
+    private chapterButton(
+        part: 'prevChapter' | 'nextChapter',
+    ): HTMLButtonElement {
+        const button = this.iconButton(
+            part === 'prevChapter'
+                ? 'sonicframe-prev-chapter'
+                : 'sonicframe-next-chapter',
+            CHAPTER_ICONS[part],
+            this.words.labels[
+                part === 'prevChapter' ? 'previousChapter' : 'nextChapter'
+            ],
+        );
+
+        button.addEventListener('click', () => {
+            const plugin = this.chaptersRef;
+            const moved =
+                part === 'prevChapter' ? plugin?.previous() : plugin?.next();
+
+            if (moved === false) {
+                this.frameRef?.announce(this.words.labels.noChapter);
+            }
+        });
+
+        return button;
+    }
+
+    /** The button that opens and closes the list of chapters inside the player. */
+    private listButton(): HTMLButtonElement {
+        const button = this.iconButton(
+            'sonicframe-chapters-toggle',
+            CHAPTER_ICONS.chapters,
+            this.words.labels.chapters,
+        );
+
+        if (this.chapterList !== null) {
+            button.setAttribute('aria-controls', this.chapterList.id);
+        }
+
+        button.addEventListener('click', () => {
+            this.listOpen = !this.listOpen;
+            this.showList();
+        });
+        this.listButtons.push(button);
+
+        return button;
+    }
+
+    /** Shows the list when it is open, or always when no button can open it. */
+    private showList(): void {
+        const list = this.chapterList;
+
+        if (list === null) {
+            return;
+        }
+
+        const shown = this.listButtons.length === 0 || this.listOpen;
+        list.hidden = !shown;
+
+        for (const button of this.listButtons) {
+            button.setAttribute('aria-expanded', String(shown));
+        }
     }
 
     /**

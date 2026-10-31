@@ -12,7 +12,9 @@ import { formatTime } from './timing';
 
 /**
  * A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end; the
- * zoom buttons show only when the player's zoom has `buttons`.
+ * zoom buttons show only when the player's zoom has `buttons`; the chapter parts (the chapter
+ * playing, the previous and next chapter buttons, and the button that opens the list) only when the
+ * player has chapters, the last one only with its list.
  */
 export type Part =
     | 'play'
@@ -28,6 +30,10 @@ export type Part =
     | 'zoomIn'
     | 'zoomOut'
     | 'zoomReset'
+    | 'chapter'
+    | 'prevChapter'
+    | 'nextChapter'
+    | 'chapters'
     | 'slot'
     | 'spacer';
 
@@ -114,6 +120,10 @@ export const PART_NAMES: readonly Part[] = Object.freeze([
     'zoomIn',
     'zoomOut',
     'zoomReset',
+    'chapter',
+    'prevChapter',
+    'nextChapter',
+    'chapters',
     'slot',
     'spacer',
 ] as const);
