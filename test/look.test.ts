@@ -102,14 +102,14 @@ describe('resolveLook', () => {
     });
 
     it('keeps the space between the parts under a voice note’s wave in range', () => {
-        expect(DEFAULT_LOOK.narrowGap).toBe(0.375);
+        expect(DEFAULT_LOOK.narrowGap).toBe(0.5);
         expect(resolveLook(DEFAULT_LOOK, { narrowGap: 0 }).narrowGap).toBe(0);
         expect(resolveLook(DEFAULT_LOOK, { narrowGap: 1 }).narrowGap).toBe(1);
         expect(resolveLook(DEFAULT_LOOK, { narrowGap: 9 }).narrowGap).toBe(3);
         expect(resolveLook(DEFAULT_LOOK, { narrowGap: -1 }).narrowGap).toBe(0);
         expect(
             resolveLook(DEFAULT_LOOK, { narrowGap: Number.NaN }).narrowGap,
-        ).toBe(0.375);
+        ).toBe(0.5);
     });
 
     it('reads the voice note’s part lists, keeping known parts only', () => {

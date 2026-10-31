@@ -125,7 +125,7 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     narrow: 22,
     narrowLine: ['play', 'wave', 'slot'],
     narrowStart: ['time', 'elapsed', 'remaining', 'duration'],
-    narrowGap: 0.375,
+    narrowGap: 0.5,
     corner: 0.75,
     padding: 0.5,
     gap: 0.625,

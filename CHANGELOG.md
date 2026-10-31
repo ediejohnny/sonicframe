@@ -65,7 +65,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   voice note: the play button beside the wave and centered on it, the time under the wave on the left, and the
   other controls on the right of the time, where only the ones that do not fit wrap. It is on by default and only
   changes players narrower than that. The player gets `data-narrow` while it lasts. `narrowLine` and `narrowStart`
-  choose which parts stay on the line and which go under the wave on the left; `narrowGap` (0.375 rem) is the space
+  choose which parts stay on the line and which go under the wave on the left; `narrowGap` (0.5 rem) is the space
   between the parts under the wave.
 - `preload` on the player and the tag: how much of `src` its own `<audio>` loads before play (`'metadata'`, as
   before; `'none'`, so a page of many players fetches nothing until one plays; or `'auto'`).
