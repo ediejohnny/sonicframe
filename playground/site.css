@@ -420,13 +420,38 @@ kbd {
 }
 
 @media (max-width: 36rem) {
-    .search-open span {
+    /* The buttons' words stay for screen readers; the eye gets an icon. */
+    .search-open span,
+    .button.small.menu span {
         position: absolute;
         width: 1px;
         height: 1px;
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap;
+    }
+
+    /* On a small screen the menu button is a square with three bars, as wide as the search's. */
+    .button.small.menu {
+        position: relative;
+        flex-shrink: 0;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+    }
+
+    .button.small.menu::before {
+        position: absolute;
+        top: calc(50% - 0.0625rem);
+        left: calc(50% - 0.5rem);
+        width: 1rem;
+        height: 0.125rem;
+        border-radius: 0.0625rem;
+        background: currentColor;
+        box-shadow:
+            0 -0.3125rem 0 currentColor,
+            0 0.3125rem 0 currentColor;
+        content: '';
     }
 
     /* On a small screen the button is a square with a magnifying glass: a ring and its handle. */
