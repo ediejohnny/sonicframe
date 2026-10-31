@@ -51,6 +51,14 @@ export {
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
 export {
+    CHAPTER_WORDS,
+    chapters,
+    type ChaptersKeys,
+    type ChaptersOptions,
+    type ChaptersPlugin,
+    type ChapterWords,
+} from './plugins/chapters';
+export {
     minimap,
     MINIMAP_WORDS,
     type MinimapOptions,
