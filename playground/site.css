@@ -667,21 +667,6 @@ html {
 }
 
 /*
- * Under every page's head, a strip of square wave bars in the logo's blue: the site's one mark,
- * drawn by a mask so it takes the scheme's color.
- */
-.page-head::after {
-    display: block;
-    width: min(100%, 18rem);
-    height: 0.875rem;
-    margin-top: 1.75rem;
-    background: var(--brand);
-    content: '';
-    -webkit-mask: url('./bars.svg') left center / auto 100% repeat-x;
-    mask: url('./bars.svg') left center / auto 100% repeat-x;
-}
-
-/*
  * "On this page": a track along the headings, filled up to the one being read (`--played`, set by
  * the script) with a playhead on it, like the played part of a wave.
  */
