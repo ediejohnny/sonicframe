@@ -170,7 +170,12 @@ function timestamp(text: string): number | null {
         return null;
     }
 
-    return hours * 3600 + minutes * 60 + seconds + Number(thousandths) / 1000;
+    // Counted in whole thousandths and divided once, the time is the nearest number to the one
+    // written; adding the thousandths to the seconds would leave float noise (1.5030000000000001).
+    const thousandthsInAll =
+        ((hours * 60 + minutes) * 60 + seconds) * 1000 + Number(thousandths);
+
+    return thousandthsInAll / 1000;
 }
 
 const ENTITIES: Readonly<Record<string, string>> = {

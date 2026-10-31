@@ -169,7 +169,12 @@
                         time, or, before the media loads
                         (<code>preload="none"</code>), where a seek will start
                         it, while the media itself still says 0. Show it rather
-                        than <code>media.currentTime</code>.
+                        than <code>media.currentTime</code>, written by
+                        <code>formatPosition(time, duration)</code>: a seek can
+                        land a hair before the time it asked for (an MP3 asked
+                        for 0:15 can start at 14.998), and
+                        <code>formatPosition</code> shows that as 0:15, where
+                        <code>formatTime</code> would show 0:14.
                     </p>
                 </section>
 

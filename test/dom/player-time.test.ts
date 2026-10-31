@@ -150,6 +150,22 @@ describe('where the time sits in its room', () => {
     });
 });
 
+describe('the time where a seek landed', () => {
+    it('shows a position the media landed 2 ms short of a second as that second, in the time and the slider', () => {
+        // An MP3 asked for 0:15 before it loaded started at 14.998 (measured in Chrome).
+        const media = make({}, 33);
+        media.currentTime = 14.998;
+        media.fire('timeupdate');
+
+        expect(read(times()[0]).text).toBe('0:15 / 0:33');
+        expect(
+            host
+                ?.querySelector('[role="slider"]')
+                ?.getAttribute('aria-valuetext'),
+        ).toBe('0:15 / 0:33');
+    });
+});
+
 describe('the time before the sound loads', () => {
     /**
      * A 77-second sound whose media has loaded nothing yet (`preload="none"`): a seek waits in the

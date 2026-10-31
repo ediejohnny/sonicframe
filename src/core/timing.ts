@@ -1,4 +1,5 @@
 import { clamp01, positive } from './math';
+import { LANDING } from './steps';
 
 /**
  * The duration to use, in seconds: the media's own once it knows a real one, otherwise the hint the
@@ -67,6 +68,24 @@ export function formatTime(seconds: number, decimals: number = 0): string {
         : `${minutes}:${rest}`;
 }
 
+/**
+ * A position for a clock, as `formatTime` writes it. A seek can land up to `LANDING` before the time
+ * it asked for (an MP3 asked for 0:15 before it loaded starts at 14.998), so a position that close to
+ * the next second shows that second; never past `duration` when the position is within it.
+ */
+export function formatPosition(
+    seconds: number,
+    duration: number | null = null,
+): string {
+    const nudged = seconds + LANDING;
+
+    return formatTime(
+        duration !== null && nudged > duration
+            ? Math.max(seconds, duration)
+            : nudged,
+    );
+}
+
 /** What a screen reader announces for the position: `0:12 / 0:45`, or a percentage without a duration. */
 export function defaultValueText(
     time: number | null,
@@ -74,6 +93,6 @@ export function defaultValueText(
     duration: number | null,
 ): string {
     return time !== null && duration !== null
-        ? `${formatTime(time)} / ${formatTime(duration)}`
+        ? `${formatPosition(time, duration)} / ${formatTime(duration)}`
         : `${Math.round(clamp01(ratio) * 100)}%`;
 }

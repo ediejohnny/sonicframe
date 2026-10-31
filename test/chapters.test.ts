@@ -46,6 +46,16 @@ const titles = (chapters: readonly Chapter[]): string[] =>
     chapters.map((chapter) => chapter.title);
 
 describe('readChapters: WebVTT', () => {
+    it('reads a time exactly as written, to the thousandth', () => {
+        // Seconds and thousandths added as numbers would make 00:01.503 1.5030000000000001.
+        const [chapter] = readChapters(
+            'WEBVTT\n\n00:01.503 --> 01:02:03.703\nOne\n',
+        );
+
+        expect(chapter.start).toBe(1.503);
+        expect(chapter.end).toBe(3723.703);
+    });
+
     it('reads cues with and without hours, an identifier and a cue without one', () => {
         const chapters = readChapters(
             [

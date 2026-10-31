@@ -4,6 +4,7 @@ import { keyAction } from '../src/core/keys';
 import {
     defaultValueText,
     effectiveDuration,
+    formatPosition,
     formatTime,
     stepRatio,
     timeAt,
@@ -77,6 +78,26 @@ describe('timing', () => {
 
     it('keeps what is finer than a second, down to a tenth of a millisecond', () => {
         expect(timeAt(0.5, 25.123)).toBe(12.5615);
+    });
+
+    it('shows a position a seek left just short of a second as that second, never past the end', () => {
+        // An MP3 asked for 0:15 before it loaded started at 14.998 (measured in Chrome).
+        expect(formatPosition(14.998)).toBe('0:15');
+        expect(formatPosition(14.9, 33)).toBe('0:14');
+        expect(formatPosition(59.97, 59.97)).toBe('0:59');
+        expect(defaultValueText(14.998, 0.45, 33)).toBe('0:15 / 0:33');
+        // A position already past the duration it was given is shown as it is.
+        expect(formatPosition(35, 30)).toBe('0:35');
+
+        // Any whole second of a day, reached up to 49 ms short.
+        fc.assert(
+            fc.property(
+                fc.integer({ min: 0, max: 86400 }),
+                fc.double({ min: 0, max: 0.049, noNaN: true }),
+                (second, short) =>
+                    formatPosition(second - short) === formatTime(second),
+            ),
+        );
     });
 
     it('writes times for people', () => {

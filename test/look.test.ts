@@ -289,6 +289,13 @@ describe('timeText', () => {
         expect(timeText('both', 5, 40)).toBe('0:05 / 0:40');
         expect(timeText('both', null, null)).toBe('0:00 / 0:00');
     });
+
+    it('shows a position a seek left 2 ms short of a second as that second', () => {
+        expect(timeText('both', 14.998, 33)).toBe('0:15 / 0:33');
+        expect(timeText('elapsed', 14.998, 33)).toBe('0:15');
+        expect(timeText('remaining', 14.998, 33)).toBe('-0:18');
+        expect(timeText('elapsed', 59.97, 59.97)).toBe('0:59');
+    });
 });
 
 describe('timeMold', () => {

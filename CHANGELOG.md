@@ -48,6 +48,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The docs' Chapters page, with a WebVTT and a JSON example.
 - `frame.time`: where the sound is, in seconds. The media's own time, or, before the media loads
   (`preload="none"`), where a seek will start it, while the media itself still says 0.
+- `formatPosition(time, duration)`: a position for a clock. A seek can land a hair before the time it
+  asked for (an MP3 asked for 0:15 can start at 14.998), so a position within 50 ms of the next second
+  shows that second, never past the duration; `formatTime` cuts it to the second before.
 
 ### Changed
 
@@ -56,6 +59,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   from a plain `git clone` of `main` or its zip. A "Want a specific version?" part under each shows the same with
   `x.y.z`, to fill in with the version's numbers.
 - The size ceiling of each entry rises from 96 KB to 128 KB (gzip, unminified, comments and chunks included).
+- The keyboard focus ring of a control with a border of its own (the player's speed button, an outlined play
+  button) now lies on that border instead of 2 px around it: one line, not a border and a ring side by side.
+  Controls without a border keep the ring 2 px out, where their own fill cannot hide it.
 
 ### Fixed
 
@@ -72,6 +78,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A step to a whole second could land a hair before it (in floating point, 5 / 77 × 77 is 4.999…), so the time
   and the slider's words showed one second less (0:04 for 0:05). Every time the frame works out from a ratio
   (the seek itself, its event, `timeupdate` and the slider's words) is now kept to the microsecond.
+- The browser itself can land a seek a hair short: an MP3 asked for 0:15 before it loaded started at 14.998,
+  and the player's time and the slider's words said 0:14 from then on. They now write the position with
+  `formatPosition`.
 
 ## [0.4.1] - 2026-10-31
 

@@ -393,6 +393,18 @@ describe('announcements', () => {
         expect(aria.at(-1)?.text).toBe('0:05 / 1:17');
     });
 
+    it('says a position a seek left 2 ms short of a second as that second', () => {
+        // An MP3 asked for 0:15 before it loaded started at 14.998 (measured in Chrome).
+        const { controller, media, fire, aria } = setup();
+        loaded(media, 33);
+        controller.bind(media);
+
+        media.advance(14.998);
+        fire('timeupdate');
+
+        expect(aria.at(-1)?.text).toBe('0:15 / 0:33');
+    });
+
     it('uses the app own words for the position', () => {
         const { controller, aria } = setup({
             valueText: (time, ratio) => `at ${time} (${ratio})`,

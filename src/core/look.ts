@@ -8,7 +8,7 @@
 
 import type { ButtonFill, ButtonShape } from './button';
 import { isFontName, type FontName } from './fonts';
-import { formatTime } from './timing';
+import { formatPosition, formatTime } from './timing';
 
 /**
  * A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end; the
@@ -408,7 +408,10 @@ export function resolveLook(
     };
 }
 
-/** The time as the look asks: elapsed, remaining (with a minus), the duration, or both. */
+/**
+ * The time as the look asks: elapsed, remaining (with a minus), the duration, or both. The position
+ * is a clock's (`formatPosition`): one a seek left a hair short of a second shows that second.
+ */
 export function timeText(
     format: PlayerLook['time'],
     time: number | null,
@@ -419,13 +422,13 @@ export function timeText(
 
     switch (format) {
         case 'elapsed':
-            return formatTime(now);
+            return formatPosition(now, duration);
         case 'remaining':
             return `-${formatTime(Math.max(0, total - now))}`;
         case 'duration':
             return formatTime(total);
         default:
-            return `${formatTime(now)} / ${formatTime(total)}`;
+            return `${formatPosition(now, duration)} / ${formatTime(total)}`;
     }
 }
 

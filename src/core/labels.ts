@@ -8,7 +8,7 @@ import type { ValueText } from './controller';
 import { localeFor, resolveLanguage, type Language } from './language';
 import { clamp01 } from './math';
 import { cleanText, fillTemplate } from './text';
-import { formatTime } from './timing';
+import { formatPosition, formatTime } from './timing';
 
 /** What the player says. `{name}` marks are filled in. */
 export type PlayerLabels = {
@@ -170,7 +170,7 @@ export function playerWords(
         valueText: (time, ratio, duration) =>
             time !== null && duration !== null
                 ? fillTemplate(labels.value, {
-                      time: formatTime(time),
+                      time: formatPosition(time, duration),
                       duration: formatTime(duration),
                   })
                 : `${Math.round(clamp01(ratio) * 100)}%`,
