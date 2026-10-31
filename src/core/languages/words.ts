@@ -16,8 +16,12 @@ export type PlayerLabels = {
     pause: string;
     /** `{seconds}`. */
     back: string;
+    /** `back` when the number of seconds is one (`'Back {seconds} second'`). */
+    backOne: string;
     /** `{seconds}`. */
     forward: string;
+    /** `forward` when the number of seconds is one. */
+    forwardOne: string;
     /** `{speed}`, as in `1.5×`. */
     speed: string;
     mute: string;

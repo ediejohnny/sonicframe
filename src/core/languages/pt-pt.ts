@@ -30,6 +30,7 @@ export const PT_PT: Words = {
         ...PT.player,
         player: 'Leitor de áudio',
         back: 'Recuar {seconds} segundos',
+        backOne: 'Recuar {seconds} segundo',
         zoomIn: 'Ampliar',
         zoomOut: 'Reduzir',
         zoomReset: 'Mostrar o som completo',

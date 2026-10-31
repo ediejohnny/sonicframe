@@ -164,7 +164,12 @@ export function skipPart(
         host.look(),
         `sonicframe-${direction}`,
         SKIP_ICONS[direction],
-        host.words.say(direction, { seconds: host.words.number(seconds) }),
+        host.words.say(
+            host.words.one(seconds) ? `${direction}One` : direction,
+            {
+                seconds: host.words.number(seconds),
+            },
+        ),
     );
     button.disabled = host.media === null;
 
