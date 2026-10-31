@@ -9,23 +9,12 @@
  * start with `a11y-`: `a11y-lang` is the language of the player's words, and the description is off
  * unless `a11y-description` is there. Zoom is off unless `zoom` is there; its words turn on its
  * ways, and `minimap` adds the strip. The `peaks-` attributes say how the peaks file is read.
- * `chapters` takes the address of a chapters file, and `chapter-options` its extras.
+ * `chapters` takes the address of a chapters file, and `chapter-options` its extras. Each attribute
+ * is read in `element-attributes.ts`.
  */
 
-import { loadWaveform } from '../core/peaks/read-waveform';
-import type { ReadWaveformOptions } from '../core/peaks/waveform';
-import type { FontChoice } from '../core/player/fonts';
-import type { PaletteChoice } from '../core/player/palettes';
-import type { MinimapOptions } from '../plugins/minimap';
-import type { WaveName } from '../types';
+import { fontOf, optionsOf, paletteOf, waveOf } from './element-attributes';
 import { Player } from './player';
-import type {
-    PlayerA11y,
-    PlayerChapters,
-    PlayerDescription,
-    PlayerOptions,
-    PlayerZoom,
-} from './player-options';
 
 /** The attributes the tag reads. */
 export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
@@ -90,134 +79,6 @@ const EVENTS = [
     'chapterchange',
 ] as const;
 
-/** The words of an attribute, lowercase. */
-function wordsOf(value: string): Set<string> {
-    return new Set(value.toLowerCase().split(/\s+/));
-}
-
-/** A number from an attribute, or undefined when it is not one. */
-function numberOf(value: string | null): number | undefined {
-    const text = value?.trim() ?? '';
-    const number = Number(text);
-
-    return text !== '' && Number.isFinite(number) ? number : undefined;
-}
-
-/**
- * The zoom from the `zoom` attribute: present turns it on, and its words turn on its ways (`wheel`,
- * `scroll`, `pinch`, `keys`, `follow`, `center`, `edges`) and the `buttons`; `max` is `zoom-max`.
- */
-function zoomOf(
-    value: string | null,
-    max: string | null,
-): PlayerZoom | undefined {
-    if (value === null) {
-        return undefined;
-    }
-
-    const words = wordsOf(value);
-
-    return {
-        wheel: words.has('wheel'),
-        scroll: words.has('scroll'),
-        pinch: words.has('pinch'),
-        keys: words.has('keys'),
-        follow: words.has('follow'),
-        followType: words.has('center') ? 'center' : 'page',
-        edgeScroll: words.has('edges'),
-        buttons: words.has('buttons'),
-        max: numberOf(max),
-    };
-}
-
-/** The minimap from the `minimap` attribute: present adds it; `above`, `autohide` and `wheel` change it. */
-function minimapOf(value: string | null): MinimapOptions | undefined {
-    if (value === null) {
-        return undefined;
-    }
-
-    const words = wordsOf(value);
-
-    return {
-        side: words.has('above') ? 'above' : 'below',
-        autoHide: words.has('autohide'),
-        controls: { wheel: words.has('wheel') },
-    };
-}
-
-/**
- * The description from the `a11y-description` attribute: present turns it on, and its words turn on
- * the extras (`keys`, `pauses`, `speech`, `button`, `announce`) and the button's `animation`, of the
- * type `pulse` (the default) or `fade`; any other word is ignored.
- */
-function descriptionOf(value: string | null): PlayerDescription | undefined {
-    if (value === null) {
-        return undefined;
-    }
-
-    const words = new Set(value.toLowerCase().split(/\s+/));
-
-    return {
-        keys: words.has('keys'),
-        pauseInValue: words.has('pauses'),
-        speech: words.has('speech'),
-        button: words.has('button')
-            ? {
-                  animation: words.has('animation'),
-                  animationType: words.has('fade') ? 'fade' : 'pulse',
-              }
-            : false,
-        announceWhenReady: words.has('announce'),
-    };
-}
-
-/**
- * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
- * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
- * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
- * `above`, `announce`, `images`, `links`, `no-keys` and `no-lines`; any other word is ignored.
- */
-function chaptersOf(
-    src: string | null,
-    value: string | null,
-): PlayerChapters | undefined {
-    if (src === null) {
-        return undefined;
-    }
-
-    const words = wordsOf(value ?? '');
-
-    return {
-        src,
-        list: words.has('list')
-            ? {
-                  type: words.has('drawer')
-                      ? 'drawer'
-                      : words.has('popover')
-                        ? 'popover'
-                        : 'inline',
-                  open: words.has('open'),
-                  side: words.has('left') ? 'left' : 'right',
-                  stayOpen: words.has('stay'),
-                  backdrop: words.has('backdrop'),
-                  animation: words.has('animation'),
-                  animationType: words.has('slide') ? 'slide' : 'fade',
-                  swipe: words.has('swipe'),
-              }
-            : false,
-        lane: words.has('above')
-            ? 'above'
-            : words.has('lane')
-              ? 'below'
-              : false,
-        announceChange: words.has('announce'),
-        images: words.has('images'),
-        links: words.has('links'),
-        keys: !words.has('no-keys'),
-        lines: !words.has('no-lines'),
-    };
-}
-
 /** A custom element name: lowercase, starting with a letter, with at least one dash. */
 const ELEMENT_NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
 
@@ -269,76 +130,14 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                 } else if (attribute === 'theme') {
                     player.setTheme(after ?? 'default');
                 } else if (attribute === 'palette') {
-                    player.setPalette(this.palette());
+                    player.setPalette(paletteOf(this));
                 } else if (attribute === 'wave') {
-                    player.setWave(this.wave());
+                    player.setWave(waveOf(this));
                 } else if (attribute === 'volume') {
                     player.setVolume(after !== null);
                 } else {
-                    player.setFont(this.font());
+                    player.setFont(fontOf(this));
                 }
-            }
-
-            private palette(): PaletteChoice | undefined {
-                return (this.getAttribute('palette') ?? undefined) as
-                    | PaletteChoice
-                    | undefined;
-            }
-
-            private wave(): WaveName | undefined {
-                return (this.getAttribute('wave') ?? undefined) as
-                    | WaveName
-                    | undefined;
-            }
-
-            private font(): FontChoice | undefined {
-                const family = this.getAttribute('font');
-                const src = this.getAttribute('font-src') ?? undefined;
-                const stylesheet =
-                    this.getAttribute('font-stylesheet') ?? undefined;
-
-                if (family === null) {
-                    return undefined;
-                }
-
-                return src !== undefined || stylesheet !== undefined
-                    ? { family, src, stylesheet }
-                    : family;
-            }
-
-            /** How the peaks file is read: `peaks-channel` (`all` or a number), `peaks-max`, `peaks-normalize`. */
-            private peaksReading(): ReadWaveformOptions {
-                const channel = this.getAttribute('peaks-channel');
-
-                return {
-                    channel:
-                        channel?.trim().toLowerCase() === 'all'
-                            ? 'all'
-                            : numberOf(channel),
-                    maxPeaks: numberOf(this.getAttribute('peaks-max')),
-                    normalize: this.hasAttribute('peaks-normalize'),
-                };
-            }
-
-            /** The accessibility attributes: the language, the description, the zoom's and the minimap's. */
-            private a11y(): PlayerA11y {
-                const zoom = this.getAttribute('a11y-zoom');
-                const strip = this.getAttribute('a11y-minimap');
-
-                return {
-                    lang: this.getAttribute('a11y-lang') ?? undefined,
-                    description: descriptionOf(
-                        this.getAttribute('a11y-description'),
-                    ),
-                    zoom:
-                        zoom === null
-                            ? undefined
-                            : { announce: wordsOf(zoom).has('announce') },
-                    minimap:
-                        strip === null
-                            ? undefined
-                            : { keys: wordsOf(strip).has('keys') },
-                };
             }
 
             private mount(): void {
@@ -350,35 +149,9 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                     this.style.setProperty('display', 'block');
                 }
 
-                const peaks = this.getAttribute('peaks');
-                const reading = this.peaksReading();
                 const player = new Player({
                     container: this,
-                    src: this.getAttribute('src') ?? undefined,
-                    // The player keeps only a known value; anything else loads the metadata.
-                    preload: (this.getAttribute('preload') ??
-                        undefined) as PlayerOptions['preload'],
-                    peaks:
-                        peaks === null
-                            ? undefined
-                            : () => loadWaveform(peaks, reading),
-                    theme: this.getAttribute('theme') ?? undefined,
-                    palette: this.palette(),
-                    wave: this.wave(),
-                    font: this.font(),
-                    label: this.getAttribute('label') ?? undefined,
-                    volume: this.hasAttribute('volume'),
-                    spectrogram: this.hasAttribute('spectrogram'),
-                    zoom: zoomOf(
-                        this.getAttribute('zoom'),
-                        this.getAttribute('zoom-max'),
-                    ),
-                    minimap: minimapOf(this.getAttribute('minimap')),
-                    chapters: chaptersOf(
-                        this.getAttribute('chapters'),
-                        this.getAttribute('chapter-options'),
-                    ),
-                    a11y: this.a11y(),
+                    ...optionsOf(this),
                 });
 
                 this.player = player;

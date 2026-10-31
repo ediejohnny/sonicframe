@@ -823,9 +823,15 @@ export class Player {
             case 'nextChapter':
                 target.append(this.chapterParts.stepButton(part));
                 break;
-            case 'chapters':
-                target.append(this.chapterParts.listButton());
+            case 'chapters': {
+                const button = this.chapterParts.listButton();
+
+                if (button !== null) {
+                    target.append(button);
+                }
+
                 break;
+            }
             case 'slot':
                 if (this.options.slot) {
                     target.append(this.options.slot);
