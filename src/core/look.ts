@@ -42,6 +42,11 @@ export type PlayerLook = {
     line: Part[];
     /** A small line right under the wave (a voice note's duration, say). */
     meta: Part[];
+    /**
+     * Short of room, the small line keeps one line (`false`: a chapter's name gives up its room)
+     * or breaks in two, the parts after a spacer going together to the far side of the second.
+     */
+    metaWrap: boolean;
     /** The wave inside the main line, or on its own line above it. */
     wavePlace: 'inline' | 'top';
     /** How the `time` part reads. */
@@ -104,6 +109,39 @@ export type PlayerLook = {
     /** Text weight, 100 to 900. */
     weight: number;
     uppercase: boolean;
+    /**
+     * How a chapter's name too long for its room ends: in an ellipsis, fading out (there is more
+     * to read), or cut where the room ends.
+     */
+    nameOverflow: 'ellipsis' | 'fade' | 'clip';
+    /** How wide the fade at a long name's end is, in rem. */
+    nameFade: number;
+    /**
+     * With the fade, a walking name fades at its start too while it is off its start, so its
+     * letters leave the room softly; at rest the start stays sharp.
+     */
+    nameFadeStart: boolean;
+    /** A long name shows in full in a tooltip while the mouse is on it. */
+    nameTooltip: boolean;
+    /**
+     * A chapter's name too long for its room walks across it, pauses at its end and starts over;
+     * off, it stays still and ends as `nameOverflow` says. Never with reduced motion.
+     */
+    marquee: boolean;
+    /**
+     * How a long name goes round: as an endless strip, its copy following it after `marqueeGap`
+     * and coming to rest where it started (`'loop'`); back to its start once its end shows
+     * (`'restart'`); or walking back (`'bounce'`).
+     */
+    marqueeType: 'loop' | 'restart' | 'bounce';
+    /** In a loop, the space between a name and its copy, in rem. */
+    marqueeGap: number;
+    /** A walking name stops while the mouse is on it, and goes on when it leaves. */
+    marqueeHoverPause: boolean;
+    /** How fast a long name walks, in rem a second. */
+    marqueeSpeed: number;
+    /** How long a long name waits at each end, in milliseconds. */
+    marqueePause: number;
     /** Seconds moved by the back and forward buttons. */
     skip: number;
     /** The speeds the speed button steps through. */
@@ -137,6 +175,7 @@ export const PART_NAMES: readonly Part[] = Object.freeze([
 export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     line: ['play', 'wave', 'time'],
     meta: [],
+    metaWrap: false,
     wavePlace: 'inline',
     time: 'both',
     timeAlign: 'auto',
@@ -160,6 +199,16 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     fontSize: 0.8125,
     weight: 500,
     uppercase: false,
+    nameOverflow: 'ellipsis',
+    nameFade: 1.5,
+    nameFadeStart: true,
+    nameTooltip: false,
+    marquee: false,
+    marqueeType: 'loop',
+    marqueeGap: 2.5,
+    marqueeHoverPause: true,
+    marqueeSpeed: 2,
+    marqueePause: 1500,
     skip: 10,
     speeds: [1, 1.5, 2],
     volume: 'hover',
@@ -262,6 +311,10 @@ export function resolveLook(
     return {
         line,
         meta,
+        metaWrap:
+            typeof given.metaWrap === 'boolean'
+                ? given.metaWrap
+                : base.metaWrap,
         wavePlace,
         time: oneOf(
             given.time,
@@ -321,6 +374,34 @@ export function resolveLook(
             typeof given.uppercase === 'boolean'
                 ? given.uppercase
                 : base.uppercase,
+        nameOverflow: oneOf(
+            given.nameOverflow,
+            ['ellipsis', 'fade', 'clip'] as const,
+            base.nameOverflow,
+        ),
+        nameFade: within(given.nameFade, base.nameFade, 0.25, 6),
+        nameFadeStart:
+            typeof given.nameFadeStart === 'boolean'
+                ? given.nameFadeStart
+                : base.nameFadeStart,
+        nameTooltip:
+            typeof given.nameTooltip === 'boolean'
+                ? given.nameTooltip
+                : base.nameTooltip,
+        marquee:
+            typeof given.marquee === 'boolean' ? given.marquee : base.marquee,
+        marqueeType: oneOf(
+            given.marqueeType,
+            ['loop', 'restart', 'bounce'] as const,
+            base.marqueeType,
+        ),
+        marqueeGap: within(given.marqueeGap, base.marqueeGap, 0.5, 10),
+        marqueeHoverPause:
+            typeof given.marqueeHoverPause === 'boolean'
+                ? given.marqueeHoverPause
+                : base.marqueeHoverPause,
+        marqueeSpeed: within(given.marqueeSpeed, base.marqueeSpeed, 0.25, 20),
+        marqueePause: within(given.marqueePause, base.marqueePause, 0, 10000),
         skip: within(given.skip, base.skip, 1, 120),
         speeds: speeds(given.speeds, base.speeds),
         volume: oneOf(given.volume, ['always', 'hover'] as const, base.volume),

@@ -310,6 +310,53 @@ The meeting</code></pre>
                 </section>
 
                 <section class="section">
+                    <h2>Long names</h2>
+                    <p>
+                        The row under the wave keeps one line: the chapter's
+                        name takes the room left and gives it up first. A name
+                        too long for its room ends in an ellipsis, or as the
+                        look says: it can fade out, show in full under the
+                        mouse, and walk across its room as an endless strip, its
+                        copy following it, that rests a moment each time round.
+                        The mouse stops it; it never walks when the system asks
+                        for less motion.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/episodes/12.mp3',
+    chapters: '/episodes/12-chapters.vtt',
+    look: {
+        underStart: 'line',
+        line: ['play', 'wave'],
+        meta: ['time', 'chapter', 'spacer', 'prevChapter', 'nextChapter'],
+        nameOverflow: 'fade',
+        nameTooltip: true,
+        marquee: true,
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"chapters":[{"start":0,"title":"An opening that takes its time before the music starts"},{"start":9,"title":"A long conversation about the little elf and the forest"},{"start":21,"title":"The answer, and what came after it"}],"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter"],"nameOverflow":"fade","nameTooltip":true,"marquee":true}}'
+                    ></div>
+                    <p>
+                        <code>nameOverflow</code>, <code>nameFade</code>,
+                        <code>nameFadeStart</code>, <code>nameTooltip</code>,
+                        <code>marquee</code>, <code>marqueeType</code>,
+                        <code>marqueeGap</code>, <code>marqueeSpeed</code>,
+                        <code>marqueePause</code> and
+                        <code>marqueeHoverPause</code> are in
+                        <a href="./layouts.html#every-look-option"
+                            >every look option</a
+                        >; <code>metaWrap: true</code> lets the row break in two
+                        instead.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>The list's forms</h2>
                     <p>
                         Short of room in the player? The list can float over the
@@ -333,12 +380,12 @@ The meeting</code></pre>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"popover","animation":true,"swipe":true}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.json","images":true,"list":{"type":"popover","animation":true,"swipe":true}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
                     ></div>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","style":{"shadow":"glow"}}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.json","images":true,"list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","style":{"shadow":"glow"}}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
                     ></div>
                     <p>
                         The first opens a popover; the second, a drawer on the
@@ -564,12 +611,111 @@ The meeting</code></pre>
                 <section class="section">
                     <h2>Styling the list</h2>
                     <p>
-                        The list carries class names for your CSS:
+                        Each item shows its number (sound bars for the chapter
+                        playing), its picture with the chapter's length on it,
+                        its title in up to two lines and its stretch; the
+                        chapter playing is tinted and fills a thin bar as it
+                        plays. <code>listLook</code> (on the player,
+                        <code>list.look</code>) changes any of it:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>thumbWidth</code>,
+                                        <code>thumbShape</code>,
+                                        <code>thumbCorner</code>
+                                    </td>
+                                    <td>
+                                        <code>3.5</code>, <code>'square'</code>,
+                                        <code>0.25</code>
+                                    </td>
+                                    <td>
+                                        The picture: width in rem (1 to 12),
+                                        <code>'square'</code> or
+                                        <code>'wide'</code> (16:9), corners in
+                                        rem.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>numbers</code>,
+                                        <code>playingMark</code>
+                                    </td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The column of numbers, and the sound
+                                        bars in place of the playing one's.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>span</code>, <code>length</code>
+                                    </td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The stretch under the title, and the
+                                        length on the picture.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>tint</code>,
+                                        <code>progress</code>
+                                    </td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The playing chapter's tint and its bar.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>titleLines</code></td>
+                                    <td><code>2</code></td>
+                                    <td>
+                                        The most lines a title takes, 1 to 4.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>itemPadding</code>,
+                                        <code>itemCorner</code>,
+                                        <code>gap</code>
+                                    </td>
+                                    <td>
+                                        <code>0.375</code>, <code>0.25</code>,
+                                        <code>0.125</code>
+                                    </td>
+                                    <td>
+                                        Each item's padding and corners, and the
+                                        space between items, in rem.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        <code>header: true</code> (on the player,
+                        <code>list.header</code>, on by default for a popover or
+                        a drawer) heads the list with its name and the place of
+                        the chapter playing. For your CSS:
                         <code>.sonicframe-chapters</code> (the
                         <code>nav</code>),
+                        <code>.sonicframe-chapters-head</code>,
                         <code>.sonicframe-chapter</code> (each button),
-                        <code>.sonicframe-chapter-time</code>,
-                        <code>.sonicframe-chapter-title</code> and
+                        <code>.sonicframe-chapter-mark</code>,
+                        <code>.sonicframe-chapter-thumb</code>,
+                        <code>.sonicframe-chapter-length</code>,
+                        <code>.sonicframe-chapter-title</code>,
+                        <code>.sonicframe-chapter-span</code>,
+                        <code>.sonicframe-chapter-progress</code> and
                         <code>.sonicframe-chapter-link</code>. On the player,
                         the list sits in <code>.sonicframe-chapter-list</code>
                         and the name of the chapter playing in

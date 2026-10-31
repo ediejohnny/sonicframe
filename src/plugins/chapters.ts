@@ -24,6 +24,10 @@ import { formatTime } from '../core/timing';
 import { FULL_VIEW, viewX } from '../core/view';
 import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
 import { sharedTooltip } from '../dom/tooltip';
+import { remPixels } from '../dom/units';
+import { ChapterListView, type ChapterListLook } from './chapter-list';
+
+export type { ChapterListLook };
 
 /** What the plugin says. `{name}` marks are filled in. */
 export type ChapterWords = {
@@ -81,8 +85,15 @@ export type ChaptersOptions = {
     valueNote?: boolean;
     /** Says the new chapter when playback enters it. Off by default. */
     announceChange?: boolean;
-    /** An element of yours that gets the list of chapters (a `nav` with buttons); removed on destroy. */
+    /**
+     * An element of yours that gets the list of chapters (a `nav` with buttons: number or playing
+     * mark, picture, title, stretch); removed on destroy.
+     */
     list?: HTMLElement | null;
+    /** A head over the list with its name and the place of the chapter playing ("2 / 8"). Off by default. */
+    header?: boolean;
+    /** How the list's items look: pictures, which pieces show, title lines, spacing. */
+    listLook?: ChapterListLook;
     /** Pictures in the list, when a chapter has one. Off by default. */
     images?: boolean;
     /** Links in the list, when a chapter has one; they open in a new tab. Off by default. */
@@ -146,15 +157,6 @@ function wordsOf(own: Partial<ChapterWords> | undefined): ChapterWords {
     return words;
 }
 
-/** The root text size in CSS pixels. */
-function remPixels(rem: number): number {
-    const root = parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-    );
-
-    return rem * (root > 0 ? root : 16);
-}
-
 export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
     const words = wordsOf(options.words);
     const keys = options.keys ?? true;
@@ -187,8 +189,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
     let host: PluginHost | null = null;
     let started = false;
     let lane: Lane | null = null;
-    let nav: HTMLElement | null = null;
-    let buttons: HTMLButtonElement[] = [];
+    let view: ChapterListView | null = null;
     let openedTooltip = false;
     let cleanups: (() => void)[] = [];
 
@@ -225,11 +226,13 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
                 : chapterAt(shown, now(current, known), known);
 
         if (next === index) {
+            view?.mark(index, played());
+
             return;
         }
 
         index = next;
-        markCurrent();
+        view?.mark(index, played());
 
         if (
             playing &&
@@ -245,111 +248,47 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         options.onChange?.(shown[next] ?? null, next);
     }
 
-    function markCurrent(): void {
-        buttons.forEach((button, at) => {
-            if (at === index) {
-                button.setAttribute('aria-current', 'true');
-            } else {
-                button.removeAttribute('aria-current');
-            }
-        });
+    /** The share of the chapter playing already played, from 0 to 1, or null when unknown. */
+    function played(): number | null {
+        const current = host;
+        const known = duration();
+        const chapter = shown[index];
+
+        if (current === null || known === null || chapter === undefined) {
+            return null;
+        }
+
+        const end = chapterEnds(shown, known)[index];
+
+        return end === null || end <= chapter.start
+            ? null
+            : (now(current, known) - chapter.start) / (end - chapter.start);
     }
 
+    /** The list in the app's element, built again with the chapters and where each one ends. */
     function buildList(): void {
-        nav?.remove();
-        nav = null;
-        buttons = [];
         const target = options.list ?? null;
 
         if (target === null) {
             return;
         }
 
-        nav = document.createElement('nav');
-        nav.className = 'sonicframe-chapters';
-        nav.setAttribute('aria-label', words.list);
-        const list = document.createElement('ol');
-        css(list, [
-            ['list-style', 'none'],
-            ['margin', '0'],
-            ['padding', '0'],
-        ]);
-
-        shown.forEach((chapter, at) => {
-            const item = document.createElement('li');
-            const button = document.createElement('button');
-            const time = document.createElement('span');
-            const title = document.createElement('span');
-            css(item, [
-                ['display', 'flex'],
-                ['align-items', 'center'],
-                ['gap', '0.5rem'],
-            ]);
-            button.type = 'button';
-            button.className = 'sonicframe-chapter';
-            css(button, [
-                ['display', 'flex'],
-                ['align-items', 'center'],
-                ['gap', '0.5rem'],
-                ['flex', '1 1 auto'],
-                ['min-width', '0'],
-                ['margin', '0'],
-                ['padding', '0.25rem 0'],
-                ['border-width', '0'],
-                ['background-color', 'transparent'],
-                ['color', 'inherit'],
-                ['font', 'inherit'],
-                ['text-align', 'start'],
-                ['cursor', 'pointer'],
-            ]);
-
-            if (options.images === true && chapter.image !== null) {
-                const image = document.createElement('img');
-                image.alt = '';
-                image.loading = 'lazy';
-                image.decoding = 'async';
-                image.src = chapter.image;
-                css(image, [
-                    ['width', '2.5rem'],
-                    ['height', '2.5rem'],
-                    ['object-fit', 'cover'],
-                    ['flex-shrink', '0'],
-                ]);
-                button.append(image);
-            }
-
-            time.className = 'sonicframe-chapter-time';
-            time.textContent = formatTime(chapter.start);
-            css(time, [['font-variant-numeric', 'tabular-nums']]);
-            title.className = 'sonicframe-chapter-title';
-            title.textContent =
-                chapter.title === '' ? label(at) : chapter.title;
-            title.setAttribute('dir', 'auto');
-            button.append(time, title);
-            button.addEventListener('click', () => go(at, 'api'));
-            item.append(button);
-
-            if (options.links === true && chapter.url !== null) {
-                const link = document.createElement('a');
-                link.className = 'sonicframe-chapter-link';
-                link.href = chapter.url;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.textContent = words.link;
-                link.setAttribute(
-                    'aria-label',
-                    `${words.link}: ${chapter.title === '' ? label(at) : chapter.title}`,
-                );
-                item.append(link);
-            }
-
-            list.append(item);
-            buttons.push(button);
-        });
-
-        nav.append(list);
-        target.append(nav);
-        markCurrent();
+        view ??= new ChapterListView(
+            target,
+            {
+                name: words.list,
+                link: words.link,
+                images: options.images === true,
+                links: options.links === true,
+                header: options.header === true,
+                look: options.listLook,
+            },
+            (at) => go(at, 'api'),
+        );
+        view.render(shown, chapterEnds(shown, duration()), (at) =>
+            shown[at].title === '' ? label(at) : shown[at].title,
+        );
+        view.mark(index, played());
     }
 
     /** The strip of titles: one box per chapter, from its start to its end, through the view. */
@@ -569,6 +508,8 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
                 frame.on('timeupdate', () => follow(true)),
                 frame.on('seek', () => follow(false)),
                 frame.on('durationchange', () => {
+                    // The last chapter's end, and so its stretch, comes with the duration.
+                    buildList();
                     follow(false);
                     placeLane();
                 }),
@@ -712,9 +653,8 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             closeTooltip();
             lane?.remove();
             lane = null;
-            nav?.remove();
-            nav = null;
-            buttons = [];
+            view?.destroy();
+            view = null;
             index = -1;
             host = null;
         },

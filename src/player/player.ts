@@ -13,7 +13,7 @@
 import { hideFocusRing, showFocusRing } from '../controls/focus';
 import { PlayButton } from '../controls/play-button';
 import { VolumeControl } from '../controls/volume';
-import { rgbaString, type Rgba } from '../core/color';
+import { readableText, rgbaString, type Rgba } from '../core/color';
 import { Emitter } from '../core/emitter';
 import { resolveFont, type FontChoice } from '../core/fonts';
 import {
@@ -60,6 +60,9 @@ import type {
 import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
 import { prefersReducedMotion } from '../dom/motion';
+import type { TooltipColors } from '../dom/tooltip';
+import { remPixels } from '../dom/units';
+import { LongName } from './long-name';
 import { pageLanguage } from '../dom/page-language';
 import { observeSize } from '../dom/observe';
 import { canSpeak } from '../dom/speak';
@@ -76,13 +79,14 @@ import {
 import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
 import {
     chapters,
+    type ChapterListLook,
     type ChaptersOptions,
     type ChaptersPlugin,
 } from '../plugins/chapters';
 import type { Chapter, ChapterInput } from '../core/chapters';
 import { FloatingList, type ListSettings } from './chapter-panel';
 
-export type { ChaptersPlugin };
+export type { ChapterListLook, ChaptersPlugin };
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -193,7 +197,7 @@ export type PlayerA11y = {
  */
 export type PlayerChapters = Omit<
     ChaptersOptions,
-    'list' | 'words' | 'onChange' | 'onChapters'
+    'list' | 'words' | 'onChange' | 'onChapters' | 'header' | 'listLook'
 > & {
     /** The list of chapters: true (in the player, under the wave) or its options. Off by default. */
     list?: boolean | PlayerChapterList;
@@ -220,6 +224,13 @@ export type PlayerChapterList = {
     width?: number;
     /** The tallest a popover grows before it scrolls, in rem: 20 by default, from 6 to 60. */
     maxHeight?: number;
+    /**
+     * A head over the list with its name and the place of the chapter playing ("2 / 8"). On by
+     * default for a popover or a drawer, off for the list in the player.
+     */
+    header?: boolean;
+    /** How the list's items look: pictures (size, shape), which pieces show, title lines, spacing. */
+    look?: ChapterListLook;
     /** A popover or a drawer stays open after a chapter is chosen. Off by default. */
     stayOpen?: boolean;
     /** A drawer dims the page behind it; a press there closes it. Off by default. */
@@ -306,6 +317,8 @@ function listSettings(list: true | PlayerChapterList): ListSettings {
         side: pick(own.side, ['left', 'right'], 'right'),
         width: size(own.width, type === 'drawer' ? 20 : 18, 10, 40),
         maxHeight: size(own.maxHeight, 20, 6, 60),
+        header:
+            typeof own.header === 'boolean' ? own.header : type !== 'inline',
         stayOpen: own.stayOpen === true,
         backdrop: own.backdrop === true,
         animation: own.animation === true,
@@ -415,15 +428,6 @@ function count(
         : fallback;
 }
 
-/** CSS pixels in `rem` of the page's root text size. */
-function remPixels(rem: number): number {
-    const root = parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-    );
-
-    return rem * (root > 0 ? root : 16);
-}
-
 /**
  * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
  * `narrowLine` names), goes under the wave on the left (what `narrowStart` names) or on the right
@@ -441,6 +445,32 @@ function placeOf(part: Part, look: PlayerLook): Place {
     }
 
     return look.narrowStart.includes(part) ? 'start' : 'end';
+}
+
+/**
+ * The far side of a row under the wave that may break: its parts stay together, with the row's
+ * gap, and keep to the far side on whichever line the group lands.
+ */
+function farGroup(): HTMLElement {
+    const group = document.createElement('div');
+    css(group, [
+        ['display', 'flex'],
+        ['flex-wrap', 'nowrap'],
+        ['align-items', 'center'],
+        ['gap', '0.5rem'],
+        ['margin-left', 'auto'],
+    ]);
+
+    return group;
+}
+
+/** The vertical shift, in pixels, a part was given to meet the bars; 0 when it has none. */
+function givenShift(part: HTMLElement): number {
+    return (
+        parseFloat(
+            part.style.getPropertyValue('translate').split(' ')[1] ?? '',
+        ) || 0
+    );
 }
 
 /** The side of its room a time's text keeps to; `auto` in the look picks one by the time's place. */
@@ -629,7 +659,7 @@ export class Player {
     /** Where a finger came down off the wave, for the swipe that opens the list. */
     private swipeStart: { id: number; x: number; y: number } | null = null;
     /** The built parts that show the chapter playing, and the buttons that open the list. */
-    private chapterNames: HTMLElement[] = [];
+    private chapterNames: LongName[] = [];
     private listButtons: HTMLButtonElement[] = [];
     private times: TimePart[] = [];
     private partCleanups: (() => void)[] = [];
@@ -695,6 +725,7 @@ export class Player {
             this.width = size.width / size.pixelRatio;
             this.arrange();
             this.alignToBars();
+            this.fitNames();
         });
     }
 
@@ -941,6 +972,8 @@ export class Player {
         return chapters({
             ...own,
             list: content,
+            header: this.list?.header === true,
+            listLook: typeof list === 'object' ? list.look : undefined,
             words: {
                 chapter: labels.chapter,
                 list: labels.chapters,
@@ -1557,23 +1590,32 @@ export class Player {
                 ['color', 'var(--sonicframe-muted, currentColor)'],
             ]);
 
-            // A chapter's name takes the room left; where there is too little, the parts after it
-            // go to a second line rather than squeeze the name away.
-            if (meta.includes('chapter')) {
+            // One line by default: a chapter's name takes the room left and gives it up first.
+            // With `metaWrap`, a row short of room breaks in two instead, the parts after the
+            // spacer going as one group that never breaks, kept to the far side of its line.
+            const wraps = this.look.metaWrap;
+
+            if (wraps) {
                 css(row, [['flex-wrap', 'wrap']]);
             }
 
             column.append(row);
             let metaSide: Side = 'start';
+            let target: HTMLElement = row;
 
             for (const part of meta) {
-                this.addPart(part, row, column, {
+                this.addPart(part, target, column, {
                     side: metaSide,
                     narrowSide: null,
                 });
 
                 if (part === 'spacer') {
                     metaSide = 'end';
+
+                    if (wraps) {
+                        target = farGroup();
+                        row.append(target);
+                    }
                 }
             }
         }
@@ -1605,8 +1647,13 @@ export class Player {
             this.swipeZones(this.layout);
         }
 
-        // The bars move when the wave resizes or a strip comes or goes.
-        this.partCleanups.push(frame.on('resize', () => this.alignToBars()));
+        // The bars move when the wave resizes or a strip comes or goes; a name's room changes too.
+        this.partCleanups.push(
+            frame.on('resize', () => {
+                this.alignToBars();
+                this.fitNames();
+            }),
+        );
         this.alignToBars();
     }
 
@@ -1614,7 +1661,10 @@ export class Player {
      * Lines up the parts beside a wave in the line with the bars themselves. The line centers its
      * parts on the wave's box, which also holds the strips plugins stack above and below the bars,
      * or on the whole column when rows sit under the wave; each part is moved by `translate` alone,
-     * so nothing around it moves.
+     * so nothing around it moves. A part centered on bars near the line's edge would stick out of
+     * the line, into the player's padding; the wave's box then takes a margin on that side, by the
+     * overshoot, which moves the bars in until every part fits. The box, not its column: with
+     * `underStart: 'line'` the column is `display: contents` and takes no margin.
      */
     private alignToBars(): void {
         const layout = this.layout;
@@ -1628,37 +1678,113 @@ export class Player {
             return;
         }
 
-        const bars = canvas.getBoundingClientRect();
+        const column = layout.box.parentElement;
+        const parts = [...layout.line.children].filter(
+            (part): part is HTMLElement =>
+                part !== column &&
+                part instanceof HTMLElement &&
+                part.getBoundingClientRect().height > 0,
+        );
+        const shifts = this.barShifts(canvas, parts);
 
-        if (bars.height <= 0) {
+        if (shifts === null) {
             return;
         }
 
-        const middle = bars.top + bars.height / 2;
-        const column = layout.box.parentElement;
+        if (column?.parentElement === layout.line) {
+            const line = layout.line.getBoundingClientRect();
 
-        for (const part of layout.line.children) {
-            if (part === column || !(part instanceof HTMLElement)) {
-                continue;
+            if (
+                line.height > 0 &&
+                this.fitBars(layout.box, line, parts, shifts)
+            ) {
+                // The bars moved: measure them again.
+                this.applyShifts(
+                    parts,
+                    this.barShifts(canvas, parts) ?? shifts,
+                );
+
+                return;
             }
+        }
 
+        this.applyShifts(parts, shifts);
+    }
+
+    /**
+     * How far each part must move, from where it sits now, for its middle to meet the bars'
+     * middle, in whole pixels; `null` while the bars have no height.
+     */
+    private barShifts(
+        canvas: HTMLCanvasElement,
+        parts: readonly HTMLElement[],
+    ): number[] | null {
+        const bars = canvas.getBoundingClientRect();
+
+        if (bars.height <= 0) {
+            return null;
+        }
+
+        const middle = bars.top + bars.height / 2;
+
+        return parts.map((part) => {
             const rect = part.getBoundingClientRect();
 
-            if (rect.height <= 0) {
-                continue;
-            }
+            return Math.round(middle - (rect.top + rect.height / 2));
+        });
+    }
 
-            // The box measured already carries the shift given last time.
-            const given =
-                parseFloat(
-                    part.style.getPropertyValue('translate').split(' ')[1] ??
-                        '',
-                ) || 0;
-            const shift = Math.round(
-                given + middle - (rect.top + rect.height / 2),
-            );
+    /** Moves each part by its shift, on top of the shift it was given last time. */
+    private applyShifts(
+        parts: readonly HTMLElement[],
+        shifts: readonly number[],
+    ): void {
+        parts.forEach((part, index) => {
+            const shift = Math.round(givenShift(part) + (shifts[index] ?? 0));
             part.style.setProperty('translate', `0px ${shift}px`);
-        }
+        });
+    }
+
+    /**
+     * Gives the wave's box the margins that keep every shifted part inside the line, and says
+     * whether they changed. The margins already given count: the overshoot measured now is added
+     * to them, and a part with room to spare takes them back, never below 0.
+     */
+    private fitBars(
+        box: HTMLElement,
+        line: DOMRect,
+        parts: readonly HTMLElement[],
+        shifts: readonly number[],
+    ): boolean {
+        let overTop = Number.NEGATIVE_INFINITY;
+        let overBottom = Number.NEGATIVE_INFINITY;
+
+        parts.forEach((part, index) => {
+            const rect = part.getBoundingClientRect();
+            const shift = shifts[index] ?? 0;
+            overTop = Math.max(overTop, line.top - (rect.top + shift));
+            overBottom = Math.max(
+                overBottom,
+                rect.bottom + shift - line.bottom,
+            );
+        });
+
+        const margin = (side: 'top' | 'bottom', over: number): boolean => {
+            const name = `margin-${side}`;
+            const given = parseFloat(box.style.getPropertyValue(name)) || 0;
+            const next =
+                over === Number.NEGATIVE_INFINITY
+                    ? 0
+                    : Math.max(0, Math.round(given + over));
+            box.style.setProperty(name, `${next}px`);
+
+            return next !== given;
+        };
+
+        const top = margin('top', overTop);
+        const bottom = margin('bottom', overBottom);
+
+        return top || bottom;
     }
 
     /**
@@ -1855,6 +1981,10 @@ export class Player {
 
         this.partCleanups = [];
         this.times = [];
+        for (const name of this.chapterNames) {
+            name.destroy();
+        }
+
         this.chapterNames = [];
         this.listButtons = [];
         this.layout = null;
@@ -2234,22 +2364,34 @@ export class Player {
         return button;
     }
 
-    /** The chapter playing, by name; hidden from screen readers, since the slider's value says it. */
+    /** The chapter playing, by name, in a room that may be too short for it (see `LongName`). */
     private chapterPart(): HTMLElement {
-        const name = document.createElement('span');
-        name.className = 'sonicframe-chapter-now';
-        name.setAttribute('aria-hidden', 'true');
-        name.setAttribute('dir', 'auto');
-        css(name, [
-            ['min-width', '0'],
-            ['flex', '1 1 6rem'],
-            ['overflow', 'hidden'],
-            ['white-space', 'nowrap'],
-            ['text-overflow', 'ellipsis'],
-        ]);
+        const name = new LongName(this.look, () => this.tooltipColors());
         this.chapterNames.push(name);
 
-        return name;
+        return name.element;
+    }
+
+    /** The page's tooltip in the played color, its text readable on it. */
+    private tooltipColors(): TooltipColors {
+        const background =
+            this.frameRef?.color('var(--sonicframe-progress, #2f6fdb)') ||
+            '#2f6fdb';
+
+        return {
+            background,
+            text: readableText(
+                readColor(background) ?? [47, 111, 219, 1],
+                [255, 255, 255, 1],
+            ),
+        };
+    }
+
+    /** Fits each chapter's name to its room: its end, its walk (see `LongName`). */
+    private fitNames(): void {
+        for (const name of this.chapterNames) {
+            name.fit();
+        }
     }
 
     /** Shows the chapter playing in the parts that name it: its title, or its place when untitled. */
@@ -2266,8 +2408,10 @@ export class Player {
                   });
 
         for (const name of this.chapterNames) {
-            name.textContent = text;
+            name.text = text;
         }
+
+        this.fitNames();
     }
 
     /** A button to the previous chapter (like a previous track) or the next one; says when there is none. */

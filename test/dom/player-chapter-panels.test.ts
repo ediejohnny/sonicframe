@@ -136,8 +136,27 @@ describe('the popover', () => {
         // Under the 24 px button at 100, with a 10 px gap.
         expect(px(box, 'top')).toBe(134);
         // The button's middle (1012) is past the list's reach: the arrow stops 16 px from its end.
-        expect(px(arrow, 'left') + 6).toBe(224);
+        // The arrow (12 px) is placed inside the list's 1 px border.
+        expect(px(arrow, 'left') + 6 + 1).toBe(224);
         expect(arrow.style.getPropertyValue('top')).not.toBe('');
+    });
+
+    it("points the arrow's middle at the button's middle through a border of any width", () => {
+        make({ type: 'popover', style: { border: 3 } });
+        sizes({ left: 300, top: 100 });
+        toggle().click();
+        const box = list();
+        const arrow = box.querySelector(
+            '.sonicframe-chapter-arrow',
+        ) as HTMLElement;
+
+        // The button's middle is at 312. The arrow (12 px) sits inside the list's 3 px border,
+        // its middle on the list's outer edge, its two outer sides as thick as the list's border.
+        expect(px(box, 'left') + 3 + px(arrow, 'left') + 6).toBe(312);
+        expect(px(arrow, 'top')).toBe(-9);
+        expect(arrow.style.getPropertyValue('border-width')).toBe(
+            '3px 0px 0px 3px',
+        );
     });
 
     it("keeps clear of the page's scrollbar", () => {
@@ -185,7 +204,10 @@ describe('the popover', () => {
         toggle().focus();
         toggle().click();
 
-        expect(document.activeElement?.textContent).toBe('0:25Interview');
+        expect(
+            document.activeElement?.querySelector('.sonicframe-chapter-title')
+                ?.textContent,
+        ).toBe('Interview');
 
         key('Escape');
         expect(list().hidden).toBe(true);
@@ -212,6 +234,35 @@ describe('the popover', () => {
         toggle().click();
         (list().querySelectorAll('nav button')[1] as HTMLButtonElement).click();
         expect(list().hidden).toBe(false);
+    });
+
+    it('heads a floating list with its name and place, and the list in the player only when asked', () => {
+        make({ type: 'popover' });
+        expect(
+            list().querySelector('.sonicframe-chapters-head'),
+        ).not.toBeNull();
+        player?.destroy();
+        host?.remove();
+
+        make(true);
+        expect(list().querySelector('.sonicframe-chapters-head')).toBeNull();
+        player?.destroy();
+        host?.remove();
+
+        make({ header: true });
+        expect(
+            list().querySelector('.sonicframe-chapters-head'),
+        ).not.toBeNull();
+    });
+
+    it("hands the list's own item look to the list", () => {
+        make({ look: { gap: 1 } });
+
+        expect(
+            (list().querySelector('ol') as HTMLElement).style.getPropertyValue(
+                'gap',
+            ),
+        ).toBe('1rem');
     });
 
     it("wears the player's colors", () => {
@@ -243,6 +294,50 @@ describe('the drawer', () => {
             list().querySelector('.sonicframe-chapter-close') as HTMLElement
         ).click();
         expect(list().style.getPropertyValue('display')).toBe('none');
+    });
+
+    it("lines the drawer's close button up with the list's head and the list's right edge", () => {
+        make({ type: 'drawer' });
+        const box = list();
+        const close = box.querySelector(
+            '.sonicframe-chapter-close',
+        ) as HTMLElement;
+        const scroll = box.querySelector(
+            '.sonicframe-chapter-scroll',
+        ) as HTMLElement;
+        const name = box.querySelector('.sonicframe-chapters-head')
+            ?.firstElementChild as HTMLElement;
+        // The drawer runs from 160 to 480 inside a 1 px border (from 1 to 479 within it); the
+        // list in it runs from 17 to 463, past 16 px of padding; the head's name runs from 21
+        // to 43, its middle at 32; the button is 28 px square.
+        boxOf(box, { left: 160, top: 0, width: 320, height: 600 });
+        boxOf(scroll, { left: 177, top: 17, width: 286, height: 566 });
+        boxOf(name, { left: 185, top: 21, width: 60, height: 22 });
+        boxOf(close, { left: 0, top: 0, width: 28, height: 28 });
+        toggle().click();
+
+        // Middle at 32 → top edge at 18, which is 17 under the border's inside; right edge at
+        // 463, which is 16 from the border's inside at 479.
+        expect(px(close, 'top')).toBe(17);
+        expect(px(close, 'right')).toBe(16);
+    });
+
+    it('keeps the close button in the corner of the list itself when the drawer has no head', () => {
+        make({ type: 'drawer', header: false });
+        const box = list();
+        const close = box.querySelector(
+            '.sonicframe-chapter-close',
+        ) as HTMLElement;
+        const scroll = box.querySelector(
+            '.sonicframe-chapter-scroll',
+        ) as HTMLElement;
+        boxOf(box, { left: 160, top: 0, width: 320, height: 600 });
+        boxOf(scroll, { left: 177, top: 17, width: 286, height: 566 });
+        boxOf(close, { left: 0, top: 0, width: 28, height: 28 });
+        toggle().click();
+
+        expect(px(close, 'top')).toBe(16);
+        expect(px(close, 'right')).toBe(16);
     });
 
     it('opens along the right side by default, or the left, with a named close button', () => {

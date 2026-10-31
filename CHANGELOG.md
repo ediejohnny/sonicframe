@@ -30,8 +30,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   motion) and `swipe` (a finger's swipe off the wave, `swipeDirection`, opens and closes it). The list can wear
   its own `palette`, `font` and `style` (corner, border, shadow, padding, text size). A list that floats adds
   its button at the end of the line when the look places none. `arrowOffset` (pure) places the arrow.
+- The chapters list's items show a number (sound bars for the chapter playing), a picture with the chapter's
+  length on it, a title in up to two lines and its stretch ("0:25 – 0:50"); the chapter playing is tinted and
+  fills a thin bar as it plays, and a head (`header`) can name the list and the playing chapter's place. All of
+  it is configurable through `listLook` (on the player, `list.look`): picture size, shape and corners, which
+  pieces show, title lines, padding, corners and gap.
 - `underStart` in the player's look (`'wave'`, the default, or `'line'`): the rows under a wave in the line start
   at the wave's left edge, or at the line's, under the play button.
+- Long chapter names in the player's look, off by default: `nameOverflow` (`'ellipsis'`, the default, `'fade'`
+  with `nameFade` rem and `nameFadeStart`, a fade at the start while the name walks, or `'clip'`), `nameTooltip`
+  (the whole name under the mouse), and `marquee`: the name walks across its room as an endless strip, its copy
+  `marqueeGap` behind and coming to rest where it started (`marqueeType: 'loop'`), or back to its start
+  (`'restart'`), or back and forth (`'bounce'`), at `marqueeSpeed`, resting `marqueePause`, stopping under the
+  mouse (`marqueeHoverPause`), never with reduced motion. `metaWrap` lets the row
+  under the wave break in two, the parts after a spacer together on the far side; by default it keeps one line.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
 - The docs' Chapters page, with a WebVTT and a JSON example.
 
@@ -48,6 +60,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The parts beside a wave in the player's line (the play button, the time) sat lower than the bars whenever a
   plugin added a strip above or below them, or rows sat under the wave: the line centered them on the wave's
   whole box or column. They now line up with the bars' middle, moved by `translate` alone.
+- Centered on short bars at the top of their box (a strip of titles under them), the play button stuck out of
+  the player's line into its padding. The wave's box now takes a margin by the overshoot.
+- The chapters popover's arrow sat one border-width off its button's middle, and its border stayed 1 px whatever
+  the list's `style.border`; the drawer's close button sat above the list's head and off its right edge. Both now
+  line up, measured when the list opens.
 
 ## [0.4.1] - 2026-10-31
 
