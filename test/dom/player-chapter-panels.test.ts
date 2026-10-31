@@ -216,6 +216,19 @@ describe('the popover', () => {
 });
 
 describe('the drawer', () => {
+    it('takes no room on the page while closed, its own display included', () => {
+        make({ type: 'drawer' });
+
+        // `hidden` alone loses to a display set on the element.
+        expect(list().style.getPropertyValue('display')).toBe('none');
+        toggle().click();
+        expect(list().style.getPropertyValue('display')).not.toBe('none');
+        (
+            list().querySelector('.sonicframe-chapter-close') as HTMLElement
+        ).click();
+        expect(list().style.getPropertyValue('display')).toBe('none');
+    });
+
     it('opens along the right side by default, or the left, with a named close button', () => {
         make({ type: 'drawer' });
         toggle().click();

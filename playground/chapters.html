@@ -279,8 +279,9 @@ The meeting</code></pre>
                             under the wave and on its left edge (under the
                             controls when the wave is on top). With a
                             <code>chapters</code> part in the look, a button
-                            opens and closes it (<code>listOpen</code>, closed
-                            by default); without one, it always shows.
+                            opens and closes it; without one, it always shows.
+                            <code>list</code> also takes the options in
+                            <a href="#the-list-s-forms">The list's forms</a>.
                         </li>
                         <li>
                             Four parts for the look, shown only with chapters:
@@ -305,6 +306,188 @@ The meeting</code></pre>
 &gt;&lt;/sonic-player&gt;</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                </section>
+
+                <section class="section">
+                    <h2>The list's forms</h2>
+                    <p>
+                        Short of room in the player? The list can float over the
+                        page instead: a <strong>popover</strong> under its
+                        button, pointing at it, or a <strong>drawer</strong>
+                        along a side of the page. Both close with
+                        <kbd>Escape</kbd>, a press outside or a chosen chapter,
+                        and give the focus back to the button.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/episodes/12.mp3',
+    chapters: {
+        src: '/episodes/12-chapters.vtt',
+        list: { type: 'popover', animation: true, swipe: true },
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"popover","animation":true,"swipe":true}},"look":{"line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
+                    ></div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","style":{"shadow":"glow"}}},"look":{"line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
+                    ></div>
+                    <p>
+                        The first opens a popover; the second, a drawer on the
+                        right with its own palette. On a phone, swipe up on the
+                        first player, off the wave, to open its list.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option of <code>list</code></th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>type</code></td>
+                                    <td><code>'inline'</code></td>
+                                    <td>
+                                        <code>'inline'</code> (in the player),
+                                        <code>'popover'</code> or
+                                        <code>'drawer'</code>. The two that
+                                        float add the <code>chapters</code>
+                                        button at the end of the line when the
+                                        look places none.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>open</code></td>
+                                    <td><code>false</code></td>
+                                    <td>The list in the player starts open.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>placement</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        A popover opens <code>'below'</code> its
+                                        button (over it without room) or
+                                        <code>'above'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>side</code></td>
+                                    <td><code>'right'</code></td>
+                                    <td>
+                                        The page's side a drawer opens on, or
+                                        <code>'left'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>width</code>,
+                                        <code>maxHeight</code>
+                                    </td>
+                                    <td>
+                                        <code>18</code> (drawer
+                                        <code>20</code>), <code>20</code>
+                                    </td>
+                                    <td>
+                                        In rem; past <code>maxHeight</code> a
+                                        popover scrolls.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>stayOpen</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Stays open after a chosen chapter.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>backdrop</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A drawer dims the page; a press there
+                                        closes it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>animation</code>,
+                                        <code>animationType</code>
+                                    </td>
+                                    <td>
+                                        <code>false</code>, <code>'fade'</code>
+                                    </td>
+                                    <td>
+                                        Moves in as it opens:
+                                        <code>'fade'</code> or
+                                        <code>'slide'</code>. Never for people
+                                        who asked for less motion.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>swipe</code>,
+                                        <code>swipeDirection</code>
+                                    </td>
+                                    <td>
+                                        <code>false</code>, <code>'up'</code>
+                                    </td>
+                                    <td>
+                                        A finger swiping on the player, off the
+                                        wave, opens the list (<code>'up'</code>,
+                                        <code>'down'</code>,
+                                        <code>'left'</code>,
+                                        <code>'right'</code>); the other way
+                                        closes it. The parts off the wave stop
+                                        panning the page along the swipe.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>palette</code></td>
+                                    <td>the player's</td>
+                                    <td>
+                                        Its own palette: a name,
+                                        <code>'auto'</code> or your colors.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>font</code></td>
+                                    <td>the player's</td>
+                                    <td>
+                                        Its own font, as the player takes it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>style</code></td>
+                                    <td>the list's</td>
+                                    <td>
+                                        <code
+                                            >{ corner, border, shadow, padding,
+                                            fontSize }</code
+                                        >: corners, padding and text in rem, the
+                                        border in CSS pixels, the shadow
+                                        <code>'none'</code>,
+                                        <code>'soft'</code>,
+                                        <code>'hard'</code> or
+                                        <code>'glow'</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        On the tag, <code>chapter-options</code> takes
+                        <code
+                            >list popover drawer left backdrop open stay
+                            animation slide swipe</code
+                        >.
+                    </p>
                 </section>
 
                 <section class="section">

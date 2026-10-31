@@ -694,6 +694,7 @@ export class Player {
         this.stopSize = observeSize(this.element, (size) => {
             this.width = size.width / size.pixelRatio;
             this.arrange();
+            this.alignToBars();
         });
     }
 
@@ -1602,6 +1603,61 @@ export class Player {
         if (this.layout !== null) {
             this.placeRows(this.layout, this.layout.narrow);
             this.swipeZones(this.layout);
+        }
+
+        // The bars move when the wave resizes or a strip comes or goes.
+        this.partCleanups.push(frame.on('resize', () => this.alignToBars()));
+        this.alignToBars();
+    }
+
+    /**
+     * Lines up the parts beside a wave in the line with the bars themselves. The line centers its
+     * parts on the wave's box, which also holds the strips plugins stack above and below the bars,
+     * or on the whole column when rows sit under the wave; each part is moved by `translate` alone,
+     * so nothing around it moves.
+     */
+    private alignToBars(): void {
+        const layout = this.layout;
+        const canvas = layout?.box.querySelector('canvas') ?? null;
+
+        if (
+            layout === null ||
+            canvas === null ||
+            this.look.wavePlace !== 'inline'
+        ) {
+            return;
+        }
+
+        const bars = canvas.getBoundingClientRect();
+
+        if (bars.height <= 0) {
+            return;
+        }
+
+        const middle = bars.top + bars.height / 2;
+        const column = layout.box.parentElement;
+
+        for (const part of layout.line.children) {
+            if (part === column || !(part instanceof HTMLElement)) {
+                continue;
+            }
+
+            const rect = part.getBoundingClientRect();
+
+            if (rect.height <= 0) {
+                continue;
+            }
+
+            // The box measured already carries the shift given last time.
+            const given =
+                parseFloat(
+                    part.style.getPropertyValue('translate').split(' ')[1] ??
+                        '',
+                ) || 0;
+            const shift = Math.round(
+                given + middle - (rect.top + rect.height / 2),
+            );
+            part.style.setProperty('translate', `0px ${shift}px`);
         }
     }
 

@@ -1,7 +1,7 @@
 {
-    "comment": "Gzip ceilings in bytes for each entry, measured with every chunk it imports. The dist is not minified (comments count); minified, an entry is about half this. A guardrail against accidental bloat (a leaked dependency, duplicated data), not a per-phase target. Bump deliberately, with a reason, at a release. index.js was 15624 at 0.1.0; raised from 48 KB to 64 KB for 0.2.0, which adds the player, its themes and the volume control (index 48447 and player 41791 when raised); raised to 96 KB for 0.3.0, which adds the wave in words, the browser's voice and the player's words in two languages (index 57097 and player 60071 when raised).",
+    "comment": "Gzip ceilings in bytes for each entry, measured with every chunk it imports. The dist is not minified (comments count); minified, an entry is about half this. A guardrail against accidental bloat (a leaked dependency, duplicated data), not a per-phase target. Bump deliberately, with a reason, at a release. index.js was 15624 at 0.1.0; raised from 48 KB to 64 KB for 0.2.0, which adds the player, its themes and the volume control (index 48447 and player 41791 when raised); raised to 96 KB for 0.3.0, which adds the wave in words, the browser's voice and the player's words in two languages (index 57097 and player 60071 when raised); raised to 128 KB for 0.5.0, which adds chapters with their floating list, the player's background, Media Session and recording, keeping the comments in the published code (index 80032 and player 95218 when raised).",
     "budget": {
-        "index.js": 98304,
-        "player.js": 98304
+        "index.js": 131072,
+        "player.js": 131072
     }
 }

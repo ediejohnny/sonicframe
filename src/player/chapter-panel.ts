@@ -82,7 +82,7 @@ export class FloatingList {
         private readonly onClose: (focusBack: boolean) => void,
     ) {
         const drawer = settings.type === 'drawer';
-        box.hidden = true;
+        this.show(false);
         css(content, [['overflow-y', 'auto']]);
         css(box, [
             ['position', 'fixed'],
@@ -108,7 +108,6 @@ export class FloatingList {
                 [settings.side, '0'],
                 ['width', `${settings.width}rem`],
                 ['max-width', '85vw'],
-                ['display', 'flex'],
                 ['flex-direction', 'column'],
             ]);
             css(content, [['flex', '1 1 auto']]);
@@ -165,7 +164,7 @@ export class FloatingList {
         this.anchor = anchor;
         this.carry();
         this.dress(this.box);
-        this.box.hidden = false;
+        this.show(true);
 
         if (this.backdrop !== null) {
             this.backdrop.hidden = false;
@@ -182,7 +181,7 @@ export class FloatingList {
 
     /** Hides the list; nothing else (the player says whether the focus goes back). */
     close(): void {
-        this.box.hidden = true;
+        this.show(false);
 
         if (this.backdrop !== null) {
             this.backdrop.hidden = true;
@@ -191,6 +190,22 @@ export class FloatingList {
         for (const stop of this.stops.splice(0)) {
             stop();
         }
+    }
+
+    /**
+     * Shows or hides the list by its `display` as well as `hidden`: a display set on the element (the
+     * drawer's column) would win over `hidden` alone.
+     */
+    private show(visible: boolean): void {
+        this.box.hidden = !visible;
+        this.box.style.setProperty(
+            'display',
+            !visible
+                ? 'none'
+                : this.settings.type === 'drawer'
+                  ? 'flex'
+                  : 'block',
+        );
     }
 
     /** Takes the list and the dimmed page off the page. */
