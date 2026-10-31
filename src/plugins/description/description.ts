@@ -37,7 +37,10 @@ export type SoundDescriptionKeys = {
 export type SoundDescriptionOptions = OutlineOptions & {
     /** Your own description (written ahead on a server, say), used instead of the one from the peaks. */
     text?: string;
-    /** `'en'` (the default), `'pt'`, any tag with your own `words`, or `'auto'` (the page's language). */
+    /**
+     * The frame's language by default (English unless it has one); `'en'`, `'pt'`, `'pt-PT'`, `'es'`,
+     * `'fr'`, a registered one, any tag with your own `words`, or `'auto'` (the page's language).
+     */
     lang?: string;
     /** Your own phrases, over the built-in ones. */
     words?: Partial<DescriptionWords>;
@@ -126,12 +129,15 @@ export function soundDescription(
         speaking = null;
     }
 
-    /** The words for the language asked; `'auto'` reads the page's language at this moment. */
+    /**
+     * The words for the language asked, the frame's without one; `'auto'` reads the page's language at
+     * this moment.
+     */
     function wordsFor(current: PluginHost): SoundWords {
         const lang =
             options.lang === 'auto'
                 ? pageLanguage(current.container)
-                : options.lang;
+                : (options.lang ?? current.lang);
 
         return soundWords({ lang, words: options.words, times: options.times });
     }

@@ -4,7 +4,7 @@
  */
 
 import type { KeyModifiers } from '../frame/keys';
-import { EN } from '../languages/en';
+import { localeFor, wordsFor } from '../languages/language';
 import { oneOf, within } from '../shared/checked';
 import { fillTemplate } from '../shared/text';
 import { ratioText } from '../shared/timing';
@@ -92,16 +92,28 @@ export type ZoomSettings = {
     revealKeys: boolean;
 };
 
-/** The words said about a view; the frame brings English, the player brings Portuguese. */
+/** The words said about a view, in the frame's language unless the app brings its own. */
 export type ZoomWords = {
     /** `level` is rounded to one decimal; `from` and `to` are times, or percentages while the duration is unknown. */
     view(level: number, from: string, to: string): string;
 };
 
-export const ZOOM_WORDS: Readonly<ZoomWords> = Object.freeze({
-    view: (level: number, from: string, to: string) =>
-        fillTemplate(EN.zoom.view, { level: String(level), from, to }),
-});
+/** The words said about a view in the language a tag finds, its level written as that language writes numbers. */
+export function zoomWords(lang: string | null | undefined): ZoomWords {
+    const phrase = wordsFor(lang).zoom.view;
+    const level = new Intl.NumberFormat(localeFor(lang, false), {
+        maximumFractionDigits: 1,
+        useGrouping: false,
+    });
+
+    return {
+        view: (value: number, from: string, to: string) =>
+            fillTemplate(phrase, { level: level.format(value), from, to }),
+    };
+}
+
+/** The words said about a view in English. */
+export const ZOOM_WORDS: Readonly<ZoomWords> = Object.freeze(zoomWords('en'));
 
 /** The largest zoom anyone can ask for. */
 export const MAX_ZOOM = 10_000;

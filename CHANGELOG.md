@@ -13,6 +13,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   word `readable` in `chapter-options`): the tooltip's text in black or white, whichever reads on its color
   (4.5:1), as the caption and the long chapter name already do. Off by default: the page's color for text on
   the played color (`--sonicframe-on-progress`), as before.
+- Three more languages: Portuguese as spoken in Portugal (`pt-PT`), Spanish (`es`) and French (`fr`), for every
+  word SonicFrame says (names, values, announcements and the wave in words). `pt` stays the Portuguese of Brazil
+  and `en` the English of the United States. A tag finds its language the BCP 47 way, the whole tag first, then
+  shorter (`es-MX` speaks Spanish, `pt-BR` Brazilian Portuguese); any other tag still speaks English.
+- `registerLanguage(tag, words)` brings a whole language at run time (`ja`, say), checked against English: every
+  phrase, nothing more, the same marks; `languageProblems(words)` says what is wrong. Built-in languages cannot
+  be replaced. `LANGUAGE_NAMES` and the `Words`, `MarkerWords` and `RegionWords` types are exported.
+- `a11y.lang` on the frame (its plugins speak it too), `PlayButton` and `VolumeControl`, and `host.lang` for
+  plugins. English by default, as before; the player hands its language to its wave, so the plugins an app adds
+  to a player speak the player's language.
+- The markers' `words` (`{ more }`, the tooltip's "and 3 more"), the regions' `a11y.words` (what R and L say),
+  the volume control's `labels.muted` and the player's `muted` label.
+- `CONTRIBUTING.md`, with "Adding a language": one file and one line, checked by the tests.
 
 ### Changed
 
@@ -41,6 +54,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `createSpectrogram`'s `minDb` and `maxDb` (the picture went black); `levels`' `windowSeconds`,
   `findSilences`' `thresholdDb`, `minDuration` and `windowSeconds`, and `silencesFromPeaks`' `threshold` and
   `minDuration` (no silence was ever found). The Security page says the rule for every option.
+- A player in Portuguese says its words in Portuguese everywhere: the volume slider said "muted", and the regions
+  and the markers' "and N more" spoke English, whatever the player's language.
 
 ## [0.5.0] - 2026-10-31
 

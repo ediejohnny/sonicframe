@@ -18,6 +18,7 @@ import {
     readChapters,
     type Chapter,
 } from '../../core/chapters/chapters';
+import { wordsFor } from '../../core/languages/language';
 import { mergeWords } from '../../core/languages/merge-words';
 import { finiteOr, within } from '../../core/shared/checked';
 import { keyLetter } from '../../core/shared/keys';
@@ -38,7 +39,7 @@ import {
 const MAX_WORD = 120;
 
 export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
-    const words = mergeWords(CHAPTER_WORDS, options.words, MAX_WORD);
+    let words = mergeWords(CHAPTER_WORDS, options.words, MAX_WORD);
     const keys = options.keys ?? true;
     const letter =
         keys === false
@@ -287,6 +288,11 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         setup(frame): void {
             host = frame;
+            words = mergeWords(
+                wordsFor(frame.lang).chapters,
+                options.words,
+                MAX_WORD,
+            );
 
             if (options.lane === 'above' || options.lane === 'below') {
                 lane = new ChapterLane(

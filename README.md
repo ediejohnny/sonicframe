@@ -92,7 +92,8 @@ Sound is for everyone, so accessibility is where SonicFrame starts, not an add-o
 
 - **The wave is a slider.** It takes the focus, has `role="slider"`, and says where it is as a time ("1:05 / 3:20").
   The keys are the WAI-ARIA ones: the arrows step, Page Up and Page Down jump further, Home and End go to the ends.
-- **Every control is a real button** with a name, and the player's words come in English and Portuguese, or yours.
+- **Every control is a real button** with a name, and every word comes in English, Portuguese (Brazil or
+  Portugal), Spanish or French, or yours: [Languages](https://ediejohnny.github.io/sonicframe/languages.html).
 - **One place for it all, the `a11y` group,** by place and action. On the tag, the attributes start with `a11y-`.
 
     ```js
@@ -174,6 +175,7 @@ Report a vulnerability privately to the author (see the npm page) rather than in
   you did, what you expected and what happened.
 - To run it: clone the repository, `npm install`, then `npm run dev` and open `/playground/`, the docs site with
   every example live. `npm test` runs the tests.
+- [CONTRIBUTING](CONTRIBUTING.md) says how to send a change, and how to add a language in one file.
 
 ## License
 

@@ -6,7 +6,7 @@
  * follow the page's theme variables.
  */
 
-import { EN } from '../../core/languages/en';
+import { wordsFor } from '../../core/languages/language';
 import { within } from '../../core/shared/checked';
 import { fillTemplate } from '../../core/shared/text';
 import { ratioText } from '../../core/shared/timing';
@@ -67,17 +67,27 @@ export type MinimapOptions = {
          * Off: the strip is hidden from screen readers.
          */
         keys?: boolean;
-        /** Its accessible name: `'Visible part'`. */
+        /** Its accessible name: `'Visible part'`, in the frame's language. */
         label?: string;
-        /** Its value in words: English by default. */
+        /** Its value in words, in the frame's language by default. */
         words?: Partial<MinimapWords>;
     };
 };
 
-export const MINIMAP_WORDS: Readonly<MinimapWords> = Object.freeze({
-    value: (from: string, to: string, total: string) =>
-        fillTemplate(EN.minimap.value, { from, to, total }),
-});
+/** The minimap's value in words in the language a tag finds. */
+function minimapWords(lang: string | null | undefined): MinimapWords {
+    const phrase = wordsFor(lang).minimap.value;
+
+    return {
+        value: (from: string, to: string, total: string) =>
+            fillTemplate(phrase, { from, to, total }),
+    };
+}
+
+/** The minimap's value in words in English. */
+export const MINIMAP_WORDS: Readonly<MinimapWords> = Object.freeze(
+    minimapWords('en'),
+);
 
 const MINIMAP_BAR: Readonly<BarStyle> = Object.freeze({
     width: 2,
@@ -136,8 +146,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
         },
     };
     const autoHide = options.autoHide === true;
-    const words: MinimapWords = { ...MINIMAP_WORDS, ...options.a11y?.words };
-
+    let words: MinimapWords = { ...MINIMAP_WORDS, ...options.a11y?.words };
     let host: PluginHost | null = null;
     let lane: Lane | null = null;
     let picture: MinimapPicture | null = null;
@@ -185,6 +194,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
 
         setup(frame): void {
             host = frame;
+            words = { ...minimapWords(frame.lang), ...options.a11y?.words };
             lane = frame.addLane(
                 side,
                 autoHide && isFullView(frame.view) ? 0 : laneSize,
@@ -200,7 +210,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
                 element.setAttribute('tabindex', '0');
                 element.setAttribute(
                     'aria-label',
-                    options.a11y?.label ?? EN.minimap.label,
+                    options.a11y?.label ?? wordsFor(frame.lang).minimap.label,
                 );
                 element.setAttribute('aria-valuemin', '0');
                 element.setAttribute('aria-valuemax', '100');

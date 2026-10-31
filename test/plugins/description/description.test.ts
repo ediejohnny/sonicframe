@@ -106,6 +106,23 @@ describe('the description on the slider', () => {
         ).toBe('pt');
     });
 
+    it("speaks the frame's language when it has none of its own", () => {
+        mounted = mount({
+            media: fakeMedia({ duration: 33 }),
+            peaks: NOTE,
+            a11y: { lang: 'es-MX' },
+            plugins: [soundDescription()],
+        });
+
+        expect(described(mounted.container)).toBe(
+            '33 segundos. Sonido hasta 20 segundos, una pausa de 4 segundos, ' +
+                'luego sonido hasta el final. Más fuerte hacia 12 segundos.',
+        );
+        expect(
+            mounted.container.querySelector('[hidden]')?.getAttribute('lang'),
+        ).toBe('es-MX');
+    });
+
     it("follows the page's language with 'auto'", () => {
         document.documentElement.setAttribute('lang', 'pt-BR');
         mounted = mount({

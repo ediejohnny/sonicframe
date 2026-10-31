@@ -23,14 +23,18 @@ import {
     type Mounted,
 } from '../../support/helpers';
 
-/** A 200 px wide frame of a 100-second sound with a minimap, zoom on. */
-function shown(options: MinimapOptions = {}): {
+/** A 200 px wide frame of a 100-second sound with a minimap, zoom on, in the language `lang`. */
+function shown(
+    options: MinimapOptions = {},
+    lang?: string,
+): {
     mounted: Mounted;
     strip: HTMLElement;
     map: HTMLCanvasElement;
 } {
     const mounted = mount(
         {
+            a11y: { lang },
             zoom: true,
             media: fakeMedia({ duration: 100 }),
             peaks: Array.from({ length: 400 }, (_, i) => (i % 10) / 10),
@@ -311,6 +315,16 @@ describe('the minimap as a keyboard slider', () => {
         slider.strip.dispatchEvent(pointer('pointerdown', 100));
 
         expect(document.activeElement).toBe(slider.strip);
+    });
+
+    it("is named and says the part in view in the frame's language", () => {
+        const { mounted: frame, strip } = shown({ a11y: { keys: true } }, 'fr');
+        frame.frame.setView(0.25, 0.5);
+
+        expect(strip.getAttribute('aria-label')).toBe('Partie visible');
+        expect(strip.getAttribute('aria-valuetext')).toBe(
+            '0:25 à 0:50 sur 1:40',
+        );
     });
 
     it('takes your own name and words', () => {

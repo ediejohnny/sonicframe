@@ -16,10 +16,12 @@ import {
     volumeIcon,
     volumeText,
 } from '../../core/controls/volume';
-import { EN } from '../../core/languages/en';
+import { wordsFor } from '../../core/languages/language';
+import type { Words } from '../../core/languages/words';
 import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { BUTTON, PROGRESS, WAVE } from '../../core/shared/variables';
+import { chosenLanguage } from '../../dom/a11y/page-language';
 import { css } from '../../dom/shared/css';
 import { iconElement, iconPath } from '../../dom/shared/icon';
 import { hideFocusRing, showFocusRing } from '../shared/focus';
@@ -47,13 +49,23 @@ export type VolumeControlOptions = {
     /** How far an arrow key moves the level (0..1); 0.05 by default. */
     step?: number;
     colors?: Partial<VolumeColors>;
-    /** Accessible names. */
-    labels?: { mute: string; unmute: string; volume: string };
+    /** Accessible names, and the slider's value while muted; they win over the language's. */
+    labels?: { mute: string; unmute: string; volume: string; muted?: string };
+    /** Accessibility options. */
+    a11y?: {
+        /**
+         * The language of the control's names: `'en'` (the default), `'pt'`, `'pt-PT'`, `'es'`, `'fr'`,
+         * a registered one, or `'auto'` (the page's).
+         */
+        lang?: string;
+    };
 };
 
 export type VolumeControlEvents = {
     destroy: [];
 };
+
+type VolumeWords = Words['volume'];
 
 export const DEFAULT_VOLUME_COLORS: Readonly<VolumeColors> = Object.freeze({
     icon: BUTTON,
@@ -86,7 +98,7 @@ export class VolumeControl {
     private readonly marks: SVGPathElement;
     private readonly bar: VolumeBar;
     private readonly events = new Emitter<VolumeControlEvents>();
-    private readonly labels: { mute: string; unmute: string; volume: string };
+    private readonly labels: VolumeWords;
     private slider: 'always' | 'hover';
     private size: number;
     private width: number;
@@ -104,7 +116,11 @@ export class VolumeControl {
             throw new TypeError('sonicframe: a container element is required');
         }
 
-        this.labels = options.labels ?? EN.volume;
+        this.labels = {
+            ...wordsFor(chosenLanguage(options.a11y?.lang, options.container))
+                .volume,
+            ...options.labels,
+        };
         this.slider = options.slider ?? 'always';
         this.size = finiteOr(options.size, 32);
         this.width = finiteOr(options.width, 80);
@@ -281,7 +297,7 @@ export class VolumeControl {
         this.button.style.setProperty('opacity', media === null ? '0.5' : '1');
         this.bar.show(
             percent,
-            volumeText(volume, media === null || muted),
+            volumeText(volume, media === null || muted, this.labels.muted),
             media !== null,
         );
     };

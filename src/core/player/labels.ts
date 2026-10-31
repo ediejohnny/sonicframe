@@ -1,14 +1,14 @@
 /**
- * The accessible names and words of the ready-made player, in each built-in language. Pure: the app
- * picks the language (English unless it asks for another) and can replace any label; every label it
- * gives is cleaned and capped, and marks are filled with SonicFrame's own values only.
+ * The accessible names and words of the ready-made player, in each language SonicFrame speaks. Pure:
+ * the app picks the language (English unless it asks for another) and can replace any label; every
+ * label it gives is cleaned and capped, and marks are filled with SonicFrame's own values only.
  */
 
 import type { ValueText } from '../frame/controller';
 import {
     byLanguage,
     localeFor,
-    resolveLanguage,
+    wordsFor,
     type Language,
 } from '../languages/language';
 import { mergeWords } from '../languages/merge-words';
@@ -33,6 +33,7 @@ function playerLabels(words: Readonly<Words>): PlayerLabels {
         mute: volume.mute,
         unmute: volume.unmute,
         volume: volume.volume,
+        muted: volume.muted,
         listen: player.listen,
         stopListening: player.stopListening,
         speechFailed: player.speechFailed,
@@ -52,6 +53,7 @@ function playerLabels(words: Readonly<Words>): PlayerLabels {
     };
 }
 
+/** The player's labels in each built-in language. */
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
     byLanguage(playerLabels);
 
@@ -80,11 +82,7 @@ export function playerWords(
     own?: Partial<PlayerLabels>,
 ): PlayerWords {
     const locale = localeFor(lang, own !== undefined);
-    const labels = mergeWords(
-        PLAYER_LABELS[resolveLanguage(lang)],
-        own,
-        MAX_LABEL,
-    );
+    const labels = mergeWords(playerLabels(wordsFor(lang)), own, MAX_LABEL);
 
     const number = (value: number): string =>
         new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(

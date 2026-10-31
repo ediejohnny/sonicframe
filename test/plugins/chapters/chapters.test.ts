@@ -12,6 +12,7 @@ import { recordingOf } from '../../support/fakes';
 import {
     fakeMedia,
     mount,
+    mountShown,
     nextFrame,
     repainted,
     takeOff,
@@ -185,6 +186,26 @@ describe('what a screen reader hears', () => {
         expect(off.container.getAttribute('aria-valuetext')).toBe(
             '0:30 / 1:40',
         );
+    });
+
+    it("says the chapters in the frame's language", () => {
+        const media = fakeMedia({ duration: 100 });
+        const { container } = mountShown({
+            media,
+            plugins: [plugin()],
+            a11y: { lang: 'fr' },
+        });
+        playTo(media, 30);
+
+        expect(container.getAttribute('aria-valuetext')).toBe(
+            '0:30 / 1:40, Chapitre 2 sur 3: Interview',
+        );
+
+        pressKey(container, 'c');
+        expect(said()).toBe('Chapitre 3 sur 3, 0:50');
+
+        pressKey(container, 'c');
+        expect(said()).toBe('Plus aucun chapitre');
     });
 
     it('says a chapter playback enters only when asked, and tells the app every change', () => {

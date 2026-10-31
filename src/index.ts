@@ -57,7 +57,19 @@ export {
     type ChaptersPlugin,
 } from './plugins/chapters/chapters-options';
 export type { ChapterListLook } from './plugins/chapters/chapter-list-look';
-export type { ChapterWords, DescriptionWords } from './core/languages/words';
+export type {
+    ChapterWords,
+    DescriptionWords,
+    MarkerWords,
+    RegionWords,
+    Words,
+} from './core/languages/words';
+export {
+    LANGUAGE_NAMES,
+    registerLanguage,
+    type Language,
+} from './core/languages/language';
+export { languageProblems } from './core/languages/language-check';
 export {
     minimap,
     MINIMAP_WORDS,

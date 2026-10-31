@@ -6,7 +6,9 @@
  */
 
 import type { KeyModifiers } from '../../core/frame/keys';
-import { EN } from '../../core/languages/en';
+import { wordsFor } from '../../core/languages/language';
+import { mergeWords } from '../../core/languages/merge-words';
+import type { RegionWords } from '../../core/languages/words';
 import { clamp01 } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
@@ -15,12 +17,26 @@ import type { Region, RegionsHost } from './region-store';
 /** How far a nudge moves an edge, in seconds. */
 const NUDGE = 0.5;
 
+/** The longest word taken from the app, in characters. */
+const MAX_WORD = 120;
+
 export class RegionKeys {
     constructor(
         private readonly host: RegionsHost,
         /** Zoomed in, a region chosen by R is brought into view, centered. */
         private readonly scrollIntoView: boolean,
+        /** The app's own words, over those of the frame's language. */
+        private readonly own: Partial<RegionWords> | undefined,
     ) {}
+
+    /** The words said, in the frame's language. */
+    private words(): RegionWords {
+        return mergeWords(
+            wordsFor(this.host.frame()?.lang).regions,
+            this.own,
+            MAX_WORD,
+        );
+    }
 
     /** Whether the key was the regions' (and so done). */
     down(
@@ -49,9 +65,10 @@ export class RegionKeys {
 
         if ((key === 'l' || key === 'L') && selectedId !== null) {
             store.loop = !store.loop;
+            const words = this.words();
             this.host
                 .frame()
-                ?.announce(store.loop ? EN.regions.loopOn : EN.regions.loopOff);
+                ?.announce(store.loop ? words.loopOn : words.loopOff);
 
             return true;
         }
@@ -109,7 +126,7 @@ export class RegionKeys {
 
     /** Says the region's label, then where it is. */
     private announce(region: Region): void {
-        const place = fillTemplate(EN.regions.place, {
+        const place = fillTemplate(this.words().place, {
             from: formatTime(region.start),
             to: formatTime(region.end),
         });

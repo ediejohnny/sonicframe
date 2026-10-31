@@ -60,10 +60,16 @@ export type SonicFrameOptions = {
 };
 
 export type SonicFrameA11y = {
+    /**
+     * The language of the wave's words and of its plugins': `'en'` (the default), `'pt'` (the
+     * Portuguese of Brazil), `'pt-PT'`, `'es'`, `'fr'`, a registered one (`registerLanguage`), or
+     * `'auto'` (the page's). A tag with a region finds its language (`'es-MX'` speaks Spanish).
+     */
+    lang?: string;
     zoom?: {
         /** Says the new view through the live region after a zoom by the keys, a button or two fingers. Off by default. */
         announce?: boolean;
-        /** The words said; English by default. */
+        /** The words said; in the frame's language by default. */
         words?: Partial<ZoomWords>;
     };
 };

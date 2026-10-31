@@ -14,10 +14,11 @@ import {
     type ButtonLook,
     type ButtonShape,
 } from '../../core/controls/button';
-import { EN } from '../../core/languages/en';
+import { wordsFor } from '../../core/languages/language';
 import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { applyStyles } from '../../core/shared/styles';
+import { chosenLanguage } from '../../dom/a11y/page-language';
 import { BUTTON, BUTTON_ICON } from '../../core/shared/variables';
 import { iconElement, iconPath } from '../../dom/shared/icon';
 import { hideFocusRing, showFocusRing } from '../shared/focus';
@@ -35,10 +36,18 @@ export type PlayButtonOptions = {
     /** Corner radius in CSS pixels, instead of the shape's own. */
     radius?: number | null;
     colors?: Partial<ButtonColors>;
-    /** Accessible names for both states. */
+    /** Accessible names for both states; they win over the language's. */
     labels?: { play: string; pause: string };
     /** Starting this media pauses every other media that has an exclusive play button (default true). */
     exclusive?: boolean;
+    /** Accessibility options. */
+    a11y?: {
+        /**
+         * The language of the button's names: `'en'` (the default), `'pt'`, `'pt-PT'`, `'es'`, `'fr'`,
+         * a registered one, or `'auto'` (the page's).
+         */
+        lang?: string;
+    };
 };
 
 export type PlayButtonEvents = {
@@ -87,7 +96,10 @@ export class PlayButton {
             throw new TypeError('sonicframe: a container element is required');
         }
 
-        this.labels = options.labels ?? EN.playButton;
+        this.labels =
+            options.labels ??
+            wordsFor(chosenLanguage(options.a11y?.lang, options.container))
+                .playButton;
         this.exclusive = options.exclusive ?? true;
         this.look = {
             shape: options.shape ?? 'circle',

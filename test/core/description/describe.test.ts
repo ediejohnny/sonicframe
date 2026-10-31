@@ -241,7 +241,7 @@ describe('the wave in words', () => {
     it('speaks English for a language it has no words for, never a mix', () => {
         const outline = outlineSound(NOTE, 33);
 
-        expect(outline && describeSound(outline, { lang: 'fr' })).toMatch(
+        expect(outline && describeSound(outline, { lang: 'de' })).toMatch(
             /^33 seconds\. Sound until/,
         );
         expect(
@@ -254,11 +254,11 @@ describe('the wave in words', () => {
         const text =
             outline &&
             describeSound(outline, {
-                lang: 'es',
-                words: { length: 'Dura {duration}.{unknown}' },
+                lang: 'de',
+                words: { length: 'Dauer {duration}.{unknown}' },
             });
 
-        expect(text).toMatch(/^Dura 33 segundos\. Sound until/);
+        expect(text).toMatch(/^Dauer 33 Sekunden\. Sound until/);
     });
 
     it('keeps words that are not text, or not safe, out of the result', () => {
@@ -356,19 +356,40 @@ describe('moving between the parts', () => {
 });
 
 describe('choosing the language', () => {
-    it('knows English and Portuguese, and falls back to English', () => {
+    it('knows the built-in languages, and falls back to English', () => {
         expect(resolveLanguage('pt-BR')).toBe('pt');
         expect(resolveLanguage('PT')).toBe('pt');
+        expect(resolveLanguage('pt-pt')).toBe('pt-PT');
+        expect(resolveLanguage('es-MX')).toBe('es');
+        expect(resolveLanguage('fr-CA')).toBe('fr');
         expect(resolveLanguage('en-GB')).toBe('en');
-        expect(resolveLanguage('fr')).toBe('en');
+        expect(resolveLanguage('de')).toBe('en');
         expect(resolveLanguage(undefined)).toBe('en');
     });
 
     it('marks the text with a valid tag of the language it is in', () => {
         expect(localeFor('pt-br', false)).toBe('pt-BR');
-        expect(localeFor('fr', false)).toBe('en');
-        expect(localeFor('fr', true)).toBe('fr');
+        expect(localeFor('pt-PT', false)).toBe('pt-PT');
+        expect(localeFor('fr-ca', false)).toBe('fr-CA');
+        expect(localeFor('de', false)).toBe('en');
+        expect(localeFor('de', true)).toBe('de');
         expect(localeFor('', false)).toBe('en');
         expect(localeFor('x'.repeat(100), true)).toBe('en');
+    });
+
+    it('says the steps in each built-in language, with its own numbers', () => {
+        const steps: [string, string, string][] = [
+            ['pt-PT', 'Parte 2 de 2, 24 segundos.', 'Não há mais partes.'],
+            ['es', 'Parte 2 de 2, 24 segundos.', 'No hay más partes.'],
+            ['fr', 'Partie 2 sur 2, 24 secondes.', 'Plus aucune partie.'],
+        ];
+
+        for (const [lang, part, noPart] of steps) {
+            const words = soundWords({ lang });
+
+            expect(words.part(1, 2, 24.6), lang).toBe(part);
+            expect(words.noPart(), lang).toBe(noPart);
+            expect(words.locale, lang).toBe(lang);
+        }
     });
 });

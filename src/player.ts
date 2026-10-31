@@ -34,7 +34,13 @@ export {
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element/element';
-export type { PlayerLabels } from './core/languages/words';
+export type { PlayerLabels, Words } from './core/languages/words';
+export {
+    LANGUAGE_NAMES,
+    registerLanguage,
+    type Language,
+} from './core/languages/language';
+export { languageProblems } from './core/languages/language-check';
 export {
     PLAYER_LABELS,
     playerWords,

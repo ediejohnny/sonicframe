@@ -1,0 +1,83 @@
+/** Spanish: `es` and every tag that starts with it (`es-ES`, `es-MX`). */
+
+import type { Words } from './words';
+
+export const ES: Words = {
+    frame: {
+        position: 'Posición en el audio',
+    },
+    playButton: {
+        play: 'Reproducir',
+        pause: 'Pausar',
+    },
+    volume: {
+        mute: 'Silenciar',
+        unmute: 'Activar el sonido',
+        volume: 'Volumen',
+        muted: 'silenciado',
+    },
+    zoom: {
+        view: 'Zoom {level}×, de {from} a {to}',
+    },
+    minimap: {
+        label: 'Parte visible',
+        value: '{from} a {to} de {total}',
+    },
+    chapters: {
+        chapter: 'Capítulo {index} de {count}',
+        list: 'Capítulos',
+        none: 'No hay más capítulos',
+        link: 'Enlace',
+    },
+    markers: {
+        more: 'y {count} más',
+    },
+    regions: {
+        place: 'de {from} a {to}',
+        loopOn: 'repetición activada',
+        loopOff: 'repetición desactivada',
+    },
+    description: {
+        length: '{duration}.',
+        silence: '{duration} de silencio.',
+        continuous: 'Sonido continuo.',
+        silenceFor: 'Silencio durante {duration}',
+        soundUntil: 'Sonido hasta {at}',
+        pause: 'una pausa de {duration}',
+        thenSoundUntil: 'luego sonido hasta {at}',
+        thenSoundToEnd: 'luego sonido hasta el final',
+        thenSilenceToEnd: 'luego silencio hasta el final',
+        pauses: 'Sonido con {count} pausas; la más larga, de {duration}, hacia {at}.',
+        startsAfter: 'Empieza tras {duration} de silencio.',
+        endsWith: 'Termina con {duration} de silencio.',
+        even: 'Volumen constante.',
+        rises: 'Sube de volumen hacia el final.',
+        falls: 'Baja de volumen hacia el final.',
+        loudest: 'Más fuerte hacia {at}.',
+        loudestStart: 'Más fuerte al principio.',
+        part: 'Parte {part} de {count}, {at}.',
+        partStart: 'Parte {part} de {count}, al principio.',
+        noPart: 'No hay más partes.',
+        pauseNote: 'pausa',
+        silenceNote: 'silencio',
+        join: ',',
+        stop: '.',
+    },
+    player: {
+        player: 'Reproductor de audio',
+        position: 'Posición de reproducción',
+        value: '{time} de {duration}',
+        back: 'Retroceder {seconds} segundos',
+        forward: 'Avanzar {seconds} segundos',
+        speed: 'Velocidad {speed}',
+        listen: 'Escuchar la descripción',
+        stopListening: 'Detener la descripción',
+        speechFailed: 'No se pudo leer la descripción en voz alta aquí.',
+        zoomIn: 'Acercar',
+        zoomOut: 'Alejar',
+        zoomReset: 'Mostrar todo el sonido',
+        previousChapter: 'Capítulo anterior',
+        nextChapter: 'Capítulo siguiente',
+        closeChapters: 'Cerrar los capítulos',
+    },
+};

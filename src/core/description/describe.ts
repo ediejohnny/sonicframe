@@ -9,7 +9,7 @@
 import {
     byLanguage,
     localeFor,
-    resolveLanguage,
+    wordsFor,
     type Language,
 } from '../languages/language';
 import { mergeWords } from '../languages/merge-words';
@@ -19,7 +19,10 @@ import { formatTime } from '../shared/timing';
 import type { SoundOutline } from './outline';
 
 export type DescribeOptions = {
-    /** A language tag: `'en'` (the default), `'pt'`, `'pt-BR'`… or any other with `words`. */
+    /**
+     * A language tag: `'en'` (the default), `'pt'` (`'pt-BR'`), `'pt-PT'`, `'es'`, `'fr'`, a registered
+     * one, or any other with `words`.
+     */
     lang?: string;
     /** Your own phrases, over the built-in ones; their language follows `lang`. */
     words?: Partial<DescriptionWords>;
@@ -39,6 +42,7 @@ export type SoundWords = {
     silenceNote(): string;
 };
 
+/** The description's phrases in each built-in language. */
 export const DESCRIPTION_WORDS: Readonly<
     Record<Language, Readonly<DescriptionWords>>
 > = byLanguage((words) => words.description);
@@ -116,7 +120,7 @@ function spoken(seconds: number, locale: string, length: boolean): string {
 export function soundWords(options: DescribeOptions = {}): SoundWords {
     const locale = localeFor(options.lang, options.words !== undefined);
     const words = mergeWords(
-        DESCRIPTION_WORDS[resolveLanguage(options.lang)],
+        wordsFor(options.lang).description,
         options.words,
         MAX_WORD,
     );
