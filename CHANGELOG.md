@@ -27,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - The time part holds its text in `.sonicframe-time-text`, next to the hidden mold `.sonicframe-time-mold`; read
   the shown time from `.sonicframe-time-text`.
+- The docs' Installation page teaches building from the source code, for sites that use no package manager: get the version's
+  tag, build with Node, copy the whole `dist/` folder with the license, and import by path or through an import map
+  (with the hash a strict Content-Security-Policy needs), plus the TypeScript `paths`.
 
 ## [0.4.0] - 2026-10-30
 
