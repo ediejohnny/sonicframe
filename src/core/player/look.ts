@@ -3,7 +3,8 @@
  * line under the wave, where the wave goes, how the time reads, the button, the sizes (in rem, so a
  * player grows with the page's text) and the finish. `resolveLook` lays a partial look over a base and
  * keeps only known names and numbers in range, so a look can come from anywhere (an attribute, a
- * stored setting) without surprises.
+ * stored setting) without surprises. It stays one file: the look, its defaults and the one function
+ * that reads it are one subject, and its size is the documentation of each field.
  */
 
 import type { ButtonFill, ButtonShape } from '../controls/button';
