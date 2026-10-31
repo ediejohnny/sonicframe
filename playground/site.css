@@ -636,6 +636,13 @@ kbd {
     margin-left: auto;
 }
 
+/* The links to other sites, a landmark of their own, spaced as the switches beside them. */
+.elsewhere {
+    display: flex;
+    gap: inherit;
+    align-items: center;
+}
+
 .nav a {
     color: var(--ink);
     font-weight: 550;

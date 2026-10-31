@@ -92,6 +92,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   the first page arrived) is no longer reported as an error.
 - The docs' search said its words and its keys as one ("Search the docsCtrl K"), and once something was typed
   it took Escape twice to close. Its keys are said by `aria-keyshortcuts` only, and one Escape closes it.
+- The docs, for people who cannot see the page:
+    - **Search results:** each one says its title and its place apart ("Zoom and scroll, Long sounds", not "Zoom and
+      scrollLong sounds").
+    - **Previous and Next:** said the same way ("Previous: Overview").
+    - **Menu on a phone:** while it is open, Tab and screen readers stay in the header and the list of pages,
+      instead of wandering into the page behind it.
+    - **Copy buttons:** each is described by the heading over its code, and "Copied." is said aloud.
+    - **Wide code blocks:** a block wider than the screen can be scrolled from the keyboard.
+    - **"On this page":** the link to a heading whose words the page already used as an address (the Words page's
+      "Keys") now reaches that heading.
+    - **Header:** the font and scheme switches left the landmark of links to other sites.
+    - **Status lines:** the one-hour sound's status and the clip export's are said aloud.
 
 ## [0.4.1] - 2026-10-31
 
