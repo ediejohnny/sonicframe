@@ -13,6 +13,7 @@ import {
     fakeMedia,
     mount,
     nextFrame,
+    repainted,
     takeOff,
     tooltipTextOnPale,
 } from '../../support/helpers';
@@ -23,24 +24,29 @@ afterEach(() => {
     document.querySelector('[role="status"]')?.replaceChildren();
 });
 
+/** The lines a chapters plugin of `options` draws on a fresh picture: their x and width. */
+function linesOf(
+    options: Parameters<typeof plugin>[0] = {},
+): Promise<{ x: number; width: number }[]> {
+    return repainted(showFrame([plugin(options)]), 'red');
+}
+
 describe('chapters on the wave', () => {
     it('draws a line where each chapter in the contents starts, none at the very start', async () => {
-        const { canvas, frame } = showFrame([plugin()]);
-        await nextFrame();
-        const from = recordingOf(canvas).rects.length;
-        frame.invalidate();
-        await nextFrame();
-
         // 25 s and 50 s of 100 s across 200 px: x = 50 and 100, 2 px wide.
-        expect(
-            recordingOf(canvas)
-                .rects.slice(from)
-                .filter((rect) => rect.fill === 'red')
-                .map(({ x, width }) => ({ x, width })),
-        ).toEqual([
+        expect(await linesOf()).toEqual([
             { x: 49, width: 2 },
             { x: 99, width: 2 },
         ]);
+    });
+
+    it('draws the lines the usual 2 pixels wide when the width is not a number', async () => {
+        for (const width of [Number.NaN, '6' as unknown as number]) {
+            expect(await linesOf({ width })).toEqual([
+                { x: 49, width: 2 },
+                { x: 99, width: 2 },
+            ]);
+        }
     });
 
     it('draws no line with lines off', async () => {

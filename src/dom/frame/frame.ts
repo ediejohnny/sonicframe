@@ -17,6 +17,7 @@ import {
 } from '../../core/frame/media-events';
 import { EN } from '../../core/languages/en';
 import { Emitter } from '../../core/shared/emitter';
+import { finiteOr } from '../../core/shared/checked';
 import { clamp01 } from '../../core/shared/math';
 import { defaultValueText } from '../../core/shared/timing';
 import {
@@ -138,7 +139,7 @@ export class SonicFrame implements PluginHost {
         this.interact = options.interact ?? true;
         this.lazy = options.lazy ?? true;
         this.animate = options.animate ?? true;
-        this.cursorWidth = options.cursorWidth ?? 2;
+        this.cursorWidth = finiteOr(options.cursorWidth, 2);
         this.valueText = options.valueText ?? defaultValueText;
         this.bar = { ...DEFAULT_BAR, ...options.bar };
         this.wave = resolveWave(DEFAULT_WAVE, options.wave);
@@ -191,8 +192,8 @@ export class SonicFrame implements PluginHost {
         this.controller = new Controller(
             {
                 interact: this.interact,
-                stepSeconds: options.stepSeconds ?? 5,
-                largeStepRatio: options.largeStepRatio ?? 0.1,
+                stepSeconds: finiteOr(options.stepSeconds, 5),
+                largeStepRatio: finiteOr(options.largeStepRatio, 0.1),
                 rewindOnEnd: options.rewindOnEnd ?? false,
                 valueText: (time, ratio, duration) =>
                     [

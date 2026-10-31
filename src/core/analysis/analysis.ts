@@ -4,6 +4,8 @@
  * without a browser. Everything is capped, so a long recording cannot blow up memory or time.
  */
 
+import { finiteOr } from '../shared/checked';
+
 /** A structural stand-in for an `AudioBuffer`, so the core never names a DOM type. */
 export type ChannelSource = {
     readonly numberOfChannels: number;
@@ -29,7 +31,7 @@ export function levels(
 ): { rms: number[]; peak: number[]; windowSeconds: number } {
     const wanted = Math.max(
         1,
-        Math.round(sampleRate * (options.windowSeconds ?? 0.05)),
+        Math.round(sampleRate * finiteOr(options.windowSeconds, 0.05)),
     );
     const size = Math.max(wanted, Math.ceil(samples.length / MAX_WINDOWS));
     const rms: number[] = [];
@@ -71,11 +73,12 @@ export function findSilences(
         windowSeconds?: number;
     } = {},
 ): Silence[] {
-    const minDuration = options.minDuration ?? 0.4;
-    const quiet = amplitudeFromDb(options.thresholdDb ?? -45);
-    const loud = amplitudeFromDb((options.thresholdDb ?? -45) + 6);
+    const minDuration = finiteOr(options.minDuration, 0.4);
+    const thresholdDb = finiteOr(options.thresholdDb, -45);
+    const quiet = amplitudeFromDb(thresholdDb);
+    const loud = amplitudeFromDb(thresholdDb + 6);
     const { rms, windowSeconds } = levels(samples, sampleRate, {
-        windowSeconds: options.windowSeconds ?? 0.02,
+        windowSeconds: finiteOr(options.windowSeconds, 0.02),
     });
     const silences: Silence[] = [];
     let open = false;
@@ -118,8 +121,8 @@ export function silencesFromPeaks(
     duration: number,
     options: { threshold?: number; minDuration?: number } = {},
 ): Silence[] {
-    const threshold = options.threshold ?? 0.05;
-    const minDuration = options.minDuration ?? 0.4;
+    const threshold = finiteOr(options.threshold, 0.05);
+    const minDuration = finiteOr(options.minDuration, 0.4);
     const step = peaks.length > 0 ? duration / peaks.length : 0;
 
     if (step <= 0) {

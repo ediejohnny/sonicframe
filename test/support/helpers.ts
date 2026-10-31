@@ -120,6 +120,22 @@ export function stubMedia(matches: (query: string) => boolean): void {
     }));
 }
 
+/** Paints a frame once more and gives the boxes that painting drew in one color: their x and width. */
+export async function repainted(
+    { frame, canvas }: Mounted,
+    fill: string,
+): Promise<{ x: number; width: number }[]> {
+    await nextFrame();
+    const from = recordingOf(canvas).rects.length;
+    frame.invalidate();
+    await nextFrame();
+
+    return recordingOf(canvas)
+        .rects.slice(from)
+        .filter((rect) => rect.fill === fill)
+        .map(({ x, width }) => ({ x, width }));
+}
+
 /**
  * Gives a mounted frame pixels (200 × 40) and the screen, puts its position at the middle and waits
  * for the picture; returns what its canvas recorded.

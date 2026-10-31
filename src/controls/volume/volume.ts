@@ -17,6 +17,7 @@ import {
     volumeText,
 } from '../../core/controls/volume';
 import { EN } from '../../core/languages/en';
+import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { BUTTON, PROGRESS, WAVE } from '../../core/shared/variables';
 import { css } from '../../dom/shared/css';
@@ -105,8 +106,8 @@ export class VolumeControl {
 
         this.labels = options.labels ?? EN.volume;
         this.slider = options.slider ?? 'always';
-        this.size = options.size ?? 32;
-        this.width = options.width ?? 80;
+        this.size = finiteOr(options.size, 32);
+        this.width = finiteOr(options.width, 80);
         this.colors = { ...DEFAULT_VOLUME_COLORS, ...options.colors };
 
         this.element = document.createElement('div');
@@ -135,7 +136,7 @@ export class VolumeControl {
                 setLevel: (level) => this.setLevel(level),
             },
             this.labels.volume,
-            options.step ?? 0.05,
+            finiteOr(options.step, 0.05),
         );
         this.element.append(this.button, this.bar.element);
 
@@ -185,8 +186,8 @@ export class VolumeControl {
         }>,
     ): void {
         this.slider = look.slider ?? this.slider;
-        this.size = look.size ?? this.size;
-        this.width = look.width ?? this.width;
+        this.size = finiteOr(look.size, this.size);
+        this.width = finiteOr(look.width, this.width);
         this.colors = { ...this.colors, ...look.colors };
         this.draw();
         this.update();

@@ -5,7 +5,7 @@
  * dimension is capped, so neither memory nor time can run away.
  */
 
-import { within } from '../shared/checked';
+import { finiteOr, within } from '../shared/checked';
 import { powerOfTwo } from '../shared/math';
 import { fft } from './fft';
 
@@ -61,8 +61,8 @@ export function createSpectrogram(
     );
     const columns = within(options.columns, 512, 1, MAX_COLUMNS, Math.floor);
     const rows = within(options.rows, 256, 1, MAX_ROWS, Math.floor);
-    const minDb = options.minDb ?? -90;
-    const maxDb = options.maxDb ?? -20;
+    const minDb = finiteOr(options.minDb, -90);
+    const maxDb = finiteOr(options.maxDb, -20);
     const logScale = options.scale === 'log';
     const bins = fftSize / 2;
 

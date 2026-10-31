@@ -77,6 +77,12 @@
                             Tag attributes: unknown names fall back, text stays
                             text, font addresses only when http(s) or relative.
                         </li>
+                        <li>
+                            Numbers in options: anything that is not a finite
+                            number (<code>NaN</code>, <code>Infinity</code>, a
+                            number written as text) takes the option's default,
+                            and a number with a range is kept inside it.
+                        </li>
                     </ul>
                 </section>
 

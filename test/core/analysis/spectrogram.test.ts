@@ -83,6 +83,26 @@ describe('spectrogram', () => {
         expect(job.done).toBe(true);
     });
 
+    it('maps the levels from -90 dB to -20 dB when those are not numbers', () => {
+        const picture = (options: { minDb?: number; maxDb?: number }) => {
+            const job = createSpectrogram(samples, rate, {
+                fftSize,
+                columns: 8,
+                rows,
+                ...options,
+            });
+            job.step(job.columns);
+
+            return Array.from(job.data);
+        };
+        const usual = picture({ minDb: -90, maxDb: -20 });
+
+        for (const odd of [Number.NaN, '-60' as unknown as number]) {
+            expect(picture({ minDb: odd })).toEqual(usual);
+            expect(picture({ maxDb: odd })).toEqual(usual);
+        }
+    });
+
     it('caps the dimensions and the window size', () => {
         const job = createSpectrogram(samples, rate, {
             fftSize: 3,

@@ -6,7 +6,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { VolumeControl } from '../../../src/index';
+import { VolumeControl, type VolumeControlOptions } from '../../../src/index';
 import { boxOf, fakeMedia, focusRing } from '../../support/helpers';
 
 let control: VolumeControl | null = null;
@@ -21,10 +21,11 @@ afterEach(() => {
 
 function setup(
     media = fakeMedia({ duration: 10 }),
+    options: Partial<VolumeControlOptions> = {},
 ): ReturnType<typeof fakeMedia> {
     host = document.createElement('div');
     document.body.append(host);
-    control = VolumeControl.create({ container: host, media });
+    control = VolumeControl.create({ container: host, media, ...options });
 
     return media;
 }
@@ -48,6 +49,29 @@ function press(target: HTMLElement, key: string): void {
 }
 
 describe('the volume control', () => {
+    it('keeps its usual size, width and step when they are not numbers, set up or changed', () => {
+        for (const odd of [Number.NaN, '0.1' as unknown as number]) {
+            const media = setup(fakeMedia({ duration: 10 }), {
+                size: odd,
+                width: odd,
+                step: odd,
+            });
+            media.volume = 0.5;
+            const { button, bar } = parts();
+
+            expect(button.style.getPropertyValue('width')).toBe('32px');
+            expect(bar.style.getPropertyValue('width')).toBe('80px');
+            press(bar, 'ArrowRight');
+            expect(media.volume).toBe(0.55);
+
+            control?.setLook({ size: odd, width: odd });
+            expect(button.style.getPropertyValue('width')).toBe('32px');
+            expect(bar.style.getPropertyValue('width')).toBe('80px');
+            control?.destroy();
+            host?.remove();
+        }
+    });
+
     it('mutes with the speaker button and brings the level back', () => {
         const media = setup();
         media.volume = 0.6;

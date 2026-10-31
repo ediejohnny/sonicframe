@@ -15,6 +15,7 @@ import {
     type ButtonShape,
 } from '../../core/controls/button';
 import { EN } from '../../core/languages/en';
+import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { applyStyles } from '../../core/shared/styles';
 import { BUTTON, BUTTON_ICON } from '../../core/shared/variables';
@@ -91,8 +92,8 @@ export class PlayButton {
         this.look = {
             shape: options.shape ?? 'circle',
             fill: options.fill ?? 'solid',
-            size: options.size ?? 32,
-            radius: options.radius ?? null,
+            size: finiteOr(options.size, 32),
+            radius: finiteOr(options.radius, null),
             colors: { ...DEFAULT_BUTTON_COLORS, ...options.colors },
         };
 
@@ -165,6 +166,11 @@ export class PlayButton {
         this.look = {
             ...this.look,
             ...look,
+            size: finiteOr(look.size, this.look.size),
+            radius:
+                look.radius === undefined
+                    ? this.look.radius
+                    : finiteOr(look.radius, null),
             colors: { ...this.look.colors, ...look.colors },
         };
         this.draw();

@@ -20,6 +20,7 @@ import {
     fakeMedia,
     mountShown,
     nextFrame,
+    repainted,
     takeOff,
     type Mounted,
 } from '../../support/helpers';
@@ -32,22 +33,6 @@ function shown(plugins: Plugin[], zoom: object = {}): Mounted {
         plugins,
         animate: false,
     });
-}
-
-/** Paints the frame once more and gives the boxes that painting drew in one color. */
-async function repainted(
-    { frame, canvas }: Mounted,
-    fill: string,
-): Promise<{ x: number; width: number }[]> {
-    await nextFrame();
-    const from = recordingOf(canvas).rects.length;
-    frame.invalidate();
-    await nextFrame();
-
-    return recordingOf(canvas)
-        .rects.slice(from)
-        .filter((rect) => rect.fill === fill)
-        .map(({ x, width }) => ({ x, width }));
 }
 
 /** The one box `plugin` paints in red on a frame of its own, taken off right after. */

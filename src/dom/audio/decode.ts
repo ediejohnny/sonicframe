@@ -6,6 +6,7 @@
  */
 
 import { mixdown } from '../../core/analysis/analysis';
+import { finiteOr } from '../../core/shared/checked';
 import { readCapped } from '../../core/shared/fetch';
 
 /** The largest download decoded, in bytes (50 MiB). */
@@ -61,7 +62,7 @@ export async function decodeAudio(
 ): Promise<{ samples: Float32Array; sampleRate: number; duration: number }> {
     const maxBytes = lowered(options.maxBytes, MAX_DECODE_BYTES);
     const maxSeconds = lowered(options.maxSeconds, MAX_DECODE_SECONDS);
-    const rate = options.sampleRate ?? 22050;
+    const rate = finiteOr(options.sampleRate, 22050);
     let data: ArrayBuffer;
 
     if (typeof source === 'string') {
