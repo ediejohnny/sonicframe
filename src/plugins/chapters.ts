@@ -196,12 +196,12 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         return positive(host?.duration ?? null);
     }
 
+    /**
+     * The position shown, in seconds. Never the media's own time: before its metadata loads
+     * (`preload="none"`) a seek waits in the frame and the media still says 0.
+     */
     function now(current: PluginHost, known: number): number {
-        const media = current.media;
-
-        return media !== null && Number.isFinite(media.currentTime)
-            ? media.currentTime
-            : current.progress * known;
+        return current.progress * known;
     }
 
     /** "Chapter 3 of 8: Interview", or without the colon for an untitled chapter. */

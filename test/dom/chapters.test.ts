@@ -147,6 +147,25 @@ describe('the keys', () => {
         expect(said()).toBe('No more chapters');
     });
 
+    it('steps from the position shown while the sound has not loaded yet (preload none)', () => {
+        const changes: number[] = [];
+        mounted = mount({
+            media: fakeMedia({ readyState: 0 }),
+            duration: 100,
+            animate: false,
+            plugins: [
+                plugin({ onChange: (_chapter, index) => changes.push(index) }),
+            ],
+        });
+
+        press(mounted.container, 'c');
+        press(mounted.container, 'c');
+
+        expect(mounted.frame.progress).toBe(0.5);
+        expect(said()).toBe('Chapter 3 of 3, 0:50');
+        expect(changes).toEqual([0, 1, 2]);
+    });
+
     it('goes back with Shift+C like a previous track, by the Shift key and not the case', () => {
         const { container, media } = shown([plugin()]);
 
