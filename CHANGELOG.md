@@ -62,6 +62,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The keyboard focus ring of a control with a border of its own (the player's speed button, an outlined play
   button) now lies on that border instead of 2 px around it: one line, not a border and a ring side by side.
   Controls without a border keep the ring 2 px out, where their own fill cannot hide it.
+- The docs' header is icons without borders, all of one size: the menu, the search (a box with a magnifying
+  glass on wide screens), GitHub's and npm's marks in their own colors, the font and a moon or a sun for the
+  scheme; each is named for screen readers, and the version is plain text. The font is chosen in a panel where
+  every name is written in its own font (it was a select cut short on a phone). Keyboard focus on the docs is one
+  ring, on a control's own edge.
 
 ### Fixed
 
@@ -81,6 +86,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The browser itself can land a seek a hair short: an MP3 asked for 0:15 before it loaded started at 14.998,
   and the player's time and the slider's words said 0:14 from then on. They now write the position with
   `formatPosition`.
+- The fade between docs pages never ran on the published site, and every move logged an uncaught
+  `InvalidStateError`: the build put the stylesheet after the page's first script, so the arriving page read as
+  not opting in. The stylesheets now come first, and a fade the browser skips on its own (a second click before
+  the first page arrived) is no longer reported as an error.
+- The docs' search said its words and its keys as one ("Search the docsCtrl K"), and once something was typed
+  it took Escape twice to close. Its keys are said by `aria-keyshortcuts` only, and one Escape closes it.
 
 ## [0.4.1] - 2026-10-31
 

@@ -8,6 +8,8 @@
 
 import { loadWaveform, peaksFromChannel } from '../src/index';
 import { POEM } from './docs/sounds';
+import { setupFontPicker } from './font-picker';
+import { store, stored } from './storage';
 
 export type Sound = {
     /** The sound's address (or an object URL for a file the reader picked); each player's own `<audio>` plays it. */
@@ -28,7 +30,6 @@ const PEAKS = 1000;
 const COPIED_FOR = 1500;
 
 const SCHEME_KEY = 'sonicframe-playground-scheme';
-const FONT_KEY = 'sonicframe-docs-font';
 
 type Scheme = 'light' | 'dark';
 
@@ -91,21 +92,9 @@ export function pickSound(
 }
 
 function storedScheme(): Scheme | null {
-    try {
-        const value = localStorage.getItem(SCHEME_KEY);
+    const value = stored(SCHEME_KEY);
 
-        return value === 'light' || value === 'dark' ? value : null;
-    } catch {
-        return null;
-    }
-}
-
-function store(key: string, value: string): void {
-    try {
-        localStorage.setItem(key, value);
-    } catch {
-        // Storage can be off; the choice then lasts for this visit only.
-    }
+    return value === 'light' || value === 'dark' ? value : null;
 }
 
 function systemQuery(): MediaQueryList {
@@ -156,33 +145,10 @@ export function setupHeader(repaint: () => void): void {
         repaint();
     });
     show();
-    setupFont(repaint);
+    setupFontPicker(repaint);
     setupSidebar();
     setupSearch();
     prefetchOnHover();
-}
-
-/** The font picker: the page's font from the library's own stacks, remembered for the next visit. */
-function setupFont(repaint: () => void): void {
-    const root = document.documentElement;
-    const select = document.querySelector<HTMLSelectElement>('#site-font');
-
-    if (select === null) {
-        return;
-    }
-
-    const known = [...select.options].map((option) => option.value);
-
-    if (!known.includes(root.dataset.font ?? '')) {
-        delete root.dataset.font;
-    }
-
-    select.value = root.dataset.font ?? known[0];
-    select.addEventListener('change', () => {
-        root.dataset.font = select.value;
-        store(FONT_KEY, select.value);
-        repaint();
-    });
 }
 
 /** The width at which the sidebar stops being a drawer and stays beside the page (60rem). */
@@ -451,6 +417,10 @@ function setupSearch(): void {
             } else if (event.key === 'Enter' && active >= 0) {
                 event.preventDefault();
                 links[active].click();
+            } else if (event.key === 'Escape') {
+                // A search field's own Escape only clears it; here it closes the search at once.
+                event.preventDefault();
+                box.close();
             }
         });
         list.addEventListener('click', (event) => {
