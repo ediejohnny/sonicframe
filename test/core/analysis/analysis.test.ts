@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     findSilences,
+    levels,
     mixdown,
     nextSkip,
     peakLevel,
@@ -19,15 +20,22 @@ function tone(
     }
 }
 
+/** Three seconds at 1000 samples a second: loud, a quiet second from `from` ms, loud again. */
+function quietMiddle(from = 1000): Float32Array {
+    const samples = new Float32Array(3000);
+    tone(samples, 0, from, 0.5);
+    tone(samples, from, from + 1000, 0.0001);
+    tone(samples, from + 1000, 3000, 0.5);
+
+    return samples;
+}
+
+/** A number written as text, or `NaN`, where an option wants a number. */
+const odd = (value: string | number): number => value as number;
+
 describe('finding silences', () => {
     it('finds the quiet second between two loud ones', () => {
-        const rate = 1000;
-        const samples = new Float32Array(3 * rate);
-        tone(samples, 0, rate, 0.5);
-        tone(samples, rate, 2 * rate, 0.0001);
-        tone(samples, 2 * rate, 3 * rate, 0.5);
-
-        const silences = findSilences(samples, rate, {
+        const silences = findSilences(quietMiddle(), 1000, {
             thresholdDb: -45,
             minDuration: 0.4,
         });
@@ -37,6 +45,40 @@ describe('finding silences', () => {
         expect(silences[0].end).toBeCloseTo(2, 1);
     });
 
+    it('reads -45 dB, 0.4 seconds and windows of 20 ms when those are not numbers', () => {
+        for (const options of [
+            { thresholdDb: Number.NaN },
+            { thresholdDb: odd('-45') },
+            { minDuration: Number.NaN },
+            { minDuration: Number.POSITIVE_INFINITY },
+            { minDuration: odd('5') },
+        ]) {
+            const silences = findSilences(quietMiddle(), 1000, options);
+
+            expect(silences).toHaveLength(1);
+            expect(silences[0].start).toBeCloseTo(1, 1);
+            expect(silences[0].end).toBeCloseTo(2, 1);
+        }
+
+        // Quiet from 1.01 s: the first quiet window of 20 ms starts at 1.02 s (one of 50 ms, at 1.05).
+        for (const windowSeconds of [Number.NaN, odd('wide')]) {
+            const [silence] = findSilences(quietMiddle(1010), 1000, {
+                windowSeconds,
+            });
+
+            expect(silence.start).toBeCloseTo(1.02, 3);
+        }
+    });
+
+    it('measures the levels in windows of 50 ms when the window is not a number', () => {
+        for (const windowSeconds of [Number.NaN, odd('wide')]) {
+            // One second at 1000 samples a second: twenty windows of fifty.
+            expect(
+                levels(new Float32Array(1000), 1000, { windowSeconds }).rms,
+            ).toHaveLength(20);
+        }
+    });
+
     it('finds silences from server peaks', () => {
         const silences = silencesFromPeaks([1, 1, 0, 0, 1, 1], 6, {
             minDuration: 1,
@@ -44,6 +86,19 @@ describe('finding silences', () => {
 
         expect(silences).toHaveLength(1);
         expect(silences[0]).toEqual({ start: 2, end: 4 });
+    });
+
+    it('reads quiet under 0.05 and pauses of 0.4 seconds from peaks when those are not numbers', () => {
+        for (const options of [
+            { threshold: Number.NaN },
+            { threshold: odd('0.5') },
+            { minDuration: Number.NaN },
+            { minDuration: odd('3') },
+        ]) {
+            expect(silencesFromPeaks([1, 1, 0, 0, 1, 1], 6, options)).toEqual([
+                { start: 2, end: 4 },
+            ]);
+        }
     });
 });
 

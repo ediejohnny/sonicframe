@@ -11,6 +11,8 @@ import { firePointer, playTo, pressKey } from '../../support/events';
 import {
     fakeMedia,
     mount,
+    mountShown,
+    repainted,
     tooltipTextOnPale,
     type Mounted,
 } from '../../support/helpers';
@@ -142,6 +144,21 @@ describe('markers on the page', () => {
         expect(hovered({ a11y: { tooltip: { readable: true } } })).toBe(
             'rgba(0, 0, 0, 1)',
         );
+    });
+});
+
+describe('the line of a marker', () => {
+    it('is the usual 2 pixels wide when the width is not a number', async () => {
+        for (const width of [Number.NaN, '6' as unknown as number]) {
+            const shown = mountShown({
+                media: fakeMedia({ duration: 40 }),
+                plugins: [markers({ times: [20], color: 'red', width })],
+            });
+
+            expect(
+                (await repainted(shown, 'red')).map((box) => box.width),
+            ).toEqual([2]);
+        }
     });
 });
 

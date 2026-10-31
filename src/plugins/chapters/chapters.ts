@@ -19,7 +19,7 @@ import {
     type Chapter,
 } from '../../core/chapters/chapters';
 import { mergeWords } from '../../core/languages/merge-words';
-import { within } from '../../core/shared/checked';
+import { finiteOr, within } from '../../core/shared/checked';
 import { keyLetter } from '../../core/shared/keys';
 import { clamp01, positive } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
@@ -243,7 +243,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
     const lines = new ChapterLines(parts, {
         lines: options.lines !== false,
         color,
-        width: options.width ?? 2,
+        width: finiteOr(options.width, 2),
         tooltip: options.tooltip !== false,
         snap: options.snap !== false,
         a11y: options.a11y,

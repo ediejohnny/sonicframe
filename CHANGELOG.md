@@ -33,6 +33,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   and a tooltip section's `limit` (the tooltip showed only "(...)"), `skipSilences`' `lead` (it jumped to no
   time at all), the browser voice's `rate`, `frequencyBands`' and the live frequency's `minHz` and `maxHz` (all
   bars stayed at zero), the regions' `minLength` and the markers' `group` (crowded markers never shared a pill).
+- The numbers the options read without a range fall back to their default as well when they are not finite
+  numbers: the volume control's `size`, `width` and `step` (a step written as text muted the sound on an arrow
+  key) and the play button's `size` and `radius`, also through `setLook`; the frame's `cursorWidth` (the cursor
+  vanished), `stepSeconds` and `largeStepRatio` (Page Up sent the sound back to its start); the markers' and
+  chapters' line `width` (the lines vanished); `decodeAudio`'s `sampleRate` (decoding failed);
+  `createSpectrogram`'s `minDb` and `maxDb` (the picture went black); `levels`' `windowSeconds`,
+  `findSilences`' `thresholdDb`, `minDuration` and `windowSeconds`, and `silencesFromPeaks`' `threshold` and
+  `minDuration` (no silence was ever found). The Security page says the rule for every option.
 
 ## [0.5.0] - 2026-10-31
 

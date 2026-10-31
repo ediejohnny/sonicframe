@@ -15,7 +15,7 @@ import {
     toMarks,
     type Mark,
 } from '../../core/marks/markers';
-import { within } from '../../core/shared/checked';
+import { finiteOr, within } from '../../core/shared/checked';
 import { positive } from '../../core/shared/math';
 import { formatTime } from '../../core/shared/timing';
 import { ON_PROGRESS } from '../../core/shared/variables';
@@ -83,6 +83,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
         Number.POSITIVE_INFINITY,
     );
     const defaultColor = options.color ?? 'var(--sonicframe-marker, #e5484d)';
+    const width = finiteOr(options.width, 2);
 
     let marks: Mark[] = toMarks(options.marks ?? options.times ?? []).slice(
         0,
@@ -205,10 +206,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 paint.view,
             );
             const clusters = groupMarks(centers, groupPx * paint.pixelRatio);
-            const lineWidth = Math.max(
-                1,
-                Math.round((options.width ?? 2) * paint.pixelRatio),
-            );
+            const lineWidth = Math.max(1, Math.round(width * paint.pixelRatio));
             const fallback = paint.color(defaultColor);
 
             for (const cluster of clusters) {

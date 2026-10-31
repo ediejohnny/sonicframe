@@ -7,11 +7,19 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { decodeAudio } from '../../../src/dom/audio/decode';
 
+/** What each decoder was made with: channels, length and sample rate. */
+let made: unknown[][] = [];
+
 /** A decoder whose every sound is `seconds` long at 1000 samples per second, the value i at sample i. */
 function fakeDecoder(seconds: number): void {
+    made = [];
     vi.stubGlobal(
         'OfflineAudioContext',
         class {
+            constructor(...args: unknown[]) {
+                made.push(args);
+            }
+
             decodeAudioData(): Promise<AudioBuffer> {
                 const length = seconds * 1000;
                 const data = Float32Array.from({ length }, (_, i) => i);
@@ -40,6 +48,15 @@ describe('decodeAudio', () => {
         expect(decoded.samples.length).toBe(3000);
         expect(decoded.sampleRate).toBe(1000);
         expect(decoded.duration).toBe(3);
+    });
+
+    it('decodes at the usual 22 050 samples a second when the rate is not a number', async () => {
+        for (const sampleRate of [Number.NaN, '8000' as unknown as number]) {
+            fakeDecoder(3);
+            await decodeAudio(new Blob([new Uint8Array(4)]), { sampleRate });
+
+            expect(made).toEqual([[1, 22050, 22050]]);
+        }
     });
 
     it('reads a sound past maxSeconds evenly through, at the rate of what it gives back', async () => {
