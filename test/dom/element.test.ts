@@ -61,6 +61,27 @@ describe('the <sonic-player> tag', () => {
         );
     });
 
+    it('loads as much of the sound as preload says, metadata when it says nothing known', () => {
+        const preloadOf = (value: string | null): string | null => {
+            const element = tag({ src: 'note.ogg' });
+
+            if (value !== null) {
+                element.setAttribute('preload', value);
+            }
+
+            document.body.append(element);
+
+            return (
+                element.querySelector('audio')?.getAttribute('preload') ?? null
+            );
+        };
+
+        expect(preloadOf(null)).toBe('metadata');
+        expect(preloadOf('none')).toBe('none');
+        expect(preloadOf('auto')).toBe('auto');
+        expect(preloadOf('"><script>')).toBe('metadata');
+    });
+
     it('is defined once, and only under a valid custom element name', () => {
         expect(defineSonicPlayer()).toBe(false);
         expect(defineSonicPlayer('nodash')).toBe(false);

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Tag attributes · SonicFrame</title>
+        <meta
+            name="description"
+            content="Every attribute of the &lt;sonic-player&gt; tag and the words each one takes."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Tag attributes</h1>
+                <p class="lede">
+                    Every attribute of <code>&lt;sonic-player&gt;</code>. Words
+                    inside an attribute turn its extras on; anything unknown is
+                    ignored.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Attributes</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Attribute</th>
+                                    <th>Values</th>
+                                    <th>Player option</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>src</code></td>
+                                    <td>an address</td>
+                                    <td><code>src</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>preload</code></td>
+                                    <td>
+                                        <code>none</code>,
+                                        <code>metadata</code>, <code>auto</code>
+                                    </td>
+                                    <td><code>preload</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks</code></td>
+                                    <td>
+                                        a <code>.dat</code>, audiowaveform JSON
+                                        or list address
+                                    </td>
+                                    <td>
+                                        <code
+                                            >peaks: () =&gt;
+                                            loadWaveform(…)</code
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks-channel</code></td>
+                                    <td><code>all</code> or a number</td>
+                                    <td><code>channel</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks-max</code></td>
+                                    <td>a number</td>
+                                    <td><code>maxPeaks</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks-normalize</code></td>
+                                    <td>present</td>
+                                    <td><code>normalize: true</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>theme</code></td>
+                                    <td>a theme's name</td>
+                                    <td><code>theme</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>palette</code></td>
+                                    <td>a palette's name, <code>auto</code></td>
+                                    <td><code>palette</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>wave</code></td>
+                                    <td>a drawing's name</td>
+                                    <td><code>wave</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>font</code></td>
+                                    <td>a stack name or family</td>
+                                    <td><code>font</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>font-src</code>,
+                                        <code>font-stylesheet</code>
+                                    </td>
+                                    <td>an address</td>
+                                    <td>
+                                        <code>font: { src }</code>,
+                                        <code>font: { stylesheet }</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td>text</td>
+                                    <td><code>label</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>volume</code></td>
+                                    <td>present</td>
+                                    <td><code>volume: true</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>spectrogram</code></td>
+                                    <td>present</td>
+                                    <td><code>spectrogram: true</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom</code></td>
+                                    <td>
+                                        <code
+                                            >wheel scroll pinch keys follow
+                                            center edges buttons</code
+                                        >
+                                    </td>
+                                    <td><code>zoom</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom-max</code></td>
+                                    <td>a number</td>
+                                    <td><code>zoom.max</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>minimap</code></td>
+                                    <td>
+                                        present;
+                                        <code>above autohide wheel</code>
+                                    </td>
+                                    <td><code>minimap</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-lang</code></td>
+                                    <td>a language tag, <code>auto</code></td>
+                                    <td><code>a11y.lang</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-description</code></td>
+                                    <td>
+                                        present;
+                                        <code
+                                            >keys pauses speech announce button
+                                            animation fade</code
+                                        >
+                                    </td>
+                                    <td><code>a11y.description</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-zoom</code></td>
+                                    <td><code>announce</code></td>
+                                    <td><code>a11y.zoom.announce</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-minimap</code></td>
+                                    <td><code>keys</code></td>
+                                    <td><code>a11y.minimap.keys</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Changing an attribute updates the player; the ones that
+                        change what is built (the sound, its peaks, zoom, the
+                        minimap, the words) build it again.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

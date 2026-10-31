@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Motion · SonicFrame</title>
+        <meta
+            name="description"
+            content="What moves in SonicFrame, what is off by default, and how reduced motion is respected."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Motion</h1>
+                <p class="lede">
+                    Some people get dizzy or distracted by things that move. In
+                    SonicFrame, decoration never moves unless you ask, and
+                    nothing moves for people who asked their system for less
+                    motion.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>What moves, and when</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Motion</th>
+                                    <th>By default</th>
+                                    <th>With reduced motion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        The played part, while the sound plays
+                                    </td>
+                                    <td>on (it is the information)</td>
+                                    <td>on</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Bars growing in when peaks arrive
+                                        (<code>animate</code>)
+                                    </td>
+                                    <td>on</td>
+                                    <td>never</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The reading button's pulse or fade
+                                        (<code>description.button.animation</code>)
+                                    </td>
+                                    <td>off</td>
+                                    <td>never</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The zoom following the position
+                                        (<code>follow</code>)
+                                    </td>
+                                    <td>off</td>
+                                    <td>
+                                        <code>'center'</code> turns a page at a
+                                        time
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Live frequency bars</td>
+                                    <td>off (a plugin)</td>
+                                    <td>your call</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Animation is a switch, its kind another option</h2>
+                    <p>
+                        Where SonicFrame offers motion, a boolean turns it on
+                        and a separate option picks its kind, with a default:
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    a11y: {
+        description: {
+            button: { animation: true, animationType: 'fade' }, // 'pulse' by default
+        },
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        A kind it does not know falls back to the default, and
+                        the whole animation is skipped when the system asks for
+                        less motion.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Turning the grow-in off</h2>
+                    <div class="code">
+                        <pre><code>new SonicFrame({ container, media, peaks, animate: false });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

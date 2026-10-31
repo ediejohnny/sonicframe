@@ -2,6 +2,7 @@
 /node_modules
 /dist
 /coverage
+/site
 
 # Secrets (the npm publishing token lives here, never in git)
 .env

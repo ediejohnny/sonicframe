@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite-plus';
+import { docsSite } from './playground/docs/plugin';
 
 export default defineConfig({
-    // The playground (playground/index.html) runs on the dev server. IPv4 on purpose: browsers ignore an IPv6
-    // address in a Content-Security-Policy, and apps that load SonicFrame often have one.
+    // The docs site (playground/index.html and its pages) runs on the dev server; the plugin draws the
+    // parts every page shares. IPv4 on purpose: browsers ignore an IPv6 address in a
+    // Content-Security-Policy, and apps that load SonicFrame often have one.
+    plugins: [docsSite()],
     server: {
         host: '127.0.0.1',
         port: 5174,

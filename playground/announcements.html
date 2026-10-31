@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Screen readers · SonicFrame</title>
+        <meta
+            name="description"
+            content="What a screen reader hears from SonicFrame: names, values in words, languages and announcements."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Screen readers</h1>
+                <p class="lede">
+                    What a screen reader says comes from three places: each
+                    control's name, the wave's value in words, and a shared live
+                    region for news. All three speak the player's language.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The wave's value</h2>
+                    <p>
+                        The wave is a slider whose value is said in words: "0:12
+                        / 0:45" by default. Change it with
+                        <code>valueText</code> on the frame, or the
+                        <code>value</code> label on the player:
+                    </p>
+                    <div class="code">
+                        <pre><code>new SonicFrame({
+    container,
+    media,
+    valueText: (time, ratio, duration) =&gt; `${Math.round(ratio * 100)}% played`,
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        With the wave in words and <code>pauseInValue</code>,
+                        the value also says where the sound is quiet: "0:22 /
+                        0:33, pause". Plugins can add their own short notes the
+                        same way.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Languages</h2>
+                    <p>
+                        English is the default and Portuguese is built in.
+                        <code>a11y.lang</code> picks one (<code>'pt'</code>,
+                        <code>'pt-BR'</code>…) or <code>'auto'</code>, the
+                        page's language. Given, it also marks the player with
+                        <code>lang</code>, so the screen reader speaks with a
+                        voice of that language.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"a11y":{"lang":"pt-BR"},"look":{"line":["play","back","wave","forward","time","speed"]}}'
+                        data-label="Um player em português"
+                    ></div>
+                    <p>
+                        This player's buttons are named in Portuguese: inspect
+                        them, or tab through them with a screen reader on.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Your own words</h2>
+                    <p>
+                        <code>a11y.labels</code> renames any control, over the
+                        language's words. A label is cleaned and capped, and its
+                        marks (<code>{seconds}</code>, <code>{speed}</code>…)
+                        are filled with SonicFrame's own values only.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    a11y: {
+        labels: {
+            player: 'Voice note from Ana',
+            play: 'Listen',
+            back: 'Back {seconds} seconds',
+        },
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Label</th>
+                                    <th>Names</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>player</code>,
+                                        <code>position</code>
+                                    </td>
+                                    <td>The player's group and its wave.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>value</code></td>
+                                    <td>
+                                        The wave's value:
+                                        <code>'{time} / {duration}'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>play</code>, <code>pause</code>
+                                    </td>
+                                    <td>The play button, by state.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>back</code>, <code>forward</code>
+                                    </td>
+                                    <td>
+                                        The skip buttons
+                                        (<code>{seconds}</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>speed</code></td>
+                                    <td>
+                                        The speed button (<code>{speed}</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>mute</code>, <code>unmute</code>,
+                                        <code>volume</code>
+                                    </td>
+                                    <td>The volume control.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>listen</code>,
+                                        <code>stopListening</code>,
+                                        <code>speechFailed</code>
+                                    </td>
+                                    <td>
+                                        The button that reads the description
+                                        aloud.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>zoomIn</code>,
+                                        <code>zoomOut</code>,
+                                        <code>zoomReset</code>,
+                                        <code>zoomView</code>
+                                    </td>
+                                    <td>
+                                        The zoom buttons and the zoom
+                                        announcement.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>minimap</code>,
+                                        <code>minimapValue</code>
+                                    </td>
+                                    <td>The minimap slider.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Announcements</h2>
+                    <p>
+                        One polite live region is shared by every frame on the
+                        page. It speaks only when something worth saying happens
+                        that the focused control cannot say by itself:
+                    </p>
+                    <ul>
+                        <li>
+                            <code>a11y.zoom.announce</code>: the new view after
+                            a zoom by the keys, a button or two fingers ("Zoom
+                            4×, 1:20 to 2:40").
+                        </li>
+                        <li>
+                            The wave in words: the description again on
+                            <kbd>D</kbd>, and the part reached on <kbd>P</kbd>.
+                        </li>
+                        <li>
+                            When the browser has no voice to read the
+                            description aloud, it says so.
+                        </li>
+                    </ul>
+                    <p>
+                        A plugin speaks through the same region with
+                        <code>host.announce(text)</code>. Nothing is ever said
+                        on its own while nobody is using the player.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Hidden on purpose</h2>
+                    <p>
+                        The time beside the wave is hidden from screen readers
+                        (the wave already says it), and so is the minimap unless
+                        <code>a11y.minimap.keys</code> makes it a slider. A
+                        frame with <code>interact: false</code> is a picture
+                        (<code>role="img"</code>) named by its label.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

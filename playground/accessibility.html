@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Accessibility · SonicFrame</title>
+        <meta
+            name="description"
+            content="What SonicFrame does for people who use a keyboard, a screen reader, or less motion, and what you can turn on."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Accessibility</h1>
+                <p class="lede">
+                    A sound is for everyone, and so is its wave. Accessibility
+                    is SonicFrame's first priority: the basics are always on,
+                    and the extras are one option away.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Always on</h2>
+                    <p>Every frame and player, with nothing to set:</p>
+                    <ul>
+                        <li>
+                            <strong>The wave is a slider.</strong> It has
+                            <code>role="slider"</code>, is reachable with
+                            <kbd>Tab</kbd>, and says its position in words
+                            ("0:12 of 0:45") through
+                            <code>aria-valuetext</code>.
+                        </li>
+                        <li>
+                            <strong
+                                >The keys of the WAI-ARIA slider
+                                pattern.</strong
+                            >
+                            Arrows, Page Up and Page Down, Home and End. See
+                            <a href="./keyboard.html">Keyboard</a>.
+                        </li>
+                        <li>
+                            <strong>Real buttons.</strong> Play, skip, speed,
+                            volume and zoom are
+                            <code>&lt;button&gt;</code> elements with names that
+                            change with their state ("Play", "Pause").
+                        </li>
+                        <li>
+                            <strong>Focus is never lost.</strong> A zoom button
+                            at its limit is marked
+                            <code>aria-disabled</code> instead of
+                            <code>disabled</code>, so the focus stays on it.
+                        </li>
+                        <li>
+                            <strong>Less motion is respected.</strong> No
+                            grow-in and no animated buttons for people who asked
+                            their system for less motion. See
+                            <a href="./motion.html">Motion</a>.
+                        </li>
+                        <li>
+                            <strong>Text you give stays text.</strong> Labels,
+                            captions and tooltips never become markup, and
+                            control or direction-changing characters are
+                            removed.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>One option away</h2>
+                    <p>
+                        Everything that adds behavior lives in one group,
+                        <code>a11y</code>, arranged by place, and is off until
+                        you turn it on:
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    a11y: {
+        lang: 'pt-BR', // the language of every word the player says
+        labels: { play: 'Ouvir' }, // your own names, over the language's
+        description: { keys: true, button: true }, // the wave in words
+        zoom: { announce: true }, // say the new view after a zoom
+        minimap: { keys: true }, // the minimap as a keyboard slider
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>What it gives</th>
+                                    <th>Read more</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>a11y.lang</code></td>
+                                    <td>
+                                        English or Portuguese words (or
+                                        <code>'auto'</code>, the page's
+                                        language), and the player marked with
+                                        <code>lang</code> so a screen reader
+                                        speaks in that voice.
+                                    </td>
+                                    <td>
+                                        <a href="./announcements.html"
+                                            >Screen readers</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.labels</code></td>
+                                    <td>
+                                        Your own accessible names for every
+                                        control.
+                                    </td>
+                                    <td>
+                                        <a
+                                            href="./announcements.html#your-own-words"
+                                            >Your own words</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.description</code></td>
+                                    <td>
+                                        The sound's shape in words, read by the
+                                        person's own screen reader.
+                                    </td>
+                                    <td>
+                                        <a href="./words.html"
+                                            >The wave in words</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.zoom.announce</code></td>
+                                    <td>
+                                        "Zoom 4×, 1:20 to 2:40" after a zoom by
+                                        keys, buttons or fingers.
+                                    </td>
+                                    <td>
+                                        <a href="./announcements.html"
+                                            >Screen readers</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.minimap.keys</code></td>
+                                    <td>
+                                        The minimap as a slider of the part in
+                                        view.
+                                    </td>
+                                    <td>
+                                        <a href="./minimap.html">The minimap</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        On the tag, the same options are attributes that start
+                        with <code>a11y-</code>:
+                    </p>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player src="/note.ogg" a11y-lang="pt-BR" a11y-description="keys button"&gt;&lt;/sonic-player&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Your part</h2>
+                    <ul>
+                        <li>
+                            <strong>Name each player.</strong>
+                            <code>label: 'Voice note from Ana, 0:42'</code>
+                            tells a list of players apart.
+                        </li>
+                        <li>
+                            <strong>Show the focus.</strong> Style
+                            <code>:focus-visible</code> on the wave's container;
+                            see
+                            <a href="./styling.html#the-focus-ring"
+                                >the focus ring</a
+                            >.
+                        </li>
+                        <li>
+                            <strong>Mind the contrast.</strong> The built-in
+                            palettes pass WCAG contrast; check your own colors
+                            the same way.
+                        </li>
+                        <li>
+                            <strong>Give words to what has words.</strong> A
+                            transcript or caption is still the best description
+                            of speech; the
+                            <a href="./captions.html">caption plugin</a> shows
+                            one beside the wave.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>How we check it</h2>
+                    <p>
+                        Every accessible behavior has a test: the roles, the
+                        values in words, the keys of each pattern, the names in
+                        each language and the live region. What a test cannot
+                        prove is how it feels with a real screen reader.
+                    </p>
+                    <div class="callout tip">
+                        <strong>Use a screen reader?</strong>
+                        Your experience is the proof that counts. Tell us what
+                        works and what does not in a
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/issues"
+                            >GitHub issue</a
+                        >: which reader, which browser, and what you heard.
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Peaks · SonicFrame</title>
+        <meta
+            name="description"
+            content="Where a waveform's shape comes from: peaks, how to make them and how to load them."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Peaks</h1>
+                <p class="lede">
+                    Peaks are the loudest point of each slice of a sound, as
+                    numbers from 0 to 1. They are all the frame needs to draw:
+                    SonicFrame never decodes audio just to draw it.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The idea</h2>
+                    <p>
+                        Compute the peaks once, when a sound is uploaded, and
+                        serve them as a small file. A few hundred to a few
+                        thousand values are plenty: the frame folds or stretches
+                        them to the number of bars that fit.
+                    </p>
+                    <p>
+                        A peaks file is either a list or an object with a list:
+                    </p>
+                    <div class="code">
+                        <pre><code>[0.02, 0.31, 0.77, 0.54, 0.12]
+{ "peaks": [0.02, 0.31, 0.77, 0.54, 0.12] }</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Giving peaks to a frame</h2>
+                    <p><code>peaks</code> takes any of these:</p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Value</th>
+                                    <th>What happens</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>a list of numbers</td>
+                                    <td>drawn at once.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{ peaks, duration }</code></td>
+                                    <td>
+                                        drawn at once; the duration shows until
+                                        the media knows its own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        a function returning a promise of either
+                                    </td>
+                                    <td>
+                                        called the first time the frame comes
+                                        near the screen.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        a thin line until peaks arrive
+                                        (<code>setPeaks</code>).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code">
+                        <pre><code>import { SonicFrame, loadPeaks } from 'sonicframe';
+
+new SonicFrame({
+    container,
+    media,
+    peaks: () =&gt; loadPeaks('/voice.peaks.json'),
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>loadPeaks(url)</code> fetches a file once per
+                        page, however many frames use it, and refuses a file
+                        with more than 20,000 values. For larger and binary
+                        files, use
+                        <a href="./waveform-files.html"
+                            >ready-made waveform files</a
+                        >.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Making peaks</h2>
+                    <h3>On your server</h3>
+                    <p>
+                        Write an audiowaveform file with
+                        <code>writeWaveform</code> from
+                        <code>sonicframe/analysis</code> (it runs in Node), or
+                        use the audiowaveform tool itself. Both are covered in
+                        <a href="./waveform-files.html">Ready-made peaks</a>.
+                    </p>
+                    <h3>In the browser</h3>
+                    <p>
+                        For a recording just made, compute them from the decoded
+                        samples:
+                    </p>
+                    <div class="code">
+                        <pre><code>import { peaksFromChannel } from 'sonicframe';
+
+const peaks = peaksFromChannel(audioBuffer.getChannelData(0), 400);</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <h3>Let the player do it</h3>
+                    <p>
+                        The ready-made player, given only <code>src</code>,
+                        decodes the sound in the browser the first time it comes
+                        near the screen. It is the easiest start, and the most
+                        expensive for long sounds; <code>decode</code> on the
+                        <a href="./player-options.html">player</a> sets its
+                        limits.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Shape, not loudness</h2>
+                    <p>
+                        Peaks are relative: a quiet recording and a loud one can
+                        draw the same wave. The bar style's <code>curve</code>
+                        (0.7 by default) lifts quiet parts so speech reads well;
+                        1 draws the peaks as they are. See
+                        <a href="./drawings.html">Drawings</a>.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

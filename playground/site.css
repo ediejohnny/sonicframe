@@ -18,11 +18,32 @@
     --code: #f5f7fa;
     --thumb: #b9c3d0;
     --thumb-hover: #8e9aac;
-    --sans:
+    --accent: #0b8f78;
+    --deck: #111820;
+    --deck-ink: #dfe7f1;
+    --deck-muted: #8d9bb0;
+    --sans: var(--stack-system);
+    --display: var(--stack-industrial);
+    --mono: var(--stack-mono);
+
+    /* The library's own font stacks (src/core/fonts.ts); the reader picks one in the header. */
+    --stack-system:
         system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
         sans-serif;
-    --mono:
-        ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+    --stack-industrial:
+        Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium',
+        'Nimbus Sans Narrow', var(--stack-system);
+    --stack-humanist:
+        Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', sans-serif;
+    --stack-geometric: Avenir, Montserrat, Corbel, 'URW Gothic', sans-serif;
+    --stack-serif:
+        Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+    --stack-rounded:
+        ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Quicksand,
+        Comfortaa, Manjari, 'Arial Rounded MT', Calibri, sans-serif;
+    --stack-mono:
+        ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+        'DejaVu Sans Mono', monospace;
 
     --sonicframe-surface: #ffffff;
     --sonicframe-text: #18202c;
@@ -54,6 +75,8 @@
         --on-brand: #0f141b;
         --link: #8fb6ff;
         --code: #121922;
+        --accent: #3ee6c1;
+        --deck: #0b1016;
         --thumb: #364252;
         --thumb-hover: #4d5c70;
 
@@ -87,6 +110,8 @@
     --on-brand: #0f141b;
     --link: #8fb6ff;
     --code: #121922;
+    --accent: #3ee6c1;
+    --deck: #0b1016;
     --thumb: #364252;
     --thumb-hover: #4d5c70;
 
@@ -113,12 +138,70 @@
     box-sizing: border-box;
 }
 
+/* The font the reader picked: the display stack for headings, the text stack for the rest. */
+:root[data-font='system'] {
+    --display: var(--stack-system);
+}
+
+:root[data-font='humanist'] {
+    --sans: var(--stack-humanist);
+    --display: var(--stack-humanist);
+}
+
+:root[data-font='geometric'] {
+    --sans: var(--stack-geometric);
+    --display: var(--stack-geometric);
+}
+
+:root[data-font='serif'] {
+    --sans: var(--stack-serif);
+    --display: var(--stack-serif);
+}
+
+:root[data-font='rounded'] {
+    --sans: var(--stack-rounded);
+    --display: var(--stack-rounded);
+}
+
 body {
     margin: 0;
     background: var(--page);
     color: var(--ink);
-    font: 1rem/1.55 var(--sans);
+    font: 1rem/1.65 var(--sans);
     -webkit-text-size-adjust: 100%;
+}
+
+/* Moving between pages fades the page body only; the header and sidebar stay put. */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    .content {
+        view-transition-name: page;
+    }
+
+    ::view-transition-old(page),
+    ::view-transition-new(page) {
+        animation-duration: 0.18s;
+    }
+}
+
+.skip {
+    position: absolute;
+    z-index: 50;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.125rem;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+
+.skip:focus {
+    transform: none;
 }
 
 /*
@@ -185,8 +268,10 @@ h1,
 h2,
 h3 {
     margin: 0;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
+    font-family: var(--display);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0;
 }
 
 p {
@@ -250,9 +335,9 @@ p {
     gap: 0.625rem;
     align-items: center;
     color: inherit;
+    font-family: var(--display);
     font-size: 1.25rem;
-    font-weight: 750;
-    letter-spacing: -0.02em;
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -269,6 +354,100 @@ p {
     font-size: 0.8125rem;
     font-weight: 500;
     letter-spacing: 0;
+}
+
+/* The search: an input-like button that opens the search dialog. */
+.search-open {
+    display: inline-flex;
+    gap: 2rem;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 15rem;
+    min-height: 2.25rem;
+    margin-left: 1.5rem;
+    padding: 0.25rem 0.375rem 0.25rem 0.75rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--page);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.search-open:hover {
+    border-color: var(--brand);
+    color: var(--ink);
+}
+
+kbd {
+    padding: 0.0625rem 0.375rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 52rem) {
+    .search-open {
+        min-width: 0;
+        margin-left: 0;
+    }
+
+    .search-open kbd {
+        display: none;
+    }
+}
+
+@media (max-width: 30rem) {
+    .search-open span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .search-open::before {
+        width: 0.75rem;
+        height: 0.75rem;
+        border: 0.125rem solid currentColor;
+        border-radius: 0.125rem;
+        content: '';
+    }
+}
+
+.font-pick {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.font-pick select {
+    min-height: 2rem;
+    padding: 0.125rem 0.375rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+}
+
+@media (max-width: 40rem) {
+    .font-pick span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
 }
 
 .nav {
@@ -465,9 +644,23 @@ html {
 }
 
 .page-head h1 {
-    font-size: clamp(2rem, 5vw, 2.75rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
+    font-size: clamp(2rem, 4.5vw, 2.625rem);
+    line-height: 1.1;
+}
+
+/*
+ * Under every page's head, a strip of square wave bars in the logo's blue: the site's one mark,
+ * drawn by a mask so it takes the scheme's color.
+ */
+.page-head::after {
+    display: block;
+    width: min(100%, 18rem);
+    height: 0.875rem;
+    margin-top: 1.75rem;
+    background: var(--brand);
+    content: '';
+    -webkit-mask: url('./bars.svg') left center / auto 100% repeat-x;
+    mask: url('./bars.svg') left center / auto 100% repeat-x;
 }
 
 /*
@@ -637,8 +830,250 @@ html {
     padding-top: 3.5rem;
 }
 
-.section > h2 {
-    font-size: 1.75rem;
+.doc h2 {
+    font-size: 1.625rem;
+}
+
+.doc h3 {
+    margin-top: 2rem;
+    font-size: 1.1875rem;
+}
+
+/* A heading's link to itself, shown on hover or focus. */
+.doc :is(h2, h3) {
+    position: relative;
+}
+
+.anchor {
+    margin-left: 0.5rem;
+    color: var(--muted);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+}
+
+.doc :is(h2, h3):hover .anchor,
+.anchor:focus-visible {
+    opacity: 1;
+}
+
+/* Running text keeps to a readable measure; demos, code and tables use the full width. */
+.doc :is(p, ul, ol):not([class]) {
+    max-width: 44rem;
+}
+
+.doc
+    > .section
+    > :is(p, ul, ol, .callout, .code, .table-wrap, .stage)
+    + :is(p, ul, ol, .callout, .code, .table-wrap, .stage, h3) {
+    margin-top: 1rem;
+}
+
+.doc :is(ul, ol):not([class]) {
+    padding-left: 1.25rem;
+}
+
+.doc li + li {
+    margin-top: 0.375rem;
+}
+
+.doc h2 + :is(p, .lede, .code, .callout, .table-wrap, .stage, ul, ol),
+.doc h3 + :is(p, .code, .callout, .table-wrap, .stage, ul, ol) {
+    margin-top: 0.875rem;
+}
+
+:not(pre) > code {
+    padding: 0.0625rem 0.3125rem;
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    color: var(--ink);
+    font-size: 0.875em;
+}
+
+/* A tip, a note or a warning beside the text. */
+.callout {
+    max-width: 44rem;
+    padding: 0.875rem 1rem;
+    border: 0.0625rem solid var(--line);
+    border-left: 0.25rem solid var(--brand);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.callout.warn {
+    border-left-color: var(--sonicframe-marker);
+}
+
+.callout.tip {
+    border-left-color: var(--accent);
+}
+
+.callout > strong:first-child {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+/* Option tables: they scroll sideways on narrow screens instead of squeezing. */
+.table-wrap {
+    overflow-x: auto;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+}
+
+.table-wrap th,
+.table-wrap td {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 0.0625rem solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.table-wrap tr:last-child td {
+    border-bottom: 0;
+}
+
+.table-wrap th {
+    background: var(--sunken);
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+.table-wrap td:first-child {
+    white-space: nowrap;
+}
+
+/* Previous and next page, at the end of every page. */
+.pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 4rem;
+}
+
+.pager a {
+    display: grid;
+    gap: 0.25rem;
+    padding: 1rem 1.125rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+    font-family: var(--display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pager a:hover {
+    border-color: var(--brand);
+    color: var(--link);
+}
+
+.pager span {
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.pager-next {
+    grid-column: 2;
+    text-align: right;
+}
+
+@media (max-width: 30rem) {
+    .pager {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pager-next {
+        grid-column: 1;
+    }
+}
+
+/* The search dialog. */
+.search {
+    width: min(40rem, calc(100vw - 2rem));
+    max-height: min(36rem, calc(100vh - 6rem));
+    margin: 5rem auto auto;
+    padding: 1rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+}
+
+.search::backdrop {
+    background: rgb(0 0 0 / 0.45);
+}
+
+.search-label {
+    display: grid;
+    gap: 0.5rem;
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+.search-input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 0.125rem solid var(--brand);
+    border-radius: 0.125rem;
+    background: var(--page);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1.0625rem;
+}
+
+.search-status {
+    margin: 0.75rem 0 0.25rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.search-results {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.search-results a {
+    display: grid;
+    gap: 0.125rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.125rem;
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.search-results a span {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+}
+
+.search-results a[aria-selected='true'],
+.search-results a:hover {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.search-results a[aria-selected='true'] span,
+.search-results a:hover span {
+    color: inherit;
 }
 
 /* Keys and gestures: one per line, each key as a cap. */
@@ -687,9 +1122,8 @@ html {
 }
 
 .hero h1 {
-    font-size: clamp(2.25rem, 6vw, 3.75rem);
-    font-weight: 800;
-    letter-spacing: -0.035em;
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+    line-height: 1.05;
 }
 
 .hero .lede {
@@ -698,12 +1132,80 @@ html {
     font-size: 1.1875rem;
 }
 
+/*
+ * Where a player is coming: its height kept, and five square bars rising and falling in the logo's
+ * blue until the sound's peaks arrive. Still under reduced motion.
+ */
+.loading {
+    position: relative;
+    min-height: 3.5rem;
+}
+
+.loading::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.25rem;
+    height: 1.25rem;
+    background:
+        linear-gradient(var(--brand) 0 0) 0% 100%,
+        linear-gradient(var(--brand) 0 0) 25% 100%,
+        linear-gradient(var(--brand) 0 0) 50% 100%,
+        linear-gradient(var(--brand) 0 0) 75% 100%,
+        linear-gradient(var(--brand) 0 0) 100% 100%;
+    background-repeat: no-repeat;
+    background-size:
+        0.3125rem 40%,
+        0.3125rem 70%,
+        0.3125rem 100%,
+        0.3125rem 70%,
+        0.3125rem 40%;
+    content: '';
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .loading::before {
+        animation: loading-bars 0.9s ease-in-out infinite;
+    }
+}
+
+@keyframes loading-bars {
+    0%,
+    100% {
+        background-size:
+            0.3125rem 40%,
+            0.3125rem 70%,
+            0.3125rem 100%,
+            0.3125rem 70%,
+            0.3125rem 40%;
+    }
+
+    50% {
+        background-size:
+            0.3125rem 100%,
+            0.3125rem 50%,
+            0.3125rem 30%,
+            0.3125rem 90%,
+            0.3125rem 100%;
+    }
+}
+
 .stage {
     margin-top: 2.25rem;
     padding: 1rem;
     border: 0.0625rem solid var(--line);
     border-radius: 0.125rem;
     background: var(--panel);
+}
+
+/* A player shown at phone width, so the voice note can be seen on any screen. */
+.narrow-demo {
+    max-width: 20rem;
+}
+
+.doc .stage {
+    margin-top: 1.25rem;
 }
 
 .source {
@@ -733,14 +1235,22 @@ html {
     position: relative;
 }
 
+/* Code sits on a dark deck in both schemes, like a console. */
 .code pre {
     margin: 0;
-    padding: 1rem 5.5rem 1rem 1rem;
+    padding: 1rem 5.5rem 1rem 1.125rem;
     overflow-x: auto;
-    border: 0.0625rem solid var(--line);
+    border: 0.0625rem solid var(--deck);
     border-radius: 0.125rem;
-    background: var(--code);
-    line-height: 1.6;
+    background: var(--deck);
+    color: var(--deck-ink);
+    line-height: 1.65;
+}
+
+.code .button {
+    border-color: #2a3442;
+    background: #1c2531;
+    color: var(--deck-ink);
 }
 
 .code .button {
@@ -1086,8 +1596,8 @@ html {
 }
 
 .gallery-head h1 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    font-weight: 800;
+    font-size: clamp(2rem, 4.5vw, 2.625rem);
+    line-height: 1.1;
 }
 
 .toolbar {

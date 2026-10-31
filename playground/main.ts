@@ -10,6 +10,7 @@ import {
     caption,
     formatTime,
     liveFrequency,
+    loadWaveform,
     markers,
     minimap,
     PlayButton,
@@ -33,6 +34,7 @@ import {
     type PlayerOptions,
     type ThemeName,
 } from '../src/player';
+import { MUSIC } from './docs/sounds';
 import {
     bundledSound,
     byId,
@@ -144,7 +146,9 @@ const mounts: { host: HTMLElement; build: Build }[] = [];
 let teardowns: (() => void)[] = [];
 let current: Sound | null = null;
 
+/** A place for something built on the page's sound; it shows the loader, at a player's height, until then. */
 function mount(host: HTMLElement, build: Build): void {
+    host.classList.add('loading');
     mounts.push({ host, build });
 }
 
@@ -159,6 +163,7 @@ function player(
     const made = createPlayer({
         container: host,
         src: sound.url,
+        preload: 'none',
         peaks: sound.peaks,
         duration: sound.duration,
         ...options,
@@ -447,6 +452,7 @@ function clipCard(): PluginCard {
             const made = createPlayer({
                 container: wave,
                 src: sound.url,
+                preload: 'none',
                 peaks: sound.peaks,
                 duration: sound.duration,
                 wave: 'line',
@@ -507,7 +513,7 @@ function buttonsCard(): PluginCard {
             const audio = document.createElement('audio');
             const row = document.createElement('div');
             const wave = document.createElement('div');
-            audio.preload = 'metadata';
+            audio.preload = 'none';
             audio.src = sound.url;
             row.className = 'buttons';
             wave.className = 'bare-wave';
@@ -657,6 +663,64 @@ function pluginCards(): PluginCard[] {
     ];
 }
 
+/**
+ * The plugins a `data-plugins` demo can name, each set up for the page's poem (33 seconds): marks on
+ * its lines, a region over the second line, its silences, and so on.
+ */
+const DEMO_PLUGINS: Record<string, (sound: Sound) => PlayerPlugin> = {
+    timeline: () => timeline(),
+    markers: () =>
+        markers({
+            marks: [
+                { time: 2.4, label: 'Title' },
+                { time: 9, label: 'Second line' },
+                { time: 21, label: 'Last lines' },
+            ],
+        }),
+    regions: () =>
+        regions({ items: [{ start: 8.5, end: 16, label: 'Verse' }] }),
+    caption: () =>
+        caption({
+            text: 'I met a little elf-man, once, down where the lilies blow.',
+            badges: ['auto', 'en'],
+        }),
+    skipSilences: (sound) =>
+        skipSilences({
+            silences: silencesFromPeaks(sound.peaks, sound.duration),
+            dim: true,
+        }),
+    liveFrequency: () => liveFrequency({ bars: 48 }),
+    minimap: () => minimap(),
+};
+
+type PlayerPlugin = NonNullable<PlayerOptions['plugins']>[number];
+
+/**
+ * Live demos written in a page's own markup: `data-demo="player"` builds a player on the page's
+ * sound, with the JSON in `data-options` (any player option) and the plugins `data-plugins` names.
+ */
+function setupDemos(): void {
+    for (const host of document.querySelectorAll<HTMLElement>(
+        '[data-demo="player"]',
+    )) {
+        const options = JSON.parse(host.dataset.options ?? '{}') as Omit<
+            PlayerOptions,
+            'container'
+        >;
+        const names = (host.dataset.plugins ?? '').split(/\s+/).filter(Boolean);
+
+        mount(host, (box, sound) =>
+            player(box, sound, {
+                label: host.dataset.label ?? sound.name,
+                ...options,
+                plugins: names.flatMap((name) =>
+                    name in DEMO_PLUGINS ? [DEMO_PLUGINS[name](sound)] : [],
+                ),
+            }),
+        );
+    }
+}
+
 /** Calls `use` with the element of that id, when this page has one. */
 function on(id: string, use: (element: HTMLElement) => void): void {
     const element = document.getElementById(id);
@@ -666,12 +730,32 @@ function on(id: string, use: (element: HTMLElement) => void): void {
     }
 }
 
-/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
-function setupPage(): void {
-    on('hero-player', (hero) =>
-        mount(hero, (host, sound) =>
-            player(host, sound, {
-                label: sound.name,
+/**
+ * The home page's music: one track, drawn at random on each visit, shows its ready-made peaks and
+ * loads nothing more until someone presses play. When a track ends the next one plays, and the
+ * tracks go round for as long as the page is open. The player itself stays, so focus stays on it.
+ */
+function musicPlayer(host: HTMLElement): void {
+    const line = document.getElementById('now-playing');
+    const audio = document.createElement('audio');
+    audio.preload = 'none';
+    host.classList.add('loading');
+    let index = Math.floor(Math.random() * MUSIC.length);
+    let made: ReturnType<typeof createPlayer> | null = null;
+
+    const show = async (play: boolean): Promise<void> => {
+        const track = MUSIC[index];
+        const waveform = await loadWaveform(`./${track.peaks}`);
+        audio.src = `./${track.audio}`;
+
+        if (made === null) {
+            host.classList.remove('loading');
+            const created = createPlayer({
+                container: host,
+                media: audio,
+                label: 'Music',
+                peaks: waveform.peaks,
+                duration: waveform.duration ?? undefined,
                 look: {
                     waveHeight: 5,
                     button: { shape: 'circle', fill: 'solid', size: 52 },
@@ -682,12 +766,44 @@ function setupPage(): void {
                     fontSize: 0.9375,
                 },
                 plugins: [timeline()],
-            }),
-        ),
-    );
+            });
+            created.on('error', (error) => console.error(error));
+            painted.add(() => created.frame.refresh());
+            made = created;
+        } else {
+            made.frame.setPeaks(waveform.peaks);
+            made.frame.setDuration(waveform.duration);
+        }
+
+        if (line !== null) {
+            line.textContent = `Music: ${track.title} by ${track.artist}.`;
+        }
+
+        if (play) {
+            await audio.play();
+        }
+    };
+
+    audio.addEventListener('ended', () => {
+        index = (index + 1) % MUSIC.length;
+        show(true).catch((error: unknown) => console.error(error));
+    });
+    show(false).catch((error: unknown) => {
+        console.error(error);
+
+        if (line !== null) {
+            line.textContent = 'The music did not load.';
+        }
+    });
+}
+
+/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
+function setupPage(): void {
+    on('hero-player', musicPlayer);
 
     on('tag-player', (tag) => {
         mount(tag, (host, sound) => {
+            host.setAttribute('preload', 'none');
             host.setAttribute('src', sound.url);
 
             return () => host.removeAttribute('src');
@@ -749,7 +865,7 @@ function crowd(sound: Sound): () => void {
     const playHost = byId('crowd-play');
     const fps = byId('fps');
     const audio = document.createElement('audio');
-    audio.preload = 'metadata';
+    audio.preload = 'none';
     audio.src = sound.url;
     playHost.append(audio);
 
@@ -834,44 +950,59 @@ function render(sound: Sound): void {
     }
 
     current = sound;
-    teardowns = mounts.map(({ host, build }) => build(host, sound));
+    teardowns = mounts.map(({ host, build }) => {
+        host.classList.remove('loading');
+
+        return build(host, sound);
+    });
 
     if (stopCrowd !== null) {
         stopCrowd();
         stopCrowd = crowd(sound);
     }
 
-    byId('source').textContent = `Playing ${sound.name}.`;
+    say(`Playing ${sound.name}.`);
 
     if (previous !== null) {
         forget(previous);
     }
 }
 
+/** Says what the page plays, on a page that shows its sound. */
+function say(text: string): void {
+    const source = document.getElementById('source');
+
+    if (source !== null) {
+        source.textContent = text;
+    }
+}
+
 function showError(error: unknown): void {
     console.error(error);
-    byId('source').textContent =
+    say(
         current === null
             ? 'That file could not be read as audio. Try an MP3, WAV, OGG or M4A file.'
-            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`;
+            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`,
+    );
 }
 
 defineSonicPlayer();
 setupHeader(() => painted.forEach((repaint) => repaint()));
 setupCopyButtons();
 setupPage();
+setupDemos();
 setupContents();
 setupCrowd();
 setupLongSound();
-pickSound(
-    byId<HTMLButtonElement>('pick'),
-    byId<HTMLInputElement>('file'),
-    render,
-    showError,
-);
+
+const pick = document.getElementById('pick');
+const file = document.getElementById('file');
+
+if (pick instanceof HTMLButtonElement && file instanceof HTMLInputElement) {
+    pickSound(pick, file, render, showError);
+}
 
 bundledSound().then(render, (error: unknown) => {
     console.error(error);
-    byId('source').textContent =
-        'The page’s sound did not load. Use your own sound instead.';
+    say('The page’s sound did not load. Use your own sound instead.');
 });

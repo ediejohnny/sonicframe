@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Themes and palettes · SonicFrame</title>
+        <meta
+            name="description"
+            content="A whole player in one word: 25 themes, 8 palettes, fonts, and themes of your own."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Themes and palettes</h1>
+                <p class="lede">
+                    A theme is a whole player in one word: the layout, the
+                    button, the drawing, the font and a palette. Any theme wears
+                    any of the eight palettes, and your own options always win.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Picking a theme</h2>
+                    <div class="code">
+                        <pre><code>createPlayer({ container, src, theme: 'bubble' });
+createPlayer({ container, src, theme: 'pulse', palette: 'ocean' });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="theme-list" id="theme-shelf"></div>
+                    <p class="more">
+                        <a class="button main" href="./themes.html"
+                            >See all 25 themes in 8 palettes</a
+                        >
+                    </p>
+                    <p>
+                        The themes: <code>default</code> (SonicFrame as it
+                        always looked; no theme, or an unknown name, gives this
+                        one), <code>bubble</code>, <code>pill</code>,
+                        <code>blocky</code>, <code>card</code>,
+                        <code>minimal</code>, <code>terminal</code>,
+                        <code>pulse</code>, <code>scope</code>,
+                        <code>neon</code>, <code>glass</code>,
+                        <code>soft</code>, <code>brutal</code>,
+                        <code>studio</code>, <code>retro</code>,
+                        <code>dots</code>, <code>paper</code>,
+                        <code>bold</code>, <code>stream</code>,
+                        <code>led</code>, <code>smooth</code>,
+                        <code>compact</code>, <code>bubbly</code>,
+                        <code>mono</code> and <code>classic</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Palettes</h2>
+                    <p>
+                        <code>light</code>, <code>dark</code>,
+                        <code>ocean</code>, <code>forest</code>,
+                        <code>sunset</code>, <code>berry</code>,
+                        <code>paper</code> and <code>contrast</code>, each
+                        checked for readable text and visible controls (WCAG
+                        contrast). <code>'auto'</code> follows the system's
+                        light or dark; <code>'default'</code> sets no color at
+                        all, so your page's
+                        <code>--sonicframe-*</code> variables show.
+                    </p>
+                    <p>
+                        A palette is set as custom properties on the player, so
+                        plain CSS can still change one color. Or give your own,
+                        with all eleven colors:
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    palette: {
+        surface: '#101820', // the background
+        text: '#f2f5f9', // the time
+        muted: '#9aa7b8', // labels, the ruler
+        border: '#2a3442',
+        wave: '#3b4a5e', // bars not yet played
+        progress: '#3ee6c1', // bars played
+        accent: '#3ee6c1', // the play button
+        onAccent: '#08110f', // icons on the accent
+        marker: '#ff7a59',
+        region: 'rgba(62, 230, 193, 0.18)',
+        dim: 'rgba(255, 255, 255, 0.08)',
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Themes of your own</h2>
+                    <p>
+                        Start from any theme and change what you need. Register
+                        it to use its name everywhere, the HTML tag included
+                        (built-in names cannot be replaced):
+                    </p>
+                    <div class="code">
+                        <pre><code>import { defineTheme, registerTheme } from 'sonicframe/player';
+
+const quiet = defineTheme({ extends: 'bubble', palette: 'dark', look: { corner: 0 } });
+createPlayer({ container, src, theme: quiet });
+
+registerTheme('brand-note', { extends: 'pill', wave: { knob: 14 } });
+// &lt;sonic-player theme="brand-note" …&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Fonts</h2>
+                    <p>
+                        SonicFrame ships no font files. The stacks name fonts
+                        already on the device: <code>system</code>,
+                        <code>rounded</code>, <code>mono</code>,
+                        <code>serif</code>, <code>humanist</code>,
+                        <code>geometric</code>, <code>industrial</code>,
+                        <code>slab</code> and <code>handwritten</code>. This
+                        site's own font picker uses them.
+                    </p>
+                    <p>To use another font, bring it:</p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    font: { family: 'Brand Sans', src: '/fonts/brand.woff2', fallback: 'humanist' },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        It loads once per page, with the system stack behind it.
+                        An address is used only when it is http(s) or a relative
+                        path; your Content-Security-Policy decides the rest.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

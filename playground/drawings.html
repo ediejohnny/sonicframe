@@ -2,108 +2,196 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Drawings and themes · SonicFrame</title>
+        <title>Drawings · SonicFrame</title>
         <meta
             name="description"
-            content="Ten ways SonicFrame draws a sound, and whole players in one word."
+            content="Ten ways SonicFrame draws a sound, and the bar style behind all of them."
         />
-        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
-        <link rel="stylesheet" href="./site.css" />
     </head>
     <body>
-        <header class="top">
-            <div class="wrap">
-                <button
-                    id="menu"
-                    class="button small menu"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="side"
-                >
-                    Menu
-                </button>
-                <a class="brand" href="./">
-                    <img src="../assets/logo.svg" alt="" />
-                    SonicFrame
-                    <span class="version" data-version></span>
-                </a>
-                <nav class="nav" aria-label="Elsewhere">
-                    <a
-                        class="far"
-                        href="https://github.com/ediejohnny/sonicframe"
-                        >GitHub</a
-                    >
-                    <a
-                        class="far"
-                        href="https://www.npmjs.com/package/sonicframe"
-                        >npm</a
-                    >
-                    <button
-                        id="scheme"
-                        class="button small"
-                        type="button"
-                        aria-pressed="false"
-                    >
-                        Dark
+        <main class="content">
+            <div class="page-head">
+                <h1>Drawings</h1>
+                <p class="lede">
+                    Ten ways to draw a sound, from rounded bars to a heartbeat
+                    monitor. Every player on this page plays; press any of them.
+                </p>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
                     </button>
-                </nav>
+                    <input id="file" type="file" accept="audio/*" hidden />
+                </div>
             </div>
-        </header>
 
-        <div class="wrap layout">
-            <nav class="side" id="side" aria-label="Pages"></nav>
-            <div class="side-backdrop" id="side-backdrop" hidden></div>
-
-            <main class="content">
-                <div class="page-head">
-                    <h1>Drawings and themes</h1>
-                    <p class="lede">
-                        How the sound is drawn, and whole players in one word.
-                        Every player on this page plays; press any of them.
+            <div class="doc">
+                <section class="section">
+                    <h2>Ten ways to draw the sound</h2>
+                    <p>
+                        Every drawing takes the played, hover and unplayed
+                        colors, and any of them can carry a knob at the playing
+                        position.
                     </p>
-                    <div class="source">
-                        <p id="source" aria-live="polite">Loading the sound…</p>
-                        <button id="pick" class="button small" type="button">
-                            Use your own sound
-                        </button>
-                        <input id="file" type="file" accept="audio/*" hidden />
+                    <div class="shelf" id="drawing-shelf"></div>
+                </section>
+
+                <section class="section">
+                    <h2>Choosing one</h2>
+                    <div class="code">
+                        <pre><code>new SonicFrame({ container, media, peaks, wave: 'pulse' });
+
+// With details:
+new SonicFrame({
+    container,
+    media,
+    peaks,
+    wave: { style: 'line', lineWidth: 3, glow: 6, smooth: true },
+});
+
+// Later:
+frame.setWave('blocks');</code></pre>
+                        <button class="button small" type="button">Copy</button>
                     </div>
-                </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Detail</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>style</code></td>
+                                    <td><code>'bars'</code></td>
+                                    <td>
+                                        <code>'bars'</code>,
+                                        <code>'needles'</code>,
+                                        <code>'blocks'</code>,
+                                        <code>'dots'</code>,
+                                        <code>'steps'</code>,
+                                        <code>'line'</code>,
+                                        <code>'area'</code>,
+                                        <code>'scope'</code>,
+                                        <code>'pulse'</code> or
+                                        <code>'track'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>lineWidth</code></td>
+                                    <td><code>2</code></td>
+                                    <td>
+                                        The line of line drawings and of the
+                                        track, in CSS pixels.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>glow</code></td>
+                                    <td><code>0</code></td>
+                                    <td>A soft glow around lines.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>mirror</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The line also traces the lower edge.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>smooth</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Curves instead of corners.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>knob</code></td>
+                                    <td><code>0</code></td>
+                                    <td>
+                                        The diameter of a dot riding the playing
+                                        position, over any drawing.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="callout tip">
+                        <strong>A plain track</strong>
+                        <code>{ style: 'track', knob: 12 }</code> needs no peaks
+                        at all: a line with a moving dot, for sounds you have no
+                        peaks for yet.
+                    </div>
+                </section>
 
-                <aside class="toc" id="toc"></aside>
-
-                <div class="doc">
-                    <section class="section" id="drawings">
-                        <h2>Ten ways to draw the sound</h2>
-                        <p class="lede">
-                            Every drawing takes the played, hover and unplayed
-                            colors, and any of them can carry a knob at the
-                            playhead.
-                        </p>
-                        <div class="shelf" id="drawing-shelf"></div>
-                    </section>
-
-                    <section class="section" id="themes">
-                        <h2>Themes</h2>
-                        <p class="lede">
-                            A whole player in one word: the layout, the button,
-                            the drawing, the font and a palette. Any theme wears
-                            any of the eight palettes.
-                        </p>
-                        <div class="theme-list" id="theme-shelf"></div>
-                        <p class="more">
-                            <a class="button main" href="./themes.html"
-                                >See all 24 themes in 8 palettes</a
-                            >
-                        </p>
-                    </section>
-                </div>
-            </main>
-        </div>
-
-        <footer class="foot" id="foot"></footer>
-
+                <section class="section">
+                    <h2>The bar style</h2>
+                    <p>
+                        Every drawing takes its density, curve and alignment
+                        from
+                        <code>bar</code>, in CSS pixels:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>width</code></td>
+                                    <td><code>3</code></td>
+                                    <td>Width of a bar.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>gap</code></td>
+                                    <td><code>2</code></td>
+                                    <td>Space between bars.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>radius</code></td>
+                                    <td><code>1.5</code></td>
+                                    <td>Corner radius of a bar.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>minHeight</code></td>
+                                    <td><code>2</code></td>
+                                    <td>
+                                        The height of silence, so the wave never
+                                        disappears.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>align</code></td>
+                                    <td><code>'center'</code></td>
+                                    <td>
+                                        <code>'center'</code>, or
+                                        <code>'bottom'</code> for a level meter.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>curve</code></td>
+                                    <td><code>0.7</code></td>
+                                    <td>
+                                        Below 1 lifts quiet sounds (speech reads
+                                        well); 1 draws the peaks as they are;
+                                        above 1 leaves only the loud parts
+                                        standing out.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Every bar has the same width in whole device pixels,
+                        edge to edge, so the wave stays sharp at any page zoom.
+                        Live frequency and exported clips use the same drawing.
+                    </p>
+                </section>
+            </div>
+        </main>
         <script type="module" src="./main.ts"></script>
     </body>
 </html>

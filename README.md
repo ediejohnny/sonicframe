@@ -414,25 +414,26 @@ and the time together, plus any of these parts: `speed` (steps through `1×`, `1
 avatar, given back on destroy) and `spacer`. Given only `src`, it makes its own media element and decodes the peaks in
 the browser when it first comes near the screen (`peaks` skips that).
 
-| Option        | Default     | What it does                                                                                                                                                                              |
-| ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `container`   | (required)  | The element the player is added to.                                                                                                                                                       |
-| `src`         | none        | The sound's address; the player makes its own `<audio>`.                                                                                                                                  |
-| `media`       | none        | Your own audio or video element instead.                                                                                                                                                  |
-| `peaks`       | decoded     | Peaks or a loader, as for `SonicFrame`.                                                                                                                                                   |
-| `theme`       | none        | A theme name (built-in or registered) or one made with `defineTheme`.                                                                                                                     |
-| `look`        | see below   | How the player is put together.                                                                                                                                                           |
-| `palette`     | the theme's | A palette name, `'auto'`, `'default'`, or your own colors (see below).                                                                                                                    |
-| `wave`        | `'bars'`    | How the sound is drawn (as for `SonicFrame`).                                                                                                                                             |
-| `font`        | the look's  | A stack name, a `font-family` list, or a font you bring (see below).                                                                                                                      |
-| `volume`      | `false`     | Show the volume control.                                                                                                                                                                  |
-| `spectrogram` | `false`     | A spectrogram under the wave, in the palette's colors (the sound is decoded once).                                                                                                        |
-| `zoom`        | `false`     | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`.                                                                                                        |
-| `minimap`     | `false`     | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall and `minimapGap` away; the player grows to fit it (with `autoHide`, it takes from the wave while it shows). |
-| `decode`      | see below   | How a sound is decoded for its peaks.                                                                                                                                                     |
-| `slot`        | none        | Your element for the `slot` part.                                                                                                                                                         |
-| `a11y`        | `{}`        | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).                                                                                                                |
-| `frame`       | `{}`        | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                                                                                                                               |
+| Option        | Default      | What it does                                                                                                                                                                              |
+| ------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `container`   | (required)   | The element the player is added to.                                                                                                                                                       |
+| `src`         | none         | The sound's address; the player makes its own `<audio>`.                                                                                                                                  |
+| `preload`     | `'metadata'` | How much of `src` loads before play: `'metadata'`, `'none'` (nothing until play; give the duration with the peaks) or `'auto'`. Also the tag's `preload` attribute.                       |
+| `media`       | none         | Your own audio or video element instead.                                                                                                                                                  |
+| `peaks`       | decoded      | Peaks or a loader, as for `SonicFrame`.                                                                                                                                                   |
+| `theme`       | none         | A theme name (built-in or registered) or one made with `defineTheme`.                                                                                                                     |
+| `look`        | see below    | How the player is put together.                                                                                                                                                           |
+| `palette`     | the theme's  | A palette name, `'auto'`, `'default'`, or your own colors (see below).                                                                                                                    |
+| `wave`        | `'bars'`     | How the sound is drawn (as for `SonicFrame`).                                                                                                                                             |
+| `font`        | the look's   | A stack name, a `font-family` list, or a font you bring (see below).                                                                                                                      |
+| `volume`      | `false`      | Show the volume control.                                                                                                                                                                  |
+| `spectrogram` | `false`      | A spectrogram under the wave, in the palette's colors (the sound is decoded once).                                                                                                        |
+| `zoom`        | `false`      | The wave's zoom options (see [Zoom and scroll](#zoom-and-scroll)), plus `buttons`.                                                                                                        |
+| `minimap`     | `false`      | `true` or the `minimap` options: a strip under the wave, `minimapHeight` tall and `minimapGap` away; the player grows to fit it (with `autoHide`, it takes from the wave while it shows). |
+| `decode`      | see below    | How a sound is decoded for its peaks.                                                                                                                                                     |
+| `slot`        | none         | Your element for the `slot` part.                                                                                                                                                         |
+| `a11y`        | `{}`         | Accessibility: `{ lang, labels, description, zoom, minimap }` (see below).                                                                                                                |
+| `frame`       | `{}`         | Any other `SonicFrame` option (`label`, `lazy`, `colors`…).                                                                                                                               |
 
 Accessibility options live in one group, `a11y`, arranged by place, and whatever adds behaviour is off until you turn
 it on:
@@ -486,14 +487,16 @@ through, and 50 MB).
 
 The look: `line` and `meta` (the parts of the main line and of the small line under the wave), `wavePlace`
 (`'inline'` or `'top'`), `time` (`'elapsed'`, `'remaining'`, `'duration'` or `'both'`), `button`
-(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `minimapGap`, `waveMin`, `narrow`, `corner`, `padding`, `gap`
+(`{ shape, fill, size }`), `waveHeight`, `minimapHeight`, `minimapGap`, `waveMin`, `narrow`, `narrowLine`,
+`narrowStart`, `corner`, `padding`, `gap`
 (rem), `border` (CSS pixels), `shadow` (`'none'`, `'soft'`, `'hard'`, `'glow'`), `surface` (`'solid'`, `'glass'`,
 `'none'`), `font`, `fontSize`, `weight`, `uppercase`, `skip` (seconds), `speeds` and `volume` (`'always'` or
 `'hover'`). Unknown names fall back and numbers are kept in range.
 
 A narrow player turns into a voice note. Under `narrow` (22 rem; `0` turns it off), a player with the wave in its
-line keeps only the play button and the wave there; the time goes under the wave on the left and the other controls
-on the right, wrapping under the time when they do not fit. The pieces are moved, not built again, so the wave keeps
+line keeps there only the wave and the parts `narrowLine` names (`['play', 'wave', 'slot']`). The parts
+`narrowStart` names (the four time parts) go under the wave on the left, and every other part goes on the right,
+wrapping under the left ones when they do not fit. Both keep the order of `line`. The pieces are moved, not built again, so the wave keeps
 its state, and the player gets a `data-narrow` attribute for your CSS (the row is `.sonicframe-under`). With zoom
 buttons on a wider line, the wave keeps at least `waveMin` (8 rem) and the buttons wrap under it.
 

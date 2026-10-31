@@ -20,12 +20,14 @@ import {
     Player,
     type PlayerA11y,
     type PlayerDescription,
+    type PlayerOptions,
     type PlayerZoom,
 } from './player';
 
 /** The attributes the tag reads. */
 export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
     'src',
+    'preload',
     'peaks',
     'peaks-channel',
     'peaks-max',
@@ -51,6 +53,7 @@ export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
 /** Attributes that need a new player (a new sound, or parts built once). */
 const REBUILD = new Set([
     'src',
+    'preload',
     'peaks',
     'peaks-channel',
     'peaks-max',
@@ -297,6 +300,9 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                 const player = new Player({
                     container: this,
                     src: this.getAttribute('src') ?? undefined,
+                    // The player keeps only a known value; anything else loads the metadata.
+                    preload: (this.getAttribute('preload') ??
+                        undefined) as PlayerOptions['preload'],
                     peaks:
                         peaks === null
                             ? undefined

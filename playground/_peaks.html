@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Make the peaks files · SonicFrame</title>
+    </head>
+    <body>
+        <h1>Make the peaks files</h1>
+        <p>
+            Decodes every sound of the docs site here, writes its peaks as an
+            audiowaveform .dat file with writeWaveform, and saves it next to the
+            sound through the dev server. Run it again whenever a sound changes.
+        </p>
+        <button id="make" type="button">Make them</button>
+        <ul id="log"></ul>
+        <script type="module" src="./_peaks.ts"></script>
+    </body>
+</html>

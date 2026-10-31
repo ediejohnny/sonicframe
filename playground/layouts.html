@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Parts and layouts · SonicFrame</title>
+        <meta
+            name="description"
+            content="Arrange the ready-made player: its parts, sizes, the wave on top, and the voice note on phones."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Parts and layouts</h1>
+                <p class="lede">
+                    The look says how a player is put together: which parts sit
+                    on its line, where the wave goes, the sizes and the finish.
+                    Sizes are in rem, so a player grows with the page's text.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The line and the small line</h2>
+                    <p>
+                        <code>line</code> lists the parts of the main line, in
+                        order. <code>meta</code> adds a small line right under
+                        the wave, like a voice note's duration.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    look: { line: ['play', 'wave'], meta: ['elapsed', 'spacer', 'speed'] },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"look":{"line":["play","wave"],"meta":["elapsed","spacer","speed"]}}'
+                    ></div>
+                </section>
+
+                <section class="section">
+                    <h2>The wave on top</h2>
+                    <p>
+                        <code>wavePlace: 'top'</code> puts the wave on its own
+                        line, above the controls, which wrap on narrow screens.
+                    </p>
+                    <div class="code">
+                        <pre><code>look: { wavePlace: 'top', line: ['back', 'play', 'forward', 'spacer', 'time'] }</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"look":{"wavePlace":"top","line":["back","play","forward","spacer","time"]}}'
+                    ></div>
+                </section>
+
+                <section class="section">
+                    <h2>The voice note on phones</h2>
+                    <p>
+                        A player narrower than <code>narrow</code> (22 rem) with
+                        the wave in its line turns into a voice note: the play
+                        button and the wave keep the line, the time goes under
+                        the wave on the left, and the other controls go on the
+                        right, wrapping when they do not fit. The pieces are
+                        moved, never built again, so nothing flickers. This
+                        player is 20 rem wide:
+                    </p>
+                    <div
+                        class="stage narrow-demo"
+                        data-demo="player"
+                        data-options='{"zoom":{"buttons":true},"look":{"line":["play","wave","time","speed"]}}'
+                    ></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>narrow</code></td>
+                                    <td><code>22</code></td>
+                                    <td>
+                                        The width, in rem, under which the
+                                        player turns into a voice note.
+                                        <code>0</code> keeps one line at any
+                                        width.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>narrowLine</code></td>
+                                    <td>
+                                        <code>['play', 'wave', 'slot']</code>
+                                    </td>
+                                    <td>The parts that stay on the line.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>narrowStart</code></td>
+                                    <td>the four time parts</td>
+                                    <td>
+                                        The parts that go under the wave on the
+                                        left. Every other part goes on the
+                                        right.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>waveMin</code></td>
+                                    <td><code>8</code></td>
+                                    <td>
+                                        On a wider line with zoom buttons, the
+                                        wave keeps this width (rem) and the
+                                        buttons wrap under it.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        While it lasts, the player has a
+                        <code>data-narrow</code> attribute and the row under the
+                        wave is <code>.sonicframe-under</code>, for your own
+                        CSS.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Every look option</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>line</code></td>
+                                    <td>
+                                        <code>['play', 'wave', 'time']</code>
+                                    </td>
+                                    <td>The parts of the main line.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>meta</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>A small line under the wave.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>wavePlace</code></td>
+                                    <td><code>'inline'</code></td>
+                                    <td>
+                                        <code>'inline'</code> or
+                                        <code>'top'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>time</code></td>
+                                    <td><code>'both'</code></td>
+                                    <td>
+                                        <code>'elapsed'</code>,
+                                        <code>'remaining'</code>,
+                                        <code>'duration'</code> or
+                                        <code>'both'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>button</code></td>
+                                    <td>
+                                        <code
+                                            >{ shape: 'circle', fill: 'solid',
+                                            size: 36 }</code
+                                        >
+                                    </td>
+                                    <td>
+                                        The play button; <code>size</code> in
+                                        CSS pixels.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>waveHeight</code></td>
+                                    <td><code>2.5</code></td>
+                                    <td>Height of the wave (rem).</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>minimapHeight</code>,
+                                        <code>minimapGap</code>
+                                    </td>
+                                    <td>
+                                        <code>1.5</code>, <code>0.375</code>
+                                    </td>
+                                    <td>
+                                        The minimap strip and its space from the
+                                        wave (rem).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>corner</code>,
+                                        <code>padding</code>, <code>gap</code>
+                                    </td>
+                                    <td>
+                                        <code>0.75</code>, <code>0.5</code>,
+                                        <code>0.625</code>
+                                    </td>
+                                    <td>
+                                        Corner radius, inner space and space
+                                        between parts (rem).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>border</code></td>
+                                    <td><code>1</code></td>
+                                    <td>
+                                        Border width in CSS pixels; 0 draws
+                                        none.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>shadow</code></td>
+                                    <td><code>'none'</code></td>
+                                    <td>
+                                        <code>'none'</code>,
+                                        <code>'soft'</code>,
+                                        <code>'hard'</code> or
+                                        <code>'glow'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>surface</code></td>
+                                    <td><code>'solid'</code></td>
+                                    <td>
+                                        <code>'solid'</code>,
+                                        <code>'glass'</code> or
+                                        <code>'none'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>font</code>,
+                                        <code>fontSize</code>,
+                                        <code>weight</code>,
+                                        <code>uppercase</code>
+                                    </td>
+                                    <td>
+                                        <code>'system'</code>,
+                                        <code>0.8125</code>, <code>500</code>,
+                                        <code>false</code>
+                                    </td>
+                                    <td>The text.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>skip</code></td>
+                                    <td><code>10</code></td>
+                                    <td>Seconds moved by back and forward.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>speeds</code></td>
+                                    <td><code>[1, 1.5, 2]</code></td>
+                                    <td>
+                                        The speeds the speed button steps
+                                        through.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>volume</code></td>
+                                    <td><code>'hover'</code></td>
+                                    <td>
+                                        <code>'always'</code> or
+                                        <code>'hover'</code>: when the volume
+                                        bar shows.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Unknown names fall back to the default and numbers are
+                        kept in range, so a look can come from anywhere (an
+                        attribute, a stored setting) without surprises.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

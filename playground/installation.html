@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Installation · SonicFrame</title>
+        <meta
+            name="description"
+            content="Install SonicFrame from npm or a CDN, and pick the entry point you need."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Installation</h1>
+                <p class="lede">
+                    One package, no dependencies, three entry points. Install it
+                    with your package manager, or load it straight from a CDN.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>With a package manager</h2>
+                    <p>
+                        SonicFrame is published on npm as
+                        <code>sonicframe</code>. Use whichever manager your
+                        project already uses:
+                    </p>
+                    <div class="code">
+                        <pre><code>npm install sonicframe</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="code">
+                        <pre><code>pnpm add sonicframe
+yarn add sonicframe
+bun add sonicframe</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        It brings nothing else along: the published package has
+                        no runtime dependencies and no install scripts. Types
+                        come in the package, so TypeScript needs nothing extra.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Three entry points</h2>
+                    <p>
+                        Import only what the page needs. An app that draws waves
+                        never loads the ready-made player, and a server that
+                        reads peaks never loads anything that touches the DOM.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Import</th>
+                                    <th>What is in it</th>
+                                    <th>Use it for</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>sonicframe</code></td>
+                                    <td>
+                                        The frame (<code>SonicFrame</code>),
+                                        every plugin, the play button, the
+                                        volume control, the peaks readers and
+                                        the analysis functions.
+                                    </td>
+                                    <td>
+                                        Building your own player, or drawing
+                                        waves with your own controls.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>sonicframe/player</code></td>
+                                    <td>
+                                        <code>createPlayer</code>, the themes
+                                        and palettes, and the
+                                        <code>&lt;sonic-player&gt;</code> tag.
+                                    </td>
+                                    <td>
+                                        A complete player in one call or one
+                                        tag.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>sonicframe/analysis</code></td>
+                                    <td>
+                                        Pure functions: levels, silences, the
+                                        wave in words, and the waveform file
+                                        writer.
+                                    </td>
+                                    <td>
+                                        Servers, workers and build scripts
+                                        (Node, Deno, Bun).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code">
+                        <pre><code>import { SonicFrame, loadPeaks } from 'sonicframe';
+import { createPlayer } from 'sonicframe/player';
+import { writeWaveform } from 'sonicframe/analysis';</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>From a CDN</h2>
+                    <p>
+                        No build step? Any npm CDN serves the package as plain
+                        modules. Pin the version you tested:
+                    </p>
+                    <div class="code">
+                        <pre><code>&lt;script type="module"&gt;
+    import { createPlayer } from 'https://cdn.jsdelivr.net/npm/sonicframe@0.4.0/dist/player.js';
+
+    createPlayer({
+        container: document.querySelector('#player'),
+        src: '/voice.mp3',
+    });
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="callout tip">
+                        <strong>Tip</strong>
+                        A strict Content-Security-Policy keeps working: add the
+                        CDN to <code>script-src</code>, and nothing else is
+                        needed. SonicFrame sets no inline styles, runs no
+                        <code>eval</code> and starts no blob workers.
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Module format</h2>
+                    <p>
+                        SonicFrame is shipped as standard ES modules (<code
+                            >"type": "module"</code
+                        >), compiled for ES2022. Every current bundler (Vite,
+                        webpack, Rollup, esbuild, Parcel) and every current
+                        browser loads it as is. There is no CommonJS build; in
+                        Node, use <code>import</code> (or a dynamic
+                        <code>import()</code> from CommonJS).
+                    </p>
+                    <p>
+                        The package is marked free of side effects, so a bundler
+                        drops every plugin and function you do not import.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Next steps</h2>
+                    <ul>
+                        <li>
+                            <a href="./quickstart.html">Quickstart</a>: a
+                            working player in five steps.
+                        </li>
+                        <li>
+                            <a href="./frame.html">The frame</a>: what
+                            SonicFrame draws and how it follows the sound.
+                        </li>
+                        <li>
+                            <a href="./browsers.html">Browser support</a>: what
+                            runs where.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

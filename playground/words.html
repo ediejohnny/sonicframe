@@ -2,136 +2,84 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>The wave in words · SonicFrame</title>
         <meta
             name="description"
             content="A description of the sound for people who cannot see the wave."
         />
-        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
-        <link rel="stylesheet" href="./site.css" />
     </head>
     <body>
-        <header class="top">
-            <div class="wrap">
-                <button
-                    id="menu"
-                    class="button small menu"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="side"
-                >
-                    Menu
-                </button>
-                <a class="brand" href="./">
-                    <img src="../assets/logo.svg" alt="" />
-                    SonicFrame
-                    <span class="version" data-version></span>
-                </a>
-                <nav class="nav" aria-label="Elsewhere">
-                    <a
-                        class="far"
-                        href="https://github.com/ediejohnny/sonicframe"
-                        >GitHub</a
-                    >
-                    <a
-                        class="far"
-                        href="https://www.npmjs.com/package/sonicframe"
-                        >npm</a
-                    >
-                    <button
-                        id="scheme"
-                        class="button small"
-                        type="button"
-                        aria-pressed="false"
-                    >
-                        Dark
+        <main class="content">
+            <div class="page-head">
+                <h1>The wave in words</h1>
+                <p class="lede">
+                    For people who cannot see the wave: a short description of
+                    the sound, read by their own screen reader when they reach
+                    the player. It is shown here as text too. Off until you turn
+                    it on.
+                </p>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
                     </button>
-                </nav>
-            </div>
-        </header>
-
-        <div class="wrap layout">
-            <nav class="side" id="side" aria-label="Pages"></nav>
-            <div class="side-backdrop" id="side-backdrop" hidden></div>
-
-            <main class="content">
-                <div class="page-head">
-                    <h1>The wave in words</h1>
-                    <p class="lede">
-                        For people who cannot see the wave: a short description
-                        of the sound, read by their own screen reader when they
-                        reach the player. It is shown here as text too. Off
-                        until you turn it on.
-                    </p>
-                    <div class="source">
-                        <p id="source" aria-live="polite">Loading the sound…</p>
-                        <button id="pick" class="button small" type="button">
-                            Use your own sound
-                        </button>
-                        <input id="file" type="file" accept="audio/*" hidden />
-                    </div>
+                    <input id="file" type="file" accept="audio/*" hidden />
                 </div>
+            </div>
 
-                <aside class="toc" id="toc"></aside>
-
-                <div class="doc">
-                    <section class="section" id="try">
-                        <h2>Try it</h2>
-                        <div class="words">
-                            <div
-                                class="buttons"
-                                role="group"
-                                aria-label="Language"
+            <div class="doc">
+                <section class="section" id="try">
+                    <h2>Try it</h2>
+                    <div class="words">
+                        <div class="buttons" role="group" aria-label="Language">
+                            <button
+                                class="button small"
+                                type="button"
+                                data-words-lang="en"
+                                aria-pressed="true"
                             >
-                                <button
-                                    class="button small"
-                                    type="button"
-                                    data-words-lang="en"
-                                    aria-pressed="true"
-                                >
-                                    English
-                                </button>
-                                <button
-                                    class="button small"
-                                    type="button"
-                                    data-words-lang="pt"
-                                    aria-pressed="false"
-                                    lang="pt"
-                                >
-                                    Português
-                                </button>
-                            </div>
-                            <div id="words-player"></div>
-                            <p class="words-text" id="words-text"></p>
-                            <!-- Seen, not spoken: the player says the same through the live region. -->
-                            <p
-                                class="note"
-                                id="words-status"
-                                aria-hidden="true"
-                            ></p>
+                                English
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-words-lang="pt"
+                                aria-pressed="false"
+                                lang="pt"
+                            >
+                                Português
+                            </button>
                         </div>
-                    </section>
+                        <div id="words-player"></div>
+                        <p class="words-text" id="words-text"></p>
+                        <!-- Seen, not spoken: the player says the same through the live region. -->
+                        <p
+                            class="note"
+                            id="words-status"
+                            aria-hidden="true"
+                        ></p>
+                    </div>
+                </section>
 
-                    <section class="section" id="keys">
-                        <h2>Keys</h2>
-                        <ul class="keys">
-                            <li><kbd>D</kbd> says the description again</li>
-                            <li>
-                                <kbd>P</kbd> and <kbd>Shift</kbd> + <kbd>P</kbd>
-                                step between the parts
-                            </li>
-                            <li>
-                                The speech bubble reads it with your browser’s
-                                own voice
-                            </li>
-                        </ul>
-                    </section>
+                <section class="section" id="keys">
+                    <h2>Keys</h2>
+                    <ul class="keys">
+                        <li><kbd>D</kbd> says the description again</li>
+                        <li>
+                            <kbd>P</kbd> and <kbd>Shift</kbd> + <kbd>P</kbd>
+                            step between the parts
+                        </li>
+                        <li>
+                            The speech bubble reads it with your browser’s own
+                            voice
+                        </li>
+                    </ul>
+                </section>
 
-                    <section class="section" id="code">
-                        <h2>In code</h2>
-                        <div class="code">
-                            <pre><code>createPlayer({
+                <section class="section" id="code">
+                    <h2>In code</h2>
+                    <div class="code">
+                        <pre><code>createPlayer({
     container,
     src: '/voice.mp3',
     a11y: {
@@ -143,16 +91,196 @@
         },
     },
 });</code></pre>
-                            <button class="button small" type="button">
-                                Copy
-                            </button>
-                        </div>
-                    </section>
-                </div>
-            </main>
-        </div>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        On a frame of your own, it is the
+                        <code>soundDescription</code> plugin:
+                    </p>
+                    <div class="code">
+                        <pre><code>import { soundDescription } from 'sonicframe';
 
-        <footer class="foot" id="foot"></footer>
+frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>What it says</h2>
+                    <p>
+                        How long the sound is, where the sound and the pauses
+                        are, and where it is loudest: "33 seconds. Sound until
+                        20 seconds, a pause of 4 seconds, then sound to the end.
+                        Loudest at 12 seconds." A sound with many pauses is
+                        summed up by its longest one, and the silence at the
+                        start and the end is told apart.
+                    </p>
+                    <p>
+                        It says "sound", never "speech" or "music": peaks cannot
+                        tell them apart, and they are relative, so it describes
+                        the shape, never how loud the recording is.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Who narrates</h2>
+                    <p>
+                        The person's own screen reader, in their voice and at
+                        their speed: the text goes in the wave's
+                        <code>aria-describedby</code>, next to any ids your page
+                        put there. Nothing is ever spoken on its own.
+                    </p>
+                    <p>
+                        For people without a screen reader,
+                        <code>speech: true</code> lets a click read it with the
+                        browser's own voice (<code>speechSynthesis</code>), with
+                        nothing to download. Only voices on the device are used,
+                        because some browsers' online voices send the text to a
+                        server; <code>speech: { voices: 'any' }</code>
+                        allows them.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>lang</code></td>
+                                    <td><code>'en'</code></td>
+                                    <td>
+                                        <code>'pt'</code>,
+                                        <code>'pt-BR'</code>…,
+                                        <code>'auto'</code>, or any tag with
+                                        your own <code>words</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>words</code></td>
+                                    <td>built in</td>
+                                    <td>
+                                        Your own phrases, templates with
+                                        <code>{duration}</code>,
+                                        <code>{at}</code>, <code>{count}</code>…
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>times</code></td>
+                                    <td><code>'words'</code></td>
+                                    <td>
+                                        <code>'clock'</code> says positions as
+                                        <code>0:12</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td>from the peaks</td>
+                                    <td>
+                                        Your own description, written ahead.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>minPause</code></td>
+                                    <td>automatic</td>
+                                    <td>
+                                        The shortest pause, in seconds (3 % of
+                                        the sound, from 0.75 to 5).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>threshold</code></td>
+                                    <td><code>0.06</code></td>
+                                    <td>
+                                        Below this share of the loudest peak
+                                        counts as quiet.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>describedBy</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Put the text in the wave's
+                                        <code>aria-describedby</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>target</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        An element of yours that shows the text
+                                        too.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>announceWhenReady</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Say it once if it arrives while the wave
+                                        has focus.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>keys</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <kbd>D</kbd> says it again,
+                                        <kbd>P</kbd> / <kbd>Shift</kbd> +
+                                        <kbd>P</kbd> step through the parts.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>pauseInValue</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Add "pause" or "silence" to the wave's
+                                        value.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>speech</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Let <code>speak()</code> read it with
+                                        the browser's voice;
+                                        <code>{ voices, rate }</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>onChange</code></td>
+                                    <td>none</td>
+                                    <td>Called with the new text.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Written ahead of time</h2>
+                    <p>
+                        <code>outlineSound</code> and
+                        <code>describeSound</code> are pure functions on
+                        <code>sonicframe/analysis</code>, so a server can write
+                        the description when a file is uploaded and pass it as
+                        <code>text</code>, ready at the first focus.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { describeSound, outlineSound } from 'sonicframe/analysis';
+
+const text = describeSound(outlineSound(peaks, duration), { lang: 'en' });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
 
         <script type="module" src="./main.ts"></script>
     </body>

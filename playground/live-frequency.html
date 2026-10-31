@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Live frequency · SonicFrame</title>
+        <meta
+            name="description"
+            content="Bars that dance to the sound's spectrum while it plays, through Web Audio."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Live frequency</h1>
+                <p class="lede">
+                    While the sound plays, the bars dance to its spectrum,
+                    through Web Audio, in up to 512 bands. When it stops, the
+                    wave comes back.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding it</h2>
+                    <div class="code">
+                        <pre><code>import { liveFrequency } from 'sonicframe';
+
+frame.use(liveFrequency({ bars: 48 }));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-plugins="liveFrequency"
+                    ></div>
+                    <p>Press play to see it move.</p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>fftSize</code></td>
+                                    <td><code>512</code></td>
+                                    <td>
+                                        The analyser's window, a power of two up
+                                        to 2048.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>smoothing</code></td>
+                                    <td><code>0.8</code></td>
+                                    <td>
+                                        How much each frame leans on the last (0
+                                        to 0.99).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>minHz</code>, <code>maxHz</code>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        The frequency range across the bars.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>bars</code></td>
+                                    <td><code>48</code></td>
+                                    <td>
+                                        How many bands feed the bars (at most
+                                        512).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Never silences a sound</h2>
+                    <p>
+                        A media element from another origin without CORS cannot
+                        be read without muting it. SonicFrame refuses it with an
+                        <code>error</code> instead, and the sound keeps playing.
+                        The page's shared audio context is never closed, nor its
+                        output disconnected.
+                    </p>
+                    <div class="callout note">
+                        <strong>Motion</strong>
+                        These bars move with the sound, so leave the plugin out
+                        for people who asked for less motion if it is only
+                        decoration.
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

@@ -101,6 +101,24 @@ describe('resolveLook', () => {
         );
     });
 
+    it('reads the voice note’s part lists, keeping known parts only', () => {
+        expect(DEFAULT_LOOK.narrowLine).toEqual(['play', 'wave', 'slot']);
+        expect(DEFAULT_LOOK.narrowStart).toEqual([
+            'time',
+            'elapsed',
+            'remaining',
+            'duration',
+        ]);
+
+        const look = resolveLook(DEFAULT_LOOK, {
+            narrowLine: ['play', 'nope', 'speed'] as never,
+            narrowStart: ['volume', 'volume'],
+        });
+
+        expect(look.narrowLine).toEqual(['play', 'speed']);
+        expect(look.narrowStart).toEqual(['volume']);
+    });
+
     it('keeps the space between the wave and the minimap in range', () => {
         expect(DEFAULT_LOOK.minimapGap).toBe(0.375);
         expect(resolveLook(DEFAULT_LOOK, { minimapGap: 0 }).minimapGap).toBe(0);

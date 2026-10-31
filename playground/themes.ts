@@ -77,7 +77,7 @@ const SWATCHES = ['surface', 'wave', 'progress', 'marker'] as const;
 type Pick = { theme: ThemeName; palette: PaletteName };
 
 const audio = document.createElement('audio');
-audio.preload = 'metadata';
+audio.preload = 'none';
 document.body.append(audio);
 
 const gallery = byId('gallery');

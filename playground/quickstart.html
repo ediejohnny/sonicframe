@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Quickstart · SonicFrame</title>
+        <meta
+            name="description"
+            content="Draw a sound's waveform, play it and seek it, in five steps."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Quickstart</h1>
+                <p class="lede">
+                    In five steps you will have a waveform that plays with its
+                    sound, seeks on a click, a drag or the keyboard, and follows
+                    your page's colors. It takes about five minutes.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Before you start</h2>
+                    <p>You need:</p>
+                    <ul>
+                        <li>
+                            a page you can edit, with a bundler (Vite, webpack,
+                            Next.js…) or plain HTML;
+                        </li>
+                        <li>
+                            a sound file the page can reach, such as
+                            <code>/voice.mp3</code>;
+                        </li>
+                        <li>
+                            basic HTML and JavaScript. No framework is needed,
+                            and any framework works.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>1. Install SonicFrame</h2>
+                    <div class="code">
+                        <pre><code>npm install sonicframe</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        No bundler? Skip this step and import from a CDN, as
+                        <a href="./installation.html#from-a-cdn"
+                            >Installation</a
+                        >
+                        shows.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>2. Add the sound and a place for the wave</h2>
+                    <p>
+                        The wave is drawn inside any element you give it. The
+                        element keeps its size from your CSS, so give it a
+                        height.
+                    </p>
+                    <div class="code">
+                        <pre><code>&lt;audio id="voice" src="/voice.mp3" preload="metadata"&gt;&lt;/audio&gt;
+&lt;div id="wave" style="height: 3rem"&gt;&lt;/div&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>3. Draw the wave</h2>
+                    <p>
+                        Create a frame on the element and bind it to the audio.
+                        <code>peaks</code> are the loudest points of the sound,
+                        numbers from 0 to 1. Here they come from a small JSON
+                        file; <a href="./peaks.html">Peaks</a> shows every way
+                        to make them.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { SonicFrame, loadPeaks } from 'sonicframe';
+
+const frame = new SonicFrame({
+    container: document.getElementById('wave'),
+    media: document.getElementById('voice'),
+    peaks: () =&gt; loadPeaks('/voice.peaks.json'),
+    label: 'Voice note',
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="callout note">
+                        <strong>No peaks file yet?</strong>
+                        The ready-made player decodes the sound in the browser
+                        for you. Step 5 shows it.
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>4. Add a play button</h2>
+                    <div class="code">
+                        <pre><code>import { PlayButton } from 'sonicframe';
+
+PlayButton.create({
+    container: document.getElementById('controls'),
+    media: document.getElementById('voice'),
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        It is a real <code>&lt;button&gt;</code>: it works with
+                        the keyboard, and screen readers hear "Play" and
+                        "Pause".
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>5. Or take the whole player at once</h2>
+                    <p>
+                        Steps 2 to 4 in one call: the play button, the wave and
+                        the time, made from the sound's address alone.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { createPlayer } from 'sonicframe/player';
+
+createPlayer({
+    container: document.getElementById('player'),
+    src: '/voice.mp3',
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>Or with no JavaScript of your own, as a tag:</p>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player src="/voice.mp3"&gt;&lt;/sonic-player&gt;
+
+&lt;script type="module"&gt;
+    import { defineSonicPlayer } from 'sonicframe/player';
+    defineSonicPlayer();
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Try it</h2>
+                    <p>
+                        This is the result. Press play, click anywhere on the
+                        wave, or press <kbd>Tab</kbd> until the wave is focused
+                        and use the arrow keys, <kbd>Home</kbd> and
+                        <kbd>End</kbd>.
+                    </p>
+                    <div class="stage" data-demo="player"></div>
+                </section>
+
+                <section class="section">
+                    <h2>If something is off</h2>
+                    <ul>
+                        <li>
+                            <strong>Nothing shows.</strong> The container has no
+                            height. Give it one in CSS (<code>height: 3rem</code
+                            >).
+                        </li>
+                        <li>
+                            <strong>A thin line instead of bars.</strong> The
+                            peaks have not arrived: check the peaks address in
+                            the network panel, and listen to the frame's
+                            <code>error</code> event.
+                        </li>
+                        <li>
+                            <strong>The time says 0:00.</strong> The audio has
+                            not loaded its metadata yet. Use
+                            <code>preload="metadata"</code>, or pass the length
+                            as <code>duration</code>.
+                        </li>
+                        <li>
+                            <strong>Colors look wrong in dark mode.</strong> Set
+                            the <code>--sonicframe-*</code> variables for your
+                            dark scheme; see
+                            <a href="./styling.html">Colors and CSS</a>.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Next steps</h2>
+                    <ul>
+                        <li>
+                            <a href="./player.html">Player basics</a>: the
+                            ready-made player and its parts.
+                        </li>
+                        <li>
+                            <a href="./theming.html">Themes and palettes</a>: a
+                            whole look in one word.
+                        </li>
+                        <li>
+                            <a href="./accessibility.html">Accessibility</a>:
+                            what is built in, and what to turn on.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>
