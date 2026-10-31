@@ -1,4 +1,5 @@
 import { clamp01, positive } from './math';
+import { LANDING } from './steps';
 
 /**
  * The duration to use, in seconds: the media's own once it knows a real one, otherwise the hint the
@@ -34,6 +35,18 @@ export function stepRatio(
     return clamp01(ratio + direction * delta);
 }
 
+/** Steps in a second a time is kept to: microseconds. */
+const STEPS_PER_SECOND = 1000000;
+
+/**
+ * The time at `ratio` of a `duration`-second sound, in seconds. The bare product carries float
+ * noise (5 / 77 * 77 is 4.999…), so a time chosen as a whole second would show one second less;
+ * kept to the microsecond, it comes back whole, and nothing heard or shown changes.
+ */
+export function timeAt(ratio: number, duration: number): number {
+    return Math.round(ratio * duration * STEPS_PER_SECOND) / STEPS_PER_SECOND;
+}
+
 /** Starts fast and settles softly; `t` runs from 0 to 1. */
 export function easeOut(t: number): number {
     return 1 - (1 - clamp01(t)) ** 3;
@@ -55,6 +68,24 @@ export function formatTime(seconds: number, decimals: number = 0): string {
         : `${minutes}:${rest}`;
 }
 
+/**
+ * A position for a clock, as `formatTime` writes it. A seek can land up to `LANDING` before the time
+ * it asked for (an MP3 asked for 0:15 before it loaded starts at 14.998), so a position that close to
+ * the next second shows that second; never past `duration` when the position is within it.
+ */
+export function formatPosition(
+    seconds: number,
+    duration: number | null = null,
+): string {
+    const nudged = seconds + LANDING;
+
+    return formatTime(
+        duration !== null && nudged > duration
+            ? Math.max(seconds, duration)
+            : nudged,
+    );
+}
+
 /** What a screen reader announces for the position: `0:12 / 0:45`, or a percentage without a duration. */
 export function defaultValueText(
     time: number | null,
@@ -62,6 +93,6 @@ export function defaultValueText(
     duration: number | null,
 ): string {
     return time !== null && duration !== null
-        ? `${formatTime(time)} / ${formatTime(duration)}`
+        ? `${formatPosition(time, duration)} / ${formatTime(duration)}`
         : `${Math.round(clamp01(ratio) * 100)}%`;
 }

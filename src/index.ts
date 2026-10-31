@@ -170,7 +170,7 @@ export {
     type ZoomOptions,
     type ZoomWords,
 } from './core/zoom';
-export { formatTime } from './core/timing';
+export { formatPosition, formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
 export type {
     BarStyle,

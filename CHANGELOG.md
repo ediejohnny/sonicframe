@@ -46,6 +46,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   under the wave break in two, the parts after a spacer together on the far side; by default it keeps one line.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
 - The docs' Chapters page, with a WebVTT and a JSON example.
+- `frame.time`: where the sound is, in seconds. The media's own time, or, before the media loads
+  (`preload="none"`), where a seek will start it, while the media itself still says 0.
+- `formatPosition(time, duration)`: a position for a clock. A seek can land a hair before the time it
+  asked for (an MP3 asked for 0:15 can start at 14.998), so a position within 50 ms of the next second
+  shows that second, never past the duration; `formatTime` cuts it to the second before.
 
 ### Changed
 
@@ -54,6 +59,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   from a plain `git clone` of `main` or its zip. A "Want a specific version?" part under each shows the same with
   `x.y.z`, to fill in with the version's numbers.
 - The size ceiling of each entry rises from 96 KB to 128 KB (gzip, unminified, comments and chunks included).
+- The keyboard focus ring of a control with a border of its own (the player's speed button, an outlined play
+  button) now lies on that border instead of 2 px around it: one line, not a border and a ring side by side.
+  Controls without a border keep the ring 2 px out, where their own fill cannot hide it.
+- The docs' header is icons without borders, all of one size: the menu, the search (a box with a magnifying
+  glass on wide screens), GitHub's and npm's marks in their own colors, the font and a moon or a sun for the
+  scheme; each is named for screen readers, and the version is plain text. The font is chosen in a panel where
+  every name is written in its own font (it was a select cut short on a phone). Keyboard focus on the docs is one
+  ring, on a control's own edge.
 
 ### Fixed
 
@@ -65,6 +78,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The chapters popover's arrow sat one border-width off its button's middle, and its border stayed 1 px whatever
   the list's `style.border`; the drawer's close button sat above the list's head and off its right edge. Both now
   line up, measured when the list opens.
+- With `preload="none"`, a seek before play left the player's time at 0:00 while the wave showed the place
+  chosen, and the skip buttons started from 0:00. Both now go by the frame's time.
+- A step to a whole second could land a hair before it (in floating point, 5 / 77 × 77 is 4.999…), so the time
+  and the slider's words showed one second less (0:04 for 0:05). Every time the frame works out from a ratio
+  (the seek itself, its event, `timeupdate` and the slider's words) is now kept to the microsecond.
+- The browser itself can land a seek a hair short: an MP3 asked for 0:15 before it loaded started at 14.998,
+  and the player's time and the slider's words said 0:14 from then on. They now write the position with
+  `formatPosition`.
+- The fade between docs pages never ran on the published site, and every move logged an uncaught
+  `InvalidStateError`: the build put the stylesheet after the page's first script, so the arriving page read as
+  not opting in. The stylesheets now come first, and a fade the browser skips on its own (a second click before
+  the first page arrived) is no longer reported as an error.
+- The docs' search said its words and its keys as one ("Search the docsCtrl K"), and once something was typed
+  it took Escape twice to close. Its keys are said by `aria-keyshortcuts` only, and one Escape closes it.
 
 ## [0.4.1] - 2026-10-31
 

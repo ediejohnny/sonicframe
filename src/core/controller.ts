@@ -8,7 +8,12 @@ import type { MediaLike, SeekSource, SonicFrameEvents } from '../types';
 import { keyAction, type KeyModifiers } from './keys';
 import { clamp01, positive } from './math';
 import { rangeStep, type RangeState } from './range';
-import { defaultValueText, effectiveDuration, stepRatio } from './timing';
+import {
+    defaultValueText,
+    effectiveDuration,
+    stepRatio,
+    timeAt,
+} from './timing';
 
 /** `HAVE_METADATA`: from here on the media knows its duration and can seek. */
 const HAVE_METADATA = 1;
@@ -120,6 +125,23 @@ export class Controller {
     /** 0..1, the position shown (under the pointer while it drags). */
     get progress(): number {
         return this.dragging ?? this.position;
+    }
+
+    /**
+     * Where the sound is, in seconds: the media's own time, or where a seek waiting for the media
+     * to load (`preload="none"`) will start it; without media, the position set. A drag moves it
+     * only when let go. Null without media while the duration is unknown.
+     */
+    get time(): number | null {
+        const media = this.media;
+
+        if (media !== null && this.pending === null) {
+            return media.currentTime;
+        }
+
+        const duration = this.duration;
+
+        return duration === null ? null : timeAt(this.position, duration);
     }
 
     /** 0..1 under the mouse pointer, or null. */
@@ -459,7 +481,7 @@ export class Controller {
 
         this.effects.emit('seek', {
             ratio: target,
-            time: duration !== null ? target * duration : null,
+            time: duration !== null ? timeAt(target, duration) : null,
             source,
         });
     }
@@ -479,7 +501,7 @@ export class Controller {
         const duration = this.duration;
 
         if (duration !== null) {
-            media.currentTime = this.pending * duration;
+            media.currentTime = timeAt(this.pending, duration);
         }
 
         this.pending = null;
@@ -523,7 +545,7 @@ export class Controller {
 
     private report(): void {
         const duration = this.duration;
-        const time = duration !== null ? this.position * duration : null;
+        const time = duration !== null ? timeAt(this.position, duration) : null;
 
         if (time !== this.reported) {
             this.reported = time;
@@ -543,7 +565,7 @@ export class Controller {
     private updateAria(): void {
         const ratio = this.progress;
         const duration = this.duration;
-        const time = duration !== null ? ratio * duration : null;
+        const time = duration !== null ? timeAt(ratio, duration) : null;
         const state: AriaState = {
             now: Math.round(ratio * 100),
             text: (this.options.valueText ?? defaultValueText)(

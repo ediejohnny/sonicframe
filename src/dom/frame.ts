@@ -391,6 +391,15 @@ export class SonicFrame implements PluginHost {
         return this.controller.duration;
     }
 
+    /**
+     * Where the sound is, in seconds: the media's own time, or where a seek waiting for the media
+     * to load (`preload="none"`) will start it; without media, the position set. A drag moves it
+     * only when let go. Null without media while the duration is unknown.
+     */
+    get time(): number | null {
+        return this.controller.time;
+    }
+
     on<Name extends keyof SonicFrameEvents>(
         event: Name,
         listener: (...args: SonicFrameEvents[Name]) => void,

@@ -570,9 +570,10 @@ describe('dragging at an edge', () => {
             view.start + (195 / 200) * (view.end - view.start),
             9,
         );
-        expect(media.currentTime / 100).toBeCloseTo(
-            view.start + (195 / 200) * (view.end - view.start),
-            9,
+        // The media lands there, in seconds, to the microsecond a time is kept to.
+        expect(media.currentTime).toBeCloseTo(
+            (view.start + (195 / 200) * (view.end - view.start)) * 100,
+            6,
         );
     });
 
