@@ -173,6 +173,79 @@
                                     <td>A small line under the wave.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>metaWrap</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Short of room, the small line keeps one
+                                        line and a chapter's name gives up its
+                                        room. <code>true</code> breaks it in two
+                                        instead, the parts after a spacer going
+                                        together to the far side of the second.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameOverflow</code></td>
+                                    <td><code>'ellipsis'</code></td>
+                                    <td>
+                                        How a chapter's name too long for its
+                                        room ends: an ellipsis,
+                                        <code>'fade'</code> (it fades out,
+                                        saying there is more) or
+                                        <code>'clip'</code> (cut where the room
+                                        ends).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameFade</code></td>
+                                    <td><code>1.5</code></td>
+                                    <td>
+                                        How wide that fade is (rem, 0.25 to 6).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>nameTooltip</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A long name shows in full in a tooltip
+                                        while the mouse is on it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marquee</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A long name walks across its room, waits
+                                        at its end and starts over; a faded name
+                                        walks out from under its fade. Never
+                                        when the system asks for less motion.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeType</code></td>
+                                    <td><code>'restart'</code></td>
+                                    <td>
+                                        At its end, the name starts over from
+                                        its start, or <code>'bounce'</code>: it
+                                        walks back.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeSpeed</code></td>
+                                    <td><code>2</code></td>
+                                    <td>
+                                        How fast it walks (rem a second, 0.25 to
+                                        20).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueePause</code></td>
+                                    <td><code>1500</code></td>
+                                    <td>
+                                        How long it waits at each end
+                                        (milliseconds, 0 to 10000).
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>wavePlace</code></td>
                                     <td><code>'inline'</code></td>
                                     <td>

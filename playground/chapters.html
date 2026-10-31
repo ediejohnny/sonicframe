@@ -310,6 +310,49 @@ The meeting</code></pre>
                 </section>
 
                 <section class="section">
+                    <h2>Long names</h2>
+                    <p>
+                        The row under the wave keeps one line: the chapter's
+                        name takes the room left and gives it up first. A name
+                        too long for its room ends in an ellipsis, or as the
+                        look says: it can fade out, walk across its room and
+                        show in full under the mouse. The walk never runs when
+                        the system asks for less motion.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/episodes/12.mp3',
+    chapters: '/episodes/12-chapters.vtt',
+    look: {
+        underStart: 'line',
+        line: ['play', 'wave'],
+        meta: ['time', 'chapter', 'spacer', 'prevChapter', 'nextChapter'],
+        nameOverflow: 'fade',
+        nameTooltip: true,
+        marquee: true,
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"chapters":[{"start":0,"title":"An opening that takes its time before the music starts"},{"start":9,"title":"A long conversation about the little elf and the forest"},{"start":21,"title":"The answer, and what came after it"}],"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter"],"nameOverflow":"fade","nameTooltip":true,"marquee":true}}'
+                    ></div>
+                    <p>
+                        <code>nameOverflow</code>, <code>nameFade</code>,
+                        <code>nameTooltip</code>, <code>marquee</code>,
+                        <code>marqueeType</code>, <code>marqueeSpeed</code> and
+                        <code>marqueePause</code> are in
+                        <a href="./layouts.html#every-look-option"
+                            >every look option</a
+                        >; <code>metaWrap: true</code> lets the row break in two
+                        instead.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>The list's forms</h2>
                     <p>
                         Short of room in the player? The list can float over the

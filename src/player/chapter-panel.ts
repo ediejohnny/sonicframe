@@ -38,6 +38,8 @@ const CARRIED = [
     '--sonicframe-progress',
 ];
 
+const SVG = 'http://www.w3.org/2000/svg';
+
 /** The arrow's side, in CSS pixels, and how far it keeps from the list's ends. */
 const ARROW = 12;
 const ARROW_INSET = 16;
@@ -53,7 +55,7 @@ const ENTER_MS = 180;
 const LAYER = '2147483645';
 
 function css(
-    element: HTMLElement,
+    element: HTMLElement | SVGElement,
     pairs: readonly (readonly [string, string])[],
 ): void {
     for (const [name, value] of pairs) {
@@ -64,6 +66,8 @@ function css(
 export class FloatingList {
     private readonly arrow: HTMLElement | null = null;
     private readonly backdrop: HTMLElement | null = null;
+    /** The drawer's close button; a popover has none. */
+    private readonly closer: HTMLButtonElement | null = null;
     private anchor: HTMLElement | null = null;
     private stops: (() => void)[] = [];
 
@@ -75,7 +79,7 @@ export class FloatingList {
      */
     constructor(
         private readonly box: HTMLElement,
-        content: HTMLElement,
+        private readonly content: HTMLElement,
         private readonly settings: ListSettings,
         private readonly source: HTMLElement,
         private readonly dress: (box: HTMLElement) => void,
@@ -119,7 +123,8 @@ export class FloatingList {
                 ['flex-direction', 'column'],
             ]);
             css(content, [['flex', '1 1 auto']]);
-            box.prepend(this.closeButton(closeLabel));
+            this.closer = this.closeButton(closeLabel);
+            box.prepend(this.closer);
 
             if (settings.backdrop) {
                 const backdrop = document.createElement('div');
@@ -179,6 +184,7 @@ export class FloatingList {
         }
 
         this.place();
+        this.placeCloser();
         this.listen();
         this.enter();
         const chosen =
@@ -223,32 +229,86 @@ export class FloatingList {
         this.backdrop?.remove();
     }
 
+    /** A cross drawn in SVG, so its middle is the button's whatever the font. */
     private closeButton(label: string): HTMLButtonElement {
         const button = document.createElement('button');
+        const icon = document.createElementNS(SVG, 'svg');
+        const path = document.createElementNS(SVG, 'path');
         button.type = 'button';
         button.className = 'sonicframe-chapter-close';
         button.setAttribute('aria-label', label);
         button.title = label;
-        button.textContent = '×';
+        icon.setAttribute('viewBox', '0 0 24 24');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.setAttribute('focusable', 'false');
+        path.setAttribute('d', 'M6 6 18 18M18 6 6 18');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'currentColor');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-linecap', 'round');
+        icon.append(path);
+        button.append(icon);
         css(button, [
-            // In the corner, beside the list's head.
+            // On the list's head, set by `placeCloser` when the list opens.
             ['position', 'absolute'],
-            ['top', '0.75rem'],
-            ['right', '0.75rem'],
+            ['top', '0'],
+            ['right', '0'],
             ['z-index', '1'],
+            ['display', 'inline-grid'],
+            ['place-items', 'center'],
+            ['width', '1.75rem'],
+            ['height', '1.75rem'],
             ['margin', '0'],
-            ['padding', '0 0.5rem'],
+            ['padding', '0'],
             ['border-width', '0'],
+            ['border-radius', '0.25rem'],
             ['background-color', 'transparent'],
             ['color', 'inherit'],
-            ['font', 'inherit'],
-            ['font-size', '1.5rem'],
-            ['line-height', '1'],
             ['cursor', 'pointer'],
+        ]);
+        css(icon, [
+            ['width', '1.125rem'],
+            ['height', '1.125rem'],
+            ['display', 'block'],
         ]);
         button.addEventListener('click', () => this.onClose(true));
 
         return button;
+    }
+
+    /**
+     * Puts the drawer's close button on the list's head, its middle on the middle of the head's
+     * name and its right edge on the list's; without a head, in the list's top corner. Measured
+     * when the list opens, since the list's look may change its padding, border and font.
+     */
+    private placeCloser(): void {
+        const button = this.closer;
+
+        if (button === null) {
+            return;
+        }
+
+        // The button is placed from inside the drawer's border.
+        const style = getComputedStyle(this.box);
+        const box = this.box.getBoundingClientRect();
+        const top = box.top + (parseFloat(style.borderTopWidth) || 0);
+        const right = box.right - (parseFloat(style.borderRightWidth) || 0);
+        const list = this.content.getBoundingClientRect();
+        const size = button.getBoundingClientRect();
+        const name =
+            this.content.querySelector('.sonicframe-chapters-head')
+                ?.firstElementChild ?? null;
+        let middle = list.top + size.height / 2;
+
+        if (name !== null) {
+            const line = name.getBoundingClientRect();
+            middle = line.top + line.height / 2;
+        }
+
+        css(button, [
+            ['top', `${middle - size.height / 2 - top}px`],
+            ['right', `${right - list.right}px`],
+        ]);
     }
 
     /** The player's colors and font, read now, so a palette changed later still shows. */
@@ -306,20 +366,28 @@ export class FloatingList {
         );
         const x = arrowOffset(at, spot.left, size.width, ARROW_INSET);
         const below = spot.side === 'below';
+        // The arrow is placed from inside the list's border, which the list's look may thicken.
+        const edge = parseFloat(getComputedStyle(this.box).borderTopWidth) || 0;
 
         css(this.box, [
             ['left', `${spot.left}px`],
             ['top', `${spot.top}px`],
         ]);
         css(arrow, [
-            ['left', `${x - ARROW / 2}px`],
+            ['left', `${x - ARROW / 2 - edge}px`],
             // The arrow's two outer sides carry the border, on the edge that faces the button.
-            ['border-width', below ? '1px 0 0 1px' : '0 1px 1px 0'],
+            [
+                'border-width',
+                below
+                    ? `${edge}px 0px 0px ${edge}px`
+                    : `0px ${edge}px ${edge}px 0px`,
+            ],
         ]);
         arrow.style.removeProperty(below ? 'bottom' : 'top');
+        // Its middle sits on the list's outer edge, half of it out toward the button.
         arrow.style.setProperty(
             below ? 'top' : 'bottom',
-            `${-ARROW / 2 - 1}px`,
+            `${-ARROW / 2 - edge}px`,
         );
     }
 
