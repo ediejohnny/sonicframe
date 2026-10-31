@@ -3,7 +3,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { sharedTooltip } from '../../src/dom/tooltip';
+import { sharedTooltip } from '../../src/dom/shared/tooltip';
 import { boxOf } from './helpers';
 
 const COLORS = { background: '#2f6fdb', text: '#ffffff' };

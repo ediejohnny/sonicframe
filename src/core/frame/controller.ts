@@ -1,7 +1,7 @@
 /**
  * Everything a frame does, without the page: it follows a media element, turns pointer and keyboard
  * input into seeks, and decides when a new picture or animation frames are needed. The DOM shell
- * (`dom/frame.ts`) only translates events in and carries effects out, so all of this runs in tests.
+ * (`dom/frame/frame.ts`) only translates events in and carries effects out, so all of this runs in tests.
  * It stays one class because the position, a drag, a seek waiting for the media and what is reported
  * change together on every event; a range being played is `RangePlayback`.
  */

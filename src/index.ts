@@ -3,19 +3,19 @@
  * https://www.npmjs.com/package/sonicframe (MIT)
  */
 
-export { SonicFrame } from './dom/frame';
+export { SonicFrame } from './dom/frame/frame';
 export {
     DEFAULT_BAR,
     DEFAULT_COLORS,
     type SonicFrameA11y,
     type SonicFrameOptions,
-} from './dom/frame-options';
+} from './dom/frame/frame-options';
 export {
     DEFAULT_BUTTON_COLORS,
     PlayButton,
     type PlayButtonEvents,
     type PlayButtonOptions,
-} from './controls/play-button';
+} from './controls/play/play-button';
 export type {
     ButtonColors,
     ButtonFill,
@@ -28,54 +28,54 @@ export {
     type VolumeColors,
     type VolumeControlEvents,
     type VolumeControlOptions,
-} from './controls/volume';
+} from './controls/volume/volume';
 export { markerSpans, type Mark } from './core/marks/markers';
 export {
     markers,
     type MarkersOptions,
     type MarkersPlugin,
-} from './plugins/markers';
+} from './plugins/markers/markers';
 export {
     caption,
     type CaptionOptions,
     type CaptionPlugin,
     type TooltipContent,
     type TooltipSection,
-} from './plugins/caption';
+} from './plugins/caption/caption';
 export {
     regions,
     type RegionsOptions,
     type RegionsPlugin,
-} from './plugins/regions';
-export type { Region } from './plugins/region-store';
-export { timeline, type TimelineOptions } from './plugins/timeline';
-export { chapters } from './plugins/chapters';
+} from './plugins/regions/regions';
+export type { Region } from './plugins/regions/region-store';
+export { timeline, type TimelineOptions } from './plugins/timeline/timeline';
+export { chapters } from './plugins/chapters/chapters';
 export {
     CHAPTER_WORDS,
     type ChaptersKeys,
     type ChaptersOptions,
     type ChaptersPlugin,
-} from './plugins/chapters-options';
-export type { ChapterListLook } from './plugins/chapter-list-look';
+} from './plugins/chapters/chapters-options';
+export type { ChapterListLook } from './plugins/chapters/chapter-list-look';
 export type { ChapterWords, DescriptionWords } from './core/languages/words';
 export {
     minimap,
     MINIMAP_WORDS,
     type MinimapOptions,
     type MinimapWords,
-} from './plugins/minimap';
+} from './plugins/minimap/minimap';
 export {
     soundDescription,
     type SoundDescriptionKeys,
     type SoundDescriptionOptions,
     type SoundDescriptionPlugin,
-} from './plugins/description';
-export type { SpeechOptions } from './dom/speak';
+} from './plugins/description/description';
+export type { SpeechOptions } from './dom/a11y/speak';
 export {
     skipSilences,
     type SkipSilencesOptions,
     type SkipSilencesPlugin,
-} from './plugins/skip-silences';
+} from './plugins/skip-silences/skip-silences';
 export {
     findSilences,
     levels,
@@ -108,7 +108,7 @@ export {
     type ColorStops,
     type DecodedAudio,
     type SpectrogramPluginOptions,
-} from './plugins/spectrogram';
+} from './plugins/spectrogram/spectrogram';
 export {
     createSpectrogram,
     type SpectrogramJob,
@@ -119,10 +119,10 @@ export {
     colormap,
     type ColormapName,
 } from './core/analysis/colormap';
-export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
+export { liveFrequency, type LiveFrequencyOptions } from './plugins/live/live';
 export { frequencyBands, MAX_BANDS } from './core/analysis/bands';
 export { canTapMedia } from './core/analysis/origin';
-export { exportClip, type ClipOptions } from './dom/clip';
+export { exportClip, type ClipOptions } from './dom/clip/clip';
 export {
     clipPlan,
     DEFAULT_CLIP_TYPES,

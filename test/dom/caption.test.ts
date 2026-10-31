@@ -5,7 +5,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { sharedTooltip } from '../../src/dom/tooltip';
+import { sharedTooltip } from '../../src/dom/shared/tooltip';
 import { caption, type CaptionPlugin } from '../../src/index';
 import { mount, type Mounted } from './helpers';
 

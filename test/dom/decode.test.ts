@@ -5,7 +5,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { decodeAudio } from '../../src/dom/decode';
+import { decodeAudio } from '../../src/dom/audio/decode';
 
 /** A decoder whose every sound is `seconds` long at 1000 samples per second, the value i at sample i. */
 function fakeDecoder(seconds: number): void {

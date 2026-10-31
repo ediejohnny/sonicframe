@@ -99,7 +99,7 @@ describe('package boundaries', () => {
         // it is described by (looks, palettes, fonts), so the main entry never has to carry them.
         for (const target of imports(join(root, 'src/player.ts'))) {
             expect(target, 'src/player.ts').toMatch(
-                /^\.\/(player\/[\w-]+|core\/[\w-]+\/[\w-]+)$/,
+                /^\.\/(player|core)\/[\w-]+\/[\w-]+$/,
             );
         }
     });

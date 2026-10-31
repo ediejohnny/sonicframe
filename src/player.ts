@@ -5,7 +5,7 @@
  * waveform file without the main entry.
  */
 
-export { createPlayer, Player } from './player/player';
+export { createPlayer, Player } from './player/player/player';
 export type {
     ButtonAnimation,
     ChapterListLook,
@@ -19,7 +19,7 @@ export type {
     PlayerListenButton,
     PlayerOptions,
     PlayerZoom,
-} from './player/player-options';
+} from './player/player/player-options';
 export {
     loadWaveform,
     readWaveform,
@@ -33,7 +33,7 @@ export {
     type ChapterInput,
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
-export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
+export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element/element';
 export type { PlayerLabels } from './core/languages/words';
 export {
     PLAYER_LABELS,

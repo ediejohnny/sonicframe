@@ -4,7 +4,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { sharedTooltip } from '../../src/dom/tooltip';
+import { sharedTooltip } from '../../src/dom/shared/tooltip';
 import { markers } from '../../src/index';
 import { fakeMedia, mount, type Mounted } from './helpers';
 
