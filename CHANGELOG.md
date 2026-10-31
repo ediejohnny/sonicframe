@@ -26,6 +26,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The markers' `words` (`{ more }`, the tooltip's "and 3 more"), the regions' `a11y.words` (what R and L say),
   the volume control's `labels.muted` and the player's `muted` label.
 - `CONTRIBUTING.md`, with "Adding a language": one file and one line, checked by the tests.
+- A player's own background, `look.background`, off by default: a color, a gradient (two to five colors,
+  linear, radial or conic) or an image (a web, relative or `blob:` address; size, place and repeat), with
+  filters (blur, brightness, contrast, saturate, grayscale, sepia), an opacity and six ready-made effects
+  drawn by SonicFrame: `dim`, `vignette`, `frost`, `tint`, `duotone` and `grain`. It takes the surface's
+  place, sits behind the controls and is hidden from screen readers; colors are read as numbers before any
+  style gets them. Themes can bring one, and a player's own look changes only what it gives.
+- `look.backgroundAnimation`, off by default: `pan`, `zoom`, `pulse`, `hue` or `flow`, with its `duration`
+  and `strength`. It moves only while the sound plays unless `while: 'always'`, holds still under the mouse
+  or the focus with `pauseOnHover`, and never runs with reduced motion.
+- The tag's `background-` attributes: `background-color`, `background-gradient`, `background-image`,
+  `background-options`, `background-angle`, `background-blur`, `background-opacity`, `background-effects`,
+  `background-animation` and `background-duration`.
 
 ### Changed
 

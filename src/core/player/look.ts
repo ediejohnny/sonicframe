@@ -8,6 +8,11 @@
 
 import type { ButtonFill, ButtonShape } from '../controls/button';
 import { isOneOf, oneOf, within } from '../shared/checked';
+import { backgroundOver, type Background } from './background';
+import {
+    animationOver,
+    type BackgroundAnimation,
+} from './background-animation';
 import { isFontName, type FontName } from './fonts';
 
 /**
@@ -148,6 +153,14 @@ export type PlayerLook = {
     speeds: number[];
     /** How the volume bar shows, when the volume part is on. */
     volume: 'always' | 'hover';
+    /**
+     * A background of its own, over the surface: a color, a gradient or an image, with filters,
+     * effects and an opacity. None by default; null turns it off, and a partial one changes only
+     * what it gives.
+     */
+    background: Background | null;
+    /** How the background moves; off by default (`true` gives the defaults). Never with reduced motion. */
+    backgroundAnimation: BackgroundAnimation | boolean | null;
 };
 
 export const PART_NAMES: readonly Part[] = Object.freeze([
@@ -212,6 +225,8 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     skip: 10,
     speeds: [1, 1.5, 2],
     volume: 'hover',
+    background: null,
+    backgroundAnimation: null,
 });
 
 /** The most parts on one line. */
@@ -383,5 +398,10 @@ export function resolveLook(
         skip: within(given.skip, base.skip, 1, 120),
         speeds: speeds(given.speeds, base.speeds),
         volume: oneOf(given.volume, ['always', 'hover'] as const, base.volume),
+        background: backgroundOver(base.background, given.background),
+        backgroundAnimation: animationOver(
+            base.backgroundAnimation,
+            given.backgroundAnimation,
+        ),
     };
 }

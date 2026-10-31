@@ -136,8 +136,10 @@ export function finishBox(
     palette: Palette,
 ): void {
     let surface = 'var(--sonicframe-surface, transparent)';
+    // A background of its own takes the surface's place, so its opacity shows the page behind.
+    const own = look.background !== null;
 
-    if (look.surface === 'none') {
+    if (look.surface === 'none' || own) {
         surface = 'transparent';
     } else if (look.surface === 'glass') {
         surface = withAlpha(readColor(palette.surface), 0.72);
@@ -158,7 +160,7 @@ export function finishBox(
         ['background-color', surface],
         [
             'backdrop-filter',
-            look.surface === 'glass' ? 'blur(0.75rem)' : 'none',
+            look.surface === 'glass' && !own ? 'blur(0.75rem)' : 'none',
         ],
         ['box-shadow', shadowOf(look.shadow, palette)],
         ['color', 'var(--sonicframe-text, inherit)'],

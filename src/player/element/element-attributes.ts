@@ -17,6 +17,7 @@ import type {
     PlayerOptions,
     PlayerZoom,
 } from '../player/player-options';
+import { backgroundLookOf } from './background-attributes';
 
 /** The words of an attribute, lowercase. */
 function wordsOf(value: string): Set<string> {
@@ -229,5 +230,6 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
             element.getAttribute('chapter-options'),
         ),
         a11y: a11yOf(element),
+        look: backgroundLookOf(element),
     };
 }

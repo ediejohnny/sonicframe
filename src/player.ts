@@ -54,6 +54,21 @@ export {
     type PlayerLook,
 } from './core/player/look';
 export {
+    BACKGROUND_EFFECTS,
+    type Background,
+    type BackgroundEffect,
+    type BackgroundEffectName,
+    type BackgroundFilters,
+    type BackgroundGradient,
+    type BackgroundImage,
+    type BackgroundPosition,
+    type BackgroundType,
+} from './core/player/background';
+export type {
+    BackgroundAnimation,
+    BackgroundAnimationType,
+} from './core/player/background-animation';
+export {
     defineTheme,
     findTheme,
     registerTheme,

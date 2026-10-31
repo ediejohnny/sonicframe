@@ -73,6 +73,7 @@ import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
 import { farGroup, placeOf, PlayerLayout, type Piece } from './player-layout';
 import type { PlayerEvents, PlayerOptions } from './player-options';
+import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, wearPalette } from './player-paint';
 import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
 import { PlayerSound } from './player-sound';
@@ -124,6 +125,7 @@ export class Player {
     /** What the parts and the chapters reach of the player. */
     private readonly host: ChapterHost;
     private readonly sound: PlayerSound;
+    private readonly backdrop: PlayerBackdrop;
     private readonly chapterParts: ChapterParts;
     private readonly times = new TimeParts();
     private partCleanups: (() => void)[] = [];
@@ -188,6 +190,11 @@ export class Player {
         };
         this.sound = new PlayerSound(options, this.media, this.abort.signal);
         this.chapterParts = new ChapterParts(options.chapters, this.host);
+        this.backdrop = new PlayerBackdrop(
+            this.element,
+            this.media,
+            this.abort.signal,
+        );
 
         if (this.ownMedia && this.media !== null) {
             this.element.append(this.media);
@@ -202,6 +209,7 @@ export class Player {
             this.arrange();
             this.alignToBars();
             this.chapterParts.fitNames();
+            this.backdrop.resize();
         });
     }
 
@@ -318,6 +326,7 @@ export class Player {
         this.stopSize();
         this.teardown();
         this.chapterParts.destroy();
+        this.backdrop.destroy();
 
         if (this.ownMedia && this.media !== null) {
             this.media.pause();
@@ -892,9 +901,10 @@ export class Player {
         this.frameRef?.refresh();
     }
 
-    /** The player's own box, from the look and the colors it wears. */
+    /** The player's own box and background, from the look and the colors it wears. */
     private finish(): void {
         finishBox(this.element, this.look, this.colors);
+        this.backdrop.show(this.look, this.colors);
     }
 
     private applyFont(): void {
