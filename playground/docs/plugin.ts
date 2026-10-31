@@ -152,7 +152,7 @@ function header(): string {
     return `<a class="skip" href="#main">Skip to the content</a>
 <header class="top"><div class="wrap">
 <button id="menu" class="button small menu" type="button" aria-expanded="false" aria-controls="side">Menu</button>
-<a class="brand" href="./"><img src="../assets/logo.svg" alt="" width="32" height="32" />SonicFrame <span class="version">v${escape(version())}</span></a>
+<a class="brand" href="./"><img src="../assets/logo.svg" alt="" width="32" height="32" /><span class="brand-name">SonicFrame</span> <span class="version">v${escape(version())}</span></a>
 <button id="search-open" class="search-open" type="button" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"><span>Search the docs</span><kbd>Ctrl K</kbd></button>
 <nav class="nav" aria-label="Elsewhere">
 <a class="far" href="${REPOSITORY}">GitHub</a>

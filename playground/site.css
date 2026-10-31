@@ -303,30 +303,48 @@ p {
     height: 3.75rem;
 }
 
-@media (max-width: 40rem) {
-    .top .far {
+/*
+ * Narrower screens keep the one line by dropping words, never controls: first the far links and the
+ * version, then the search's words, then the name beside the mark (still read by screen readers),
+ * then the spaces between.
+ */
+@media (max-width: 50rem) {
+    .top .far,
+    .top .version {
         display: none;
     }
 }
 
-/* Phones: Menu, the mark and the scheme switch share one line. */
-@media (max-width: 24rem) {
-    .top .version {
-        display: none;
+@media (max-width: 32rem) {
+    .top .brand-name {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
+}
 
+@media (max-width: 24rem) {
     .top .wrap {
         gap: 0.5rem;
+        padding: 0 0.75rem;
     }
 
-    .top .brand {
-        gap: 0.375rem;
-        font-size: 1.0625rem;
+    .top .nav {
+        gap: 0.5rem;
     }
 
     .top .brand img {
         width: 1.75rem;
         height: 1.75rem;
+    }
+}
+
+@media (max-width: 22rem) {
+    .top .font-pick select {
+        max-width: 5rem;
     }
 }
 
@@ -390,7 +408,7 @@ kbd {
     font-size: 0.75rem;
 }
 
-@media (max-width: 52rem) {
+@media (max-width: 59.99rem) {
     .search-open {
         min-width: 0;
         margin-left: 0;
@@ -401,7 +419,7 @@ kbd {
     }
 }
 
-@media (max-width: 30rem) {
+@media (max-width: 36rem) {
     .search-open span {
         position: absolute;
         width: 1px;
@@ -862,10 +880,36 @@ html {
     max-width: 44rem;
 }
 
+/* Blocks in a section, the demos' shelves, word boxes and live tags included, keep 1rem apart. */
 .doc
     > .section
-    > :is(p, ul, ol, .callout, .code, .table-wrap, .stage)
-    + :is(p, ul, ol, .callout, .code, .table-wrap, .stage, h3) {
+    > :is(
+        p,
+        ul,
+        ol,
+        .callout,
+        .code,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        sonic-player
+    )
+    + :is(
+        p,
+        ul,
+        ol,
+        .callout,
+        .code,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        sonic-player,
+        h3
+    ) {
     margin-top: 1rem;
 }
 
@@ -877,8 +921,35 @@ html {
     margin-top: 0.375rem;
 }
 
-.doc h2 + :is(p, .lede, .code, .callout, .table-wrap, .stage, ul, ol),
-.doc h3 + :is(p, .code, .callout, .table-wrap, .stage, ul, ol) {
+.doc
+    h2
+    + :is(
+        p,
+        .lede,
+        .code,
+        .callout,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        ul,
+        ol
+    ),
+.doc
+    h3
+    + :is(
+        p,
+        .code,
+        .callout,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        ul,
+        ol
+    ) {
     margin-top: 0.875rem;
 }
 
