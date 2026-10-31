@@ -273,7 +273,7 @@ describe('the player', () => {
         media.currentTime = 5;
         media.fire('timeupdate');
 
-        expect(root().querySelector('.sonicframe-time')?.textContent).toBe(
+        expect(root().querySelector('.sonicframe-time-text')?.textContent).toBe(
             '0:05 / 0:40',
         );
     });

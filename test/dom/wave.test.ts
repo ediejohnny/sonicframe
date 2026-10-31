@@ -1,7 +1,7 @@
 /**
  * Drawings of the sound on the page: line drawings are stroked in the played and unplayed colors,
- * the track draws without any peaks, the knob rides the playing position in its own color, and a
- * change of drawing repaints.
+ * the track draws without any peaks, the knob rides the playing position in its own color, a change
+ * of drawing repaints, and a new canvas size repaints at once, never showing a blank canvas.
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
@@ -35,6 +35,19 @@ async function draw(): Promise<Recorded> {
 }
 
 describe('wave drawings', () => {
+    it('repaints the moment the canvas changes size, so it never shows blank', async () => {
+        mounted = mount({ lazy: false, peaks: PEAKS, colors: COLORS });
+        const recorded = await draw();
+        const before = recorded.fills.length;
+
+        // Setting a canvas's size clears it; a repaint left to the next animation frame shows one
+        // blank frame in between.
+        triggerResize(mounted.canvas, { width: 210, height: 40 });
+
+        expect(mounted.canvas.width).toBe(210);
+        expect(recorded.fills.slice(before)).toContain('#cccccc');
+    });
+
     it('strokes a line drawing in the played and unplayed colors', async () => {
         mounted = mount({
             lazy: false,
