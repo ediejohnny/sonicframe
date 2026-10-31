@@ -237,6 +237,80 @@ describe('chapters on the player', () => {
         expect((part('chapter-list') as HTMLElement).hidden).toBe(false);
     });
 
+    it("puts the list under the wave, on the wave's left edge, as a voice note too", () => {
+        make({
+            chapters: { items: ITEMS, list: true },
+            look: { line: ['play', 'wave'], meta: ['time', 'chapters'] },
+        });
+        const list = part('chapter-list') as HTMLElement;
+        // The slider is the wave's own box; its parent is the wave's column.
+        const wave = slider();
+        const column = wave.parentElement as HTMLElement;
+
+        // The wave's column holds the wave, the row under it and the list, in that order.
+        expect(list.parentElement).toBe(column);
+        expect(column.lastElementChild).toBe(list);
+
+        // The play button keeps to the wave's row, so opening the list never moves it.
+        const play = part('play') as HTMLElement;
+        expect(play.style.getPropertyValue('grid-row')).toBe('1');
+        expect(wave.style.getPropertyValue('grid-row')).toBe('1');
+        expect(list.style.getPropertyValue('grid-column')).toBe(
+            wave.style.getPropertyValue('grid-column'),
+        );
+
+        triggerResize(
+            (host as HTMLElement).querySelector(
+                '.sonicframe-player',
+            ) as HTMLElement,
+            { width: 300, height: 48 },
+        );
+        expect(list.style.getPropertyValue('grid-column')).not.toBe('');
+        expect(list.style.getPropertyValue('grid-column')).toBe(
+            wave.style.getPropertyValue('grid-column'),
+        );
+    });
+
+    it('lets the row under the wave break into two lines when it names the chapter, and only then', () => {
+        make({
+            chapters: ITEMS,
+            look: {
+                line: ['play', 'wave'],
+                meta: ['time', 'chapter', 'spacer', 'nextChapter'],
+            },
+        });
+        const name = part('chapter-now') as HTMLElement;
+
+        expect(name.parentElement?.style.getPropertyValue('flex-wrap')).toBe(
+            'wrap',
+        );
+        expect(name.style.getPropertyValue('flex-grow')).toBe('1');
+        player?.destroy();
+        host?.remove();
+
+        make({
+            chapters: ITEMS,
+            look: { line: ['play', 'wave'], meta: ['time', 'nextChapter'] },
+        });
+        expect(
+            part('next-chapter')?.parentElement?.style.getPropertyValue(
+                'flex-wrap',
+            ),
+        ).toBe('');
+    });
+
+    it('puts the list under the controls when the wave is on top', () => {
+        make({
+            chapters: { items: ITEMS, list: true },
+            look: { wavePlace: 'top', line: ['play', 'time', 'chapters'] },
+        });
+        const player = (host as HTMLElement).querySelector(
+            '.sonicframe-player',
+        ) as HTMLElement;
+
+        expect(player.lastElementChild).toBe(part('chapter-list'));
+    });
+
     it('keeps chapters set by the app through a rebuild', () => {
         const { player: made, media } = make({
             chapters: { items: ITEMS, list: true },

@@ -1157,6 +1157,13 @@ export class Player {
                 ['font-size', '0.85em'],
                 ['color', 'var(--sonicframe-muted, currentColor)'],
             ]);
+
+            // A chapter's name takes the room left; where there is too little, the parts after it
+            // go to a second line rather than squeeze the name away.
+            if (meta.includes('chapter')) {
+                css(row, [['flex-wrap', 'wrap']]);
+            }
+
             column.append(row);
             let metaSide: Side = 'start';
 
@@ -1173,7 +1180,11 @@ export class Player {
         }
 
         if (this.chapterList !== null) {
-            this.element.append(this.chapterList);
+            // Under the wave, on its left edge like the row under it (see `placeRows`); otherwise
+            // under everything, as wide as the player.
+            (this.listUnderWave() ? column : this.element).append(
+                this.chapterList,
+            );
         }
 
         const sync = (): void => this.showTime();
@@ -1188,6 +1199,22 @@ export class Player {
         this.finish();
         this.alignTimes();
         this.arrange();
+
+        if (this.layout !== null) {
+            this.placeRows(this.layout, this.layout.narrow);
+        }
+    }
+
+    /**
+     * Whether the chapters list goes under the wave, in its column: with the wave in the line, unless
+     * zoom buttons share the line (that line wraps, which a grid cannot).
+     */
+    private listUnderWave(): boolean {
+        return (
+            this.chapterList !== null &&
+            this.look.wavePlace === 'inline' &&
+            !this.zoomOnLine()
+        );
     }
 
     /**
@@ -1277,7 +1304,7 @@ export class Player {
             }
         }
 
-        this.placeVoiceNote(layout, narrow);
+        this.placeRows(layout, narrow);
         this.alignTimes();
 
         if (
@@ -1290,11 +1317,12 @@ export class Player {
     }
 
     /**
-     * The voice note's line is a grid: its first row holds the line's parts and the wave, each one
-     * centered on the wave, and the rows under the wave keep to the wave's column. Outside the voice
-     * note the line is the flexible row it was built as.
+     * A voice note's line, and the line of a player with its chapters list under the wave, is a grid:
+     * its first row holds the line's parts and the wave, each one centered on the wave, and the rows
+     * under the wave (the small line, the list) keep to the wave's column, so opening the list never
+     * moves the parts beside the wave. Otherwise the line is the flexible row it was built as.
      */
-    private placeVoiceNote(layout: Layout, narrow: boolean): void {
+    private placeRows(layout: Layout, narrow: boolean): void {
         const { line, box } = layout;
         const column = box.parentElement as HTMLElement;
         const parts = [...line.children] as HTMLElement[];
@@ -1303,7 +1331,7 @@ export class Player {
         ) as HTMLElement[];
         const placed = [...parts, box, ...below];
 
-        if (!narrow) {
+        if (!narrow && !this.listUnderWave()) {
             css(line, [
                 ['display', 'flex'],
                 ['gap', `${this.look.gap}rem`],
@@ -1748,7 +1776,7 @@ export class Player {
         name.setAttribute('dir', 'auto');
         css(name, [
             ['min-width', '0'],
-            ['flex', '0 1 auto'],
+            ['flex', '1 1 6rem'],
             ['overflow', 'hidden'],
             ['white-space', 'nowrap'],
             ['text-overflow', 'ellipsis'],
