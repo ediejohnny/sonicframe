@@ -88,12 +88,18 @@ frame.use(
                                     <td><code>tooltipLimit</code></td>
                                     <td>
                                         The most characters the tooltip shows,
-                                        cut at a word.
+                                        cut at a word: 280, up to 2000 (a
+                                        section's own <code>limit</code> too).
+                                        Anything that is not a number is the
+                                        default.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>size</code></td>
-                                    <td>The line's height, in CSS pixels.</td>
+                                    <td>
+                                        The line's height, in CSS pixels: 20, at
+                                        least 1.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

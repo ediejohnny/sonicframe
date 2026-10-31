@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A `max` that is not a number (`NaN`, a string) falls back to the default: every marker is kept (up to 2000)
   instead of none, and the regions stay capped at 200 instead of unlimited. The same goes for the `threshold` of
   `soundDescription()` and `outlineSound` (0.06), which found no pauses before.
+- The other numbers the options read within a range fall back to their default too when they are not numbers,
+  instead of turning into `NaN`: the timeline's `size` and `minSpacing`, the caption's `size`, `tooltipLimit`
+  and a tooltip section's `limit` (the tooltip showed only "(...)"), `skipSilences`' `lead` (it jumped to no
+  time at all), the browser voice's `rate`, `frequencyBands`' and the live frequency's `minHz` and `maxHz` (all
+  bars stayed at zero), the regions' `minLength` and the markers' `group` (crowded markers never shared a pill).
 
 ## [0.5.0] - 2026-10-31
 

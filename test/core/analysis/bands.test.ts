@@ -29,6 +29,24 @@ describe('frequency bands', () => {
             MAX_BANDS,
         );
     });
+
+    it('reads from 40 Hz to 16 kHz when minHz or maxHz is not a number', () => {
+        // ~86 Hz per bin: bin 0 is under 100 Hz, bin 180 near 15.5 kHz. Four bands from 40 Hz to
+        // 16 kHz run 40-179, 179-800, 800-3578 and 3578-16000 Hz.
+        const low = new Uint8Array(256);
+        low[0] = 255;
+        const high = new Uint8Array(256);
+        high[180] = 255;
+
+        for (const odd of [Number.NaN, '1000' as unknown as number]) {
+            expect(frequencyBands(low, 4, 44100, { minHz: odd })).toEqual([
+                1, 0, 0, 0,
+            ]);
+            expect(frequencyBands(high, 4, 44100, { maxHz: odd })).toEqual([
+                0, 0, 0, 1,
+            ]);
+        }
+    });
 });
 
 describe('tapping media', () => {

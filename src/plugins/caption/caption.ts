@@ -7,6 +7,7 @@
  * away from the wave.
  */
 
+import { within } from '../../core/shared/checked';
 import { cleanText, truncateWords } from '../../core/shared/text';
 import { addDescribedBy, removeDescribedBy } from '../../dom/a11y/describedby';
 import { css, VISUALLY_HIDDEN } from '../../dom/shared/css';
@@ -51,8 +52,8 @@ const FADE = 'linear-gradient(to right, #000 calc(100% - 24px), transparent)';
 let counter = 0;
 
 export function caption(options: CaptionOptions = {}): CaptionPlugin {
-    const laneSize = Math.max(1, options.size ?? 20);
-    const tooltipLimit = Math.min(MAX_TOOLTIP, options.tooltipLimit ?? 280);
+    const laneSize = within(options.size, 20, 1, Number.POSITIVE_INFINITY);
+    const tooltipLimit = within(options.tooltipLimit, 280, 0, MAX_TOOLTIP);
     const describedId = `sonicframe-caption-${++counter}`;
 
     let host: PluginHost | null = null;
@@ -104,7 +105,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
         return tooltipContent.map((section) => {
             const body = truncateWords(
                 cleanText(section.text, MAX_TEXT),
-                Math.min(MAX_TOOLTIP, section.limit ?? tooltipLimit),
+                within(section.limit, tooltipLimit, 0, MAX_TOOLTIP),
             );
 
             return section.label === undefined

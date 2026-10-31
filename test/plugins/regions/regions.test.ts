@@ -187,6 +187,17 @@ describe('regions on the page', () => {
         expect(plugin.list()).toHaveLength(1);
     });
 
+    it('keeps a region at least the usual quarter second long when minLength is not a number', () => {
+        for (const minLength of [Number.NaN, '1' as unknown as number]) {
+            const { plugin } = shown({ minLength });
+
+            expect(plugin.add({ start: 1, end: 1.1 })).toMatchObject({
+                start: 1,
+                end: 1.25,
+            });
+        }
+    });
+
     it('keeps at most 200 regions when max is not a number', () => {
         const { plugin } = shown({ max: Number.NaN }, 400);
 

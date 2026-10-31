@@ -71,7 +71,7 @@ const MAX_MARKS = 2000;
 const TOOLTIP_LINES = 5;
 
 export function markers(options: MarkersOptions = {}): MarkersPlugin {
-    const groupPx = Math.max(0, options.group ?? 12);
+    const groupPx = within(options.group, 12, 0, Number.POSITIVE_INFINITY);
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
     const max = within(options.max, MAX_MARKS, 0, MAX_MARKS);

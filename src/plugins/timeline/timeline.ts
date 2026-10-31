@@ -7,6 +7,7 @@
  */
 
 import { niceTicks } from '../../core/marks/ticks';
+import { within } from '../../core/shared/checked';
 import { formatTime } from '../../core/shared/timing';
 import { css } from '../../dom/shared/css';
 import type { Plugin, PluginHost } from '../../types';
@@ -28,8 +29,13 @@ export type TimelineOptions = {
 
 export function timeline(options: TimelineOptions = {}): Plugin {
     const side = options.side ?? 'below';
-    const size = Math.max(1, options.size ?? 14);
-    const minSpacing = Math.max(8, options.minSpacing ?? 48);
+    const size = within(options.size, 14, 1, Number.POSITIVE_INFINITY);
+    const minSpacing = within(
+        options.minSpacing,
+        48,
+        8,
+        Number.POSITIVE_INFINITY,
+    );
     const color = options.color ?? 'var(--sonicframe-timeline, #8a94a6)';
     const minor = options.minor ?? true;
 
