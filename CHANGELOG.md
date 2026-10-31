@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `timeAlign` in the player's look (`'auto'`, `'start'`, `'center'` or `'end'`): where a time's text sits in the
+  room it keeps. `'auto'` keeps to the end after the wave or a spacer, and on the right under a voice note's wave;
+  to the start everywhere else.
+
+### Fixed
+
+- A player with the time beside the wave blinked now and then while playing, and its bars shifted a little each
+  time. Digits are not all as wide in every font, even with tabular figures (in Segoe UI Semibold the 7 is
+  narrower), so the time changed width as it counted and resized the wave. Each time now keeps the room of the
+  longest time the sound can show, with a hidden mold of that time beside the shown text.
+- A frame whose size changed showed a blank canvas for one frame (a new canvas size clears it, and the repaint
+  waited for the next animation frame). It now repaints at once, before the page is painted, which also stops the
+  wave blinking while the window is resized.
+
+### Changed
+
+- The time part holds its text in `.sonicframe-time-text`, next to the hidden mold `.sonicframe-time-mold`; read
+  the shown time from `.sonicframe-time-text`.
+
 ## [0.4.0] - 2026-10-30
 
 ### Added

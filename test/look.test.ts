@@ -1,9 +1,11 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
 import {
     DEFAULT_LOOK,
     nextSpeed,
     resolveLook,
     speedText,
+    timeMold,
     timeText,
     type Part,
     type PlayerLook,
@@ -112,6 +114,20 @@ describe('resolveLook', () => {
         ).toBe(0.5);
     });
 
+    it('aligns the time by its place unless the look names a side', () => {
+        expect(DEFAULT_LOOK.timeAlign).toBe('auto');
+
+        for (const side of ['start', 'center', 'end'] as const) {
+            expect(
+                resolveLook(DEFAULT_LOOK, { timeAlign: side }).timeAlign,
+            ).toBe(side);
+        }
+
+        expect(
+            resolveLook(DEFAULT_LOOK, { timeAlign: 'left' as never }).timeAlign,
+        ).toBe('auto');
+    });
+
     it('reads the voice note’s part lists, keeping known parts only', () => {
         expect(DEFAULT_LOOK.narrowLine).toEqual(['play', 'wave', 'slot']);
         expect(DEFAULT_LOOK.narrowStart).toEqual([
@@ -158,6 +174,73 @@ describe('timeText', () => {
         expect(timeText('duration', 5, 40)).toBe('0:40');
         expect(timeText('both', 5, 40)).toBe('0:05 / 0:40');
         expect(timeText('both', null, null)).toBe('0:00 / 0:00');
+    });
+});
+
+describe('timeMold', () => {
+    /** How many of each character a text holds: the room it takes when every digit is as wide. */
+    function counts(text: string): Map<string, number> {
+        const kept = new Map<string, number>();
+
+        for (const char of text.replace(/\d/g, '0')) {
+            kept.set(char, (kept.get(char) ?? 0) + 1);
+        }
+
+        return kept;
+    }
+
+    const FORMATS = ['elapsed', 'remaining', 'duration', 'both'] as const;
+
+    it('is the longest time the sound can show, every digit a zero', () => {
+        expect(timeMold('both', 7, 123)).toBe('0:00 / 0:00');
+        expect(timeMold('both', 7, 600)).toBe('00:00 / 00:00');
+        expect(timeMold('both', 7, 3600)).toBe('0:00:00 / 0:00:00');
+        expect(timeMold('elapsed', 7, 600)).toBe('00:00');
+        expect(timeMold('remaining', 7, 123)).toBe('-0:00');
+        expect(timeMold('duration', null, null)).toBe('0:00');
+        // Without a duration, the time that has passed is the longest one known.
+        expect(timeMold('elapsed', 700, null)).toBe('00:00');
+    });
+
+    it('holds every character the time shows, for any position in the sound', () => {
+        fc.assert(
+            fc.property(
+                fc.constantFrom(...FORMATS),
+                fc.double({ min: 0, max: 40_000, noNaN: true }),
+                fc.double({ min: 0, max: 1, noNaN: true }),
+                (format, duration, ratio) => {
+                    const time = duration * ratio;
+                    const mold = counts(timeMold(format, time, duration));
+
+                    for (const [char, count] of counts(
+                        timeText(format, time, duration),
+                    )) {
+                        expect(mold.get(char) ?? 0).toBeGreaterThanOrEqual(
+                            count,
+                        );
+                    }
+                },
+            ),
+        );
+    });
+
+    it('takes no more room than the time shows at the end of the sound', () => {
+        fc.assert(
+            fc.property(
+                fc.constantFrom(...FORMATS),
+                fc.double({ min: 0, max: 40_000, noNaN: true }),
+                (format, duration) => {
+                    const end =
+                        format === 'remaining'
+                            ? timeText(format, 0, duration)
+                            : timeText(format, duration, duration);
+
+                    expect(timeMold(format, 0, duration)).toBe(
+                        end.replace(/\d/g, '0'),
+                    );
+                },
+            ),
+        );
     });
 });
 

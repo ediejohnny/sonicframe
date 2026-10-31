@@ -40,6 +40,12 @@ export type PlayerLook = {
     wavePlace: 'inline' | 'top';
     /** How the `time` part reads. */
     time: 'elapsed' | 'remaining' | 'duration' | 'both';
+    /**
+     * Where a time's text sits in the room it keeps (the room of the longest time the sound can
+     * show). `auto` keeps to the end after the wave or a spacer in its row, and in the right-hand
+     * group under a voice note's wave; to the start everywhere else.
+     */
+    timeAlign: 'auto' | 'start' | 'center' | 'end';
     /** The play button; `size` in CSS pixels. */
     button: { shape: ButtonShape; fill: ButtonFill; size: number };
     /** Height of the wave, in rem. */
@@ -117,6 +123,7 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     meta: [],
     wavePlace: 'inline',
     time: 'both',
+    timeAlign: 'auto',
     button: { shape: 'circle', fill: 'solid', size: 36 },
     waveHeight: 2.5,
     minimapHeight: 1.5,
@@ -244,6 +251,11 @@ export function resolveLook(
             ['elapsed', 'remaining', 'duration', 'both'] as const,
             base.time,
         ),
+        timeAlign: oneOf(
+            given.timeAlign,
+            ['auto', 'start', 'center', 'end'] as const,
+            base.timeAlign,
+        ),
         button: {
             shape: oneOf(
                 button.shape,
@@ -312,6 +324,25 @@ export function timeText(
         default:
             return `${formatTime(now)} / ${formatTime(total)}`;
     }
+}
+
+/**
+ * The longest text `timeText` shows for this sound, every digit a zero: laid under the time, it
+ * keeps the room of the widest time, so the digits changing never move what sits beside it. The
+ * longest is the duration, or the time already passed when that is longer (no duration yet).
+ */
+export function timeMold(
+    format: PlayerLook['time'],
+    time: number | null,
+    duration: number | null,
+): string {
+    const longest = Math.max(time ?? 0, duration ?? 0);
+    const text =
+        format === 'remaining'
+            ? timeText(format, 0, longest)
+            : timeText(format, longest, longest);
+
+    return text.replace(/\d/g, '0');
 }
 
 /** The speed after `rate`, wrapping around; the first one when `rate` is not in the list. */
