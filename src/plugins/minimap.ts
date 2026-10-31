@@ -7,28 +7,25 @@
  */
 
 import { EN } from '../core/languages/en';
-import { resample } from '../core/peaks/peaks';
 import { within } from '../core/shared/checked';
-import { clamp01 } from '../core/shared/math';
 import { fillTemplate } from '../core/shared/text';
 import { ratioText } from '../core/shared/timing';
 import { PROGRESS, REGION, WAVE } from '../core/shared/variables';
-import { zoomView, type View } from '../core/view/view';
-import { wheelFactor } from '../core/view/zoom';
-import { barMetrics } from '../core/wave/layout';
-import { overlayOf } from '../core/wave/scene';
-import { DEFAULT_WAVE, resolveWave, waveShape } from '../core/wave/shapes';
-import { css } from '../dom/css';
-import { drawingOf, paintWave, type Drawing } from '../dom/paint';
+import { isFullView } from '../core/view/view';
+import { DEFAULT_WAVE, resolveWave } from '../core/wave/shapes';
 import type {
     BarStyle,
     Lane,
-    PaintContext,
     Plugin,
     PluginHost,
     WaveName,
     WaveStyle,
 } from '../types';
+import {
+    MinimapControls,
+    type MinimapControlSettings,
+} from './minimap-controls';
+import { MinimapPicture, type MinimapLook } from './minimap-picture';
 
 /** The words of the minimap as a slider; `total` is the sound's length. */
 export type MinimapWords = {
@@ -91,19 +88,12 @@ const MINIMAP_BAR: Readonly<BarStyle> = Object.freeze({
     curve: 0.7,
 });
 
-/** Part of the view an arrow key moves. */
-const ARROW_STEP = 0.25;
-
 const COLORS = {
     wave: WAVE,
     progress: PROGRESS,
     view: `var(--sonicframe-minimap-view, ${REGION})`,
     edge: `var(--sonicframe-minimap-edge, ${PROGRESS})`,
 };
-
-function isFull(view: View): boolean {
-    return view.start <= 0 && view.end >= 1;
-}
 
 /**
  * The strip's height and the space on its wave side, in CSS pixels: 24 and 4 unless given; the
@@ -124,167 +114,35 @@ export function minimap(options: MinimapOptions = {}): Plugin {
     const { height, gap } = minimapSize(options);
     /** The lane's room: the strip and the space on its wave side. */
     const laneSize = height + gap;
-    const wave = resolveWave({ ...DEFAULT_WAVE, style: 'bars' }, options.wave);
-    const bar: BarStyle = { ...MINIMAP_BAR, ...options.bar };
-    const colors = { ...COLORS, ...options.colors };
-    const showProgress = options.progress !== false;
+    const look: MinimapLook = {
+        height,
+        wave: resolveWave({ ...DEFAULT_WAVE, style: 'bars' }, options.wave),
+        bar: { ...MINIMAP_BAR, ...options.bar },
+        colors: { ...COLORS, ...options.colors },
+        progress: options.progress !== false,
+    };
     const drag = options.controls?.drag !== false;
     const click = options.controls?.click !== false;
-    const wheel = options.controls?.wheel === true;
-    const cursors = {
-        box: drag ? (options.cursors?.box ?? 'grab') : 'default',
-        moving: options.cursors?.moving ?? 'grabbing',
-        beside: click ? (options.cursors?.beside ?? 'pointer') : 'default',
+    const keys = options.a11y?.keys === true;
+    const settings: MinimapControlSettings = {
+        drag,
+        click,
+        wheel: options.controls?.wheel === true,
+        keys,
+        cursors: {
+            box: drag ? (options.cursors?.box ?? 'grab') : 'default',
+            moving: options.cursors?.moving ?? 'grabbing',
+            beside: click ? (options.cursors?.beside ?? 'pointer') : 'default',
+        },
     };
     const autoHide = options.autoHide === true;
-    const keys = options.a11y?.keys === true;
     const words: MinimapWords = { ...MINIMAP_WORDS, ...options.a11y?.words };
 
     let host: PluginHost | null = null;
     let lane: Lane | null = null;
-    let canvas: HTMLCanvasElement | null = null;
-    let drawing: Drawing | null = null;
-    /** What the cached drawing was made for: its size and the peaks. */
-    let drawn: {
-        width: number;
-        height: number;
-        peaks: readonly number[] | null;
-    } | null = null;
-    /** A drag of the box: the ratio of the sound under the pointer, from the view's start. */
-    let grab: number | null = null;
+    let picture: MinimapPicture | null = null;
+    let controls: MinimapControls | null = null;
     const cleanups: (() => void)[] = [];
-
-    /** The ratio of the sound at a pointer over the strip. */
-    function ratioOf(event: { clientX: number }): number {
-        const box = lane?.element.getBoundingClientRect();
-
-        return box !== undefined && box.width > 0
-            ? clamp01((event.clientX - box.left) / box.width)
-            : 0;
-    }
-
-    function moveTo(start: number): void {
-        const frame = host;
-
-        if (frame !== null) {
-            const { start: from, end } = frame.view;
-            frame.setView(start, start + (end - from), 'minimap');
-        }
-    }
-
-    function pointerDown(event: PointerEvent): void {
-        const frame = host;
-
-        if (frame === null || !event.isPrimary || event.button !== 0) {
-            return;
-        }
-
-        const at = ratioOf(event);
-        const { start, end } = frame.view;
-
-        if (at < start || at > end) {
-            if (!click) {
-                return;
-            }
-
-            moveTo(at - (end - start) / 2);
-        }
-
-        if (drag) {
-            grab = at - frame.view.start;
-            showCursor(cursors.moving);
-
-            try {
-                lane?.element.setPointerCapture(event.pointerId);
-            } catch {
-                // The pointer is already gone; the drag ends with the next event.
-            }
-        }
-
-        // Holding back the browser's default also holds back its focus, so a slider takes it here.
-        if (keys) {
-            lane?.element.focus({ preventScroll: true });
-        }
-
-        event.preventDefault();
-    }
-
-    function showCursor(cursor: string): void {
-        lane?.element.style.setProperty('cursor', cursor);
-    }
-
-    /** The cursor for a mouse at rest over the strip: over the box or beside it. */
-    function hover(event: PointerEvent): void {
-        const frame = host;
-
-        if (frame === null || event.pointerType !== 'mouse') {
-            return;
-        }
-
-        const at = ratioOf(event);
-        const { start, end } = frame.view;
-        showCursor(at >= start && at <= end ? cursors.box : cursors.beside);
-    }
-
-    function pointerMove(event: PointerEvent): void {
-        if (grab !== null) {
-            moveTo(ratioOf(event) - grab);
-        } else {
-            hover(event);
-        }
-    }
-
-    function pointerEnd(event: PointerEvent): void {
-        grab = null;
-        hover(event);
-    }
-
-    function onWheel(event: WheelEvent): void {
-        const frame = host;
-
-        if (frame === null || event.deltaY === 0) {
-            return;
-        }
-
-        event.preventDefault();
-        const view = frame.view;
-        const next = zoomView(
-            view,
-            view.level * wheelFactor(event.deltaY, event.deltaMode, 1),
-            ratioOf(event),
-            view.maxLevel,
-        );
-        frame.setView(next.start, next.end, 'minimap');
-    }
-
-    function onKey(event: KeyboardEvent): void {
-        const frame = host;
-
-        if (frame === null || event.ctrlKey || event.altKey || event.metaKey) {
-            return;
-        }
-
-        const { start, end } = frame.view;
-        const size = end - start;
-        const moves: Record<string, number> = {
-            ArrowRight: start + size * ARROW_STEP,
-            ArrowUp: start + size * ARROW_STEP,
-            ArrowLeft: start - size * ARROW_STEP,
-            ArrowDown: start - size * ARROW_STEP,
-            PageDown: start + size,
-            PageUp: start - size,
-            Home: 0,
-            End: 1 - size,
-        };
-        const target = moves[event.key];
-
-        // The strip is its own control: a key it used never reaches the wave's slider too.
-        if (target !== undefined) {
-            event.preventDefault();
-            event.stopPropagation();
-            moveTo(target);
-        }
-    }
 
     /** The slider's value and words for the view (keys on). */
     function describe(): void {
@@ -315,92 +173,10 @@ export function minimap(options: MinimapOptions = {}): Plugin {
         const frame = host;
 
         if (frame !== null && autoHide) {
-            lane?.setSize(isFull(frame.view) ? 0 : laneSize);
+            lane?.setSize(isFullView(frame.view) ? 0 : laneSize);
         }
 
         describe();
-    }
-
-    function render(paint: PaintContext): void {
-        const frame = host;
-        const target = canvas;
-        const context = target?.getContext('2d') ?? null;
-
-        if (frame === null || target === null || context === null) {
-            return;
-        }
-
-        const ratio = paint.pixelRatio;
-        const width = paint.width;
-        const tall = Math.max(1, Math.round(height * ratio));
-
-        if (target.width !== width || target.height !== tall) {
-            target.width = width;
-            target.height = tall;
-        }
-
-        const peaks = frame.peaks;
-
-        if (
-            drawn === null ||
-            drawn.width !== width ||
-            drawn.height !== tall ||
-            drawn.peaks !== peaks
-        ) {
-            const values =
-                peaks === null
-                    ? []
-                    : resample(peaks, barMetrics(width, bar, ratio).count);
-            drawing = drawingOf(
-                waveShape(values, width, tall, bar, wave, ratio),
-                Math.round(wave.glow * ratio),
-            );
-            drawn = { width, height: tall, peaks };
-        }
-
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, width, tall);
-
-        if (drawing !== null) {
-            paintWave(
-                context,
-                drawing,
-                overlayOf(showProgress ? paint.progress : 0, null, width),
-                width,
-                tall,
-                {
-                    wave: paint.color(colors.wave),
-                    progress: paint.color(colors.progress),
-                    hover: null,
-                    cursor: null,
-                },
-            );
-        }
-
-        const view = paint.view;
-
-        if (isFull(view)) {
-            return;
-        }
-
-        const from = Math.round(view.start * width);
-        const to = Math.max(from + 1, Math.round(view.end * width));
-        const edge = Math.max(1, Math.round(ratio));
-        context.fillStyle = paint.color(colors.view);
-        context.fillRect(from, 0, to - from, tall);
-        context.fillStyle = paint.color(colors.edge);
-        context.fillRect(from, 0, edge, tall);
-        context.fillRect(to - edge, 0, edge, tall);
-    }
-
-    function listen<Name extends keyof HTMLElementEventMap>(
-        element: HTMLElement,
-        type: Name,
-        listener: (event: HTMLElementEventMap[Name]) => void,
-        passive: boolean = true,
-    ): void {
-        element.addEventListener(type, listener, { passive });
-        cleanups.push(() => element.removeEventListener(type, listener));
     }
 
     return {
@@ -411,43 +187,13 @@ export function minimap(options: MinimapOptions = {}): Plugin {
             host = frame;
             lane = frame.addLane(
                 side,
-                autoHide && isFull(frame.view) ? 0 : laneSize,
+                autoHide && isFullView(frame.view) ? 0 : laneSize,
             );
             const element = lane.element;
             element.classList.add('sonicframe-minimap');
-            canvas = document.createElement('canvas');
-            css(canvas, [
-                ['display', 'block'],
-                ['width', '100%'],
-                ['height', `${height}px`],
-                [side === 'below' ? 'margin-top' : 'margin-bottom', `${gap}px`],
-            ]);
-            canvas.setAttribute('aria-hidden', 'true');
-            element.append(canvas);
-
-            const pointer = drag || click || wheel || keys;
-            element.style.setProperty(
-                'pointer-events',
-                pointer ? 'auto' : 'none',
-            );
-
-            // The wave's cursor says a press seeks; here it never does.
-            if (pointer) {
-                showCursor('default');
-            }
-
-            if (drag || click) {
-                element.style.setProperty('touch-action', 'none');
-                listen(element, 'pointerdown', pointerDown, false);
-                listen(element, 'pointermove', pointerMove);
-                listen(element, 'pointerup', pointerEnd);
-                listen(element, 'pointercancel', pointerEnd);
-                listen(element, 'lostpointercapture', pointerEnd);
-            }
-
-            if (wheel) {
-                listen(element, 'wheel', onWheel, false);
-            }
+            picture = new MinimapPicture(look, side, gap);
+            element.append(picture.canvas);
+            controls = new MinimapControls(frame, element, settings);
 
             if (keys) {
                 element.setAttribute('role', 'slider');
@@ -458,7 +204,6 @@ export function minimap(options: MinimapOptions = {}): Plugin {
                 );
                 element.setAttribute('aria-valuemin', '0');
                 element.setAttribute('aria-valuemax', '100');
-                listen(element, 'keydown', onKey, false);
             } else {
                 element.setAttribute('aria-hidden', 'true');
             }
@@ -471,19 +216,22 @@ export function minimap(options: MinimapOptions = {}): Plugin {
         },
 
         draw(paint): void {
-            render(paint);
+            if (host !== null) {
+                picture?.paint(paint, host.peaks);
+            }
         },
 
         destroy(): void {
+            controls?.destroy();
+
             for (const cleanup of cleanups.splice(0)) {
                 cleanup();
             }
 
             lane?.remove();
             lane = null;
-            canvas = null;
-            drawing = null;
-            drawn = null;
+            picture = null;
+            controls = null;
             host = null;
         },
     };

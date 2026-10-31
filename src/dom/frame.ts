@@ -10,12 +10,8 @@
  * file because most of it is the public API of one class, each method handing its work on.
  */
 
-import {
-    Controller,
-    MEDIA_EVENTS,
-    type MediaEventType,
-    type ValueText,
-} from '../core/frame/controller';
+import { Controller, type ValueText } from '../core/frame/controller';
+import { MEDIA_EVENTS, type MediaEventType } from '../core/frame/media-events';
 import { EN } from '../core/languages/en';
 import { Emitter } from '../core/shared/emitter';
 import { clamp01 } from '../core/shared/math';

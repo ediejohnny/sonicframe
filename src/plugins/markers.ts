@@ -9,12 +9,17 @@
  */
 
 import { groupMarks } from '../core/marks/clusters';
+import {
+    placeMarks,
+    sortedMarks,
+    toMarks,
+    type Mark,
+} from '../core/marks/markers';
 import { within } from '../core/shared/checked';
-import { clamp01, positive } from '../core/shared/math';
-import { cleanText } from '../core/shared/text';
+import { positive } from '../core/shared/math';
 import { formatTime } from '../core/shared/timing';
 import { ON_PROGRESS } from '../core/shared/variables';
-import { FULL_VIEW, viewX, type View } from '../core/view/view';
+import { FULL_VIEW } from '../core/view/view';
 import { onProgressColors, sharedTooltip } from '../dom/tooltip';
 import type {
     PaintContext,
@@ -23,14 +28,6 @@ import type {
     SeekSource,
     WavePoint,
 } from '../types';
-
-/** One marker: a moment in seconds, with an optional label, color and id. */
-export type Mark = {
-    time: number;
-    label?: string;
-    color?: string;
-    id?: string;
-};
 
 export type MarkersOptions = {
     /** Moments to mark, in seconds (the simple form). */
@@ -68,65 +65,6 @@ export type MarkersPlugin = Plugin & {
 const MAX_MARKS = 2000;
 const TOOLTIP_LINES = 5;
 
-/** Whether a ratio of the sound is in `view` (its ends included). */
-function inView(ratio: number, view: View): boolean {
-    return ratio >= view.start && ratio <= view.end;
-}
-
-/**
- * Where each marker line goes, in device pixels: centered on its moment and never outside the frame.
- * Moments that are not finite numbers are skipped, and so are those outside `view` (the whole sound
- * by default).
- */
-export function markerSpans(
-    times: readonly number[],
-    duration: number | null,
-    width: number,
-    size: number,
-    view: View = FULL_VIEW,
-): { x: number; width: number }[] {
-    const known = positive(duration);
-
-    if (known === null || width <= 0) {
-        return [];
-    }
-
-    const lineWidth = Math.max(1, Math.min(size, width));
-
-    return times
-        .filter(
-            (time) =>
-                Number.isFinite(time) && inView(clamp01(time / known), view),
-        )
-        .map((time) => ({
-            x: Math.min(
-                width - lineWidth,
-                Math.max(
-                    0,
-                    Math.round(
-                        viewX(clamp01(time / known), view, width) -
-                            lineWidth / 2,
-                    ),
-                ),
-            ),
-            width: lineWidth,
-        }));
-}
-
-function toMarks(next: readonly number[] | readonly Mark[]): Mark[] {
-    return next.map((item) =>
-        typeof item === 'number'
-            ? { time: item }
-            : {
-                  ...item,
-                  label:
-                      item.label === undefined
-                          ? undefined
-                          : cleanText(item.label, 120),
-              },
-    );
-}
-
 export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const groupPx = Math.max(0, options.group ?? 12);
     const snap = options.snap ?? true;
@@ -148,37 +86,13 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     let host: PluginHost | null = null;
     let openedTooltip = false;
 
-    /** The marks sorted by time, with finite times only. */
-    function sorted(): Mark[] {
-        return marks
-            .filter((mark) => Number.isFinite(mark.time))
-            .sort((a, b) => a.time - b.time);
-    }
-
-    /** The marks in `view`, sorted, and their centers across `width` through it. */
-    function placed(
-        width: number,
-        duration: number,
-        view: View,
-    ): { order: Mark[]; centers: number[] } {
-        const order = sorted().filter((mark) =>
-            inView(clamp01(mark.time / duration), view),
-        );
-
-        return {
-            order,
-            centers: order.map((mark) =>
-                viewX(clamp01(mark.time / duration), view, width),
-            ),
-        };
-    }
-
     /** Clusters of marks in CSS pixels, for hover and click; each cluster keeps its marks. */
     function clustersCss(
         width: number,
         duration: number,
     ): { from: number; to: number; marks: Mark[] }[] {
-        const { order, centers } = placed(
+        const { order, centers } = placeMarks(
+            marks,
             width,
             duration,
             host?.view ?? FULL_VIEW,
@@ -279,7 +193,8 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 return;
             }
 
-            const { order, centers } = placed(
+            const { order, centers } = placeMarks(
+                marks,
                 paint.width,
                 duration,
                 paint.view,
@@ -381,7 +296,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 return false;
             }
 
-            const order = sorted();
+            const order = sortedMarks(marks);
             const now = frame.progress * duration;
             const next = modifiers.shiftKey
                 ? [...order]

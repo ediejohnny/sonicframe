@@ -8,62 +8,20 @@
  */
 
 import type { Chapter } from '../core/chapters/chapters';
-import { within } from '../core/shared/checked';
 import { formatTime } from '../core/shared/timing';
 import { MUTED, PROGRESS, REGION } from '../core/shared/variables';
 import { css } from '../dom/css';
-import { iconElement, iconPath } from '../dom/icon';
-
-/** How the list's items look; each left out keeps its default. */
-export type ChapterListLook = {
-    /** The picture's width, in rem: 3.5 by default, from 1 to 12. */
-    thumbWidth?: number;
-    /** `'square'` (the default) or `'wide'` (16:9). */
-    thumbShape?: 'square' | 'wide';
-    /** The picture's corner radius, in rem: 0.25 by default, from 0 to 2. */
-    thumbCorner?: number;
-    /** The column with each chapter's number (and the playing mark). On by default. */
-    numbers?: boolean;
-    /** Sound bars in place of the number of the chapter playing. On by default. */
-    playingMark?: boolean;
-    /** The stretch under the title ("0:25 – 0:50"). On by default. */
-    span?: boolean;
-    /** The chapter's length on its picture. On by default. */
-    length?: boolean;
-    /** A thin bar under the chapter playing, filled as it plays. On by default. */
-    progress?: boolean;
-    /** The chapter playing tinted in the played color. On by default. */
-    tint?: boolean;
-    /** The most lines a title takes before it is cut: 2 by default, from 1 to 4. */
-    titleLines?: number;
-    /** Space inside each item, in rem: 0.375 by default, from 0 to 2. */
-    itemPadding?: number;
-    /** Each item's corner radius, in rem: 0.25 by default, from 0 to 2. */
-    itemCorner?: number;
-    /** Space between items, in rem: 0.125 by default, from 0 to 2. */
-    gap?: number;
-};
-
-type ListLook = Required<ChapterListLook>;
-
-/** The look asked for, checked: known values only, sizes in range. */
-function resolveListLook(look: ChapterListLook = {}): ListLook {
-    return {
-        thumbWidth: within(look.thumbWidth, 3.5, 1, 12),
-        thumbShape: look.thumbShape === 'wide' ? 'wide' : 'square',
-        thumbCorner: within(look.thumbCorner, 0.25, 0, 2),
-        numbers: look.numbers !== false,
-        playingMark: look.playingMark !== false,
-        span: look.span !== false,
-        length: look.length !== false,
-        progress: look.progress !== false,
-        tint: look.tint !== false,
-        titleLines: Math.round(within(look.titleLines, 2, 1, 4)),
-        itemPadding: within(look.itemPadding, 0.375, 0, 2),
-        itemCorner: within(look.itemCorner, 0.25, 0, 2),
-        gap: within(look.gap, 0.125, 0, 2),
-    };
-}
+import {
+    chapterThumb,
+    playingMark,
+    progressBar,
+    textSpan,
+} from './chapter-item';
+import {
+    resolveListLook,
+    type ChapterListLook,
+    type ListLook,
+} from './chapter-list-look';
 
 export type ChapterListOptions = {
     /** The list's name (its `aria-label`, and the head's text). */
@@ -75,17 +33,6 @@ export type ChapterListOptions = {
     header: boolean;
     look?: ChapterListLook;
 };
-
-/** Three bars of different heights, the mark of the chapter playing (on a 12 × 12 grid). */
-const PLAYING = 'M1 5h2v6H1zM5 1h2v10H5zM9 4h2v7H9z';
-
-function span(className: string, text: string): HTMLSpanElement {
-    const element = document.createElement('span');
-    element.className = className;
-    element.textContent = text;
-
-    return element;
-}
 
 export class ChapterListView {
     private readonly nav: HTMLElement;
@@ -118,9 +65,9 @@ export class ChapterListView {
                 ['gap', '0.5rem'],
                 ['padding', '0.25rem 0.5rem 0.5rem'],
             ]);
-            const name = span('sonicframe-chapters-name', options.name);
+            const name = textSpan('sonicframe-chapters-name', options.name);
             css(name, [['font-weight', '700']]);
-            const place = span('sonicframe-chapters-place', '');
+            const place = textSpan('sonicframe-chapters-place', '');
             css(place, [
                 ['font-size', '0.75rem'],
                 ['color', MUTED],
@@ -189,7 +136,10 @@ export class ChapterListView {
             ]);
 
             if (this.look.numbers) {
-                const mark = span('sonicframe-chapter-mark', String(at + 1));
+                const mark = textSpan(
+                    'sonicframe-chapter-mark',
+                    String(at + 1),
+                );
                 mark.setAttribute('aria-hidden', 'true');
                 css(mark, [
                     ['flex', '0 0 1.25rem'],
@@ -205,7 +155,7 @@ export class ChapterListView {
             }
 
             if (this.options.images && chapter.image !== null) {
-                button.append(this.thumb(chapter, end));
+                button.append(chapterThumb(chapter, end, this.look));
             }
 
             const text = document.createElement('span');
@@ -215,7 +165,7 @@ export class ChapterListView {
                 ['gap', '0.125rem'],
                 ['min-width', '0'],
             ]);
-            const heading = span('sonicframe-chapter-title', name);
+            const heading = textSpan('sonicframe-chapter-title', name);
             heading.setAttribute('dir', 'auto');
             css(heading, [
                 ['font-weight', '600'],
@@ -234,7 +184,7 @@ export class ChapterListView {
             text.append(heading);
 
             if (this.look.span) {
-                const stretch = span(
+                const stretch = textSpan(
                     'sonicframe-chapter-span',
                     end === null
                         ? formatTime(chapter.start)
@@ -301,7 +251,7 @@ export class ChapterListView {
                 );
                 mark?.replaceChildren(
                     on && this.look.playingMark
-                        ? this.playing()
+                        ? playingMark()
                         : String(at + 1),
                 );
             });
@@ -309,7 +259,7 @@ export class ChapterListView {
             this.fill?.parentElement?.remove();
             this.fill =
                 index >= 0 && this.look.progress
-                    ? this.bar(this.buttons[index])
+                    ? progressBar(this.buttons[index])
                     : null;
             this.current = index;
 
@@ -329,104 +279,5 @@ export class ChapterListView {
     /** Takes the list off the page. */
     destroy(): void {
         this.nav.remove();
-    }
-
-    /** The chapter's picture, square or wide, with its length on it (said already by its stretch). */
-    private thumb(chapter: Chapter, end: number | null): HTMLElement {
-        const { thumbWidth, thumbShape, thumbCorner } = this.look;
-        const height =
-            thumbShape === 'wide' ? (thumbWidth * 9) / 16 : thumbWidth;
-        const box = document.createElement('span');
-        box.className = 'sonicframe-chapter-thumb';
-        css(box, [
-            ['position', 'relative'],
-            ['flex', `0 0 ${thumbWidth}rem`],
-            ['width', `${thumbWidth}rem`],
-            ['height', `${height}rem`],
-            ['overflow', 'hidden'],
-            ['border-radius', `${thumbCorner}rem`],
-            ['background-color', REGION],
-        ]);
-        const image = document.createElement('img');
-        image.alt = '';
-        image.loading = 'lazy';
-        image.decoding = 'async';
-        image.src = chapter.image ?? '';
-        css(image, [
-            ['display', 'block'],
-            ['width', '100%'],
-            ['height', '100%'],
-            ['object-fit', 'cover'],
-        ]);
-        box.append(image);
-
-        if (end !== null && this.look.length) {
-            const length = span(
-                'sonicframe-chapter-length',
-                formatTime(end - chapter.start),
-            );
-            const cover = document.createElement('span');
-            cover.setAttribute('aria-hidden', 'true');
-            cover.append(length);
-            css(length, [
-                ['position', 'absolute'],
-                ['right', '0.1875rem'],
-                ['bottom', '0.1875rem'],
-                ['padding', '0 0.25rem'],
-                ['border-radius', '0.125rem'],
-                ['background-color', 'rgba(0, 0, 0, 0.72)'],
-                ['color', '#ffffff'],
-                ['font-size', '0.6875rem'],
-                ['line-height', '1.4'],
-                ['font-variant-numeric', 'tabular-nums'],
-            ]);
-            box.append(cover);
-        }
-
-        return box;
-    }
-
-    /** The still mark of the chapter playing: three sound bars in the played color. */
-    private playing(): SVGSVGElement {
-        const icon = iconElement(12);
-        icon.setAttribute('class', 'sonicframe-chapter-playing');
-        icon.append(iconPath({ d: PLAYING, fill: 'currentColor' }));
-        css(icon, [
-            ['width', '0.75rem'],
-            ['height', '0.75rem'],
-            ['color', PROGRESS],
-            ['vertical-align', 'middle'],
-        ]);
-
-        return icon;
-    }
-
-    /** The thin bar along the bottom of the chapter playing, filled as it plays. */
-    private bar(button: HTMLButtonElement | undefined): HTMLElement | null {
-        if (button === undefined) {
-            return null;
-        }
-
-        const track = document.createElement('span');
-        const fill = document.createElement('span');
-        track.setAttribute('aria-hidden', 'true');
-        fill.className = 'sonicframe-chapter-progress';
-        css(track, [
-            ['position', 'absolute'],
-            ['left', '0'],
-            ['right', '0'],
-            ['bottom', '0'],
-            ['height', '0.125rem'],
-        ]);
-        css(fill, [
-            ['display', 'block'],
-            ['height', '100%'],
-            ['width', '0%'],
-            ['background-color', PROGRESS],
-        ]);
-        track.append(fill);
-        button.append(track);
-
-        return fill;
     }
 }

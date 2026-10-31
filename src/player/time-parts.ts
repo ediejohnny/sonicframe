@@ -5,7 +5,8 @@
  * the time would change width as it counts and move the wave beside it.
  */
 
-import { timeMold, timeText, type PlayerLook } from '../core/player/look';
+import type { PlayerLook } from '../core/player/look';
+import { timeMold, timeText } from '../core/player/part-text';
 import { MUTED } from '../core/shared/variables';
 import { css } from '../dom/css';
 import type { SonicFrame } from '../dom/frame';

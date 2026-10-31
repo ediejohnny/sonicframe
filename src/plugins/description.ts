@@ -17,11 +17,12 @@ import {
     type SoundOutline,
 } from '../core/description/outline';
 import type { DescriptionWords } from '../core/languages/words';
+import { keyLetter } from '../core/shared/keys';
 import { cleanText } from '../core/shared/text';
-import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
 import { pageLanguage } from '../dom/page-language';
 import { speak, type Speaking, type SpeechOptions } from '../dom/speak';
 import type { Plugin, PluginHost } from '../types';
+import { DescriptionDisplay } from './description-display';
 
 /** Single-key shortcuts while the wave has focus; a key set to false is not used. */
 export type SoundDescriptionKeys = {
@@ -88,33 +89,16 @@ export type SoundDescriptionPlugin = Plugin & {
 /** The longest text taken from the app, in characters. */
 const MAX_TEXT = 2000;
 
-let counter = 0;
-
-/** A key name as one lower-case character, or null for none (a word such as "Enter" is no letter). */
-function letter(
-    key: string | false | undefined,
-    fallback: string,
-): string | null {
-    if (key === false) {
-        return null;
-    }
-
-    const chosen = key ?? fallback;
-
-    return chosen.length === 1 ? chosen.toLowerCase() : null;
-}
-
 export function soundDescription(
     options: SoundDescriptionOptions = {},
 ): SoundDescriptionPlugin {
-    const describedId = `sonicframe-description-${++counter}`;
     const keys =
         options.keys === true
             ? { again: 'd', parts: 'p' }
             : options.keys
               ? {
-                    again: letter(options.keys.again, 'd'),
-                    parts: letter(options.keys.parts, 'p'),
+                    again: keyLetter(options.keys.again, 'd'),
+                    parts: keyLetter(options.keys.parts, 'p'),
                 }
               : { again: null, parts: null };
     const backGrace = Math.max(
@@ -123,14 +107,12 @@ export function soundDescription(
             ? options.keys.backGrace
             : undefined) ?? 1,
     );
-    const target = options.target ?? null;
-    const saved =
-        target === null
-            ? null
-            : { text: target.textContent, lang: target.getAttribute('lang') };
+    const display = new DescriptionDisplay(
+        options.describedBy !== false,
+        options.target ?? null,
+    );
 
     let host: PluginHost | null = null;
-    let element: HTMLSpanElement | null = null;
     let own =
         options.text === undefined ? null : cleanText(options.text, MAX_TEXT);
     let words: SoundWords = soundWords();
@@ -154,32 +136,6 @@ export function soundDescription(
         return soundWords({ lang, words: options.words, times: options.times });
     }
 
-    function show(current: PluginHost): void {
-        if (options.describedBy !== false) {
-            if (element === null) {
-                element = document.createElement('span');
-                element.id = describedId;
-                element.hidden = true;
-                element.style.setProperty('display', 'none');
-                current.container.append(element);
-            }
-
-            element.textContent = text ?? '';
-            element.setAttribute('lang', words.locale);
-
-            if (text === null) {
-                removeDescribedBy(current.container, describedId);
-            } else {
-                addDescribedBy(current.container, describedId);
-            }
-        }
-
-        if (target !== null) {
-            target.textContent = text ?? '';
-            target.setAttribute('lang', words.locale);
-        }
-    }
-
     function update(): void {
         const current = host;
 
@@ -198,7 +154,7 @@ export function soundDescription(
         const changed = next !== text;
         const arrived = text === null && next !== null;
         text = next;
-        show(current);
+        display.show(current.container, text, words.locale);
 
         if (options.pauseInValue) {
             current.updateValueText();
@@ -377,23 +333,7 @@ export function soundDescription(
                 cleanup();
             }
 
-            if (host !== null) {
-                removeDescribedBy(host.container, describedId);
-            }
-
-            element?.remove();
-            element = null;
-
-            if (target !== null && saved !== null) {
-                target.textContent = saved.text;
-
-                if (saved.lang === null) {
-                    target.removeAttribute('lang');
-                } else {
-                    target.setAttribute('lang', saved.lang);
-                }
-            }
-
+            display.destroy(host?.container ?? null);
             host = null;
             outline = null;
             text = null;

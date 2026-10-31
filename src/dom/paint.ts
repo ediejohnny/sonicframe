@@ -6,7 +6,9 @@
 import { rgbaFromBytes, type Rgba } from '../core/shared/color';
 import type { Bar } from '../core/wave/layout';
 import { cursorSpan, regions, type Overlay } from '../core/wave/scene';
-import type { Circle, Polyline, WaveShape } from '../core/wave/shapes';
+import type { Circle } from '../core/wave/pieces';
+import type { WaveShape } from '../core/wave/shapes';
+import type { Polyline } from '../core/wave/traces';
 
 /** Colors ready for the canvas: variables already resolved. */
 export type Palette = {

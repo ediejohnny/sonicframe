@@ -9,9 +9,9 @@
 import type { Controller } from '../core/frame/controller';
 import { isDrag } from '../core/frame/gesture';
 import { applyStyles } from '../core/shared/styles';
-import { fitView, viewLevel, viewRatio } from '../core/view/view';
+import { viewRatio } from '../core/view/view';
 import type { Claim, Plugin, WavePoint } from '../types';
-import type { FrameView } from './frame-view';
+import { FramePinch, type PinchHost } from './frame-pinch';
 import type { LaneManager } from './lanes';
 import type { PluginSet } from './plugin-set';
 
@@ -26,37 +26,30 @@ type Press = {
     last: PointerEvent;
 };
 
-/** Two fingers on the wave: where they started, and the sound that was between them. */
-type Pinch = { distance: number; level: number; anchor: number };
-
 /** The longest time one edge-scroll step covers, in seconds (a frame after a pause never jumps). */
 const MAX_EDGE_STEP = 0.1;
 
 /** What the pointer needs from its frame. */
-export type PointerHost = {
+export type PointerHost = PinchHost & {
     readonly container: HTMLElement;
     readonly controller: Controller;
     readonly plugins: PluginSet;
     readonly lanes: LaneManager;
-    readonly view: FrameView;
-    /** The wave's box on the page. */
-    box(): DOMRect;
-    /** The largest zoom now. */
-    maxLevel(): number;
     /** Asks for another animation frame. */
     schedule(): void;
 };
 
 export class FramePointer {
     private press: Press | null = null;
-    /** The touch pointers down on the frame, for two-finger zoom. */
-    private readonly touches = new Map<number, { x: number; y: number }>();
-    private pinch: Pinch | null = null;
+    private readonly pinch: FramePinch;
     /** When the last edge-scroll step ran, or null while no drag sits at an edge. */
     private edgeAt: number | null = null;
     private restoreCursor: () => void = () => undefined;
 
-    constructor(private readonly host: PointerHost) {}
+    constructor(private readonly host: PointerHost) {
+        // A second finger ends whatever the first one started.
+        this.pinch = new FramePinch(host, () => this.cancel());
+    }
 
     /** Whether a press is held now. */
     get pressing(): boolean {
@@ -65,7 +58,7 @@ export class FramePointer {
 
     down(event: PointerEvent): void {
         if (
-            this.touch(event, 'down') ||
+            this.pinch.track(event, 'down') ||
             !event.isPrimary ||
             event.button !== 0
         ) {
@@ -120,7 +113,7 @@ export class FramePointer {
     }
 
     move(event: PointerEvent): void {
-        if (this.touch(event, 'move')) {
+        if (this.pinch.track(event, 'move')) {
             return;
         }
 
@@ -146,7 +139,7 @@ export class FramePointer {
     }
 
     up(event: PointerEvent): void {
-        if (this.touch(event, 'up')) {
+        if (this.pinch.track(event, 'up')) {
             return;
         }
 
@@ -185,7 +178,7 @@ export class FramePointer {
 
     /** The browser took the pointer away (`pointercancel`): a finger leaves, and the press ends. */
     cancelled(event: PointerEvent): void {
-        this.touch(event, 'up');
+        this.pinch.track(event, 'up');
         this.cancel();
     }
 
@@ -250,73 +243,6 @@ export class FramePointer {
     /** Puts back the cursor a plugin had set, when the frame goes. */
     restore(): void {
         this.restoreCursor();
-    }
-
-    /**
-     * Tracks touch pointers (two-finger zoom on). Returns true while two fingers are down, when the
-     * pointer belongs to the pinch and nothing else should see it.
-     */
-    private touch(event: PointerEvent, phase: 'down' | 'move' | 'up'): boolean {
-        const view = this.host.view;
-
-        if (!view.zoom?.pinch || event.pointerType !== 'touch') {
-            return false;
-        }
-
-        if (phase === 'up') {
-            this.touches.delete(event.pointerId);
-
-            if (this.pinch !== null && this.touches.size < 2) {
-                this.pinch = null;
-                view.announce();
-
-                return true;
-            }
-
-            return this.pinch !== null;
-        }
-
-        this.touches.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY,
-        });
-
-        if (this.touches.size !== 2) {
-            return this.pinch !== null;
-        }
-
-        const [a, b] = [...this.touches.values()];
-        const box = this.host.box();
-        const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
-        const middle = (a.x + b.x) / 2 - box.left;
-
-        if (this.pinch === null) {
-            // A second finger ends whatever the first one started.
-            this.cancel();
-            this.pinch = {
-                distance,
-                level: viewLevel(view.current),
-                anchor: viewRatio(middle, view.current, box.width),
-            };
-
-            return true;
-        }
-
-        const maxLevel = this.host.maxLevel();
-        const span =
-            1 /
-            Math.min(
-                maxLevel,
-                Math.max(
-                    1,
-                    (this.pinch.level * distance) / this.pinch.distance,
-                ),
-            );
-        const start =
-            this.pinch.anchor - (box.width > 0 ? middle / box.width : 0) * span;
-        view.move(fitView(start, start + span, maxLevel), 'pinch');
-
-        return true;
     }
 
     private wavePoint(event: PointerEvent, box: DOMRect): WavePoint {

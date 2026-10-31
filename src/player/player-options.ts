@@ -8,7 +8,7 @@ import type { PaletteChoice } from '../core/player/palettes';
 import type { ThemeInput } from '../core/player/theme';
 import type { ZoomOptions } from '../core/view/zoom';
 import type { SonicFrameOptions } from '../dom/frame-options';
-import type { ChapterListLook } from '../plugins/chapter-list';
+import type { ChapterListLook } from '../plugins/chapter-list-look';
 import type {
     ChaptersOptions,
     ChaptersPlugin,

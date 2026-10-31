@@ -16,6 +16,11 @@ export type ViewState = View & {
 
 export const FULL_VIEW: View = Object.freeze({ start: 0, end: 1 });
 
+/** Whether `view` shows the whole sound. */
+export function isFullView(view: View): boolean {
+    return view.start <= 0 && view.end >= 1;
+}
+
 /**
  * The view `start`..`end` made possible: at least 1 ÷ `maxLevel` and at most the whole sound in size,
  * slid back inside the sound when it runs past an end. Numbers that are not finite give the whole

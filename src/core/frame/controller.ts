@@ -2,6 +2,8 @@
  * Everything a frame does, without the page: it follows a media element, turns pointer and keyboard
  * input into seeks, and decides when a new picture or animation frames are needed. The DOM shell
  * (`dom/frame.ts`) only translates events in and carries effects out, so all of this runs in tests.
+ * It stays one class because the position, a drag, a seek waiting for the media and what is reported
+ * change together on every event; a range being played is `RangePlayback`.
  */
 
 import type { MediaLike, SeekSource, SonicFrameEvents } from '../../types';
@@ -13,38 +15,11 @@ import {
     timeAt,
 } from '../shared/timing';
 import { keyAction, type KeyModifiers } from './keys';
-import { rangeStep, type RangeState } from './range';
+import type { MediaEventType } from './media-events';
+import { RangePlayback, startPlaying } from './range-playback';
 
 /** `HAVE_METADATA`: from here on the media knows its duration and can seek. */
 const HAVE_METADATA = 1;
-
-export type MediaEventType =
-    | 'play'
-    | 'playing'
-    | 'pause'
-    | 'ended'
-    | 'waiting'
-    | 'seeking'
-    | 'seeked'
-    | 'timeupdate'
-    | 'durationchange'
-    | 'loadedmetadata'
-    | 'emptied';
-
-/** The media events a frame listens to. */
-export const MEDIA_EVENTS: readonly MediaEventType[] = [
-    'play',
-    'playing',
-    'pause',
-    'ended',
-    'waiting',
-    'seeking',
-    'seeked',
-    'timeupdate',
-    'durationchange',
-    'loadedmetadata',
-    'emptied',
-];
 
 export type ValueText = (
     time: number | null,
@@ -102,7 +77,9 @@ export class Controller {
     private reported: number | null | undefined = undefined;
     /** The duration last announced; it starts unknown, so a known one is announced as it arrives. */
     private reportedDuration: number | null = null;
-    private range: RangeState | null = null;
+    private readonly range = new RangePlayback(() =>
+        this.effects.emit('rangeend'),
+    );
 
     constructor(options: ControllerOptions, effects: ControllerEffects) {
         this.options = { ...options };
@@ -167,7 +144,7 @@ export class Controller {
         this.dragging = null;
         this.waiting = false;
         this.reported = undefined;
-        this.range = null;
+        this.range.close();
 
         if (media === null) {
             this.position = 0;
@@ -181,7 +158,9 @@ export class Controller {
 
     /** Called with every media event in `MEDIA_EVENTS`. */
     mediaEvent(type: MediaEventType): void {
-        if (this.media === null) {
+        const media = this.media;
+
+        if (media === null) {
             return;
         }
 
@@ -196,10 +175,10 @@ export class Controller {
             case 'emptied':
                 this.pending = null;
                 this.waiting = false;
-                this.range = null;
+                this.range.close();
                 break;
             case 'ended':
-                this.rangeAtEnd();
+                this.range.mediaEnded(media);
                 break;
             default:
                 break;
@@ -210,8 +189,8 @@ export class Controller {
         this.sync(true);
 
         // The animation tick only runs on screen; the media's own pace keeps a range in bounds everywhere.
-        if (type === 'timeupdate' && this.range !== null && this.playing) {
-            this.applyRange();
+        if (type === 'timeupdate' && this.range.active && this.playing) {
+            this.range.follow(media);
         }
 
         this.updateLoop();
@@ -220,12 +199,14 @@ export class Controller {
 
     /** One animation frame while looping: reads the media's time. Returns whether to keep looping. */
     tick(): boolean {
-        if (this.media !== null && this.dragging === null) {
+        const media = this.media;
+
+        if (media !== null && this.dragging === null) {
             this.sync(false);
         }
 
-        if (this.range !== null && this.playing) {
-            this.applyRange();
+        if (media !== null && this.range.active && this.playing) {
+            this.range.follow(media);
         }
 
         return this.looping;
@@ -233,75 +214,21 @@ export class Controller {
 
     /** Plays `start`..`end` seconds (optionally looping); the frame must have a media element. */
     playRange(start: number, end: number, loop: boolean = false): void {
+        const media = this.media;
         const duration = this.duration;
 
-        if (this.media === null || duration === null) {
+        if (media === null || duration === null) {
             return;
         }
 
-        const from = Math.max(0, Math.min(start, duration));
-        const to = Math.max(from, Math.min(end, duration));
-        this.range = { start: from, end: to, loop };
+        const from = this.range.open(start, end, loop, duration);
         this.seek(from / duration, 'api');
-        this.play(this.media);
+        startPlaying(media);
     }
 
     /** Forgets any range being played (playback itself carries on). */
     stopRange(): void {
-        this.range = null;
-    }
-
-    private applyRange(): void {
-        const media = this.media;
-
-        if (media === null || this.range === null) {
-            return;
-        }
-
-        const step = rangeStep(media.currentTime, this.range);
-
-        if (step === 'wrap') {
-            media.currentTime = this.range.start;
-        } else if (step === 'stop') {
-            const reachedEnd = media.currentTime >= this.range.end;
-            this.range = null;
-
-            if (reachedEnd) {
-                media.pause?.();
-            }
-
-            this.effects.emit('rangeend');
-        }
-    }
-
-    /**
-     * The media ended while a range was open: a looping range starts again, any other one is over.
-     * The animation tick never sees this moment, since an ended media no longer plays.
-     */
-    private rangeAtEnd(): void {
-        const media = this.media;
-        const range = this.range;
-
-        if (media === null || range === null) {
-            return;
-        }
-
-        if (range.loop) {
-            media.currentTime = range.start;
-            this.play(media);
-        } else {
-            this.range = null;
-            this.effects.emit('rangeend');
-        }
-    }
-
-    /** Starts playback; a refused start (an autoplay rule, say) leaves the media paused and is no error here. */
-    private play(media: MediaLike): void {
-        const started = media.play?.();
-
-        if (started !== undefined && typeof started.then === 'function') {
-            started.then(undefined, () => undefined);
-        }
+        this.range.close();
     }
 
     /** Whether the frame is on (or near) the screen; animation only runs where it can be seen. */
@@ -470,13 +397,8 @@ export class Controller {
 
         const duration = this.duration;
 
-        // A seek out of the range being played abandons it (a seek to its start does not).
-        if (this.range !== null && duration !== null) {
-            const at = target * duration;
-
-            if (at < this.range.start - 0.05 || at > this.range.end) {
-                this.range = null;
-            }
+        if (duration !== null) {
+            this.range.seeked(target * duration);
         }
 
         this.effects.emit('seek', {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { markers, markerSpans } from '../src/plugins/markers';
+import { markerSpans } from '../src/core/marks/markers';
+import { markers } from '../src/plugins/markers';
 import type { PluginHost } from '../src/types';
 
 describe('markerSpans', () => {

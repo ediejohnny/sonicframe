@@ -29,10 +29,9 @@ export {
     type VolumeControlEvents,
     type VolumeControlOptions,
 } from './controls/volume';
+export { markerSpans, type Mark } from './core/marks/markers';
 export {
     markers,
-    markerSpans,
-    type Mark,
     type MarkersOptions,
     type MarkersPlugin,
 } from './plugins/markers';
@@ -57,7 +56,7 @@ export {
     type ChaptersOptions,
     type ChaptersPlugin,
 } from './plugins/chapters-options';
-export type { ChapterListLook } from './plugins/chapter-list';
+export type { ChapterListLook } from './plugins/chapter-list-look';
 export type { ChapterWords, DescriptionWords } from './core/languages/words';
 export {
     minimap,

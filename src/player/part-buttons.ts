@@ -7,7 +7,8 @@
 import { hideFocusRing, showFocusRing } from '../controls/focus';
 import { iconButtonBox } from '../core/controls/button';
 import type { PlayerWords } from '../core/player/labels';
-import { nextSpeed, speedText, type PlayerLook } from '../core/player/look';
+import type { PlayerLook } from '../core/player/look';
+import { nextSpeed, speedText } from '../core/player/part-text';
 import { PROGRESS } from '../core/shared/variables';
 import { css } from '../dom/css';
 import type { SonicFrame } from '../dom/frame';

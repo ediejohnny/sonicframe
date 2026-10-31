@@ -17,24 +17,16 @@ import {
     DEFAULT_MAX_SOURCE_SECONDS,
     pickMimeType,
 } from '../core/wave/clip';
-import { overlayOf } from '../core/wave/scene';
-import { DEFAULT_WAVE, knobSpot } from '../core/wave/shapes';
+import { DEFAULT_WAVE } from '../core/wave/shapes';
 import type { BarStyle, WaveStyle } from '../types';
-import { fetchAudio } from './decode';
-import {
-    drawingOf,
-    paintKnob,
-    paintWave,
-    type Drawing,
-    type Palette,
-} from './paint';
+import { CAPTION_HEIGHT, paintClipFrame, type ClipScene } from './clip-picture';
+import { isDecoded, MAX_BYTES, toBuffer, tooLong } from './clip-source';
+import { drawingOf, type Drawing } from './paint';
 
 const MAX_WIDTH = 1920;
 const MAX_HEIGHT = 1080;
 const MAX_FPS = 60;
 const MAX_BITRATE = 8_000_000;
-/** The largest sound a clip is recorded from, in bytes (100 MiB). */
-const MAX_BYTES = 104_857_600;
 const MAX_CAPTION = 200;
 
 export type ClipOptions = {
@@ -72,42 +64,6 @@ export type ClipOptions = {
     onProgress?: (fraction: number) => void;
 };
 
-/** Whether the sound is already decoded (and needs neither a download nor a decode). */
-function isDecoded(audio: AudioBuffer | Blob | string): audio is AudioBuffer {
-    return typeof audio !== 'string' && 'getChannelData' in audio;
-}
-
-/** A source past `maxSourceSeconds`; both lengths are named so the app can tell the listener. */
-function tooLong(seconds: number, limit: number): Error {
-    return new Error(
-        `sonicframe: the source is too long to record a clip from (${Math.round(seconds)} s, the limit is ${Math.round(limit)} s)`,
-    );
-}
-
-async function toBuffer(
-    context: AudioContext,
-    audio: AudioBuffer | Blob | string,
-    signal: AbortSignal | undefined,
-): Promise<AudioBuffer> {
-    if (isDecoded(audio)) {
-        return audio;
-    }
-
-    let data: ArrayBuffer;
-
-    if (typeof audio === 'string') {
-        data = await fetchAudio(audio, MAX_BYTES, signal);
-    } else {
-        if (audio.size > MAX_BYTES) {
-            throw new Error('sonicframe: audio is too large to record');
-        }
-
-        data = await audio.arrayBuffer();
-    }
-
-    return context.decodeAudioData(data);
-}
-
 /**
  * Records the clip and resolves with the video blob, its type and its length in seconds. Call it from
  * a user gesture (a click): browsers keep audio suspended until one, and a clip whose audio never
@@ -142,6 +98,11 @@ export async function exportClip(
     const width = within(options.width, 1280, 16, MAX_WIDTH, Math.round);
     const height = within(options.height, 720, 16, MAX_HEIGHT, Math.round);
     const fps = within(options.fps, 30, 1, MAX_FPS, Math.round);
+    const caption =
+        options.caption === undefined
+            ? undefined
+            : cleanText(options.caption, MAX_CAPTION);
+    const waveHeight = height - (caption === undefined ? 0 : CAPTION_HEIGHT);
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -194,14 +155,13 @@ export async function exportClip(
                 : { mimeType, videoBitsPerSecond: MAX_BITRATE },
         );
 
-        const captionHeight = options.caption === undefined ? 0 : 28;
         drawing = drawingOf(
             clipShape(
                 options.peaks,
                 plan,
                 buffer.duration,
                 width,
-                height - captionHeight,
+                waveHeight,
                 options.bar,
                 wave,
             ),
@@ -219,17 +179,21 @@ export async function exportClip(
     }
 
     const mimeType = recorder.mimeType || 'video/webm';
-    const caption =
-        options.caption === undefined
-            ? undefined
-            : cleanText(options.caption, MAX_CAPTION);
-    const captionHeight = caption === undefined ? 0 : 28;
-    const waveHeight = height - captionHeight;
-    const palette: Palette = {
-        wave: options.colors.wave,
-        progress: options.colors.progress,
-        hover: null,
-        cursor: null,
+    const scene: ClipScene = {
+        drawing,
+        width,
+        height,
+        waveHeight,
+        wave,
+        align: options.bar.align,
+        palette: {
+            wave: options.colors.wave,
+            progress: options.colors.progress,
+            hover: null,
+            cursor: null,
+        },
+        knob: options.colors.knob ?? options.colors.progress,
+        caption,
     };
 
     return new Promise((resolve, reject) => {
@@ -357,35 +321,7 @@ export async function exportClip(
             const elapsed = context.currentTime - startedAt;
             const fraction = plan.seconds > 0 ? elapsed / plan.seconds : 1;
             options.onProgress?.(Math.min(1, Math.max(0, fraction)));
-
-            ctx.clearRect(0, 0, width, height);
-            const overlay = overlayOf(Math.min(1, fraction), null, width);
-            paintWave(ctx, drawing, overlay, width, waveHeight, palette);
-
-            const spot = knobSpot(
-                overlay.progress,
-                width,
-                waveHeight,
-                wave,
-                options.bar.align,
-                1,
-            );
-
-            if (spot !== null) {
-                paintKnob(ctx, spot, options.colors.knob ?? palette.progress);
-            }
-
-            if (caption !== undefined) {
-                ctx.fillStyle = palette.progress;
-                ctx.font = '16px sans-serif';
-                ctx.textBaseline = 'middle';
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(0, waveHeight, width, captionHeight);
-                ctx.clip();
-                ctx.fillText(caption, 8, waveHeight + captionHeight / 2);
-                ctx.restore();
-            }
+            paintClipFrame(ctx, scene, fraction);
 
             if (elapsed >= plan.seconds) {
                 finish();

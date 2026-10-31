@@ -4,15 +4,16 @@
  * side of the page, with a close button and, when asked, the page dimmed behind it. It lives on the
  * page's body, so no player box clips it, and wears the player's colors and font, copied into it as
  * it opens. Escape, a press outside, the focus leaving and, unless it stays open, a chapter chosen
- * close it; the focus goes to the chapter playing as it opens.
+ * close it; the focus goes to the chapter playing as it opens. The popover and the drawer stay one
+ * class because they open, close and dress alike; the drawer's close button is `DrawerClose`.
  */
 
 import { arrowOffset, placeTooltip } from '../core/shared/place';
 import { MUTED } from '../core/shared/variables';
 import { css } from '../dom/css';
-import { iconElement, iconPath } from '../dom/icon';
 import { prefersReducedMotion } from '../dom/motion';
 import { pageSize } from '../dom/units';
+import { DrawerClose } from './drawer-close';
 
 /** The player's chapters list settings, already checked. */
 export type ListSettings = {
@@ -60,7 +61,7 @@ export class FloatingList {
     private readonly arrow: HTMLElement | null = null;
     private readonly backdrop: HTMLElement | null = null;
     /** The drawer's close button; a popover has none. */
-    private readonly closer: HTMLButtonElement | null = null;
+    private readonly closer: DrawerClose | null = null;
     private anchor: HTMLElement | null = null;
     private stops: (() => void)[] = [];
 
@@ -113,8 +114,8 @@ export class FloatingList {
                 ['flex-direction', 'column'],
             ]);
             css(content, [['flex', '1 1 auto']]);
-            this.closer = this.closeButton(closeLabel);
-            box.prepend(this.closer);
+            this.closer = new DrawerClose(closeLabel, () => this.onClose(true));
+            box.prepend(this.closer.element);
 
             if (settings.backdrop) {
                 const backdrop = document.createElement('div');
@@ -174,7 +175,7 @@ export class FloatingList {
         }
 
         this.place();
-        this.placeCloser();
+        this.closer?.place(this.box, this.content);
         this.listen();
         this.enter();
         const chosen =
@@ -217,87 +218,6 @@ export class FloatingList {
         this.close();
         this.box.remove();
         this.backdrop?.remove();
-    }
-
-    /** A cross drawn in SVG, so its middle is the button's whatever the font. */
-    private closeButton(label: string): HTMLButtonElement {
-        const button = document.createElement('button');
-        const icon = iconElement();
-        button.type = 'button';
-        button.className = 'sonicframe-chapter-close';
-        button.setAttribute('aria-label', label);
-        button.title = label;
-        icon.append(
-            iconPath({
-                d: 'M6 6 18 18M18 6 6 18',
-                fill: 'none',
-                stroke: 'currentColor',
-                'stroke-width': '2',
-                'stroke-linecap': 'round',
-            }),
-        );
-        button.append(icon);
-        css(button, [
-            // On the list's head, set by `placeCloser` when the list opens.
-            ['position', 'absolute'],
-            ['top', '0'],
-            ['right', '0'],
-            ['z-index', '1'],
-            ['display', 'inline-grid'],
-            ['place-items', 'center'],
-            ['width', '1.75rem'],
-            ['height', '1.75rem'],
-            ['margin', '0'],
-            ['padding', '0'],
-            ['border-width', '0'],
-            ['border-radius', '0.25rem'],
-            ['background-color', 'transparent'],
-            ['color', 'inherit'],
-            ['cursor', 'pointer'],
-        ]);
-        css(icon, [
-            ['width', '1.125rem'],
-            ['height', '1.125rem'],
-            ['display', 'block'],
-        ]);
-        button.addEventListener('click', () => this.onClose(true));
-
-        return button;
-    }
-
-    /**
-     * Puts the drawer's close button on the list's head, its middle on the middle of the head's
-     * name and its right edge on the list's; without a head, in the list's top corner. Measured
-     * when the list opens, since the list's look may change its padding, border and font.
-     */
-    private placeCloser(): void {
-        const button = this.closer;
-
-        if (button === null) {
-            return;
-        }
-
-        // The button is placed from inside the drawer's border.
-        const style = getComputedStyle(this.box);
-        const box = this.box.getBoundingClientRect();
-        const top = box.top + (parseFloat(style.borderTopWidth) || 0);
-        const right = box.right - (parseFloat(style.borderRightWidth) || 0);
-        const list = this.content.getBoundingClientRect();
-        const size = button.getBoundingClientRect();
-        const name =
-            this.content.querySelector('.sonicframe-chapters-head')
-                ?.firstElementChild ?? null;
-        let middle = list.top + size.height / 2;
-
-        if (name !== null) {
-            const line = name.getBoundingClientRect();
-            middle = line.top + line.height / 2;
-        }
-
-        css(button, [
-            ['top', `${middle - size.height / 2 - top}px`],
-            ['right', `${right - list.right}px`],
-        ]);
     }
 
     /** The player's colors and font, read now, so a palette changed later still shows. */

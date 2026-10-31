@@ -13,6 +13,7 @@ import {
     it,
     vi,
 } from 'vite-plus/test';
+import { recordingOf } from './fakes';
 import { mount, fakeMedia, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
@@ -307,5 +308,37 @@ describe('frame.exportClip while recording', () => {
         await vi.advanceTimersByTimeAsync(121_100);
 
         expect(outcome()).toBe('resolved');
+    });
+
+    it('keeps the wave in the middle of the room above the caption', async () => {
+        mounted = mount({ peaks: [0.5, 0.5] });
+        // Every element made from here on is the clip's: the one canvas is the video's.
+        const made = vi.spyOn(document, 'createElement');
+
+        const outcome = watch(
+            mounted.frame.exportClip({
+                audio: sound(2),
+                caption: 'Reply at 0:42',
+            }),
+        );
+        await vi.advanceTimersByTimeAsync(3_100);
+        const clip = made.mock.results
+            .map((result) => result.value as unknown)
+            .find((element) => element instanceof HTMLCanvasElement);
+        made.mockRestore();
+
+        expect(outcome()).toBe('resolved');
+        expect(clip).toBeInstanceOf(HTMLCanvasElement);
+        const bars = recordingOf(clip as HTMLCanvasElement)
+            .paths.flatMap((path) => path.calls)
+            .filter(([name]) => name === 'rect' || name === 'roundRect');
+        expect(bars.length).toBeGreaterThan(0);
+
+        // 720 pixels tall less the caption's 28: the wave's middle is at 346.
+        for (const [, , y, , height] of bars) {
+            expect(
+                Math.abs(Number(y) + Number(height) / 2 - 346),
+            ).toBeLessThanOrEqual(1);
+        }
     });
 });

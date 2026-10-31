@@ -3,8 +3,8 @@ import {
     Controller,
     type AriaState,
     type ControllerOptions,
-    type MediaEventType,
 } from '../src/core/frame/controller';
+import type { MediaEventType } from '../src/core/frame/media-events';
 import type { MediaLike } from '../src/types';
 
 /** A media element that only keeps state; tests fire its events by hand, as a browser would. */
@@ -499,5 +499,21 @@ describe('ranges', () => {
 
         expect(media.currentTime).toBe(5);
         expect(rangeEnds(events)).toEqual([]);
+    });
+
+    it('forgets a range the listener seeks out of, past its end or before its start', () => {
+        for (const seconds of [12, 2]) {
+            const { controller, media, fire, events } = setup();
+            loaded(media, 30);
+            controller.bind(media);
+
+            controller.playRange(5, 10);
+            controller.seekTo(seconds / 30);
+            fire('timeupdate');
+
+            expect(media.currentTime).toBe(seconds);
+            expect(media.paused).toBe(false);
+            expect(rangeEnds(events)).toEqual([]);
+        }
     });
 });

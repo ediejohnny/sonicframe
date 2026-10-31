@@ -30,3 +30,8 @@ export function rangeStep(time: number, range: RangeState): RangeStep {
 
     return 'inside';
 }
+
+/** Whether a seek to `time` (seconds) leaves the range: past its end, or before its start. */
+export function outsideRange(time: number, range: RangeState): boolean {
+    return time < range.start - SLACK || time > range.end;
+}

@@ -20,6 +20,7 @@ import {
 } from '../core/chapters/chapters';
 import { mergeWords } from '../core/languages/merge-words';
 import { within } from '../core/shared/checked';
+import { keyLetter } from '../core/shared/keys';
 import { clamp01, positive } from '../core/shared/math';
 import { fillTemplate } from '../core/shared/text';
 import { formatTime } from '../core/shared/timing';
@@ -42,11 +43,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
     const letter =
         keys === false
             ? null
-            : keys === true || keys.letter === undefined
-              ? 'c'
-              : keys.letter !== false && keys.letter.length === 1
-                ? keys.letter.toLowerCase()
-                : null;
+            : keyLetter(keys === true ? undefined : keys.letter, 'c');
     const backGrace = within(
         typeof keys === 'object' ? keys.backGrace : undefined,
         1,

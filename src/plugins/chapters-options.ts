@@ -8,7 +8,7 @@ import type {
 import { EN } from '../core/languages/en';
 import type { ChapterWords } from '../core/languages/words';
 import type { Plugin } from '../types';
-import type { ChapterListLook } from './chapter-list';
+import type { ChapterListLook } from './chapter-list-look';
 
 export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
     ...EN.chapters,

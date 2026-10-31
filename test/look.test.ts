@@ -2,14 +2,16 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
 import {
     DEFAULT_LOOK,
-    nextSpeed,
     resolveLook,
-    speedText,
-    timeMold,
-    timeText,
     type Part,
     type PlayerLook,
 } from '../src/core/player/look';
+import {
+    nextSpeed,
+    speedText,
+    timeMold,
+    timeText,
+} from '../src/core/player/part-text';
 
 describe('resolveLook', () => {
     it('keeps the base when nothing is given', () => {

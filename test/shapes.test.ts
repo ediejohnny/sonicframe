@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { barMetrics, barWindow, layoutBars } from '../src/core/wave/layout';
+import { MAX_CELLS } from '../src/core/wave/pieces';
 import {
     DEFAULT_WAVE,
     knobSpot,
-    MAX_CELLS,
     resolveWave,
     WAVE_NAMES,
     waveShape,
@@ -142,6 +142,19 @@ describe('waveShape', () => {
 
             expect(pieces > 0).toBe(style === 'track');
         }
+    });
+
+    it('stacks each bar as square blocks or as round dots, the same cells either way', () => {
+        const blocks = shape('blocks');
+        const dots = shape('dots');
+
+        expect(blocks.circles).toEqual([]);
+        expect(dots.rects).toEqual([]);
+        expect(blocks.rects.length).toBeGreaterThan(0);
+        expect(blocks.rects.every((cell) => cell.height === 3)).toBe(true);
+        expect(dots.circles.map((dot) => dot.y)).toEqual(
+            blocks.rects.map((cell) => cell.y + 1.5),
+        );
     });
 
     it('mirrors the line around the middle', () => {

@@ -10,11 +10,9 @@
 import { iconButtonBox } from '../core/controls/button';
 import {
     clampLevel,
-    levelAt,
     SPEAKER_PATH,
     unmutedLevel,
     VOLUME_MARKS,
-    volumeAfterKey,
     volumeIcon,
     volumeText,
 } from '../core/controls/volume';
@@ -23,8 +21,8 @@ import { Emitter } from '../core/shared/emitter';
 import { BUTTON, PROGRESS, WAVE } from '../core/shared/variables';
 import { css } from '../dom/css';
 import { iconElement, iconPath } from '../dom/icon';
-import { prefersReducedMotion } from '../dom/motion';
 import { hideFocusRing, showFocusRing } from './focus';
+import { VolumeBar } from './volume-bar';
 
 export type VolumeColors = {
     /** The speaker icon. */
@@ -85,20 +83,14 @@ export class VolumeControl {
     private readonly button: HTMLButtonElement;
     private readonly icon: SVGSVGElement;
     private readonly marks: SVGPathElement;
-    private readonly bar: HTMLDivElement;
-    private readonly rail: HTMLDivElement;
-    private readonly track: HTMLDivElement;
-    private readonly fill: HTMLDivElement;
-    private readonly handle: HTMLDivElement;
+    private readonly bar: VolumeBar;
     private readonly events = new Emitter<VolumeControlEvents>();
     private readonly labels: { mute: string; unmute: string; volume: string };
-    private readonly step: number;
     private slider: 'always' | 'hover';
     private size: number;
     private width: number;
     private colors: VolumeColors;
     private media: HTMLMediaElement | null = null;
-    private dragging: number | null = null;
     private open = false;
     private destroyed = false;
 
@@ -112,7 +104,6 @@ export class VolumeControl {
         }
 
         this.labels = options.labels ?? EN.volume;
-        this.step = options.step ?? 0.05;
         this.slider = options.slider ?? 'always';
         this.size = options.size ?? 32;
         this.width = options.width ?? 80;
@@ -137,30 +128,22 @@ export class VolumeControl {
         );
         this.button.append(this.icon);
 
-        this.bar = document.createElement('div');
-        this.bar.className = 'sonicframe-volume-bar';
-        this.bar.setAttribute('role', 'slider');
-        this.bar.setAttribute('aria-label', this.labels.volume);
-        this.bar.setAttribute('aria-valuemin', '0');
-        this.bar.setAttribute('aria-valuemax', '100');
-        this.rail = document.createElement('div');
-        this.track = document.createElement('div');
-        this.fill = document.createElement('div');
-        this.handle = document.createElement('div');
-        this.rail.append(this.track, this.fill, this.handle);
-        this.bar.append(this.rail);
-        this.element.append(this.button, this.bar);
+        this.bar = new VolumeBar(
+            {
+                enabled: () => this.media !== null,
+                level: () => this.shown(),
+                setLevel: (level) => this.setLevel(level),
+            },
+            this.labels.volume,
+            options.step ?? 0.05,
+        );
+        this.element.append(this.button, this.bar.element);
 
         this.button.addEventListener('click', this.onToggle);
         this.button.addEventListener('focus', this.onFocus);
         this.button.addEventListener('blur', this.onBlur);
-        this.bar.addEventListener('keydown', this.onKey);
-        this.bar.addEventListener('pointerdown', this.onPress);
-        this.bar.addEventListener('pointermove', this.onMove);
-        this.bar.addEventListener('pointerup', this.onRelease);
-        this.bar.addEventListener('pointercancel', this.onRelease);
-        this.bar.addEventListener('focus', this.onFocus);
-        this.bar.addEventListener('blur', this.onBlur);
+        this.bar.element.addEventListener('focus', this.onFocus);
+        this.bar.element.addEventListener('blur', this.onBlur);
         this.element.addEventListener('pointerenter', this.onOpen);
         this.element.addEventListener('pointerleave', this.onClose);
         this.element.addEventListener('focusin', this.onOpen);
@@ -226,7 +209,6 @@ export class VolumeControl {
     private draw(): void {
         const size = `${Math.max(1, this.size)}px`;
         const icon = `${Math.max(8, Math.round(this.size * 0.66))}px`;
-        const shown = this.slider === 'always' || this.open;
 
         css(this.element, [
             ['display', 'inline-flex'],
@@ -249,52 +231,14 @@ export class VolumeControl {
             ['height', icon],
             ['display', 'block'],
         ]);
-        css(this.bar, [
-            ['display', volumeIsSettable() ? 'block' : 'none'],
-            ['position', 'relative'],
-            ['box-sizing', 'border-box'],
-            ['flex-shrink', '0'],
-            ['width', shown ? `${Math.max(0, this.width)}px` : '0px'],
-            ['height', size],
-            ['padding', shown ? '0 0.375rem' : '0'],
-            ['overflow', 'hidden'],
-            ['cursor', 'pointer'],
-            ['touch-action', 'none'],
-            [
-                'transition',
-                prefersReducedMotion() ? 'none' : 'width 120ms ease-out',
-            ],
-        ]);
-        css(this.rail, [
-            ['position', 'relative'],
-            ['width', '100%'],
-            ['height', '100%'],
-        ]);
-
-        const line: [string, string][] = [
-            ['position', 'absolute'],
-            ['left', '0'],
-            ['top', '50%'],
-            ['height', '0.25rem'],
-            ['margin-top', '-0.125rem'],
-            ['border-radius', '0.125rem'],
-        ];
-
-        css(this.track, [
-            ...line,
-            ['right', '0'],
-            ['background-color', this.colors.track],
-        ]);
-        css(this.fill, [...line, ['background-color', this.colors.fill]]);
-        css(this.handle, [
-            ['position', 'absolute'],
-            ['top', '50%'],
-            ['width', '0.75rem'],
-            ['height', '0.75rem'],
-            ['margin', '-0.375rem 0 0 -0.375rem'],
-            ['border-radius', '50%'],
-            ['background-color', this.colors.fill],
-        ]);
+        this.bar.draw({
+            open: this.slider === 'always' || this.open,
+            visible: volumeIsSettable(),
+            height: size,
+            width: this.width,
+            track: this.colors.track,
+            fill: this.colors.fill,
+        });
     }
 
     /** The level shown: 0 while muted. */
@@ -334,15 +278,11 @@ export class VolumeControl {
         this.button.title = label;
         this.button.disabled = media === null;
         this.button.style.setProperty('opacity', media === null ? '0.5' : '1');
-        this.bar.setAttribute('aria-valuenow', percent);
-        this.bar.setAttribute(
-            'aria-valuetext',
+        this.bar.show(
+            percent,
             volumeText(volume, media === null || muted),
+            media !== null,
         );
-        this.bar.setAttribute('aria-disabled', String(media === null));
-        this.bar.tabIndex = media === null ? -1 : 0;
-        this.fill.style.setProperty('width', `${percent}%`);
-        this.handle.style.setProperty('left', `${percent}%`);
     };
 
     private readonly onToggle = (): void => {
@@ -361,58 +301,6 @@ export class VolumeControl {
 
         this.update();
     };
-
-    private readonly onKey = (event: KeyboardEvent): void => {
-        if (
-            this.media === null ||
-            event.ctrlKey ||
-            event.altKey ||
-            event.metaKey
-        ) {
-            return;
-        }
-
-        const next = volumeAfterKey(event.key, this.shown(), this.step);
-
-        if (next !== null) {
-            event.preventDefault();
-            this.setLevel(next);
-        }
-    };
-
-    private readonly onPress = (event: PointerEvent): void => {
-        if (this.media === null || event.button !== 0) {
-            return;
-        }
-
-        event.preventDefault();
-        this.dragging = event.pointerId;
-
-        try {
-            this.bar.setPointerCapture(event.pointerId);
-        } catch {
-            // A synthetic or already-released pointer cannot be captured; the press still counts.
-        }
-
-        this.levelFrom(event);
-    };
-
-    private readonly onMove = (event: PointerEvent): void => {
-        if (this.dragging === event.pointerId) {
-            this.levelFrom(event);
-        }
-    };
-
-    private readonly onRelease = (event: PointerEvent): void => {
-        if (this.dragging === event.pointerId) {
-            this.dragging = null;
-        }
-    };
-
-    private levelFrom(event: PointerEvent): void {
-        const box = this.rail.getBoundingClientRect();
-        this.setLevel(levelAt(event.clientX - box.left, box.width));
-    }
 
     private readonly onOpen = (): void => {
         if (this.slider === 'hover' && !this.open) {
@@ -433,7 +321,7 @@ export class VolumeControl {
             this.open &&
             !focusStays &&
             !pointerStays &&
-            this.dragging === null
+            !this.bar.held
         ) {
             this.open = false;
             this.draw();
