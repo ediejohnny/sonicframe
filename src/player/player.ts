@@ -17,20 +17,16 @@
 
 import { PlayButton } from '../controls/play-button';
 import { VolumeControl } from '../controls/volume';
-import { unknownName } from '../core/checked';
-import { Emitter } from '../core/emitter';
-import type { FontChoice } from '../core/fonts';
-import { playerWords, type PlayerWords } from '../core/labels';
-import { DEFAULT_LOOK, type Part, type PlayerLook } from '../core/look';
+import type { FontChoice } from '../core/player/fonts';
+import { playerWords, type PlayerWords } from '../core/player/labels';
+import { DEFAULT_LOOK, type Part, type PlayerLook } from '../core/player/look';
 import {
     choosePalette,
     DEFAULT_PALETTE,
     unknownPalette,
     type Palette,
     type PaletteChoice,
-} from '../core/palettes';
-import { DEFAULT_WAVE } from '../core/shapes';
-import { cleanText } from '../core/text';
+} from '../core/player/palettes';
 import {
     defineTheme,
     findTheme,
@@ -38,9 +34,13 @@ import {
     type OwnChoices,
     type Theme,
     type ThemeInput,
-} from '../core/theme';
-import { MUTED, PROGRESS } from '../core/variables';
-import { resolveZoom } from '../core/zoom';
+} from '../core/player/theme';
+import { unknownName } from '../core/shared/checked';
+import { Emitter } from '../core/shared/emitter';
+import { cleanText } from '../core/shared/text';
+import { MUTED, PROGRESS } from '../core/shared/variables';
+import { resolveZoom } from '../core/view/zoom';
+import { DEFAULT_WAVE } from '../core/wave/shapes';
 import { css } from '../dom/css';
 import { useFont } from '../dom/fonts';
 import { SonicFrame } from '../dom/frame';

@@ -5,7 +5,7 @@
 
 import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { powerOfTwo } from '../src/core/math';
+import { powerOfTwo } from '../src/core/shared/math';
 
 describe('powerOfTwo', () => {
     it('gives the smallest power of two that reaches the value, from min to max', () => {

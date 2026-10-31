@@ -52,10 +52,12 @@ describe('package boundaries', () => {
     });
 
     it('lets the core import only the core and shared types', () => {
+        // The core is in subject folders: a file imports its own folder, another subject's folder,
+        // or the package's types (src/types.ts) two folders up.
         for (const file of sources('src/core')) {
             for (const target of imports(file)) {
                 expect(target, relative(root, file)).toMatch(
-                    /^(\.\/[\w-]+|\.\.\/types)$/,
+                    /^(\.\/[\w-]+|\.\.\/[\w-]+\/[\w-]+|\.\.\/\.\.\/types)$/,
                 );
             }
         }
@@ -86,7 +88,9 @@ describe('package boundaries', () => {
         }
 
         for (const target of imports(file)) {
-            expect(target, 'src/analysis.ts').toMatch(/^\.\/core\/[\w-]+$/);
+            expect(target, 'src/analysis.ts').toMatch(
+                /^\.\/core\/[\w-]+\/[\w-]+$/,
+            );
         }
     });
 
@@ -95,7 +99,7 @@ describe('package boundaries', () => {
         // it is described by (looks, palettes, fonts), so the main entry never has to carry them.
         for (const target of imports(join(root, 'src/player.ts'))) {
             expect(target, 'src/player.ts').toMatch(
-                /^\.\/(player|core)\/[\w-]+$/,
+                /^\.\/(player\/[\w-]+|core\/[\w-]+\/[\w-]+)$/,
             );
         }
     });

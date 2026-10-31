@@ -6,16 +6,18 @@
  * follow the page's theme variables.
  */
 
-import { within } from '../core/checked';
-import { overlayOf } from '../core/scene';
-import { barMetrics } from '../core/layout';
-import { clamp01 } from '../core/math';
-import { resample } from '../core/peaks';
-import { DEFAULT_WAVE, resolveWave, waveShape } from '../core/shapes';
-import { ratioText } from '../core/timing';
-import { PROGRESS, REGION, WAVE } from '../core/variables';
-import { zoomView, type View } from '../core/view';
-import { wheelFactor } from '../core/zoom';
+import { EN } from '../core/languages/en';
+import { resample } from '../core/peaks/peaks';
+import { within } from '../core/shared/checked';
+import { clamp01 } from '../core/shared/math';
+import { fillTemplate } from '../core/shared/text';
+import { ratioText } from '../core/shared/timing';
+import { PROGRESS, REGION, WAVE } from '../core/shared/variables';
+import { zoomView, type View } from '../core/view/view';
+import { wheelFactor } from '../core/view/zoom';
+import { barMetrics } from '../core/wave/layout';
+import { overlayOf } from '../core/wave/scene';
+import { DEFAULT_WAVE, resolveWave, waveShape } from '../core/wave/shapes';
 import { css } from '../dom/css';
 import { drawingOf, paintWave, type Drawing } from '../dom/paint';
 import type {
@@ -77,7 +79,7 @@ export type MinimapOptions = {
 
 export const MINIMAP_WORDS: Readonly<MinimapWords> = Object.freeze({
     value: (from: string, to: string, total: string) =>
-        `${from} to ${to} of ${total}`,
+        fillTemplate(EN.minimap.value, { from, to, total }),
 });
 
 const MINIMAP_BAR: Readonly<BarStyle> = Object.freeze({
@@ -452,7 +454,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
                 element.setAttribute('tabindex', '0');
                 element.setAttribute(
                     'aria-label',
-                    options.a11y?.label ?? 'Visible part',
+                    options.a11y?.label ?? EN.minimap.label,
                 );
                 element.setAttribute('aria-valuemin', '0');
                 element.setAttribute('aria-valuemax', '100');

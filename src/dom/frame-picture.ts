@@ -6,13 +6,13 @@
  * drawing without its peaks yet shows a thin line; the track needs none.
  */
 
-import { barValues, buildDetail, type Detail } from '../core/detail';
-import { barMetrics, barWindow } from '../core/layout';
-import { resample } from '../core/peaks';
-import type { Overlay } from '../core/scene';
-import { knobSpot, waveShape } from '../core/shapes';
-import { easeOut } from '../core/timing';
-import type { View } from '../core/view';
+import { barValues, buildDetail, type Detail } from '../core/peaks/detail';
+import { resample } from '../core/peaks/peaks';
+import { easeOut } from '../core/shared/timing';
+import type { View } from '../core/view/view';
+import { barMetrics, barWindow } from '../core/wave/layout';
+import type { Overlay } from '../core/wave/scene';
+import { knobSpot, waveShape } from '../core/wave/shapes';
 import type { BarStyle, PaintContext, WaveStyle } from '../types';
 import type { Size } from './observe';
 import {

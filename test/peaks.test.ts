@@ -6,7 +6,7 @@ import {
     readPeaks,
     resample,
     type PeaksFetcher,
-} from '../src/core/peaks';
+} from '../src/core/peaks/peaks';
 
 function respond(body: unknown, status = 200, length?: number): PeaksFetcher {
     return () =>

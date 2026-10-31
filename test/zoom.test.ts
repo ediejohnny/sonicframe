@@ -11,7 +11,7 @@ import {
     wheelFactor,
     zoomKey,
     ZOOM_WORDS,
-} from '../src/core/zoom';
+} from '../src/core/view/zoom';
 
 describe('resolveZoom', () => {
     it('is off unless asked', () => {

@@ -5,9 +5,9 @@
  * dimension is capped, so neither memory nor time can run away.
  */
 
-import { within } from './checked';
+import { within } from '../shared/checked';
+import { powerOfTwo } from '../shared/math';
 import { fft } from './fft';
-import { powerOfTwo } from './math';
 
 const MIN_FFT = 32;
 const MAX_FFT = 8192;

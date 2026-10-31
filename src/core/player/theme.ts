@@ -8,8 +8,8 @@
  * here, like the look's.
  */
 
-import type { BarStyle, WaveName, WaveStyle } from '../types';
-import { within } from './checked';
+import type { BarStyle, WaveName, WaveStyle } from '../../types';
+import { within } from '../shared/checked';
 import { DEFAULT_LOOK, resolveLook, type PlayerLook } from './look';
 import type { PaletteChoice, PaletteName } from './palettes';
 import { THEMES, isThemeName } from './themes';

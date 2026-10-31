@@ -4,6 +4,8 @@
  * element, kept to whole hundredths. Icons sit on a 24 × 24 grid, like the play button's.
  */
 
+import { EN } from '../languages/en';
+
 export type VolumeIcon = 'muted' | 'low' | 'high';
 
 /** The speaker: a box and a cone, filled. */
@@ -66,7 +68,7 @@ export function volumeAfterKey(
 
 /** The level in words: `'40%'`, or `'muted'`. */
 export function volumeText(volume: number, muted: boolean): string {
-    return muted ? 'muted' : `${Math.round(clampLevel(volume) * 100)}%`;
+    return muted ? EN.volume.muted : `${Math.round(clampLevel(volume) * 100)}%`;
 }
 
 /** The level to bring back when unmuting: the one the media had, or half if it was silent. */

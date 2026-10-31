@@ -7,18 +7,19 @@
  * in, everything goes through the view: the bands, the grab zones and the labels.
  */
 
-import { clamp01, positive } from '../core/math';
+import { EN } from '../core/languages/en';
 import {
     hitRegion,
     normalizeRegion,
     type LaidRegion,
     type RegionPart,
-} from '../core/regions';
-import { cleanText } from '../core/text';
-import { formatTime } from '../core/timing';
-import { placeX } from '../core/scene';
-import { PROGRESS, REGION } from '../core/variables';
-import { FULL_VIEW, viewX } from '../core/view';
+} from '../core/marks/regions';
+import { clamp01, positive } from '../core/shared/math';
+import { cleanText, fillTemplate } from '../core/shared/text';
+import { formatTime } from '../core/shared/timing';
+import { PROGRESS, REGION } from '../core/shared/variables';
+import { FULL_VIEW, viewX } from '../core/view/view';
+import { placeX } from '../core/wave/scene';
 import { css } from '../dom/css';
 import type { Plugin, PluginHost, WavePoint } from '../types';
 
@@ -344,7 +345,10 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     }
 
     function announce(region: Region): void {
-        const place = `${formatTime(region.start)} to ${formatTime(region.end)}`;
+        const place = fillTemplate(EN.regions.place, {
+            from: formatTime(region.start),
+            to: formatTime(region.end),
+        });
         host?.announce(
             region.label === undefined ? place : `${region.label}, ${place}`,
         );
@@ -653,7 +657,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
             if ((key === 'l' || key === 'L') && selectedId !== null) {
                 loop = !loop;
-                host?.announce(loop ? 'loop on' : 'loop off');
+                host?.announce(loop ? EN.regions.loopOn : EN.regions.loopOff);
 
                 return true;
             }

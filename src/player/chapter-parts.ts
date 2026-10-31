@@ -5,10 +5,10 @@
  * a finger's swipe that opens it.
  */
 
-import type { Chapter, ChapterInput } from '../core/chapters';
-import { oneOf, unknownName, within } from '../core/checked';
-import type { Part } from '../core/look';
-import { unknownPalette, type Palette } from '../core/palettes';
+import type { Chapter, ChapterInput } from '../core/chapters/chapters';
+import type { Part } from '../core/player/look';
+import { unknownPalette, type Palette } from '../core/player/palettes';
+import { oneOf, unknownName, within } from '../core/shared/checked';
 import { readableColors } from '../dom/tooltip';
 import { remPixels } from '../dom/units';
 import { chapters, type ChaptersPlugin } from '../plugins/chapters';

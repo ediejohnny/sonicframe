@@ -6,7 +6,7 @@ import {
     peakLevel,
     silencesFromPeaks,
     type ChannelSource,
-} from '../src/core/analysis';
+} from '../src/core/analysis/analysis';
 
 function tone(
     samples: Float32Array,

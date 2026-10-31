@@ -3,8 +3,8 @@
  * pixels, so a frame can skip drawing when nothing visible moved.
  */
 
-import { clamp01 } from './math';
-import { FULL_VIEW, viewX, type View } from './view';
+import { clamp01 } from '../shared/math';
+import { FULL_VIEW, viewX, type View } from '../view/view';
 
 export type Overlay = {
     /** Device-pixel x where the played part ends, held inside the frame. */

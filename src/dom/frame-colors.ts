@@ -10,7 +10,7 @@ import {
     mixColors,
     resolveColor,
     rgbaString,
-} from '../core/color';
+} from '../core/shared/color';
 import type { Colors } from '../types';
 import { readColor, type Palette } from './paint';
 

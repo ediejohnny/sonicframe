@@ -5,13 +5,13 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { mount, nextFrame, type Mounted } from './helpers';
 import {
     recordingOf,
     triggerResize,
     triggerVisible,
     type Recorded,
 } from './fakes';
+import { mount, nextFrame, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
 

@@ -6,8 +6,8 @@ import {
     partAt,
     silenceAt,
     soundWords,
-} from '../src/core/describe';
-import { localeFor, resolveLanguage } from '../src/core/language';
+} from '../src/core/description/describe';
+import { localeFor, resolveLanguage } from '../src/core/languages/language';
 
 /** Peaks every `step` seconds over `duration`, from a function of the time. */
 function peaksOf(

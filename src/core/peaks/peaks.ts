@@ -4,8 +4,8 @@
  * preview). Nothing here touches the page.
  */
 
-import { fetchOk, oncePerPage, readBody } from './fetch';
-import { clamp01 } from './math';
+import { fetchOk, oncePerPage, readBody } from '../shared/fetch';
+import { clamp01 } from '../shared/math';
 
 /** The most peaks accepted from a file: plenty for any screen, small enough to read quickly. */
 export const MAX_PEAKS = 20_000;

@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vite-plus/test';
-import { marqueeTiming } from '../src/core/marquee';
+import { marqueeTiming } from '../src/core/player/marquee';
 
 describe('marqueeTiming', () => {
     it('walks the distance at the speed given, between the two waits', () => {

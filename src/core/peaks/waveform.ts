@@ -5,14 +5,14 @@
  * decoded samples. Nothing here touches the page.
  */
 
-import { within } from './checked';
+import { within } from '../shared/checked';
 import {
     fetchOk,
     oncePerPage,
     readCapped,
     type FetchedResponse,
-} from './fetch';
-import { clamp01 } from './math';
+} from '../shared/fetch';
+import { clamp01 } from '../shared/math';
 import { MAX_PEAKS, normalize as normalizePeaks } from './peaks';
 
 /** `'dat'` and `'json'` are the audiowaveform formats; `'list'` is a list or `{ peaks }`. */

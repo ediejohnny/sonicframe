@@ -4,7 +4,7 @@
  * into one bar. Pure, so it is tested without Web Audio.
  */
 
-import { within } from './checked';
+import { within } from '../shared/checked';
 
 /** The most bands a spectrum is split into; more would cost every frame and add nothing visible. */
 export const MAX_BANDS = 512;

@@ -5,7 +5,7 @@ import {
     barWindow,
     layoutBars,
     type Bar,
-} from '../src/core/layout';
+} from '../src/core/wave/layout';
 import type { BarStyle } from '../src/types';
 
 const STYLE: BarStyle = {

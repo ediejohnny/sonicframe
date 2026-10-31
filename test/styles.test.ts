@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { applyStyles, type StyleLike } from '../src/core/styles';
+import { applyStyles, type StyleLike } from '../src/core/shared/styles';
 
 /**
  * An inline style that, like browsers, stores some prefixed properties as aliases of the standard

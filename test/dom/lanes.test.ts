@@ -5,8 +5,8 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import type { FrameGeometry, Plugin } from '../../src/index';
-import { clickAt, fakeMedia, mount, type Mounted } from './helpers';
 import { triggerResize } from './fakes';
+import { clickAt, fakeMedia, mount, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
 

@@ -1,0 +1,80 @@
+/** Portuguese, for `pt` and every tag that starts with it (`pt-BR`, `pt-PT`). */
+
+import type { Words } from './words';
+
+export const PT: Words = {
+    frame: {
+        position: 'Posição no áudio',
+    },
+    playButton: {
+        play: 'Reproduzir',
+        pause: 'Pausar',
+    },
+    volume: {
+        mute: 'Silenciar',
+        unmute: 'Ativar o som',
+        volume: 'Volume',
+        muted: 'silenciado',
+    },
+    zoom: {
+        view: 'Zoom {level}×, de {from} a {to}',
+    },
+    minimap: {
+        label: 'Parte visível',
+        value: '{from} a {to} de {total}',
+    },
+    chapters: {
+        chapter: 'Capítulo {index} de {count}',
+        list: 'Capítulos',
+        none: 'Não há mais capítulos',
+        link: 'Link',
+    },
+    regions: {
+        place: 'de {from} a {to}',
+        loopOn: 'repetição ligada',
+        loopOff: 'repetição desligada',
+    },
+    description: {
+        length: '{duration}.',
+        silence: '{duration} de silêncio.',
+        continuous: 'Som contínuo.',
+        silenceFor: 'Silêncio por {duration}',
+        soundUntil: 'Som até {at}',
+        pause: 'uma pausa de {duration}',
+        thenSoundUntil: 'depois som até {at}',
+        thenSoundToEnd: 'depois som até o fim',
+        thenSilenceToEnd: 'depois silêncio até o fim',
+        pauses: 'Som com {count} pausas; a mais longa, de {duration}, por volta de {at}.',
+        startsAfter: 'Começa depois de {duration} de silêncio.',
+        endsWith: 'Termina com {duration} de silêncio.',
+        even: 'Volume constante.',
+        rises: 'Fica mais alto no fim.',
+        falls: 'Fica mais baixo no fim.',
+        loudest: 'Mais alto por volta de {at}.',
+        loudestStart: 'Mais alto no início.',
+        part: 'Parte {part} de {count}, {at}.',
+        partStart: 'Parte {part} de {count}, no início.',
+        noPart: 'Não há mais partes.',
+        pauseNote: 'pausa',
+        silenceNote: 'silêncio',
+        join: ',',
+        stop: '.',
+    },
+    player: {
+        player: 'Player de áudio',
+        position: 'Posição da reprodução',
+        value: '{time} de {duration}',
+        back: 'Voltar {seconds} segundos',
+        forward: 'Avançar {seconds} segundos',
+        speed: 'Velocidade {speed}',
+        listen: 'Ouvir a descrição',
+        stopListening: 'Parar a descrição',
+        speechFailed: 'Não foi possível ler a descrição em voz alta aqui.',
+        zoomIn: 'Aproximar',
+        zoomOut: 'Afastar',
+        zoomReset: 'Mostrar o som inteiro',
+        previousChapter: 'Capítulo anterior',
+        nextChapter: 'Próximo capítulo',
+        closeChapters: 'Fechar os capítulos',
+    },
+};

@@ -10,14 +10,18 @@
  * shown; with `detail`, a sharp picture of that part is computed once the view rests.
  */
 
-import { within } from '../core/checked';
-import { buildColormap, colormap, type ColormapName } from '../core/colormap';
+import {
+    buildColormap,
+    colormap,
+    type ColormapName,
+} from '../core/analysis/colormap';
 import {
     createSpectrogram,
     type SpectrogramOptions,
-} from '../core/spectrogram';
-import { decodeAudio } from '../dom/decode';
+} from '../core/analysis/spectrogram';
+import { within } from '../core/shared/checked';
 import { runChunked } from '../dom/chunked';
+import { decodeAudio } from '../dom/decode';
 import { readColor } from '../dom/paint';
 import type { PaintContext, Plugin, PluginHost } from '../types';
 

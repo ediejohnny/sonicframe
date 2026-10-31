@@ -21,7 +21,7 @@ export type {
     ButtonFill,
     ButtonLook,
     ButtonShape,
-} from './core/button';
+} from './core/controls/button';
 export {
     DEFAULT_VOLUME_COLORS,
     VolumeControl,
@@ -86,7 +86,7 @@ export {
     silencesFromPeaks,
     type ChannelSource,
     type Silence,
-} from './core/analysis';
+} from './core/analysis/analysis';
 export {
     DESCRIPTION_WORDS,
     describeSound,
@@ -102,7 +102,7 @@ export {
     type SoundOutline,
     type SoundPart,
     type SoundWords,
-} from './core/describe';
+} from './core/description/describe';
 export {
     spectrogram,
     type ColorStops,
@@ -113,18 +113,22 @@ export {
     createSpectrogram,
     type SpectrogramJob,
     type SpectrogramOptions,
-} from './core/spectrogram';
-export { buildColormap, colormap, type ColormapName } from './core/colormap';
+} from './core/analysis/spectrogram';
+export {
+    buildColormap,
+    colormap,
+    type ColormapName,
+} from './core/analysis/colormap';
 export { liveFrequency, type LiveFrequencyOptions } from './plugins/live';
-export { frequencyBands, MAX_BANDS } from './core/bands';
-export { canTapMedia } from './core/origin';
+export { frequencyBands, MAX_BANDS } from './core/analysis/bands';
+export { canTapMedia } from './core/analysis/origin';
 export { exportClip, type ClipOptions } from './dom/clip';
 export {
     clipPlan,
     DEFAULT_CLIP_TYPES,
     DEFAULT_MAX_SOURCE_SECONDS,
     pickMimeType,
-} from './core/clip';
+} from './core/wave/clip';
 export {
     loadPeaks,
     MAX_PEAKS,
@@ -133,7 +137,7 @@ export {
     readPeaks,
     resample,
     type PeaksFetcher,
-} from './core/peaks';
+} from './core/peaks/peaks';
 export {
     loadWaveform,
     readWaveform,
@@ -146,7 +150,7 @@ export {
     type WaveformJson,
     type WaveformResponse,
     type WriteWaveformOptions,
-} from './core/waveform';
+} from './core/peaks/waveform';
 export {
     chapterAt,
     chapterEnds,
@@ -158,10 +162,10 @@ export {
     type ChapterInput,
     type ChaptersFetcher,
     type LoadChaptersOptions,
-} from './core/chapters';
-export { safeUrl } from './core/url';
-export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
-export type { View, ViewState } from './core/view';
+} from './core/chapters/chapters';
+export { safeUrl } from './core/shared/url';
+export { DEFAULT_WAVE, WAVE_NAMES } from './core/wave/shapes';
+export type { View, ViewState } from './core/view/view';
 export {
     MAX_ZOOM,
     ZOOM_WORDS,
@@ -169,9 +173,9 @@ export {
     type ZoomKey,
     type ZoomOptions,
     type ZoomWords,
-} from './core/zoom';
-export { formatPosition, formatTime } from './core/timing';
-export type { ValueText } from './core/controller';
+} from './core/view/zoom';
+export { formatPosition, formatTime } from './core/shared/timing';
+export type { ValueText } from './core/frame/controller';
 export type {
     BarStyle,
     Colors,

@@ -6,7 +6,7 @@ import {
     regions,
     sameOverlay,
     type Region,
-} from '../src/core/scene';
+} from '../src/core/wave/scene';
 
 /** Strips must tile the frame: start at 0, end at the width, no gap and no overlap. */
 function expectTiled(strips: Region[], width: number): void {

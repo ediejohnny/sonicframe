@@ -6,7 +6,7 @@
  * element — and media that cannot be tapped (cross-origin without CORS) is refused, not muted.
  */
 
-import { canTapMedia } from '../core/origin';
+import { canTapMedia } from '../core/analysis/origin';
 
 export type MediaTap = {
     analyser: AnalyserNode;

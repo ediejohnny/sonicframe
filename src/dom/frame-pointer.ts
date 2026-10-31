@@ -6,10 +6,10 @@
  * (`edgeScroll`). The mouse hovering shows the cursor a plugin asks for.
  */
 
-import type { Controller } from '../core/controller';
-import { isDrag } from '../core/gesture';
-import { applyStyles } from '../core/styles';
-import { fitView, viewLevel, viewRatio } from '../core/view';
+import type { Controller } from '../core/frame/controller';
+import { isDrag } from '../core/frame/gesture';
+import { applyStyles } from '../core/shared/styles';
+import { fitView, viewLevel, viewRatio } from '../core/view/view';
 import type { Claim, Plugin, WavePoint } from '../types';
 import type { FrameView } from './frame-view';
 import type { LaneManager } from './lanes';

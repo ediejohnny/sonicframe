@@ -6,8 +6,8 @@
  * reusing its elements.
  */
 
-import { niceTicks } from '../core/ticks';
-import { formatTime } from '../core/timing';
+import { niceTicks } from '../core/marks/ticks';
+import { formatTime } from '../core/shared/timing';
 import { css } from '../dom/css';
 import type { Plugin, PluginHost } from '../types';
 

@@ -9,7 +9,7 @@ import {
     readChapters,
     type Chapter,
     type ChaptersFetcher,
-} from '../src/core/chapters';
+} from '../src/core/chapters/chapters';
 
 /** A response that streams `text` as UTF-8 in two pieces. */
 function respond(

@@ -4,16 +4,16 @@
  * surface are built only from the palette's colors read back as numbers, never from a raw page value.
  */
 
-import { within } from '../core/checked';
-import { rgbaString, type Rgba } from '../core/color';
-import type { FontName } from '../core/fonts';
-import type { PlayerLook } from '../core/look';
+import type { FontName } from '../core/player/fonts';
+import type { PlayerLook } from '../core/player/look';
 import {
     choosePalette,
     DEFAULT_PALETTE,
     paletteVariables,
     type Palette,
-} from '../core/palettes';
+} from '../core/player/palettes';
+import { within } from '../core/shared/checked';
+import { rgbaString, type Rgba } from '../core/shared/color';
 import { css } from '../dom/css';
 import { useFont } from '../dom/fonts';
 import { readColor } from '../dom/paint';

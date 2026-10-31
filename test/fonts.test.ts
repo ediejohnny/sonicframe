@@ -4,7 +4,7 @@ import {
     FONT_STACKS,
     resolveFont,
     safeFontUrl,
-} from '../src/core/fonts';
+} from '../src/core/player/fonts';
 
 describe('font stacks', () => {
     it('name a system stack for every font name, ending in a generic family', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { buildColormap, colormap } from '../src/core/colormap';
-import { createSpectrogram } from '../src/core/spectrogram';
+import { buildColormap, colormap } from '../src/core/analysis/colormap';
+import { createSpectrogram } from '../src/core/analysis/spectrogram';
 
 describe('colormap', () => {
     it('builds a 256-entry RGB table', () => {

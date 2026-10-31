@@ -6,15 +6,15 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { sharedTooltip } from '../../src/dom/tooltip';
 import {
     createPlayer,
     defineSonicPlayer,
     type Player,
     type PlayerOptions,
 } from '../../src/player';
-import { sharedTooltip } from '../../src/dom/tooltip';
-import { boxOf, fakeMedia } from './helpers';
 import { triggerResize, triggerVisible } from './fakes';
+import { boxOf, fakeMedia } from './helpers';
 
 let player: Player | null = null;
 let host: HTMLElement | null = null;
@@ -223,6 +223,27 @@ describe('chapters on the player', () => {
 
         toggle.click();
         expect(box.hidden).toBe(true);
+    });
+
+    it("names the list and the button that opens it in the player's language", () => {
+        const name = (selector: string): string | null | undefined =>
+            host?.querySelector(selector)?.getAttribute('aria-label');
+
+        make({ chapters: { items: ITEMS, list: true }, look: CHAPTER_LINE });
+
+        expect(name('.sonicframe-chapters-toggle')).toBe('Chapters');
+        expect(name('.sonicframe-chapter-list nav')).toBe('Chapters');
+
+        player?.destroy();
+        host?.remove();
+        make({
+            chapters: { items: ITEMS, list: true },
+            look: CHAPTER_LINE,
+            a11y: { lang: 'pt' },
+        });
+
+        expect(name('.sonicframe-chapters-toggle')).toBe('Capítulos');
+        expect(name('.sonicframe-chapter-list nav')).toBe('Capítulos');
     });
 
     it('shows the list open when asked, or when no button can open it', () => {

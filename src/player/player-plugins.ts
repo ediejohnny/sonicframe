@@ -4,9 +4,9 @@
  * asked. The minimap's room is added to the wave's box, so the strip never takes from the wave.
  */
 
-import type { PlayerWords } from '../core/labels';
-import type { PlayerLook } from '../core/look';
-import { PROGRESS, WAVE } from '../core/variables';
+import type { PlayerWords } from '../core/player/labels';
+import type { PlayerLook } from '../core/player/look';
+import { PROGRESS, WAVE } from '../core/shared/variables';
 import { remPixels } from '../dom/units';
 import type { ChaptersPlugin } from '../plugins/chapters';
 import {

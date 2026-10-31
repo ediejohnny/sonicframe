@@ -6,8 +6,8 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { caption, markers, regions, skipSilences } from '../../src/index';
-import { fakeMedia, mount, nextFrame, type Mounted } from './helpers';
 import { recordingOf, triggerResize, triggerVisible } from './fakes';
+import { fakeMedia, mount, nextFrame, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
 

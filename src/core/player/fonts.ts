@@ -6,9 +6,9 @@
  * `url("…")`.
  */
 
-import { isOneOf } from './checked';
-import { cleanText } from './text';
-import { safeUrl } from './url';
+import { isOneOf } from '../shared/checked';
+import { cleanText } from '../shared/text';
+import { safeUrl } from '../shared/url';
 
 export type FontName =
     | 'system'

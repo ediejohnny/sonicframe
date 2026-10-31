@@ -6,10 +6,10 @@
  * the number of pieces is capped.
  */
 
-import type { BarStyle, WaveName, WaveStyle } from '../types';
-import { isOneOf, within } from './checked';
+import type { BarStyle, WaveName, WaveStyle } from '../../types';
+import { isOneOf, within } from '../shared/checked';
+import { clamp01 } from '../shared/math';
 import { layoutBars, type Bar, type BarWindow } from './layout';
-import { clamp01 } from './math';
 
 export const WAVE_NAMES: readonly WaveName[] = Object.freeze([
     'bars',

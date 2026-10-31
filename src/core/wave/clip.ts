@@ -4,13 +4,13 @@
  * MediaRecorder) lives in the DOM layer; this is tested in Node.
  */
 
-import type { BarStyle, WaveStyle } from '../types';
-import { barValues, buildDetail } from './detail';
+import type { BarStyle, WaveStyle } from '../../types';
+import { barValues, buildDetail } from '../peaks/detail';
+import { resample } from '../peaks/peaks';
+import { fitView } from '../view/view';
+import { MAX_ZOOM } from '../view/zoom';
 import { barMetrics, barWindow, type BarWindow } from './layout';
-import { resample } from './peaks';
 import { waveShape, type WaveShape } from './shapes';
-import { fitView } from './view';
-import { MAX_ZOOM } from './zoom';
 
 /** Container/codec candidates, in order of preference (MP4/H.264 first, then WebM). */
 export const DEFAULT_CLIP_TYPES: readonly string[] = [

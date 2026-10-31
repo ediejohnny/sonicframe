@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { safeFontUrl } from '../src/core/fonts';
-import { safeUrl } from '../src/core/url';
+import { safeFontUrl } from '../src/core/player/fonts';
+import { safeUrl } from '../src/core/shared/url';
 
 describe('safeUrl', () => {
     it('keeps web and relative addresses', () => {

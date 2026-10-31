@@ -5,8 +5,8 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { timeline } from '../../src/index';
-import { fakeMedia, mount, type Mounted } from './helpers';
 import { triggerResize, triggerVisible } from './fakes';
+import { fakeMedia, mount, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
 

@@ -4,16 +4,16 @@
  * (`dom/frame.ts`) only translates events in and carries effects out, so all of this runs in tests.
  */
 
-import type { MediaLike, SeekSource, SonicFrameEvents } from '../types';
-import { keyAction, type KeyModifiers } from './keys';
-import { clamp01, positive } from './math';
-import { rangeStep, type RangeState } from './range';
+import type { MediaLike, SeekSource, SonicFrameEvents } from '../../types';
+import { clamp01, positive } from '../shared/math';
 import {
     defaultValueText,
     effectiveDuration,
     stepRatio,
     timeAt,
-} from './timing';
+} from '../shared/timing';
+import { keyAction, type KeyModifiers } from './keys';
+import { rangeStep, type RangeState } from './range';
 
 /** `HAVE_METADATA`: from here on the media knows its duration and can seek. */
 const HAVE_METADATA = 1;

@@ -6,13 +6,22 @@
  * and peaks are relative, so it describes the shape, never how loud the recording is.
  */
 
-import { silencesFromPeaks, type Silence } from './analysis';
-import { localeFor, resolveLanguage, type Language } from './language';
-import { positive } from './math';
-import { normalize, resample } from './peaks';
-import { LANDING, stepIndex } from './steps';
-import { cleanText, fillTemplate } from './text';
-import { formatTime } from './timing';
+import { silencesFromPeaks, type Silence } from '../analysis/analysis';
+import {
+    byLanguage,
+    localeFor,
+    resolveLanguage,
+    type Language,
+} from '../languages/language';
+import { mergeWords } from '../languages/merge-words';
+import type { DescriptionWords } from '../languages/words';
+import { normalize, resample } from '../peaks/peaks';
+import { positive } from '../shared/math';
+import { LANDING, stepIndex } from '../shared/steps';
+import { cleanText, fillTemplate } from '../shared/text';
+import { formatTime } from '../shared/timing';
+
+export type { DescriptionWords };
 
 /** A stretch with sound, in seconds. */
 export type SoundPart = { start: number; end: number };
@@ -46,55 +55,6 @@ export type OutlineOptions = {
     minPause?: number;
 };
 
-/** The phrases of a description. `{name}` marks are filled in; a mark that is not known is dropped. */
-export type DescriptionWords = {
-    /** The length, as a sentence: `{duration}`. */
-    length: string;
-    /** A sound that is only silence: `{duration}`. */
-    silence: string;
-    /** One part from start to end. */
-    continuous: string;
-    /** The steps of a short sound: silence first, `{duration}`. */
-    silenceFor: string;
-    /** The first step with sound: `{at}`. */
-    soundUntil: string;
-    /** A pause between two parts: `{duration}`. */
-    pause: string;
-    /** A later part: `{at}`. */
-    thenSoundUntil: string;
-    /** The last part, running to the end. */
-    thenSoundToEnd: string;
-    /** The silence after the last part. */
-    thenSilenceToEnd: string;
-    /** Many pauses, summed up by the longest: `{count}`, `{duration}`, `{at}`. */
-    pauses: string;
-    /** With many pauses, the silence at the start: `{duration}`. */
-    startsAfter: string;
-    /** With many pauses, the silence at the end: `{duration}`. */
-    endsWith: string;
-    even: string;
-    rises: string;
-    falls: string;
-    /** `{at}`. */
-    loudest: string;
-    /** The loudest stretch, within the first second. */
-    loudestStart: string;
-    /** Where a step between the parts landed: `{part}`, `{count}`, `{at}`. */
-    part: string;
-    /** A step that landed within the first second: `{part}`, `{count}`. */
-    partStart: string;
-    /** No part left in that direction. */
-    noPart: string;
-    /** Added to the slider's value inside a pause between two parts. */
-    pauseNote: string;
-    /** Added to the slider's value inside the silence at the start or at the end. */
-    silenceNote: string;
-    /** The mark between the steps of one sentence (a space follows it). */
-    join: string;
-    /** The end of a sentence made of steps. */
-    stop: string;
-};
-
 export type DescribeOptions = {
     /** A language tag: `'en'` (the default), `'pt'`, `'pt-BR'`… or any other with `words`. */
     lang?: string;
@@ -118,60 +78,7 @@ export type SoundWords = {
 
 export const DESCRIPTION_WORDS: Readonly<
     Record<Language, Readonly<DescriptionWords>>
-> = Object.freeze({
-    en: Object.freeze({
-        length: '{duration}.',
-        silence: '{duration} of silence.',
-        continuous: 'Continuous sound.',
-        silenceFor: 'Silence for {duration}',
-        soundUntil: 'Sound until {at}',
-        pause: 'a pause of {duration}',
-        thenSoundUntil: 'then sound until {at}',
-        thenSoundToEnd: 'then sound to the end',
-        thenSilenceToEnd: 'then silence to the end',
-        pauses: 'Sound with {count} pauses; the longest, {duration}, at {at}.',
-        startsAfter: 'Starts after {duration} of silence.',
-        endsWith: 'Ends with {duration} of silence.',
-        even: 'Even volume.',
-        rises: 'Gets louder toward the end.',
-        falls: 'Gets quieter toward the end.',
-        loudest: 'Loudest at {at}.',
-        loudestStart: 'Loudest at the start.',
-        part: 'Part {part} of {count}, {at}.',
-        partStart: 'Part {part} of {count}, at the start.',
-        noPart: 'No more parts.',
-        pauseNote: 'pause',
-        silenceNote: 'silence',
-        join: ',',
-        stop: '.',
-    }),
-    pt: Object.freeze({
-        length: '{duration}.',
-        silence: '{duration} de silêncio.',
-        continuous: 'Som contínuo.',
-        silenceFor: 'Silêncio por {duration}',
-        soundUntil: 'Som até {at}',
-        pause: 'uma pausa de {duration}',
-        thenSoundUntil: 'depois som até {at}',
-        thenSoundToEnd: 'depois som até o fim',
-        thenSilenceToEnd: 'depois silêncio até o fim',
-        pauses: 'Som com {count} pausas; a mais longa, de {duration}, por volta de {at}.',
-        startsAfter: 'Começa depois de {duration} de silêncio.',
-        endsWith: 'Termina com {duration} de silêncio.',
-        even: 'Volume constante.',
-        rises: 'Fica mais alto no fim.',
-        falls: 'Fica mais baixo no fim.',
-        loudest: 'Mais alto por volta de {at}.',
-        loudestStart: 'Mais alto no início.',
-        part: 'Parte {part} de {count}, {at}.',
-        partStart: 'Parte {part} de {count}, no início.',
-        noPart: 'Não há mais partes.',
-        pauseNote: 'pausa',
-        silenceNote: 'silêncio',
-        join: ',',
-        stop: '.',
-    }),
-});
+> = byLanguage((words) => words.description);
 
 /** The most peaks looked at; a longer list is folded first, so the cost stays the same. */
 const MAX_VALUES = 2000;
@@ -487,30 +394,13 @@ function spoken(seconds: number, locale: string, length: boolean): string {
         : both(said, amount(rest, 'minute', locale), locale);
 }
 
-/** The built-in phrases with the app's own laid over them, each cleaned and capped. */
-function mergeWords(
-    base: Readonly<DescriptionWords>,
-    own: Partial<DescriptionWords> | undefined,
-): DescriptionWords {
-    const merged = { ...base };
-
-    for (const key of Object.keys(base) as (keyof DescriptionWords)[]) {
-        const value: unknown = own?.[key];
-
-        if (typeof value === 'string') {
-            merged[key] = cleanText(value, MAX_WORD);
-        }
-    }
-
-    return merged;
-}
-
 /** Phrases for a language, with the app's own words over them. */
 export function soundWords(options: DescribeOptions = {}): SoundWords {
     const locale = localeFor(options.lang, options.words !== undefined);
     const words = mergeWords(
         DESCRIPTION_WORDS[resolveLanguage(options.lang)],
         options.words,
+        MAX_WORD,
     );
     const clock = options.times === 'clock';
     const length = (seconds: number): string => spoken(seconds, locale, true);

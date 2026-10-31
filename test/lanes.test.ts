@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { stackLanes } from '../src/core/lanes';
+import { stackLanes } from '../src/core/frame/lanes';
 
 describe('stacking lanes around the bars', () => {
     it('a 14px lane below leaves 18 of a 32px frame to the wave', () => {

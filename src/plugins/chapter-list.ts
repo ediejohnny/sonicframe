@@ -7,10 +7,10 @@
  * `--sonicframe-*` variable.
  */
 
-import type { Chapter } from '../core/chapters';
-import { within } from '../core/checked';
-import { formatTime } from '../core/timing';
-import { MUTED, PROGRESS, REGION } from '../core/variables';
+import type { Chapter } from '../core/chapters/chapters';
+import { within } from '../core/shared/checked';
+import { formatTime } from '../core/shared/timing';
+import { MUTED, PROGRESS, REGION } from '../core/shared/variables';
 import { css } from '../dom/css';
 import { iconElement, iconPath } from '../dom/icon';
 

@@ -5,7 +5,7 @@ import {
     volumeAfterKey,
     volumeIcon,
     volumeText,
-} from '../src/core/volume';
+} from '../src/core/controls/volume';
 
 describe('volumeIcon', () => {
     it('shows a muted speaker when muted or silent, one wave when low, two when loud', () => {

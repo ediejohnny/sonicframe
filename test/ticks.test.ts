@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { niceTicks } from '../src/core/ticks';
+import { niceTicks } from '../src/core/marks/ticks';
 
 describe('nice timeline ticks', () => {
     it('steps by 10 seconds for a minute across 300px', () => {

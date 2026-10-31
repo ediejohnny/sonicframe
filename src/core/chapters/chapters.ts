@@ -6,17 +6,17 @@
  * they are web or relative addresses. Nothing here touches the page.
  */
 
-import { within } from './checked';
+import { within } from '../shared/checked';
 import {
     fetchOk,
     oncePerPage,
     readCapped,
     type FetchedResponse,
-} from './fetch';
-import { positive } from './math';
-import { LANDING, stepIndex } from './steps';
-import { cleanText } from './text';
-import { safeUrl } from './url';
+} from '../shared/fetch';
+import { positive } from '../shared/math';
+import { LANDING, stepIndex } from '../shared/steps';
+import { cleanText } from '../shared/text';
+import { safeUrl } from '../shared/url';
 
 /** One chapter, in seconds. */
 export type Chapter = {

@@ -7,7 +7,7 @@
 
 import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { barValues, buildDetail } from '../src/core/detail';
+import { barValues, buildDetail } from '../src/core/peaks/detail';
 
 /** Bar k of `total` over `peaks` is the loudest of peaks floor(k·n/total) .. floor((k+1)·n/total) − 1. */
 function bruteFold(peaks: readonly number[], total: number): number[] {

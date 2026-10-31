@@ -3,10 +3,10 @@
  * the same path filled or stroked through its own clip, so strips never overlap and edges never bleed.
  */
 
-import { rgbaFromBytes, type Rgba } from '../core/color';
-import type { Bar } from '../core/layout';
-import { cursorSpan, regions, type Overlay } from '../core/scene';
-import type { Circle, Polyline, WaveShape } from '../core/shapes';
+import { rgbaFromBytes, type Rgba } from '../core/shared/color';
+import type { Bar } from '../core/wave/layout';
+import { cursorSpan, regions, type Overlay } from '../core/wave/scene';
+import type { Circle, Polyline, WaveShape } from '../core/wave/shapes';
 
 /** Colors ready for the canvas: variables already resolved. */
 export type Palette = {

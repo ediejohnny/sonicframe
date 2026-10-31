@@ -4,9 +4,9 @@
  * right after a seek, and can dim the silences it knows about.
  */
 
-import { nextSkip, type Silence } from '../core/analysis';
-import { clamp01 } from '../core/math';
-import { placeX } from '../core/scene';
+import { nextSkip, type Silence } from '../core/analysis/analysis';
+import { clamp01 } from '../core/shared/math';
+import { placeX } from '../core/wave/scene';
 import type { Plugin, PluginHost } from '../types';
 
 export type SkipSilencesOptions = {

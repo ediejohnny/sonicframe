@@ -5,8 +5,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { spectrogram } from '../../src/index';
-import { mount, nextFrame, type Mounted } from './helpers';
 import { recordingOf, triggerResize, triggerVisible } from './fakes';
+import { mount, nextFrame, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
 const realFetch = globalThis.fetch;

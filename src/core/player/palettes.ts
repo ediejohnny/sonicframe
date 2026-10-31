@@ -5,8 +5,8 @@
  * controls visible on its own surface (WCAG contrast, checked by the tests).
  */
 
-import { isOneOf } from './checked';
-import { cleanText } from './text';
+import { isOneOf } from '../shared/checked';
+import { cleanText } from '../shared/text';
 
 export type Palette = {
     /** The player's background. */

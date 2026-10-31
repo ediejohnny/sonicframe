@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
+import { hitRegion, normalizeRegion } from '../src/core/marks/regions';
 import { regions } from '../src/index';
-import { hitRegion, normalizeRegion } from '../src/core/regions';
 
 describe('region shortcuts and modifiers', () => {
     it('ignores a key held with Ctrl, Alt or Meta (so Ctrl+R still reloads)', () => {

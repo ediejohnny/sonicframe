@@ -3,9 +3,11 @@
  * and the words said about a view. Nothing here touches the page.
  */
 
-import { oneOf, within } from './checked';
-import type { KeyModifiers } from './keys';
-import { ratioText } from './timing';
+import type { KeyModifiers } from '../frame/keys';
+import { EN } from '../languages/en';
+import { oneOf, within } from '../shared/checked';
+import { fillTemplate } from '../shared/text';
+import { ratioText } from '../shared/timing';
 import { FULL_VIEW, fitView, viewLevel, type View } from './view';
 
 /** What moved the view. */
@@ -98,7 +100,7 @@ export type ZoomWords = {
 
 export const ZOOM_WORDS: Readonly<ZoomWords> = Object.freeze({
     view: (level: number, from: string, to: string) =>
-        `Zoom ${level}×, ${from} to ${to}`,
+        fillTemplate(EN.zoom.view, { level: String(level), from, to }),
 });
 
 /** The largest zoom anyone can ask for. */

@@ -5,8 +5,8 @@
  * screen readers: the slider's value says the chapter.
  */
 
-import type { PlayerLook } from '../core/look';
-import { marqueeTiming, type MarqueeTiming } from '../core/marquee';
+import type { PlayerLook } from '../core/player/look';
+import { marqueeTiming, type MarqueeTiming } from '../core/player/marquee';
 import { css } from '../dom/css';
 import { prefersReducedMotion } from '../dom/motion';
 import { sharedTooltip, type TooltipColors } from '../dom/tooltip';

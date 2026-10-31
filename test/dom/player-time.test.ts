@@ -6,10 +6,10 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import type { Part } from '../../src/core/look';
+import type { Part } from '../../src/core/player/look';
 import { createPlayer, type Player } from '../../src/player';
-import { boxOf, fakeMedia } from './helpers';
 import { triggerResize } from './fakes';
+import { boxOf, fakeMedia } from './helpers';
 
 let player: Player | null = null;
 let host: HTMLElement | null = null;

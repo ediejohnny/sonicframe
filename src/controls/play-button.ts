@@ -13,10 +13,11 @@ import {
     type ButtonFill,
     type ButtonLook,
     type ButtonShape,
-} from '../core/button';
-import { Emitter } from '../core/emitter';
-import { applyStyles } from '../core/styles';
-import { BUTTON, BUTTON_ICON } from '../core/variables';
+} from '../core/controls/button';
+import { EN } from '../core/languages/en';
+import { Emitter } from '../core/shared/emitter';
+import { applyStyles } from '../core/shared/styles';
+import { BUTTON, BUTTON_ICON } from '../core/shared/variables';
 import { iconElement, iconPath } from '../dom/icon';
 import { hideFocusRing, showFocusRing } from './focus';
 
@@ -85,7 +86,7 @@ export class PlayButton {
             throw new TypeError('sonicframe: a container element is required');
         }
 
-        this.labels = options.labels ?? { play: 'Play', pause: 'Pause' };
+        this.labels = options.labels ?? EN.playButton;
         this.exclusive = options.exclusive ?? true;
         this.look = {
             shape: options.shape ?? 'circle',

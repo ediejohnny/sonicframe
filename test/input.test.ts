@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { keyAction } from '../src/core/keys';
+import { keyAction } from '../src/core/frame/keys';
 import {
     defaultValueText,
     effectiveDuration,
@@ -8,7 +8,7 @@ import {
     formatTime,
     stepRatio,
     timeAt,
-} from '../src/core/timing';
+} from '../src/core/shared/timing';
 
 describe('keyAction', () => {
     it('follows the slider pattern', () => {

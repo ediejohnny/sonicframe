@@ -5,9 +5,9 @@ import {
     clipShape,
     DEFAULT_CLIP_TYPES,
     pickMimeType,
-} from '../src/core/clip';
-import { layoutBars } from '../src/core/layout';
-import { DEFAULT_WAVE } from '../src/core/shapes';
+} from '../src/core/wave/clip';
+import { layoutBars } from '../src/core/wave/layout';
+import { DEFAULT_WAVE } from '../src/core/wave/shapes';
 import type { BarStyle } from '../src/types';
 
 const BAR: BarStyle = {

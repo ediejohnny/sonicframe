@@ -5,9 +5,9 @@
  * tapped without muting it (cross-origin without CORS) is refused with an error, not silenced.
  */
 
-import { frequencyBands } from '../core/bands';
-import { within } from '../core/checked';
-import { powerOfTwo } from '../core/math';
+import { frequencyBands } from '../core/analysis/bands';
+import { within } from '../core/shared/checked';
+import { powerOfTwo } from '../core/shared/math';
 import { resumeAudio, tapMedia, type MediaTap } from '../dom/audio-graph';
 import type { Plugin, PluginHost } from '../types';
 

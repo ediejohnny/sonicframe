@@ -4,7 +4,7 @@ import {
     resolveColor,
     rgbaFromBytes,
     rgbaString,
-} from '../src/core/color';
+} from '../src/core/shared/color';
 
 const theme: Record<string, string> = {
     '--voice': ' #2f6fdb ',

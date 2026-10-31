@@ -5,7 +5,7 @@
  * state stay.
  */
 
-import type { Part, PlayerLook } from '../core/look';
+import type { Part, PlayerLook } from '../core/player/look';
 import { css } from '../dom/css';
 
 /**

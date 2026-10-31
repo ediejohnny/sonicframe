@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { barMetrics, barWindow, layoutBars } from '../src/core/layout';
+import { barMetrics, barWindow, layoutBars } from '../src/core/wave/layout';
 import {
     DEFAULT_WAVE,
     knobSpot,
@@ -8,7 +8,7 @@ import {
     WAVE_NAMES,
     waveShape,
     type WaveShape,
-} from '../src/core/shapes';
+} from '../src/core/wave/shapes';
 import type { BarStyle, WaveName } from '../src/types';
 
 const BAR: BarStyle = {

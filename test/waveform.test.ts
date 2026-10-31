@@ -12,7 +12,7 @@ import {
     readWaveform,
     writeWaveform,
     type WaveformFetcher,
-} from '../src/core/waveform';
+} from '../src/core/peaks/waveform';
 
 type DatFile = {
     version?: 1 | 2;

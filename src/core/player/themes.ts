@@ -5,7 +5,7 @@
  * any product.
  */
 
-import { isOneOf } from './checked';
+import { isOneOf } from '../shared/checked';
 import type { Theme } from './theme';
 
 export type ThemeName =

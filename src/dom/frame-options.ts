@@ -1,8 +1,8 @@
 /** What a frame takes: its options, grouped by place, and the bars and colors it draws by default. */
 
-import type { ValueText } from '../core/controller';
-import { PROGRESS, WAVE } from '../core/variables';
-import type { ZoomOptions, ZoomWords } from '../core/zoom';
+import type { ValueText } from '../core/frame/controller';
+import { PROGRESS, WAVE } from '../core/shared/variables';
+import type { ZoomOptions, ZoomWords } from '../core/view/zoom';
 import type {
     BarStyle,
     Colors,

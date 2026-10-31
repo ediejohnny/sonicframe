@@ -5,7 +5,7 @@
  * drops lanes that would starve the wave; this manager only places elements and sizes the canvas.
  */
 
-import { stackLanes } from '../core/lanes';
+import { stackLanes } from '../core/frame/lanes';
 import type { Lane } from '../types';
 import { css } from './css';
 

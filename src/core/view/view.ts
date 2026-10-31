@@ -3,7 +3,7 @@
  * level is 1 ÷ its size. Nothing here touches the page.
  */
 
-import { clamp01 } from './math';
+import { clamp01 } from '../shared/math';
 
 /** The part of the sound on screen: `start` < `end`, both from 0 to 1. */
 export type View = { readonly start: number; readonly end: number };

@@ -7,8 +7,8 @@
  * close it; the focus goes to the chapter playing as it opens.
  */
 
-import { arrowOffset, placeTooltip } from '../core/place';
-import { MUTED } from '../core/variables';
+import { arrowOffset, placeTooltip } from '../core/shared/place';
+import { MUTED } from '../core/shared/variables';
 import { css } from '../dom/css';
 import { iconElement, iconPath } from '../dom/icon';
 import { prefersReducedMotion } from '../dom/motion';

@@ -9,8 +9,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createPlayer, type Player } from '../../src/player';
-import { boxOf, fakeMedia } from './helpers';
 import { triggerResize, triggerVisible } from './fakes';
+import { boxOf, fakeMedia } from './helpers';
 
 let player: Player | null = null;
 let host: HTMLElement | null = null;

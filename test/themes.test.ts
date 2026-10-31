@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { DEFAULT_LOOK, resolveLook } from '../src/core/look';
-import { isPaletteName } from '../src/core/palettes';
-import { DEFAULT_WAVE, resolveWave } from '../src/core/shapes';
+import { DEFAULT_LOOK, resolveLook } from '../src/core/player/look';
+import { isPaletteName } from '../src/core/player/palettes';
 import {
     cleanBar,
     defineTheme,
     findTheme,
     registerTheme,
     themeParts,
-} from '../src/core/theme';
-import { THEME_NAMES, THEMES } from '../src/core/themes';
+} from '../src/core/player/theme';
+import { THEME_NAMES, THEMES } from '../src/core/player/themes';
+import { DEFAULT_WAVE, resolveWave } from '../src/core/wave/shapes';
 
 describe('the built-in themes', () => {
     it('are at least twenty, each named once', () => {

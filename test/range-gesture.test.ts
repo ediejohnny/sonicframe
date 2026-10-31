@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { isDrag } from '../src/core/gesture';
-import { rangeStep } from '../src/core/range';
+import { isDrag } from '../src/core/frame/gesture';
+import { rangeStep } from '../src/core/frame/range';
 
 describe('range stepping', () => {
     const range = { start: 2, end: 5, loop: false };

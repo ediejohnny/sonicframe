@@ -7,7 +7,7 @@ import {
     PLAY_ICON,
     playPath,
     type ButtonLook,
-} from '../src/core/button';
+} from '../src/core/controls/button';
 
 const LOOK: ButtonLook = {
     shape: 'circle',

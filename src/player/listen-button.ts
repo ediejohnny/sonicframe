@@ -4,7 +4,7 @@
  * with `animation` it also moves, never for people who asked their system for less motion.
  */
 
-import { BUTTON, BUTTON_ICON } from '../core/variables';
+import { BUTTON, BUTTON_ICON } from '../core/shared/variables';
 import { css } from '../dom/css';
 import { prefersReducedMotion } from '../dom/motion';
 import type { SoundDescriptionPlugin } from '../plugins/description';

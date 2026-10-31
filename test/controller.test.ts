@@ -4,7 +4,7 @@ import {
     type AriaState,
     type ControllerOptions,
     type MediaEventType,
-} from '../src/core/controller';
+} from '../src/core/frame/controller';
 import type { MediaLike } from '../src/types';
 
 /** A media element that only keeps state; tests fire its events by hand, as a browser would. */

@@ -16,7 +16,7 @@ import {
     zoomView,
     type View,
     type ViewState,
-} from '../core/view';
+} from '../core/view/view';
 import {
     viewWords,
     wheelFactor,
@@ -24,7 +24,7 @@ import {
     type ViewSource,
     type ZoomSettings,
     type ZoomWords,
-} from '../core/zoom';
+} from '../core/view/zoom';
 import type { SeekEvent } from '../types';
 import { announce } from './announce';
 import { prefersReducedMotion } from './motion';

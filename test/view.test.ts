@@ -16,7 +16,7 @@ import {
     viewRatio,
     viewX,
     zoomView,
-} from '../src/core/view';
+} from '../src/core/view/view';
 
 /** The view is `start`..`end`, to twelve decimals (sums of tenths are never exact in binary). */
 function near(

@@ -5,8 +5,8 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { liveFrequency } from '../../src/index';
-import { mount, nextFrame, fakeMedia, type Mounted } from './helpers';
 import { recordingOf, triggerResize, triggerVisible } from './fakes';
+import { mount, nextFrame, fakeMedia, type Mounted } from './helpers';
 
 let mounted: Mounted | null = null;
 

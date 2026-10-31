@@ -17,12 +17,12 @@ import {
     type OutlineOptions,
     type SoundOutline,
     type SoundWords,
-} from '../core/describe';
-import { cleanText } from '../core/text';
-import type { Plugin, PluginHost } from '../types';
+} from '../core/description/describe';
+import { cleanText } from '../core/shared/text';
 import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
 import { pageLanguage } from '../dom/page-language';
 import { speak, type Speaking, type SpeechOptions } from '../dom/speak';
+import type { Plugin, PluginHost } from '../types';
 
 /** Single-key shortcuts while the wave has focus; a key set to false is not used. */
 export type SoundDescriptionKeys = {

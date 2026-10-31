@@ -3,8 +3,8 @@
  * its gap, so edges stay sharp at any zoom or screen density.
  */
 
-import type { BarStyle } from '../types';
-import { clamp01 } from './math';
+import type { BarStyle } from '../../types';
+import { clamp01 } from '../shared/math';
 
 /** One bar, in device pixels. */
 export type Bar = {

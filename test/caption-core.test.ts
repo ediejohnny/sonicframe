@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { contrastRatio, readableText } from '../src/core/color';
-import { placeTooltip } from '../src/core/place';
-import { cleanText, truncateWords } from '../src/core/text';
+import { contrastRatio, readableText } from '../src/core/shared/color';
+import { placeTooltip } from '../src/core/shared/place';
+import { cleanText, truncateWords } from '../src/core/shared/text';
 
 describe('caption text', () => {
     it('cuts at a word boundary and marks the cut', () => {

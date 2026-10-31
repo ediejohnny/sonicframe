@@ -5,9 +5,9 @@
  * fetch a `url()`), and it is `aria-hidden` because the full text reaches assistive tech another way.
  */
 
-import { readableText, type Rgba } from '../core/color';
-import { placeTooltip, type Rect } from '../core/place';
-import { ON_PROGRESS, PROGRESS } from '../core/variables';
+import { readableText, type Rgba } from '../core/shared/color';
+import { placeTooltip, type Rect } from '../core/shared/place';
+import { ON_PROGRESS, PROGRESS } from '../core/shared/variables';
 import { css } from './css';
 import { readColor } from './paint';
 import { pageSize } from './units';

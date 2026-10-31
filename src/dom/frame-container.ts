@@ -5,7 +5,7 @@
  * before comes back when the frame goes.
  */
 
-import { applyStyles } from '../core/styles';
+import { applyStyles } from '../core/shared/styles';
 
 /** The attributes a frame sets on its element, saved first so they can be put back. */
 const ATTRIBUTES = [

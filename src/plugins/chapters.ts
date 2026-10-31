@@ -17,37 +17,25 @@ import {
     type Chapter,
     type ChapterInput,
     type LoadChaptersOptions,
-} from '../core/chapters';
-import { within } from '../core/checked';
-import { clamp01, positive } from '../core/math';
-import { cleanText, fillTemplate } from '../core/text';
-import { formatTime } from '../core/timing';
-import { FULL_VIEW, viewX } from '../core/view';
+} from '../core/chapters/chapters';
+import { EN } from '../core/languages/en';
+import { mergeWords } from '../core/languages/merge-words';
+import type { ChapterWords } from '../core/languages/words';
+import { within } from '../core/shared/checked';
+import { clamp01, positive } from '../core/shared/math';
+import { fillTemplate } from '../core/shared/text';
+import { formatTime } from '../core/shared/timing';
+import { FULL_VIEW, viewX } from '../core/view/view';
 import { css } from '../dom/css';
 import { onProgressColors, sharedTooltip } from '../dom/tooltip';
 import { remPixels } from '../dom/units';
 import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
 import { ChapterListView, type ChapterListLook } from './chapter-list';
 
-export type { ChapterListLook };
-
-/** What the plugin says. `{name}` marks are filled in. */
-export type ChapterWords = {
-    /** A chapter's place: `{index}`, `{count}` ("Chapter 3 of 8"); its title follows after a colon. */
-    chapter: string;
-    /** The name of the list. */
-    list: string;
-    /** Said when C or Shift+C finds no chapter that way. */
-    none: string;
-    /** The text of a chapter's link in the list. */
-    link: string;
-};
+export type { ChapterListLook, ChapterWords };
 
 export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
-    chapter: 'Chapter {index} of {count}',
-    list: 'Chapters',
-    none: 'No more chapters',
-    link: 'Link',
+    ...EN.chapters,
 });
 
 /** The keys that step through the chapters while the wave has focus. */
@@ -133,22 +121,8 @@ const SLOP = 6;
 /** The longest word taken from the app, in characters. */
 const MAX_WORD = 120;
 
-function wordsOf(own: Partial<ChapterWords> | undefined): ChapterWords {
-    const words = { ...CHAPTER_WORDS };
-
-    for (const key of Object.keys(words) as (keyof ChapterWords)[]) {
-        const value: unknown = own?.[key];
-
-        if (typeof value === 'string') {
-            words[key] = cleanText(value, MAX_WORD);
-        }
-    }
-
-    return words;
-}
-
 export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
-    const words = wordsOf(options.words);
+    const words = mergeWords(CHAPTER_WORDS, options.words, MAX_WORD);
     const keys = options.keys ?? true;
     const letter =
         keys === false

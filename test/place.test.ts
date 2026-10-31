@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { arrowOffset } from '../src/core/place';
+import { arrowOffset } from '../src/core/shared/place';
 
 describe('arrowOffset', () => {
     it("points at the anchor's middle from the box's left edge", () => {

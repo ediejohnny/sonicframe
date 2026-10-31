@@ -6,10 +6,10 @@
  * stored setting) without surprises.
  */
 
-import type { ButtonFill, ButtonShape } from './button';
-import { isOneOf, oneOf, within } from './checked';
+import type { ButtonFill, ButtonShape } from '../controls/button';
+import { isOneOf, oneOf, within } from '../shared/checked';
+import { formatPosition, formatTime } from '../shared/timing';
 import { isFontName, type FontName } from './fonts';
-import { formatPosition, formatTime } from './timing';
 
 /**
  * A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end; the

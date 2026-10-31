@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { groupMarks } from '../src/core/clusters';
+import { groupMarks } from '../src/core/marks/clusters';
 
 describe('grouping marks', () => {
     it('joins marks within the distance into one cluster', () => {

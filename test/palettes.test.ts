@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { contrastRatio, parseHex, type Rgba } from '../src/core/color';
 import {
     PALETTE_NAMES,
     PALETTES,
     paletteVariables,
     pickPalette,
     type Palette,
-} from '../src/core/palettes';
+} from '../src/core/player/palettes';
+import { contrastRatio, parseHex, type Rgba } from '../src/core/shared/color';
 
 function rgb(hex: string): Rgba {
     const color = parseHex(hex);

@@ -9,7 +9,7 @@ import {
     timeText,
     type Part,
     type PlayerLook,
-} from '../src/core/look';
+} from '../src/core/player/look';
 
 describe('resolveLook', () => {
     it('keeps the base when nothing is given', () => {

@@ -5,13 +5,13 @@
  * page's Content-Security-Policy still decides what may load.
  */
 
-import { oncePerPage } from '../core/fetch';
 import {
     resolveFont,
     type FontChoice,
     type FontLoad,
     type FontName,
-} from '../core/fonts';
+} from '../core/player/fonts';
+import { oncePerPage } from '../core/shared/fetch';
 
 const loads = new Map<string, Promise<void>>();
 

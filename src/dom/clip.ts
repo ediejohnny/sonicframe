@@ -8,17 +8,17 @@
  * cleaned, capped and clipped, not faded through one.
  */
 
+import { within } from '../core/shared/checked';
+import { cleanText } from '../core/shared/text';
 import {
     clipPlan,
     clipShape,
     DEFAULT_CLIP_TYPES,
     DEFAULT_MAX_SOURCE_SECONDS,
     pickMimeType,
-} from '../core/clip';
-import { overlayOf } from '../core/scene';
-import { DEFAULT_WAVE, knobSpot } from '../core/shapes';
-import { within } from '../core/checked';
-import { cleanText } from '../core/text';
+} from '../core/wave/clip';
+import { overlayOf } from '../core/wave/scene';
+import { DEFAULT_WAVE, knobSpot } from '../core/wave/shapes';
 import type { BarStyle, WaveStyle } from '../types';
 import { fetchAudio } from './decode';
 import {

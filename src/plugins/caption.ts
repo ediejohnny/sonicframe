@@ -7,7 +7,7 @@
  * away from the wave.
  */
 
-import { cleanText, truncateWords } from '../core/text';
+import { cleanText, truncateWords } from '../core/shared/text';
 import { css, VISUALLY_HIDDEN } from '../dom/css';
 import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
 import { readableColors, sharedTooltip } from '../dom/tooltip';

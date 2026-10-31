@@ -5,13 +5,13 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { sharedTooltip } from '../../src/dom/tooltip';
 import {
     chapters,
     type ChaptersFetcher,
     type ChaptersOptions,
     type Plugin,
 } from '../../src/index';
-import { sharedTooltip } from '../../src/dom/tooltip';
 import { recordingOf, triggerResize, triggerVisible } from './fakes';
 import { fakeMedia, mount, nextFrame, type Mounted } from './helpers';
 

@@ -5,7 +5,7 @@
  * wide enough to grab on a touch screen (WCAG 2.5.8).
  */
 
-import { clamp } from './math';
+import { clamp } from '../shared/math';
 
 export type RegionPart = 'start' | 'end' | 'body';
 

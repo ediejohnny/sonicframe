@@ -5,8 +5,8 @@
  * longer than the length cap is read evenly through, with the rate of the samples given back.
  */
 
-import { mixdown } from '../core/analysis';
-import { readCapped } from '../core/fetch';
+import { mixdown } from '../core/analysis/analysis';
+import { readCapped } from '../core/shared/fetch';
 
 /** The largest download decoded, in bytes (50 MiB). */
 export const MAX_DECODE_BYTES = 52_428_800;

@@ -7,8 +7,7 @@
  * shows.
  */
 
-import { iconButtonBox } from '../core/button';
-import { Emitter } from '../core/emitter';
+import { iconButtonBox } from '../core/controls/button';
 import {
     clampLevel,
     levelAt,
@@ -18,8 +17,10 @@ import {
     volumeAfterKey,
     volumeIcon,
     volumeText,
-} from '../core/volume';
-import { BUTTON, PROGRESS, WAVE } from '../core/variables';
+} from '../core/controls/volume';
+import { EN } from '../core/languages/en';
+import { Emitter } from '../core/shared/emitter';
+import { BUTTON, PROGRESS, WAVE } from '../core/shared/variables';
 import { css } from '../dom/css';
 import { iconElement, iconPath } from '../dom/icon';
 import { prefersReducedMotion } from '../dom/motion';
@@ -110,11 +111,7 @@ export class VolumeControl {
             throw new TypeError('sonicframe: a container element is required');
         }
 
-        this.labels = options.labels ?? {
-            mute: 'Mute',
-            unmute: 'Unmute',
-            volume: 'Volume',
-        };
+        this.labels = options.labels ?? EN.volume;
         this.step = options.step ?? 0.05;
         this.slider = options.slider ?? 'always';
         this.size = options.size ?? 32;

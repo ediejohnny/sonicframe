@@ -4,7 +4,7 @@
  * waveform file ahead, or check a chapters file, say). The same functions are on the main entry too.
  */
 
-export * from './core/analysis';
-export * from './core/chapters';
-export * from './core/describe';
-export * from './core/waveform';
+export * from './core/analysis/analysis';
+export * from './core/chapters/chapters';
+export * from './core/description/describe';
+export * from './core/peaks/waveform';

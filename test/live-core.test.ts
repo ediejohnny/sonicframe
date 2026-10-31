@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { frequencyBands, MAX_BANDS } from '../src/core/bands';
-import { canTapMedia } from '../src/core/origin';
+import { frequencyBands, MAX_BANDS } from '../src/core/analysis/bands';
+import { canTapMedia } from '../src/core/analysis/origin';
 
 describe('frequency bands', () => {
     it('puts energy in the band that covers the loud bin', () => {

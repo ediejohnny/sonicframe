@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { fft, fftMagnitudes } from '../src/core/fft';
+import { fft, fftMagnitudes } from '../src/core/analysis/fft';
 
 describe('fft', () => {
     it('peaks at the bin of a pure tone', () => {

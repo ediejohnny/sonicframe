@@ -15,20 +15,21 @@ import {
     MEDIA_EVENTS,
     type MediaEventType,
     type ValueText,
-} from '../core/controller';
-import { Emitter } from '../core/emitter';
-import { barMetrics } from '../core/layout';
-import { clamp01 } from '../core/math';
-import { overlayOf, sameOverlay, type Overlay } from '../core/scene';
-import { DEFAULT_WAVE, resolveWave } from '../core/shapes';
-import { defaultValueText } from '../core/timing';
-import { viewLevel, viewRatio, viewX, type ViewState } from '../core/view';
+} from '../core/frame/controller';
+import { EN } from '../core/languages/en';
+import { Emitter } from '../core/shared/emitter';
+import { clamp01 } from '../core/shared/math';
+import { defaultValueText } from '../core/shared/timing';
+import { viewLevel, viewRatio, viewX, type ViewState } from '../core/view/view';
 import {
     MAX_ZOOM,
     resolveZoom,
     ZOOM_WORDS,
     type ViewSource,
-} from '../core/zoom';
+} from '../core/view/zoom';
+import { barMetrics } from '../core/wave/layout';
+import { overlayOf, sameOverlay, type Overlay } from '../core/wave/scene';
+import { DEFAULT_WAVE, resolveWave } from '../core/wave/shapes';
 import type {
     BarStyle,
     Colors,
@@ -145,7 +146,7 @@ export class SonicFrame implements PluginHost {
         this.restoreContainer = prepareContainer(
             this.container,
             this.interact,
-            options.label ?? 'Audio position',
+            options.label ?? EN.frame.position,
         );
 
         this.canvas = document.createElement('canvas');

@@ -1,19 +1,46 @@
 /**
- * The languages SonicFrame has its own words for, and the tag a text in one of them is marked
- * with. Pure: the page's language is looked up by the DOM layer and handed in.
+ * The languages SonicFrame has its own words for, one file each in this folder, and the tag a text
+ * in one of them is marked with. Pure: the page's language is looked up by the DOM layer and handed in.
  */
+
+import { EN } from './en';
+import { PT } from './pt';
+import type { Words } from './words';
 
 /** The languages with built-in words: English and Portuguese. */
 export type Language = 'en' | 'pt';
 
+/** Each built-in language's words. */
+const LANGUAGES: Readonly<Record<Language, Readonly<Words>>> = Object.freeze({
+    en: EN,
+    pt: PT,
+});
+
 /** The longest language tag looked at; real tags are far shorter. */
 const MAX_TAG = 35;
+
+function isLanguage(name: string): name is Language {
+    return Object.hasOwn(LANGUAGES, name);
+}
 
 /** The built-in language for a tag: `pt`, `pt-BR` or `pt-PT` give Portuguese, anything else English. */
 export function resolveLanguage(tag: string | null | undefined): Language {
     const primary = (tag ?? '').trim().toLowerCase().split(/[-_]/)[0];
 
-    return primary === 'pt' ? 'pt' : 'en';
+    return isLanguage(primary) ? primary : 'en';
+}
+
+/** One group of words in every built-in language, each a frozen copy. */
+export function byLanguage<T extends object>(
+    pick: (words: Readonly<Words>) => T,
+): Readonly<Record<Language, Readonly<T>>> {
+    const all = {} as Record<Language, Readonly<T>>;
+
+    for (const language of Object.keys(LANGUAGES) as Language[]) {
+        all[language] = Object.freeze({ ...pick(LANGUAGES[language]) });
+    }
+
+    return Object.freeze(all);
 }
 
 function canonical(tag: string | null | undefined): string | null {

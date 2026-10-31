@@ -5,10 +5,10 @@
  */
 
 import { hideFocusRing, showFocusRing } from '../controls/focus';
-import { iconButtonBox } from '../core/button';
-import type { PlayerWords } from '../core/labels';
-import { nextSpeed, speedText, type PlayerLook } from '../core/look';
-import { PROGRESS } from '../core/variables';
+import { iconButtonBox } from '../core/controls/button';
+import type { PlayerWords } from '../core/player/labels';
+import { nextSpeed, speedText, type PlayerLook } from '../core/player/look';
+import { PROGRESS } from '../core/shared/variables';
 import { css } from '../dom/css';
 import type { SonicFrame } from '../dom/frame';
 import { iconElement, iconPath } from '../dom/icon';

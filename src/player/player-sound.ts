@@ -4,9 +4,9 @@
  * the same one instead of downloading again.
  */
 
-import { within } from '../core/checked';
-import { peaksFromChannel } from '../core/peaks';
-import { DEFAULT_WAVE, resolveWave } from '../core/shapes';
+import { peaksFromChannel } from '../core/peaks/peaks';
+import { within } from '../core/shared/checked';
+import { DEFAULT_WAVE, resolveWave } from '../core/wave/shapes';
 import { decodeAudio } from '../dom/decode';
 import type { SonicFrame } from '../dom/frame';
 import type { DecodedAudio } from '../plugins/spectrogram';

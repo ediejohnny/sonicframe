@@ -8,13 +8,13 @@
  * unchanged.
  */
 
-import { within } from '../core/checked';
-import { groupMarks } from '../core/clusters';
-import { clamp01, positive } from '../core/math';
-import { cleanText } from '../core/text';
-import { formatTime } from '../core/timing';
-import { ON_PROGRESS } from '../core/variables';
-import { FULL_VIEW, viewX, type View } from '../core/view';
+import { groupMarks } from '../core/marks/clusters';
+import { within } from '../core/shared/checked';
+import { clamp01, positive } from '../core/shared/math';
+import { cleanText } from '../core/shared/text';
+import { formatTime } from '../core/shared/timing';
+import { ON_PROGRESS } from '../core/shared/variables';
+import { FULL_VIEW, viewX, type View } from '../core/view/view';
 import { onProgressColors, sharedTooltip } from '../dom/tooltip';
 import type {
     PaintContext,

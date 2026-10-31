@@ -26,36 +26,36 @@ export {
     type LoadWaveformOptions,
     type ReadWaveformOptions,
     type WaveformData,
-} from './core/waveform';
+} from './core/peaks/waveform';
 export {
     loadChapters,
     readChapters,
     type Chapter,
     type ChapterInput,
     type LoadChaptersOptions,
-} from './core/chapters';
+} from './core/chapters/chapters';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
 export {
     PLAYER_LABELS,
     playerWords,
     type PlayerLabels,
     type PlayerWords,
-} from './core/labels';
+} from './core/player/labels';
 export {
     DEFAULT_LOOK,
     PART_NAMES,
     resolveLook,
     type Part,
     type PlayerLook,
-} from './core/look';
+} from './core/player/look';
 export {
     defineTheme,
     findTheme,
     registerTheme,
     type Theme,
     type ThemeInput,
-} from './core/theme';
-export { THEME_NAMES, THEMES, type ThemeName } from './core/themes';
+} from './core/player/theme';
+export { THEME_NAMES, THEMES, type ThemeName } from './core/player/themes';
 export {
     DEFAULT_PALETTE,
     PALETTE_NAMES,
@@ -65,7 +65,7 @@ export {
     type Palette,
     type PaletteChoice,
     type PaletteName,
-} from './core/palettes';
+} from './core/player/palettes';
 export {
     FONT_NAMES,
     FONT_STACKS,
@@ -74,4 +74,4 @@ export {
     type FontChoice,
     type FontName,
     type FontSource,
-} from './core/fonts';
+} from './core/player/fonts';

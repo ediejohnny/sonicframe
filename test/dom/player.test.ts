@@ -13,8 +13,8 @@ import {
     registerTheme,
     type Player,
 } from '../../src/player';
-import { boxOf, fakeMedia, nextFrame } from './helpers';
 import { triggerResize, triggerVisible } from './fakes';
+import { boxOf, fakeMedia, nextFrame } from './helpers';
 
 let player: Player | null = null;
 let host: HTMLElement | null = null;

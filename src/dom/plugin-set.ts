@@ -5,7 +5,7 @@
  * and the notes on the slider's value go in order.
  */
 
-import { cleanText } from '../core/text';
+import { cleanText } from '../core/shared/text';
 import type {
     Claim,
     FrameGeometry,
