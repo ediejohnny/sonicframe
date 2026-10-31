@@ -32,7 +32,7 @@ import { remPixels } from '../dom/units';
 import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
 import { ChapterListView, type ChapterListLook } from './chapter-list';
 
-export type { ChapterListLook, ChapterWords };
+export type { ChapterListLook };
 
 export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
     ...EN.chapters,

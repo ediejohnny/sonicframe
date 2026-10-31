@@ -17,8 +17,6 @@ import { clamp01 } from '../shared/math';
 import { cleanText, fillTemplate } from '../shared/text';
 import { formatPosition, formatTime } from '../shared/timing';
 
-export type { PlayerLabels };
-
 /** The player's labels in one language: its own words, and those of the pieces it is built of. */
 function playerLabels(words: Readonly<Words>): PlayerLabels {
     const { player, playButton, volume, zoom, minimap, chapters } = words;

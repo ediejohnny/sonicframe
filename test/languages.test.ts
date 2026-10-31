@@ -7,11 +7,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { DESCRIPTION_WORDS } from '../src/core/description/describe';
 import { resolveLanguage } from '../src/core/languages/language';
-import {
-    PLAYER_LABELS,
-    playerWords,
-    type PlayerLabels,
-} from '../src/core/player/labels';
+import type { PlayerLabels } from '../src/core/languages/words';
+import { PLAYER_LABELS, playerWords } from '../src/core/player/labels';
 
 describe('the built-in languages', () => {
     it('falls back to English for a tag that names something every object has', () => {

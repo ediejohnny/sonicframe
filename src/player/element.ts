@@ -12,7 +12,8 @@
  * `chapters` takes the address of a chapters file, and `chapter-options` its extras.
  */
 
-import { loadWaveform, type ReadWaveformOptions } from '../core/peaks/waveform';
+import { loadWaveform } from '../core/peaks/read-waveform';
+import type { ReadWaveformOptions } from '../core/peaks/waveform';
 import type { FontChoice } from '../core/player/fonts';
 import type { PaletteChoice } from '../core/player/palettes';
 import type { MinimapOptions } from '../plugins/minimap';

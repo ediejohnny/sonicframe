@@ -8,16 +8,15 @@
  * screen reader (never on its own: only through `speak()`). Text only ever goes in as text.
  */
 
+import { soundWords, type SoundWords } from '../core/description/describe';
 import {
     nextPart,
     outlineSound,
     silenceAt,
-    soundWords,
-    type DescriptionWords,
     type OutlineOptions,
     type SoundOutline,
-    type SoundWords,
-} from '../core/description/describe';
+} from '../core/description/outline';
+import type { DescriptionWords } from '../core/languages/words';
 import { cleanText } from '../core/shared/text';
 import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
 import { pageLanguage } from '../dom/page-language';

@@ -10,9 +10,9 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     loadWaveform,
     readWaveform,
-    writeWaveform,
     type WaveformFetcher,
-} from '../src/core/peaks/waveform';
+} from '../src/core/peaks/read-waveform';
+import { writeWaveform } from '../src/core/peaks/write-waveform';
 
 type DatFile = {
     version?: 1 | 2;

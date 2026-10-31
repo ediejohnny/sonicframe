@@ -57,8 +57,8 @@ export {
     type ChaptersKeys,
     type ChaptersOptions,
     type ChaptersPlugin,
-    type ChapterWords,
 } from './plugins/chapters';
+export type { ChapterWords, DescriptionWords } from './core/languages/words';
 export {
     minimap,
     MINIMAP_WORDS,
@@ -90,19 +90,20 @@ export {
 export {
     DESCRIPTION_WORDS,
     describeSound,
+    soundWords,
+    type DescribeOptions,
+    type SoundWords,
+} from './core/description/describe';
+export {
     nextPart,
     outlineSound,
     partAt,
     silenceAt,
-    soundWords,
-    type DescribeOptions,
-    type DescriptionWords,
     type OutlineOptions,
     type SoundLevel,
     type SoundOutline,
     type SoundPart,
-    type SoundWords,
-} from './core/description/describe';
+} from './core/description/outline';
 export {
     spectrogram,
     type ColorStops,
@@ -141,16 +142,20 @@ export {
 export {
     loadWaveform,
     readWaveform,
-    writeWaveform,
     type LoadWaveformOptions,
-    type ReadWaveformOptions,
-    type WaveformData,
     type WaveformFetcher,
-    type WaveformFormat,
-    type WaveformJson,
     type WaveformResponse,
-    type WriteWaveformOptions,
+} from './core/peaks/read-waveform';
+export type {
+    ReadWaveformOptions,
+    WaveformData,
+    WaveformFormat,
 } from './core/peaks/waveform';
+export {
+    writeWaveform,
+    type WaveformJson,
+    type WriteWaveformOptions,
+} from './core/peaks/write-waveform';
 export {
     chapterAt,
     chapterEnds,

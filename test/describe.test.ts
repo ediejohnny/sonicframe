@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
+import { describeSound, soundWords } from '../src/core/description/describe';
 import {
-    describeSound,
     nextPart,
     outlineSound,
     partAt,
     silenceAt,
-    soundWords,
-} from '../src/core/description/describe';
+} from '../src/core/description/outline';
 import { localeFor, resolveLanguage } from '../src/core/languages/language';
 
 /** Peaks every `step` seconds over `duration`, from a function of the time. */

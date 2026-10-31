@@ -24,9 +24,8 @@ export {
     loadWaveform,
     readWaveform,
     type LoadWaveformOptions,
-    type ReadWaveformOptions,
-    type WaveformData,
-} from './core/peaks/waveform';
+} from './core/peaks/read-waveform';
+export type { ReadWaveformOptions, WaveformData } from './core/peaks/waveform';
 export {
     loadChapters,
     readChapters,
@@ -35,10 +34,10 @@ export {
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
+export type { PlayerLabels } from './core/languages/words';
 export {
     PLAYER_LABELS,
     playerWords,
-    type PlayerLabels,
     type PlayerWords,
 } from './core/player/labels';
 export {

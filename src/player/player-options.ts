@@ -2,7 +2,7 @@
 
 import type { Chapter, ChapterInput } from '../core/chapters/chapters';
 import type { FontChoice } from '../core/player/fonts';
-import type { PlayerLabels } from '../core/player/labels';
+import type { PlayerLabels } from '../core/languages/words';
 import type { PlayerLook } from '../core/player/look';
 import type { PaletteChoice } from '../core/player/palettes';
 import type { ThemeInput } from '../core/player/theme';

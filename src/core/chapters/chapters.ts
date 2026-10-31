@@ -17,6 +17,7 @@ import { positive } from '../shared/math';
 import { LANDING, stepIndex } from '../shared/steps';
 import { cleanText } from '../shared/text';
 import { safeUrl } from '../shared/url';
+import { readVtt } from './read-vtt';
 
 /** One chapter, in seconds. */
 export type Chapter = {
@@ -148,132 +149,6 @@ function collect<Item>(
     return ordered(kept);
 }
 
-/**
- * A WebVTT timestamp in seconds, read as the specification's parser reads it, or null: `h:mm:ss.ttt`
- * (hours of any length) or `mm:ss.ttt`, where a first part that is not two digits up to 59 counts
- * as hours and then needs the seconds after it.
- */
-function timestamp(text: string): number | null {
-    const match = /^(\d+):(\d{2})(?::(\d{2}))?\.(\d{3})$/.exec(text);
-
-    if (match === null) {
-        return null;
-    }
-
-    const [, first, second, third, thousandths] = match;
-    const hoursFirst = first.length !== 2 || Number(first) > 59;
-
-    if (hoursFirst && third === undefined) {
-        return null;
-    }
-
-    const [hours, minutes, seconds] =
-        third === undefined
-            ? [0, Number(first), Number(second)]
-            : [Number(first), Number(second), Number(third)];
-
-    if (minutes > 59 || seconds > 59) {
-        return null;
-    }
-
-    // Counted in whole thousandths and divided once, the time is the nearest number to the one
-    // written; adding the thousandths to the seconds would leave float noise (1.5030000000000001).
-    const thousandthsInAll =
-        ((hours * 60 + minutes) * 60 + seconds) * 1000 + Number(thousandths);
-
-    return thousandthsInAll / 1000;
-}
-
-const ENTITIES: Readonly<Record<string, string>> = {
-    amp: '&',
-    lt: '<',
-    gt: '>',
-    quot: '"',
-    apos: "'",
-    nbsp: ' ',
-    lrm: '‎',
-    rlm: '‏',
-};
-
-/** A code point as text, or the replacement character when it is not a character. */
-function character(code: number): string {
-    return code > 0 && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff)
-        ? String.fromCodePoint(code)
-        : '�';
-}
-
-/** A cue's text without its tags, with its character references decoded (after, so `&lt;b&gt;` stays text). */
-function cueText(lines: readonly string[]): string {
-    return lines
-        .join(' ')
-        .replace(/<[^>]*>/g, '')
-        .replace(
-            /&(?:#x([0-9a-f]{1,6})|#(\d{1,7})|([a-z]+));/gi,
-            (whole, hex?: string, decimal?: string, name?: string) => {
-                if (hex !== undefined) {
-                    return character(parseInt(hex, 16));
-                }
-
-                if (decimal !== undefined) {
-                    return character(Number(decimal));
-                }
-
-                return ENTITIES[(name ?? '').toLowerCase()] ?? whole;
-            },
-        );
-}
-
-/** A timing line: two timestamps around an arrow, then any cue settings. */
-const TIMING = /^[ \t]*([\d:.]+)[ \t]*-->[ \t]*([\d:.]+)(?:[ \t].*)?$/;
-
-/** A block that is no cue: a comment, a style sheet or a region. */
-const NOT_A_CUE = /^(?:NOTE|STYLE|REGION)(?:[ \t]|$)/;
-
-function readVtt(text: string): Chapter[] {
-    const blocks = text.split(/\n{2,}/);
-    const cues: { start: number; end: number; title: string }[] = [];
-
-    // The first block is the header (`WEBVTT` and anything after it on its lines).
-    for (const block of blocks.slice(1)) {
-        const lines = block.split('\n');
-
-        if (NOT_A_CUE.test(lines[0])) {
-            continue;
-        }
-
-        // An identifier may come first; the timing line is the first or the second.
-        const at = lines[0].includes('-->') ? 0 : 1;
-        const timing = TIMING.exec(lines[at] ?? '');
-
-        if (timing === null) {
-            continue;
-        }
-
-        const start = timestamp(timing[1]);
-        const end = timestamp(timing[2]);
-
-        if (start === null || end === null || end <= start) {
-            continue;
-        }
-
-        const payload: string[] = [];
-
-        for (const line of lines.slice(at + 1)) {
-            if (line.includes('-->')) {
-                break;
-            }
-
-            payload.push(line);
-        }
-
-        cues.push({ start, end, title: cueText(payload) });
-    }
-
-    return collect(cues, (cue) =>
-        chapterOf({ ...cue, image: null, url: null, toc: true }),
-    );
-}
-
 /** The Podcasting 2.0 chapters: `{ chapters: [{ startTime, endTime, title, img, url, toc }] }`. */
 function readJson(value: unknown): Chapter[] {
     const list: unknown =
@@ -331,7 +206,9 @@ export function readChapters(input: unknown): Chapter[] {
     ).replace(/\r\n?/g, '\n');
 
     if (/^WEBVTT(?:[ \t\n]|$)/.test(text)) {
-        return readVtt(text);
+        return collect(readVtt(text), (cue) =>
+            chapterOf({ ...cue, image: null, url: null, toc: true }),
+        );
     }
 
     if (!text.trimStart().startsWith('{')) {
