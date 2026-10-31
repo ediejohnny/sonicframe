@@ -11,6 +11,7 @@ export {
     type ButtonAnimation,
     type ChaptersPlugin,
     type PlayerA11y,
+    type PlayerChapterList,
     type PlayerChapters,
     type PlayerDecode,
     type PlayerDescription,

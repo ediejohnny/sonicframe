@@ -80,6 +80,7 @@ import {
     type ChaptersPlugin,
 } from '../plugins/chapters';
 import type { Chapter, ChapterInput } from '../core/chapters';
+import { FloatingList, type ListSettings } from './chapter-panel';
 
 export type { ChaptersPlugin };
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
@@ -135,7 +136,7 @@ export type PlayerOptions = {
     minimap?: boolean | MinimapOptions;
     /**
      * Chapters on the wave (see `chapters`): the address of a WebVTT or JSON chapters file, a list,
-     * or the plugin's options plus `list` and `listOpen`. The look can place the chapter playing,
+     * or the plugin's options plus `list`. The look can place the chapter playing,
      * buttons to the previous and next chapter and a button that opens the list. Off by default.
      */
     chapters?: string | readonly ChapterInput[] | PlayerChapters;
@@ -194,14 +195,129 @@ export type PlayerChapters = Omit<
     ChaptersOptions,
     'list' | 'words' | 'onChange' | 'onChapters'
 > & {
-    /** The list of chapters inside the player, under the wave. Off by default. */
-    list?: boolean;
-    /**
-     * Whether the list starts open when the look has a `chapters` button to open it; without that
-     * button the list always shows. Closed by default.
-     */
-    listOpen?: boolean;
+    /** The list of chapters: true (in the player, under the wave) or its options. Off by default. */
+    list?: boolean | PlayerChapterList;
 };
+
+/** How the player's list of chapters shows and looks; every extra is off by default. */
+export type PlayerChapterList = {
+    /**
+     * `'inline'` (the default: in the player, under the wave), `'popover'` (a box over the page,
+     * pointing at the `chapters` button) or `'drawer'` (a panel along a side of the page). The two
+     * that float add the `chapters` button at the end of the line when the look places none.
+     */
+    type?: 'inline' | 'popover' | 'drawer';
+    /**
+     * In the player, whether the list starts open when the look has a `chapters` button; without
+     * that button it always shows. Closed by default.
+     */
+    open?: boolean;
+    /** Where a popover opens: `'auto'` (the default: under its button, over it without room), `'above'`, `'below'`. */
+    placement?: 'auto' | 'above' | 'below';
+    /** The page's side a drawer opens on: `'right'` (the default) or `'left'`. */
+    side?: 'left' | 'right';
+    /** The width of a popover or a drawer, in rem: 18 and 20 by default, from 10 to 40. */
+    width?: number;
+    /** The tallest a popover grows before it scrolls, in rem: 20 by default, from 6 to 60. */
+    maxHeight?: number;
+    /** A popover or a drawer stays open after a chapter is chosen. Off by default. */
+    stayOpen?: boolean;
+    /** A drawer dims the page behind it; a press there closes it. Off by default. */
+    backdrop?: boolean;
+    /** A popover or a drawer moves in as it opens, never for people who asked for less motion. Off by default. */
+    animation?: boolean;
+    /** `'fade'` (the default) or `'slide'`. */
+    animationType?: 'fade' | 'slide';
+    /** A finger swiping on the player, off the wave, opens the list; the other way closes it. Off by default. */
+    swipe?: boolean;
+    /** The swipe that opens the list: `'up'` (the default), `'down'`, `'left'` or `'right'`. */
+    swipeDirection?: 'up' | 'down' | 'left' | 'right';
+    /**
+     * The list's own palette, as the player's `palette` takes it (a name, `'auto'` or your colors);
+     * the player's colors by default.
+     */
+    palette?: PaletteChoice;
+    /** The list's own font, as the player's `font` takes it; the player's by default. */
+    font?: FontChoice;
+    /** The list's own box; each one left out keeps the list's default. */
+    style?: PlayerChapterListStyle;
+};
+
+/** The list's own box. */
+export type PlayerChapterListStyle = {
+    /** Corner radius, in rem, from 0 to 4. */
+    corner?: number;
+    /** Border width, in CSS pixels, from 0 to 4. */
+    border?: number;
+    /** `'none'`, `'soft'`, `'hard'` (offset, in the text color) or `'glow'` (in the played color). */
+    shadow?: 'none' | 'soft' | 'hard' | 'glow';
+    /** Space inside the list, in rem, from 0 to 3. */
+    padding?: number;
+    /** Text size, in rem, from 0.5 to 2. */
+    fontSize?: number;
+};
+
+/**
+ * A box shadow by name, for the player and its list: none, a soft one, a hard offset one in the
+ * text color or a glow in the played color, built from the palette's colors read as numbers.
+ */
+function shadowOf(
+    kind: 'none' | 'soft' | 'hard' | 'glow',
+    palette: Palette,
+): string {
+    switch (kind) {
+        case 'soft':
+            return '0 0.0625rem 0.25rem rgba(0, 0, 0, 0.12), 0 0.25rem 1rem rgba(0, 0, 0, 0.08)';
+        case 'hard':
+            return `0.25rem 0.25rem 0 ${withAlpha(readColor(palette.text), 1)}`;
+        case 'glow':
+            return `0 0 1rem ${withAlpha(readColor(palette.progress), 0.45)}`;
+        default:
+            return 'none';
+    }
+}
+
+/** The list's options checked: unknown names fall back, sizes stay in range. */
+function listSettings(list: true | PlayerChapterList): ListSettings {
+    const own: PlayerChapterList = list === true ? {} : list;
+    const pick = <Value extends string>(
+        value: unknown,
+        allowed: readonly Value[],
+        fallback: Value,
+    ): Value =>
+        (allowed as readonly unknown[]).includes(value)
+            ? (value as Value)
+            : fallback;
+    const size = (
+        value: unknown,
+        fallback: number,
+        min: number,
+        max: number,
+    ): number =>
+        typeof value === 'number' && Number.isFinite(value)
+            ? Math.min(max, Math.max(min, value))
+            : fallback;
+    const type = pick(own.type, ['inline', 'popover', 'drawer'], 'inline');
+
+    return {
+        type,
+        open: own.open === true,
+        placement: pick(own.placement, ['auto', 'above', 'below'], 'auto'),
+        side: pick(own.side, ['left', 'right'], 'right'),
+        width: size(own.width, type === 'drawer' ? 20 : 18, 10, 40),
+        maxHeight: size(own.maxHeight, 20, 6, 60),
+        stayOpen: own.stayOpen === true,
+        backdrop: own.backdrop === true,
+        animation: own.animation === true,
+        animationType: pick(own.animationType, ['fade', 'slide'], 'fade'),
+        swipe: own.swipe === true,
+        swipeDirection: pick(
+            own.swipeDirection,
+            ['up', 'down', 'left', 'right'],
+            'up',
+        ),
+    };
+}
 
 /** The player's zoom: the wave's zoom options, plus its buttons. */
 export type PlayerZoom = ZoomOptions & {
@@ -395,6 +511,17 @@ const CHAPTER_PARTS: readonly Part[] = [
 
 let chapterLists = 0;
 
+/** The swipes that open the list: along which axis, and which way (-1 up or left, 1 down or right). */
+const SWIPES = {
+    up: { axis: 'y', sign: -1 },
+    down: { axis: 'y', sign: 1 },
+    left: { axis: 'x', sign: -1 },
+    right: { axis: 'x', sign: 1 },
+} as const;
+
+/** The shortest swipe that counts, in rem. */
+const SWIPE_REM = 3;
+
 /** A speech bubble, for the button that reads the description aloud. */
 const LISTEN_ICON =
     'M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z';
@@ -489,9 +616,18 @@ export class Player {
     private readonly words: PlayerWords;
     /** The chapters plugin, made once so the chapters outlive every rebuild; null while off. */
     private readonly chaptersRef: ChaptersPlugin | null;
-    /** The list of chapters inside the player, or null without one. */
+    /** The list of chapters, or null without one. */
     private chapterList: HTMLElement | null = null;
+    private list: ListSettings | null = null;
+    /** The list's own palette, font and box, as the app gave them (an unknown palette dropped). */
+    private listOwn: Pick<PlayerChapterList, 'palette' | 'font' | 'style'> = {};
+    /** The list floating over the page (a popover or a drawer), or null for the list in the player. */
+    private floating: FloatingList | null = null;
     private listOpen = false;
+    /** The list's button pressed last: a floating list points at it. */
+    private listPressed: HTMLButtonElement | null = null;
+    /** Where a finger came down off the wave, for the swipe that opens the list. */
+    private swipeStart: { id: number; x: number; y: number } | null = null;
     /** The built parts that show the chapter playing, and the buttons that open the list. */
     private chapterNames: HTMLElement[] = [];
     private listButtons: HTMLButtonElement[] = [];
@@ -542,6 +678,8 @@ export class Player {
             this.element.setAttribute('lang', this.words.locale);
         }
 
+        this.floating = this.makeFloating();
+        this.listenSwipe();
         this.ownMedia = !options.media && typeof options.src === 'string';
         this.media = options.media ?? (this.ownMedia ? this.makeMedia() : null);
 
@@ -556,6 +694,7 @@ export class Player {
         this.stopSize = observeSize(this.element, (size) => {
             this.width = size.width / size.pixelRatio;
             this.arrange();
+            this.alignToBars();
         });
     }
 
@@ -671,6 +810,7 @@ export class Player {
         this.stopScheme?.();
         this.stopSize();
         this.teardown();
+        this.floating?.destroy();
 
         if (this.ownMedia && this.media !== null) {
             this.media.pause();
@@ -775,21 +915,32 @@ export class Player {
                 : Array.isArray(asked)
                   ? { items: asked as readonly ChapterInput[] }
                   : (asked as PlayerChapters);
-        const { list, listOpen, ...own } = settings;
+        const { list, ...own } = settings;
         const labels = this.words.labels;
 
-        if (list === true) {
+        // The list's box; a floating one holds an inner part that scrolls, so its arrow can poke out.
+        let content: HTMLElement | null = null;
+
+        if (list === true || (typeof list === 'object' && list !== null)) {
             const box = document.createElement('div');
             box.className = 'sonicframe-chapter-list';
             box.id = `sonicframe-chapter-list-${++chapterLists}`;
             this.chapterList = box;
-        }
+            this.list = listSettings(list);
+            this.listOwn = this.checkedLook(list === true ? {} : list);
+            this.listOpen = this.list.open;
+            content = box;
 
-        this.listOpen = listOpen === true;
+            if (this.list.type !== 'inline') {
+                content = document.createElement('div');
+                content.className = 'sonicframe-chapter-scroll';
+                box.append(content);
+            }
+        }
 
         return chapters({
             ...own,
-            list: this.chapterList,
+            list: content,
             words: {
                 chapter: labels.chapter,
                 list: labels.chapters,
@@ -805,8 +956,251 @@ export class Player {
     }
 
     /**
-     * The parts the options allow: placed by the look, or at the end of the line (the volume, then
-     * the zoom buttons) when the look places none of them.
+     * The list floating over the page (a popover or a drawer), made once for the player's life; null
+     * for the list in the player, or without a list.
+     */
+    private makeFloating(): FloatingList | null {
+        const box = this.chapterList;
+        const list = this.list;
+
+        if (box === null || list === null || list.type === 'inline') {
+            return null;
+        }
+
+        return new FloatingList(
+            box,
+            box.querySelector<HTMLElement>('.sonicframe-chapter-scroll') ?? box,
+            list,
+            this.element,
+            (element) => this.dressList(element),
+            this.words.labels.closeChapters,
+            (focusBack) => {
+                this.listOpen = false;
+                this.showList();
+
+                if (focusBack) {
+                    this.listAnchor()?.focus({ preventScroll: true });
+                }
+            },
+        );
+    }
+
+    /**
+     * With `swipe`, a finger swiping off the wave opens the list one way and closes it the other.
+     * The parts off the wave let the page pan only across the swipe (see `swipeZones`), so the swipe
+     * reaches the player, and the wave keeps its own way of moving.
+     */
+    private listenSwipe(): void {
+        const list = this.list;
+
+        if (list === null || !list.swipe) {
+            return;
+        }
+
+        const signal = this.abort.signal;
+        const onWave = (target: EventTarget | null): boolean =>
+            target instanceof Node &&
+            (this.layout?.box.contains(target) ?? false);
+
+        this.element.addEventListener(
+            'pointerdown',
+            (event) => {
+                this.swipeStart =
+                    event.pointerType === 'touch' && !onWave(event.target)
+                        ? {
+                              id: event.pointerId,
+                              x: event.clientX,
+                              y: event.clientY,
+                          }
+                        : null;
+            },
+            { signal },
+        );
+        this.element.addEventListener(
+            'pointercancel',
+            () => {
+                this.swipeStart = null;
+            },
+            { signal },
+        );
+        this.element.addEventListener(
+            'pointerup',
+            (event) => {
+                const start = this.swipeStart;
+                this.swipeStart = null;
+
+                if (start === null || start.id !== event.pointerId) {
+                    return;
+                }
+
+                const along = SWIPES[list.swipeDirection];
+                const dx = event.clientX - start.x;
+                const dy = event.clientY - start.y;
+                const main = along.axis === 'x' ? dx : dy;
+                const across = along.axis === 'x' ? dy : dx;
+
+                if (
+                    Math.abs(main) < remPixels(SWIPE_REM) ||
+                    Math.abs(main) <= Math.abs(across)
+                ) {
+                    return;
+                }
+
+                this.setListOpen(Math.sign(main) === along.sign);
+            },
+            { signal },
+        );
+    }
+
+    /**
+     * The parts off the wave, where a swipe starts: the line's other parts and the rows under the
+     * wave. Each lets the page pan only across the swipe.
+     */
+    private swipeZones(layout: Layout): void {
+        const list = this.list;
+
+        if (list === null || !list.swipe) {
+            return;
+        }
+
+        const column = layout.box.parentElement as HTMLElement;
+        const zones = [
+            ...[...layout.line.children].filter((part) => part !== column),
+            ...[...column.children].filter((row) => row !== layout.box),
+        ] as HTMLElement[];
+        const pan =
+            SWIPES[list.swipeDirection].axis === 'x' ? 'pan-y' : 'pan-x';
+
+        for (const zone of zones) {
+            zone.style.setProperty('touch-action', pan);
+        }
+    }
+
+    /** The list's own look with an unknown palette name reported once and dropped. */
+    private checkedLook(
+        list: PlayerChapterList,
+    ): Pick<PlayerChapterList, 'palette' | 'font' | 'style'> {
+        const { palette, font, style } = list;
+
+        if (
+            typeof palette === 'string' &&
+            palette !== 'auto' &&
+            palette !== 'default' &&
+            pickPalette(palette, false) === null
+        ) {
+            this.later(
+                new Error(
+                    `sonicframe: unknown palette "${cleanText(palette, 40)}"`,
+                ),
+            );
+
+            return { font, style };
+        }
+
+        return { palette, font, style };
+    }
+
+    /**
+     * Lays the list's own palette, font and box over its defaults (the player's colors and font, which
+     * it inherits in the player and copies when it floats). Colors go through the palette's variables;
+     * shadows are built from colors read as numbers.
+     */
+    private dressList(box: HTMLElement): void {
+        const { palette: choice, font, style = {} } = this.listOwn;
+        let palette: Palette | null = null;
+
+        if (typeof choice === 'object' && choice !== null) {
+            palette = cleanPalette(choice);
+        } else if (choice === 'auto') {
+            palette = pickPalette(
+                'auto',
+                typeof window.matchMedia === 'function' &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches,
+            );
+        } else if (choice !== undefined && choice !== 'default') {
+            palette = pickPalette(choice, false);
+        }
+
+        if (palette !== null) {
+            for (const [name, value] of paletteVariables(palette)) {
+                box.style.setProperty(name, value);
+            }
+        }
+
+        if (font !== undefined) {
+            const resolved = resolveFont(font, this.look.font);
+            box.style.setProperty('font-family', resolved.family);
+
+            if (resolved.load !== null) {
+                loadFont(resolved.load).catch((error: unknown) =>
+                    this.frameRef?.reportError(error),
+                );
+            }
+        }
+
+        const size = (
+            value: unknown,
+            min: number,
+            max: number,
+        ): number | null =>
+            typeof value === 'number' && Number.isFinite(value)
+                ? Math.min(max, Math.max(min, value))
+                : null;
+        const corner = size(style.corner, 0, 4);
+        const border = size(style.border, 0, 4);
+        const padding = size(style.padding, 0, 3);
+        const fontSize = size(style.fontSize, 0.5, 2);
+        const shadow: unknown = style.shadow;
+
+        if (corner !== null) {
+            box.style.setProperty('border-radius', `${corner}rem`);
+        }
+
+        if (border !== null) {
+            box.style.setProperty('border-width', `${border}px`);
+            box.style.setProperty('border-style', 'solid');
+        }
+
+        if (padding !== null) {
+            box.style.setProperty('padding', `${padding}rem`);
+        }
+
+        if (fontSize !== null) {
+            box.style.setProperty('font-size', `${fontSize}rem`);
+        }
+
+        if (
+            shadow === 'none' ||
+            shadow === 'soft' ||
+            shadow === 'hard' ||
+            shadow === 'glow'
+        ) {
+            box.style.setProperty(
+                'box-shadow',
+                shadowOf(shadow, palette ?? this.colors),
+            );
+        }
+    }
+
+    /** The list's button that opened it last, or the first one. */
+    private listAnchor(): HTMLButtonElement | null {
+        return this.listPressed !== null &&
+            this.listButtons.includes(this.listPressed)
+            ? this.listPressed
+            : (this.listButtons[0] ?? null);
+    }
+
+    /** Opens or closes the list, from a swipe or the app. */
+    private setListOpen(open: boolean): void {
+        if (this.chapterList !== null && open !== this.listOpen) {
+            this.listOpen = open;
+            this.showList();
+        }
+    }
+
+    /**
+     * The parts the options allow: placed by the look, or at the end of the line (the volume, the
+     * zoom buttons, then the list's button for a list that floats) when the look places none of them.
      */
     private visibleLine(): Part[] {
         const { line, meta } = this.look;
@@ -820,6 +1214,11 @@ export class Player {
 
         if (this.zoomButtons() && !ZOOM_PARTS.some(placed)) {
             extra.push(...ZOOM_PARTS);
+        }
+
+        // A list over the page opens only from its button, so it always has one.
+        if (this.floating !== null && !placed('chapters')) {
+            extra.push('chapters');
         }
 
         return [...line.filter((part) => this.allowed(part)), ...extra];
@@ -1179,12 +1578,13 @@ export class Player {
             }
         }
 
-        if (this.chapterList !== null) {
-            // Under the wave, on its left edge like the row under it (see `placeRows`); otherwise
-            // under everything, as wide as the player.
+        // The list in the player goes under the wave, on its left edge like the row under it (see
+        // `placeRows`), otherwise under everything; a floating list stays on the page's body.
+        if (this.chapterList !== null && this.floating === null) {
             (this.listUnderWave() ? column : this.element).append(
                 this.chapterList,
             );
+            this.dressList(this.chapterList);
         }
 
         const sync = (): void => this.showTime();
@@ -1202,16 +1602,73 @@ export class Player {
 
         if (this.layout !== null) {
             this.placeRows(this.layout, this.layout.narrow);
+            this.swipeZones(this.layout);
+        }
+
+        // The bars move when the wave resizes or a strip comes or goes.
+        this.partCleanups.push(frame.on('resize', () => this.alignToBars()));
+        this.alignToBars();
+    }
+
+    /**
+     * Lines up the parts beside a wave in the line with the bars themselves. The line centers its
+     * parts on the wave's box, which also holds the strips plugins stack above and below the bars,
+     * or on the whole column when rows sit under the wave; each part is moved by `translate` alone,
+     * so nothing around it moves.
+     */
+    private alignToBars(): void {
+        const layout = this.layout;
+        const canvas = layout?.box.querySelector('canvas') ?? null;
+
+        if (
+            layout === null ||
+            canvas === null ||
+            this.look.wavePlace !== 'inline'
+        ) {
+            return;
+        }
+
+        const bars = canvas.getBoundingClientRect();
+
+        if (bars.height <= 0) {
+            return;
+        }
+
+        const middle = bars.top + bars.height / 2;
+        const column = layout.box.parentElement;
+
+        for (const part of layout.line.children) {
+            if (part === column || !(part instanceof HTMLElement)) {
+                continue;
+            }
+
+            const rect = part.getBoundingClientRect();
+
+            if (rect.height <= 0) {
+                continue;
+            }
+
+            // The box measured already carries the shift given last time.
+            const given =
+                parseFloat(
+                    part.style.getPropertyValue('translate').split(' ')[1] ??
+                        '',
+                ) || 0;
+            const shift = Math.round(
+                given + middle - (rect.top + rect.height / 2),
+            );
+            part.style.setProperty('translate', `0px ${shift}px`);
         }
     }
 
     /**
-     * Whether the chapters list goes under the wave, in its column: with the wave in the line, unless
-     * zoom buttons share the line (that line wraps, which a grid cannot).
+     * Whether the chapters list goes under the wave, in its column: a list in the player with the
+     * wave in the line, unless zoom buttons share the line (that line wraps, which a grid cannot).
      */
     private listUnderWave(): boolean {
         return (
             this.chapterList !== null &&
+            this.floating === null &&
             this.look.wavePlace === 'inline' &&
             !this.zoomOnLine()
         );
@@ -1317,10 +1774,11 @@ export class Player {
     }
 
     /**
-     * A voice note's line, and the line of a player with its chapters list under the wave, is a grid:
-     * its first row holds the line's parts and the wave, each one centered on the wave, and the rows
-     * under the wave (the small line, the list) keep to the wave's column, so opening the list never
-     * moves the parts beside the wave. Otherwise the line is the flexible row it was built as.
+     * A voice note's line, the line of a player with its chapters list under the wave, and one whose
+     * rows under the wave start at the line (`underStart`) are a grid: its first row holds the line's
+     * parts and the wave, and the rows under the wave (the small line, the list) keep to the wave's
+     * column, or span the whole line from under the play button, so opening the list never moves
+     * the parts beside the wave. Otherwise the line is the flexible row it was built as.
      */
     private placeRows(layout: Layout, narrow: boolean): void {
         const { line, box } = layout;
@@ -1330,8 +1788,13 @@ export class Player {
             (row) => row !== box,
         ) as HTMLElement[];
         const placed = [...parts, box, ...below];
+        const fromLine =
+            this.look.underStart === 'line' &&
+            this.look.wavePlace === 'inline' &&
+            below.length > 0 &&
+            !this.zoomOnLine();
 
-        if (!narrow && !this.listUnderWave()) {
+        if (!narrow && !this.listUnderWave() && !fromLine) {
             css(line, [
                 ['display', 'flex'],
                 ['gap', `${this.look.gap}rem`],
@@ -1377,7 +1840,10 @@ export class Player {
         below.forEach((row, index) =>
             css(row, [
                 ['grid-row', `${index + 2}`],
-                ['grid-column', wave],
+                [
+                    'grid-column',
+                    this.look.underStart === 'line' ? '1 / -1' : wave,
+                ],
             ]),
         );
     }
@@ -1831,7 +2297,7 @@ export class Player {
         return button;
     }
 
-    /** The button that opens and closes the list of chapters inside the player. */
+    /** The button that opens and closes the list of chapters, in the player or over the page. */
     private listButton(): HTMLButtonElement {
         const button = this.iconButton(
             'sonicframe-chapters-toggle',
@@ -1844,15 +2310,18 @@ export class Player {
         }
 
         button.addEventListener('click', () => {
-            this.listOpen = !this.listOpen;
-            this.showList();
+            this.listPressed = button;
+            this.setListOpen(!this.listOpen);
         });
         this.listButtons.push(button);
 
         return button;
     }
 
-    /** Shows the list when it is open, or always when no button can open it. */
+    /**
+     * Shows the list when it is open: over the page against its button when it floats; in the player,
+     * also always when no button can open it.
+     */
     private showList(): void {
         const list = this.chapterList;
 
@@ -1860,8 +2329,20 @@ export class Player {
             return;
         }
 
-        const shown = this.listButtons.length === 0 || this.listOpen;
-        list.hidden = !shown;
+        const floating = this.floating;
+        const anchor = this.listAnchor();
+        const shown =
+            floating === null
+                ? this.listButtons.length === 0 || this.listOpen
+                : this.listOpen && anchor !== null;
+
+        if (floating === null) {
+            list.hidden = !shown;
+        } else if (shown && anchor !== null) {
+            floating.open(anchor);
+        } else {
+            floating.close();
+        }
 
         for (const button of this.listButtons) {
             button.setAttribute('aria-expanded', String(shown));
@@ -2016,21 +2497,12 @@ export class Player {
         const look = this.look;
         const palette = this.colors;
         let surface = 'var(--sonicframe-surface, transparent)';
-        let shadow = 'none';
+        const shadow = shadowOf(look.shadow, palette);
 
         if (look.surface === 'none') {
             surface = 'transparent';
         } else if (look.surface === 'glass') {
             surface = withAlpha(readColor(palette.surface), 0.72);
-        }
-
-        if (look.shadow === 'soft') {
-            shadow =
-                '0 0.0625rem 0.25rem rgba(0, 0, 0, 0.12), 0 0.25rem 1rem rgba(0, 0, 0, 0.08)';
-        } else if (look.shadow === 'hard') {
-            shadow = `0.25rem 0.25rem 0 ${withAlpha(readColor(palette.text), 1)}`;
-        } else if (look.shadow === 'glow') {
-            shadow = `0 0 1rem ${withAlpha(readColor(palette.progress), 0.45)}`;
         }
 
         css(this.element, [

@@ -20,9 +20,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   where they landed, and the chapter in the slider's value in words. Off until asked: saying the chapter
   playback enters, a strip of titles above or below the wave, and a list (`nav` with `aria-current`) in an
   element of the app, with pictures and links only when asked.
-- The player's `chapters` option (an address, a list or the plugin's options, plus `list` and `listOpen`), off
+- The player's `chapters` option (an address, a list or the plugin's options, plus `list`), off
   by default, with words in English and Portuguese; the look parts `chapter`, `prevChapter`, `nextChapter` and
   `chapters` (the list's button), shown only with chapters; `player.chapters`; and the `chapterchange` event.
+- The player's chapters list takes options (`list: true` is still the list in the player): `type` `'popover'`
+  (a box over the page under its button, kept inside the window, with an arrow at the button; `placement`) or
+  `'drawer'` (a panel along the page's `side`, with a close button and an optional `backdrop`), `width`,
+  `maxHeight`, `open`, `stayOpen`, and off by default: `animation` (`'fade'` or `'slide'`, never with reduced
+  motion) and `swipe` (a finger's swipe off the wave, `swipeDirection`, opens and closes it). The list can wear
+  its own `palette`, `font` and `style` (corner, border, shadow, padding, text size). A list that floats adds
+  its button at the end of the line when the look places none. `arrowOffset` (pure) places the arrow.
+- `underStart` in the player's look (`'wave'`, the default, or `'line'`): the rows under a wave in the line start
+  at the wave's left edge, or at the line's, under the play button.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
 - The docs' Chapters page, with a WebVTT and a JSON example.
 
@@ -32,6 +41,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   it on to the latest version's own address, so an entry and its pieces always match), and the source code comes
   from a plain `git clone` of `main` or its zip. A "Want a specific version?" part under each shows the same with
   `x.y.z`, to fill in with the version's numbers.
+- The size ceiling of each entry rises from 96 KB to 128 KB (gzip, unminified, comments and chunks included).
+
+### Fixed
+
+- The parts beside a wave in the player's line (the play button, the time) sat lower than the bars whenever a
+  plugin added a strip above or below them, or rows sat under the wave: the line centered them on the wave's
+  whole box or column. They now line up with the bars' middle, moved by `translate` alone.
 
 ## [0.4.1] - 2026-10-31
 

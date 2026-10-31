@@ -128,6 +128,17 @@ describe('resolveLook', () => {
         ).toBe('auto');
     });
 
+    it('starts the rows under the wave at the wave by default, at the line when asked, and nowhere else', () => {
+        expect(DEFAULT_LOOK.underStart).toBe('wave');
+        expect(
+            resolveLook(DEFAULT_LOOK, { underStart: 'line' }).underStart,
+        ).toBe('line');
+        expect(
+            resolveLook(DEFAULT_LOOK, { underStart: 'left' as never })
+                .underStart,
+        ).toBe('wave');
+    });
+
     it('reads the voice note’s part lists, keeping known parts only', () => {
         expect(DEFAULT_LOOK.narrowLine).toEqual(['play', 'wave', 'slot']);
         expect(DEFAULT_LOOK.narrowStart).toEqual([

@@ -52,6 +52,12 @@ export type PlayerLook = {
      * group under a voice note's wave; to the start everywhere else.
      */
     timeAlign: 'auto' | 'start' | 'center' | 'end';
+    /**
+     * Where the rows under a wave in the line start (the small line, a voice note's time, a list):
+     * at the wave's left edge (`'wave'`, the default) or at the line's, under the play button
+     * (`'line'`), so the button and the wave read as one block above them.
+     */
+    underStart: 'wave' | 'line';
     /** The play button; `size` in CSS pixels. */
     button: { shape: ButtonShape; fill: ButtonFill; size: number };
     /** Height of the wave, in rem. */
@@ -134,6 +140,7 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     wavePlace: 'inline',
     time: 'both',
     timeAlign: 'auto',
+    underStart: 'wave',
     button: { shape: 'circle', fill: 'solid', size: 36 },
     waveHeight: 2.5,
     minimapHeight: 1.5,
@@ -265,6 +272,11 @@ export function resolveLook(
             given.timeAlign,
             ['auto', 'start', 'center', 'end'] as const,
             base.timeAlign,
+        ),
+        underStart: oneOf(
+            given.underStart,
+            ['wave', 'line'] as const,
+            base.underStart,
         ),
         button: {
             shape: oneOf(
