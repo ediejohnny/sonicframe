@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-31
+
 ### Added
 
 - `timeAlign` in the player's look (`'auto'`, `'start'`, `'center'` or `'end'`): where a time's text sits in the
