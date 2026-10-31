@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The docs' Installation page now starts from the latest version: the CDN address carries no version (unpkg sends
+  it on to the latest version's own address, so an entry and its pieces always match), and the source code comes
+  from a plain `git clone` of `main` or its zip. A "Want a specific version?" part under each shows the same with
+  `x.y.z`, to fill in with the version's numbers.
+
 ## [0.4.1] - 2026-10-31
 
 ### Added
