@@ -9,6 +9,7 @@
 import { silencesFromPeaks, type Silence } from './analysis';
 import { localeFor, resolveLanguage, type Language } from './language';
 import { normalize, resample } from './peaks';
+import { LANDING, stepIndex } from './steps';
 import { cleanText, fillTemplate } from './text';
 import { formatTime } from './timing';
 
@@ -188,9 +189,6 @@ const TREND = 1.5;
 
 /** Up to this many pauses, the description walks through the sound; beyond, it sums them up. */
 const NARRATED_PAUSES = 2;
-
-/** How early before a part's start a time already counts as in it, in seconds. */
-const NEAR = 0.05;
 
 /** The longest phrase taken from the app, in characters. */
 const MAX_WORD = 200;
@@ -375,7 +373,7 @@ export function outlineSound(
 }
 
 /**
- * The index of the part playing at `time`, or -1 inside a silence. A time up to `NEAR` before a
+ * The index of the part playing at `time`, or -1 inside a silence. A time up to `LANDING` before a
  * part's start is in it already: a seek to that start can land a hair early.
  */
 export function partAt(outline: SoundOutline, time: number): number {
@@ -383,7 +381,7 @@ export function partAt(outline: SoundOutline, time: number): number {
 
     return parts.findIndex(
         (part, index) =>
-            time >= part.start - NEAR &&
+            time >= part.start - LANDING &&
             (time < part.end ||
                 (index === parts.length - 1 && time <= part.end)),
     );
@@ -412,9 +410,9 @@ export function silenceAt(
 
 /**
  * The part a step lands on, or null when there is none. Forward, the next part to start after
- * `time` (one starting within `NEAR` of it is where a step just landed); back, like a player's
+ * `time` (one starting within `LANDING` of it is where a step just landed); back, like a player's
  * previous track, the start of the current part once more than `grace` seconds into it (floored at
- * `NEAR`), otherwise the one before.
+ * `LANDING`), otherwise the one before.
  */
 export function nextPart(
     outline: SoundOutline,
@@ -422,23 +420,12 @@ export function nextPart(
     direction: 1 | -1,
     grace: number = 1,
 ): number | null {
-    const parts = outline.parts;
-
-    if (direction > 0) {
-        const index = parts.findIndex((part) => part.start > time + NEAR);
-
-        return index < 0 ? null : index;
-    }
-
-    const before = time - Math.max(NEAR, grace);
-
-    for (let index = parts.length - 1; index >= 0; index--) {
-        if (parts[index].start < before) {
-            return index;
-        }
-    }
-
-    return null;
+    return stepIndex(
+        outline.parts.map((part) => part.start),
+        time,
+        direction,
+        grace,
+    );
 }
 
 function amount(

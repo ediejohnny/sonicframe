@@ -138,6 +138,19 @@ export {
     type WaveformResponse,
     type WriteWaveformOptions,
 } from './core/waveform';
+export {
+    chapterAt,
+    chapterEnds,
+    loadChapters,
+    MAX_CHAPTERS,
+    nextChapter,
+    readChapters,
+    type Chapter,
+    type ChapterInput,
+    type ChaptersFetcher,
+    type LoadChaptersOptions,
+} from './core/chapters';
+export { safeUrl } from './core/url';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
 export type { View, ViewState } from './core/view';
 export {
