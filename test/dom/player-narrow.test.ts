@@ -109,6 +109,57 @@ describe('a narrow player', () => {
         expect(root().hasAttribute('data-narrow')).toBe(true);
     });
 
+    it('centers the play button on the wave, with the rows under the wave in the wave’s column', () => {
+        player = make({ meta: ['duration'] });
+        resize(320);
+        const line = root().firstElementChild as HTMLElement;
+        const wave = player.frame.container;
+        const under = root().querySelector('.sonicframe-under') as HTMLElement;
+        const play = root().querySelector('.sonicframe-play') as HTMLElement;
+        const place = (element: Element | null): string[] => [
+            (element as HTMLElement).style.getPropertyValue('grid-row'),
+            (element as HTMLElement).style.getPropertyValue('grid-column'),
+        ];
+
+        expect(line.style.getPropertyValue('display')).toBe('grid');
+        expect(line.style.getPropertyValue('align-items')).toBe('center');
+        expect(place(play)).toEqual(['1', '1']);
+        expect(place(wave)).toEqual(['1', '2']);
+        expect(place(under)).toEqual(['2', '2']);
+        expect(place(under.nextElementSibling)).toEqual(['3', '2']);
+    });
+
+    it('lets the controls share the time’s row, the look’s narrowGap apart, before any of them wraps', () => {
+        player = make({ narrowGap: 0.25 });
+        resize(320);
+        const under = root().querySelector('.sonicframe-under') as HTMLElement;
+        const controls = root().querySelector(
+            '.sonicframe-under-controls',
+        ) as HTMLElement;
+
+        expect(under.style.getPropertyValue('gap')).toBe('0.25rem');
+        expect(controls.style.getPropertyValue('gap')).toBe('0.25rem');
+        expect(controls.style.getPropertyValue('flex')).toBe('1 1 0px');
+        expect(controls.style.getPropertyValue('min-width')).toBe(
+            'min-content',
+        );
+    });
+
+    it('turns back into one flexible line that wraps for the zoom buttons', () => {
+        player = make();
+        resize(320);
+        resize(800);
+        const line = root().firstElementChild as HTMLElement;
+        const wave = player.frame.container;
+
+        expect(line.style.getPropertyValue('display')).toBe('flex');
+        expect(line.style.getPropertyValue('flex-wrap')).toBe('wrap');
+        expect(wave.parentElement?.style.getPropertyValue('display')).toBe(
+            'flex',
+        );
+        expect(wave.style.getPropertyValue('grid-row')).toBe('');
+    });
+
     it('puts the row under the wave right below it, before the look’s own small line', () => {
         player = make({ meta: ['duration'] });
         resize(320);
