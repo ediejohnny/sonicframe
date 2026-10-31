@@ -17,14 +17,14 @@ import type { PaletteChoice } from '../core/palettes';
 import { loadWaveform, type ReadWaveformOptions } from '../core/waveform';
 import type { MinimapOptions } from '../plugins/minimap';
 import type { WaveName } from '../types';
-import {
-    Player,
-    type PlayerA11y,
-    type PlayerChapters,
-    type PlayerDescription,
-    type PlayerOptions,
-    type PlayerZoom,
-} from './player';
+import { Player } from './player';
+import type {
+    PlayerA11y,
+    PlayerChapters,
+    PlayerDescription,
+    PlayerOptions,
+    PlayerZoom,
+} from './player-options';
 
 /** The attributes the tag reads. */
 export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([

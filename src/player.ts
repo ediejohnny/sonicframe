@@ -5,22 +5,21 @@
  * waveform file without the main entry.
  */
 
-export {
-    createPlayer,
-    Player,
-    type ButtonAnimation,
-    type ChapterListLook,
-    type ChaptersPlugin,
-    type PlayerA11y,
-    type PlayerChapterList,
-    type PlayerChapters,
-    type PlayerDecode,
-    type PlayerDescription,
-    type PlayerEvents,
-    type PlayerListenButton,
-    type PlayerOptions,
-    type PlayerZoom,
-} from './player/player';
+export { createPlayer, Player } from './player/player';
+export type {
+    ButtonAnimation,
+    ChapterListLook,
+    ChaptersPlugin,
+    PlayerA11y,
+    PlayerChapterList,
+    PlayerChapters,
+    PlayerDecode,
+    PlayerDescription,
+    PlayerEvents,
+    PlayerListenButton,
+    PlayerOptions,
+    PlayerZoom,
+} from './player/player-options';
 export {
     loadWaveform,
     readWaveform,
