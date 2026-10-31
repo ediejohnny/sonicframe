@@ -105,6 +105,74 @@ describe("the player's words", () => {
         player = null;
     });
 
+    it('names a one-second skip in the singular, in each language', () => {
+        const names: [string | undefined, string, string][] = [
+            [undefined, 'Back 1 second', 'Forward 1 second'],
+            ['pt-BR', 'Voltar 1 segundo', 'Avançar 1 segundo'],
+            ['pt-PT', 'Recuar 1 segundo', 'Avançar 1 segundo'],
+            ['es', 'Retroceder 1 segundo', 'Avanzar 1 segundo'],
+            ['fr', 'Reculer de 1 seconde', 'Avancer de 1 seconde'],
+        ];
+
+        for (const [lang, back, forward] of names) {
+            player = createPlayer({
+                container: container(),
+                media: fakeMedia({ duration: 33 }),
+                look: { line: ['back', 'play', 'wave', 'forward'], skip: 1 },
+                a11y: { lang },
+            });
+
+            expect(labelOf('.sonicframe-back'), lang).toBe(back);
+            expect(labelOf('.sonicframe-forward'), lang).toBe(forward);
+
+            player.destroy();
+            cleanUp();
+        }
+
+        player = null;
+    });
+
+    it("follows each language's own plural rules: 1.5 is singular in French, plural in English", () => {
+        const names: [string, string][] = [
+            ['en', 'Back 1.5 seconds'],
+            ['fr', 'Reculer de 1,5 seconde'],
+        ];
+
+        for (const [lang, back] of names) {
+            player = createPlayer({
+                container: container(),
+                media: fakeMedia({ duration: 33 }),
+                look: { line: ['back', 'play', 'wave'], skip: 1.5 },
+                a11y: { lang },
+            });
+
+            expect(labelOf('.sonicframe-back'), lang).toBe(back);
+
+            player.destroy();
+            cleanUp();
+        }
+
+        player = null;
+    });
+
+    it("keeps the app's own skip label for one second when it gives no singular", () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            look: { line: ['back', 'play', 'wave', 'forward'], skip: 1 },
+            a11y: {
+                labels: {
+                    back: 'Rewind {seconds}s',
+                    forward: 'Skip {seconds}s',
+                    forwardOne: 'Skip one second',
+                },
+            },
+        });
+
+        expect(labelOf('.sonicframe-back')).toBe('Rewind 1s');
+        expect(labelOf('.sonicframe-forward')).toBe('Skip one second');
+    });
+
     it("gives the app's plugins its language", () => {
         const seen: string[] = [];
         player = createPlayer({

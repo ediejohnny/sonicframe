@@ -28,7 +28,9 @@ function playerLabels(words: Readonly<Words>): PlayerLabels {
         play: playButton.play,
         pause: playButton.pause,
         back: player.back,
+        backOne: player.backOne,
         forward: player.forward,
+        forwardOne: player.forwardOne,
         speed: player.speed,
         mute: volume.mute,
         unmute: volume.unmute,
@@ -72,6 +74,8 @@ export type PlayerWords = {
     ): string;
     /** A number in the language (`1,5` in Portuguese). */
     number(value: number): string;
+    /** Whether the language says `value` in the singular ("1 second"), by its plural rules. */
+    one(value: number): boolean;
     /** The slider's value in words, from the `value` label. */
     valueText: ValueText;
 };
@@ -84,6 +88,20 @@ export function playerWords(
     const locale = localeFor(lang, own !== undefined);
     const labels = mergeWords(playerLabels(wordsFor(lang)), own, MAX_LABEL);
 
+    // The app's own plural without its singular stands for both, never mixed with the language's.
+    for (const [many, single] of [
+        ['back', 'backOne'],
+        ['forward', 'forwardOne'],
+    ] as const) {
+        if (
+            typeof own?.[many] === 'string' &&
+            typeof own[single] !== 'string'
+        ) {
+            labels[single] = labels[many];
+        }
+    }
+
+    const plural = new Intl.PluralRules(locale);
     const number = (value: number): string =>
         new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(
             value,
@@ -95,6 +113,7 @@ export function playerWords(
         say: (name, values = {}) =>
             cleanText(fillTemplate(labels[name], values), MAX_LABEL),
         number,
+        one: (value) => plural.select(value) === 'one',
         valueText: (time, ratio, duration) =>
             time !== null && duration !== null
                 ? fillTemplate(labels.value, {

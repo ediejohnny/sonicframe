@@ -66,6 +66,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `createSpectrogram`'s `minDb` and `maxDb` (the picture went black); `levels`' `windowSeconds`,
   `findSilences`' `thresholdDb`, `minDuration` and `windowSeconds`, and `silencesFromPeaks`' `threshold` and
   `minDuration` (no silence was ever found). The Security page says the rule for every option.
+- A skip of one second says "Back 1 second", not "Back 1 seconds": the player's new `backOne` and `forwardOne`
+  labels are used when the language says the number in the singular, by its own plural rules (so "1,5
+  seconde" in French). An app's own `back` or `forward` without its singular still serves both.
 - A player in Portuguese says its words in Portuguese everywhere: the volume slider said "muted", and the regions
   and the markers' "and N more" spoke English, whatever the player's language.
 

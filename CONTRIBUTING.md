@@ -30,6 +30,8 @@ Spanish (`es`) and French (`fr`). A new language is one file and one line, and a
     - Keep the meaning short and plain: most phrases are names and values a screen reader says.
     - Numbers and units in the wave in words ("33 seconds") come from the browser in your language; you do not write
       them.
+    - A phrase whose name ends in `One` (`backOne`) is the singular of the one before it, used when your
+      language says the number in the singular; write it even when it reads the same.
     - A regional variant builds on its language and holds only what it says otherwise, as `pt-pt.ts` builds on
       `pt.ts`.
 3. **Register it.** Add the tag to the `Language` type and one line to the `LANGUAGES` table in
