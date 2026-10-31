@@ -44,8 +44,8 @@ new SonicFrame({
     src: '/episodes/12.mp3',
     chapters: { src: '/episodes/12-chapters.vtt', list: true, lane: 'below' },
     look: {
-        line: ['play', 'prevChapter', 'wave', 'nextChapter', 'time'],
-        meta: ['chapter', 'spacer', 'chapters'],
+        line: ['play', 'wave'],
+        meta: ['time', 'chapter', 'spacer', 'prevChapter', 'nextChapter', 'chapters'],
     },
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
@@ -53,7 +53,7 @@ new SonicFrame({
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":"below"},"look":{"line":["play","prevChapter","wave","nextChapter","time"],"meta":["chapter","spacer","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":"below"},"look":{"line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
                     ></div>
                     <p>
                         Hover a line to see its chapter, click it to go there,
@@ -276,10 +276,11 @@ The meeting</code></pre>
                     <ul>
                         <li>
                             <code>list: true</code>: the list inside the player,
-                            under the wave. With a <code>chapters</code> part in
-                            the look, a button opens and closes it
-                            (<code>listOpen</code>, closed by default); without
-                            one, it always shows.
+                            under the wave and on its left edge (under the
+                            controls when the wave is on top). With a
+                            <code>chapters</code> part in the look, a button
+                            opens and closes it (<code>listOpen</code>, closed
+                            by default); without one, it always shows.
                         </li>
                         <li>
                             Four parts for the look, shown only with chapters:
