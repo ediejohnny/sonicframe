@@ -382,9 +382,10 @@ describe('a chapter name too long for its room', () => {
         keyframes: Keyframe[];
         options: KeyframeAnimationOptions;
         cancelled: boolean;
+        paused: boolean;
     };
 
-    /** Records each `element.animate`, with its keyframes and options, marked once cancelled. */
+    /** Records each `element.animate`: its keyframes and options, whether paused or cancelled. */
     function walks(): Walk[] {
         const started: Walk[] = [];
         vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(
@@ -393,9 +394,16 @@ describe('a chapter name too long for its room', () => {
                     keyframes: keyframes as Keyframe[],
                     options: options as KeyframeAnimationOptions,
                     cancelled: false,
+                    paused: false,
                     finished: Promise.resolve(),
                     cancel(): void {
                         walk.cancelled = true;
+                    },
+                    pause(): void {
+                        walk.paused = true;
+                    },
+                    play(): void {
+                        walk.paused = false;
                     },
                 };
                 started.push(walk);
@@ -407,9 +415,19 @@ describe('a chapter name too long for its room', () => {
         return started;
     }
 
+    /** The walk of the name itself, and the walk of its start fade, last started. */
+    const strip = (started: Walk[]): Walk | undefined =>
+        started
+            .filter((walk) => 'transform' in (walk.keyframes[0] ?? {}))
+            .at(-1);
+    const startFade = (started: Walk[]): Walk | undefined =>
+        started
+            .filter((walk) => 'maskPosition' in (walk.keyframes[0] ?? {}))
+            .at(-1);
+
     /**
-     * A player whose chapter's name has a 100 px room and a text `text` px wide, measured when the
-     * wave next resizes.
+     * A player whose chapter's name ("Intro") has a 100 px room and is `text` px wide, measured
+     * when the wave next resizes. The page's rem is 16 px.
      */
     function named(look: PlayerOptions['look'], text: number): HTMLElement {
         make({
@@ -422,12 +440,7 @@ describe('a chapter name too long for its room', () => {
         });
         const name = part('chapter-now') as HTMLElement;
         boxOf(name, { left: 60, top: 40, width: 100, height: 16 });
-        boxOf(name.firstElementChild as HTMLElement, {
-            left: 60,
-            top: 40,
-            width: text,
-            height: 16,
-        });
+        boxOf(label(name), { left: 60, top: 40, width: text, height: 16 });
         const canvas = (host as HTMLElement).querySelector(
             'canvas',
         ) as HTMLCanvasElement;
@@ -435,6 +448,18 @@ describe('a chapter name too long for its room', () => {
         triggerVisible(canvas, true);
 
         return name;
+    }
+
+    /** The name's text, and the copy that follows it in a loop. */
+    const label = (name: HTMLElement): HTMLElement =>
+        name.firstElementChild?.firstElementChild as HTMLElement;
+    const copy = (name: HTMLElement): HTMLElement =>
+        name.firstElementChild?.lastElementChild as HTMLElement;
+
+    function hover(name: HTMLElement, type: string): void {
+        name.dispatchEvent(
+            Object.assign(new Event(type), { pointerType: 'mouse' }),
+        );
     }
 
     afterEach(() => {
@@ -447,34 +472,66 @@ describe('a chapter name too long for its room', () => {
 
         expect(started).toHaveLength(0);
         expect(name.style.getPropertyValue('text-overflow')).toBe('ellipsis');
+        expect(copy(name).style.getPropertyValue('display')).toBe('none');
     });
 
-    it('walks its overflow at the speed asked, waits at each end and starts over', () => {
+    it('goes round as an endless strip by default: its copy follows and comes to rest where it started', () => {
         const started = walks();
         const name = named(
             { marquee: true, marqueeSpeed: 2, marqueePause: 1000 },
             160,
         );
-        const walk = started.at(-1) as Walk;
+        const walk = strip(started) as Walk;
 
-        // 60 px over its room, at 2 rem (32 px) a second: 1875 ms, with 1000 ms at each end.
-        expect(walk.keyframes[0]?.transform).toBe('translateX(0px)');
-        expect(walk.keyframes.at(-1)?.transform).toBe('translateX(-60px)');
-        expect(walk.options.duration).toBe(3875);
+        // 160 px of name and a 2.5 rem (40 px) gap: 200 px at 2 rem (32 px) a second, 6250 ms,
+        // after 1000 ms at rest; nothing waits at the end, where the copy sits as the name did.
+        expect(walk.keyframes.map((frame) => frame.transform)).toEqual([
+            'translateX(0px)',
+            'translateX(0px)',
+            'translateX(-200px)',
+            'translateX(-200px)',
+        ]);
+        expect(walk.keyframes[1]?.offset).toBeCloseTo(1000 / 7250, 10);
+        expect(walk.keyframes[2]?.offset).toBe(1);
+        expect(walk.options.duration).toBe(7250);
         expect(walk.options.iterations).toBe(Number.POSITIVE_INFINITY);
         expect(walk.options.direction).toBe('normal');
-        // Walking, its end shows in full: no ellipsis.
+        expect(copy(name).textContent).toBe('Intro');
+        expect(copy(name).style.getPropertyValue('display')).toBe('inline');
+        expect(copy(name).style.getPropertyValue('margin-inline-start')).toBe(
+            '2.5rem',
+        );
+        // Walking, the name is cut, never ended by an ellipsis.
         expect(name.style.getPropertyValue('text-overflow')).toBe('clip');
+    });
+
+    it('walks its overflow, waits at each end and starts over when the look says restart', () => {
+        const started = walks();
+        const name = named(
+            {
+                marquee: true,
+                marqueeType: 'restart',
+                marqueeSpeed: 2,
+                marqueePause: 1000,
+            },
+            160,
+        );
+        const walk = strip(started) as Walk;
+
+        // 60 px over its room at 32 px a second: 1875 ms, with 1000 ms at each end.
+        expect(walk.keyframes.at(-1)?.transform).toBe('translateX(-60px)');
+        expect(walk.options.duration).toBe(3875);
+        expect(copy(name).style.getPropertyValue('display')).toBe('none');
     });
 
     it('walks back instead of starting over when the look says bounce', () => {
         const started = walks();
         named({ marquee: true, marqueeType: 'bounce' }, 160);
 
-        expect(started.at(-1)?.options.direction).toBe('alternate');
+        expect(strip(started)?.options.direction).toBe('alternate');
     });
 
-    it('stays still when it fits, and stops walking once it does', () => {
+    it('stays still when it fits', () => {
         const started = walks();
         const name = named({ marquee: true }, 80);
 
@@ -497,9 +554,8 @@ describe('a chapter name too long for its room', () => {
     it('fades out at its end when the look asks, saying there is more, but only when it overflows', () => {
         walks();
         const name = named({ nameOverflow: 'fade', nameFade: 2 }, 160);
-        const mask = name.style.getPropertyValue('mask-image');
 
-        expect(mask).toBe(
+        expect(name.style.getPropertyValue('mask-image')).toBe(
             'linear-gradient(to right, #000 calc(100% - 2rem), transparent)',
         );
         expect(name.style.getPropertyValue('text-overflow')).toBe('clip');
@@ -513,13 +569,83 @@ describe('a chapter name too long for its room', () => {
         ).toBe('');
     });
 
-    it('walks out from under its fade: the overflow and the fade', () => {
-        const started = walks();
-        named({ nameOverflow: 'fade', nameFade: 2, marquee: true }, 160);
+    it('walks out from under its end fade when it starts over, but not in a loop', () => {
+        let started = walks();
+        named(
+            {
+                nameOverflow: 'fade',
+                nameFade: 2,
+                marquee: true,
+                marqueeType: 'restart',
+            },
+            160,
+        );
 
         // 60 px over its room and a 2 rem (32 px) fade.
-        expect(started.at(-1)?.keyframes.at(-1)?.transform).toBe(
+        expect(strip(started)?.keyframes.at(-1)?.transform).toBe(
             'translateX(-92px)',
+        );
+        player?.destroy();
+        host?.remove();
+        vi.restoreAllMocks();
+
+        started = walks();
+        named({ nameOverflow: 'fade', nameFade: 2, marquee: true }, 160);
+        // The loop's copy comes to rest where the name was: the name and the gap, no more.
+        expect(strip(started)?.keyframes.at(-1)?.transform).toBe(
+            'translateX(-200px)',
+        );
+    });
+
+    it('fades at its start too while it walks, out of sight at rest, sharp when the look says so', () => {
+        let started = walks();
+        let name = named(
+            {
+                nameOverflow: 'fade',
+                nameFade: 2,
+                marquee: true,
+                marqueeSpeed: 2,
+                marqueePause: 1000,
+            },
+            160,
+        );
+
+        // A second layer, one fade wider than the room, out past the start at rest.
+        expect(name.style.getPropertyValue('mask-image')).toBe(
+            'linear-gradient(to right, #000 calc(100% - 2rem), transparent), linear-gradient(to right, transparent, #000 2rem)',
+        );
+        expect(name.style.getPropertyValue('mask-size')).toBe(
+            '100% 100%, calc(100% + 2rem) 100%',
+        );
+        // At rest out of sight; in as the first 32 px walk (1000 ms of the 7250 ms round); out
+        // again as the copy walks its last 32 px and comes to rest.
+        const fade = startFade(started) as Walk;
+        expect(
+            fade.keyframes.map((frame) => [frame.maskPosition, frame.offset]),
+        ).toEqual([
+            ['0px 0px, -32px 0px', 0],
+            ['0px 0px, -32px 0px', 1000 / 7250],
+            ['0px 0px, 0px 0px', 2000 / 7250],
+            ['0px 0px, 0px 0px', 6250 / 7250],
+            ['0px 0px, -32px 0px', 1],
+        ]);
+        expect(fade.options.duration).toBe(7250);
+        player?.destroy();
+        host?.remove();
+        vi.restoreAllMocks();
+
+        started = walks();
+        name = named(
+            {
+                nameOverflow: 'fade',
+                marquee: true,
+                nameFadeStart: false,
+            },
+            160,
+        );
+        expect(startFade(started)).toBeUndefined();
+        expect(name.style.getPropertyValue('mask-image')).not.toContain(
+            'transparent, #000',
         );
     });
 
@@ -531,13 +657,26 @@ describe('a chapter name too long for its room', () => {
         expect(name.style.getPropertyValue('mask-image')).toBe('');
     });
 
+    it('stops walking under the mouse and goes on when it leaves, unless the look says not to', () => {
+        let started = walks();
+        let name = named({ marquee: true, nameOverflow: 'fade' }, 160);
+        hover(name, 'pointerenter');
+        expect(started.length).toBeGreaterThan(1);
+        expect(started.every((walk) => walk.paused)).toBe(true);
+        hover(name, 'pointerleave');
+        expect(started.some((walk) => walk.paused)).toBe(false);
+        player?.destroy();
+        host?.remove();
+        vi.restoreAllMocks();
+
+        started = walks();
+        name = named({ marquee: true, marqueeHoverPause: false }, 160);
+        hover(name, 'pointerenter');
+        expect(started.some((walk) => walk.paused)).toBe(false);
+    });
+
     it('shows in full in the tooltip under the mouse when the look asks, and only when cut', () => {
         walks();
-        const hover = (name: HTMLElement, type: string): void => {
-            name.dispatchEvent(
-                Object.assign(new Event(type), { pointerType: 'mouse' }),
-            );
-        };
         const tip = sharedTooltip();
         let name = named({}, 160);
         hover(name, 'pointerenter');
@@ -545,9 +684,10 @@ describe('a chapter name too long for its room', () => {
         player?.destroy();
         host?.remove();
 
-        name = named({ nameTooltip: true }, 160);
+        name = named({ nameTooltip: true, marquee: true }, 160);
         hover(name, 'pointerenter');
         expect(tip.open).toBe(true);
+        // The name once, not its copy.
         expect(tip.element.textContent).toBe('Intro');
         hover(name, 'pointerleave');
         expect(tip.open).toBe(false);
@@ -559,11 +699,33 @@ describe('a chapter name too long for its room', () => {
         expect(tip.open).toBe(false);
     });
 
-    it('stops its walk when the player goes', () => {
+    it('keeps walking through a resize that changes nothing, and walks a new name from its start', () => {
         const started = walks();
         named({ marquee: true }, 160);
+        const first = strip(started) as Walk;
+        const canvas = (host as HTMLElement).querySelector(
+            'canvas',
+        ) as HTMLCanvasElement;
+        // The wave grows; the name's room and the name stay as they were.
+        const resized = vi.fn();
+        player?.on('resize', resized);
+        triggerResize(canvas, { width: 320, height: 40 });
+
+        expect(resized).toHaveBeenCalled();
+        expect(strip(started)).toBe(first);
+        expect(first.cancelled).toBe(false);
+
+        player?.chapters?.go(1);
+        expect(first.cancelled).toBe(true);
+        expect(strip(started)).not.toBe(first);
+    });
+
+    it('stops its walk when the player goes', () => {
+        const started = walks();
+        named({ marquee: true, nameOverflow: 'fade' }, 160);
         player?.destroy();
 
+        expect(started.length).toBeGreaterThan(1);
         expect(started.every((walk) => walk.cancelled)).toBe(true);
     });
 });

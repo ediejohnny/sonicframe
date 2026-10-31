@@ -315,9 +315,11 @@ The meeting</code></pre>
                         The row under the wave keeps one line: the chapter's
                         name takes the room left and gives it up first. A name
                         too long for its room ends in an ellipsis, or as the
-                        look says: it can fade out, walk across its room and
-                        show in full under the mouse. The walk never runs when
-                        the system asks for less motion.
+                        look says: it can fade out, show in full under the
+                        mouse, and walk across its room as an endless strip, its
+                        copy following it, that rests a moment each time round.
+                        The mouse stops it; it never walks when the system asks
+                        for less motion.
                     </p>
                     <div class="code">
                         <pre><code>createPlayer({
@@ -342,9 +344,11 @@ The meeting</code></pre>
                     ></div>
                     <p>
                         <code>nameOverflow</code>, <code>nameFade</code>,
-                        <code>nameTooltip</code>, <code>marquee</code>,
-                        <code>marqueeType</code>, <code>marqueeSpeed</code> and
-                        <code>marqueePause</code> are in
+                        <code>nameFadeStart</code>, <code>nameTooltip</code>,
+                        <code>marquee</code>, <code>marqueeType</code>,
+                        <code>marqueeGap</code>, <code>marqueeSpeed</code>,
+                        <code>marqueePause</code> and
+                        <code>marqueeHoverPause</code> are in
                         <a href="./layouts.html#every-look-option"
                             >every look option</a
                         >; <code>metaWrap: true</code> lets the row break in two

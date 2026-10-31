@@ -429,11 +429,36 @@ kbd {
         white-space: nowrap;
     }
 
+    /* On a small screen the button is a square with a magnifying glass: a ring and its handle. */
+    .search-open {
+        position: relative;
+        flex-shrink: 0;
+        width: 2.25rem;
+        padding: 0;
+    }
+
     .search-open::before {
+        position: absolute;
+        top: 0.625rem;
+        left: 0.625rem;
+        box-sizing: border-box;
         width: 0.75rem;
         height: 0.75rem;
         border: 0.125rem solid currentColor;
-        border-radius: 0.125rem;
+        border-radius: 50%;
+        content: '';
+    }
+
+    .search-open::after {
+        position: absolute;
+        top: 1.1875rem;
+        left: 1.25rem;
+        width: 0.5rem;
+        height: 0.125rem;
+        border-radius: 0.0625rem;
+        background: currentColor;
+        transform: rotate(45deg);
+        transform-origin: left center;
         content: '';
     }
 }

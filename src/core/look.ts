@@ -116,6 +116,11 @@ export type PlayerLook = {
     nameOverflow: 'ellipsis' | 'fade' | 'clip';
     /** How wide the fade at a long name's end is, in rem. */
     nameFade: number;
+    /**
+     * With the fade, a walking name fades at its start too while it is off its start, so its
+     * letters leave the room softly; at rest the start stays sharp.
+     */
+    nameFadeStart: boolean;
     /** A long name shows in full in a tooltip while the mouse is on it. */
     nameTooltip: boolean;
     /**
@@ -123,8 +128,16 @@ export type PlayerLook = {
      * off, it stays still and ends as `nameOverflow` says. Never with reduced motion.
      */
     marquee: boolean;
-    /** At its end, a long name starts over from its start (`'restart'`) or walks back (`'bounce'`). */
-    marqueeType: 'restart' | 'bounce';
+    /**
+     * How a long name goes round: as an endless strip, its copy following it after `marqueeGap`
+     * and coming to rest where it started (`'loop'`); back to its start once its end shows
+     * (`'restart'`); or walking back (`'bounce'`).
+     */
+    marqueeType: 'loop' | 'restart' | 'bounce';
+    /** In a loop, the space between a name and its copy, in rem. */
+    marqueeGap: number;
+    /** A walking name stops while the mouse is on it, and goes on when it leaves. */
+    marqueeHoverPause: boolean;
     /** How fast a long name walks, in rem a second. */
     marqueeSpeed: number;
     /** How long a long name waits at each end, in milliseconds. */
@@ -188,9 +201,12 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     uppercase: false,
     nameOverflow: 'ellipsis',
     nameFade: 1.5,
+    nameFadeStart: true,
     nameTooltip: false,
     marquee: false,
-    marqueeType: 'restart',
+    marqueeType: 'loop',
+    marqueeGap: 2.5,
+    marqueeHoverPause: true,
     marqueeSpeed: 2,
     marqueePause: 1500,
     skip: 10,
@@ -364,6 +380,10 @@ export function resolveLook(
             base.nameOverflow,
         ),
         nameFade: within(given.nameFade, base.nameFade, 0.25, 6),
+        nameFadeStart:
+            typeof given.nameFadeStart === 'boolean'
+                ? given.nameFadeStart
+                : base.nameFadeStart,
         nameTooltip:
             typeof given.nameTooltip === 'boolean'
                 ? given.nameTooltip
@@ -372,9 +392,14 @@ export function resolveLook(
             typeof given.marquee === 'boolean' ? given.marquee : base.marquee,
         marqueeType: oneOf(
             given.marqueeType,
-            ['restart', 'bounce'] as const,
+            ['loop', 'restart', 'bounce'] as const,
             base.marqueeType,
         ),
+        marqueeGap: within(given.marqueeGap, base.marqueeGap, 0.5, 10),
+        marqueeHoverPause:
+            typeof given.marqueeHoverPause === 'boolean'
+                ? given.marqueeHoverPause
+                : base.marqueeHoverPause,
         marqueeSpeed: within(given.marqueeSpeed, base.marqueeSpeed, 0.25, 20),
         marqueePause: within(given.marqueePause, base.marqueePause, 0, 10000),
         skip: within(given.skip, base.skip, 1, 120),

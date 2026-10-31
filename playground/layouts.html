@@ -203,6 +203,17 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>nameFadeStart</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        With the fade, a walking name fades at
+                                        its start too while it is off its start;
+                                        at rest the start stays sharp.
+                                        <code>false</code> keeps a sharp cut
+                                        there.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>nameTooltip</code></td>
                                     <td><code>false</code></td>
                                     <td>
@@ -214,19 +225,37 @@
                                     <td><code>marquee</code></td>
                                     <td><code>false</code></td>
                                     <td>
-                                        A long name walks across its room, waits
-                                        at its end and starts over; a faded name
-                                        walks out from under its fade. Never
+                                        A long name walks across its room, as
+                                        <code>marqueeType</code> says. Never
                                         when the system asks for less motion.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>marqueeType</code></td>
-                                    <td><code>'restart'</code></td>
+                                    <td><code>'loop'</code></td>
                                     <td>
-                                        At its end, the name starts over from
-                                        its start, or <code>'bounce'</code>: it
-                                        walks back.
+                                        How the name goes round: an endless
+                                        strip, its copy following it and coming
+                                        to rest where it started;
+                                        <code>'restart'</code>, back to its
+                                        start once its end shows; or
+                                        <code>'bounce'</code>, walking back.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeGap</code></td>
+                                    <td><code>2.5</code></td>
+                                    <td>
+                                        In a loop, the space between the name
+                                        and its copy (rem, 0.5 to 10).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marqueeHoverPause</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The name stops walking while the mouse
+                                        is on it and goes on when it leaves.
                                     </td>
                                 </tr>
                                 <tr>
@@ -241,7 +270,9 @@
                                     <td><code>marqueePause</code></td>
                                     <td><code>1500</code></td>
                                     <td>
-                                        How long it waits at each end
+                                        How long it rests before it walks; in
+                                        <code>'restart'</code> and
+                                        <code>'bounce'</code>, at its end too
                                         (milliseconds, 0 to 10000).
                                     </td>
                                 </tr>

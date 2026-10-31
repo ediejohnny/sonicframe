@@ -38,9 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `underStart` in the player's look (`'wave'`, the default, or `'line'`): the rows under a wave in the line start
   at the wave's left edge, or at the line's, under the play button.
 - Long chapter names in the player's look, off by default: `nameOverflow` (`'ellipsis'`, the default, `'fade'`
-  with `nameFade` rem, or `'clip'`), `nameTooltip` (the whole name under the mouse), and `marquee` (the name
-  walks across its room and out from under its fade, `marqueeType` `'restart'` or `'bounce'`, `marqueeSpeed`,
-  `marqueePause`; never with reduced motion). `metaWrap` lets the row
+  with `nameFade` rem and `nameFadeStart`, a fade at the start while the name walks, or `'clip'`), `nameTooltip`
+  (the whole name under the mouse), and `marquee`: the name walks across its room as an endless strip, its copy
+  `marqueeGap` behind and coming to rest where it started (`marqueeType: 'loop'`), or back to its start
+  (`'restart'`), or back and forth (`'bounce'`), at `marqueeSpeed`, resting `marqueePause`, stopping under the
+  mouse (`marqueeHoverPause`), never with reduced motion. `metaWrap` lets the row
   under the wave break in two, the parts after a spacer together on the far side; by default it keeps one line.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
 - The docs' Chapters page, with a WebVTT and a JSON example.

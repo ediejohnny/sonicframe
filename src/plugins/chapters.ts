@@ -24,6 +24,7 @@ import { formatTime } from '../core/timing';
 import { FULL_VIEW, viewX } from '../core/view';
 import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
 import { sharedTooltip } from '../dom/tooltip';
+import { remPixels } from '../dom/units';
 import { ChapterListView, type ChapterListLook } from './chapter-list';
 
 export type { ChapterListLook };
@@ -154,15 +155,6 @@ function wordsOf(own: Partial<ChapterWords> | undefined): ChapterWords {
     }
 
     return words;
-}
-
-/** The root text size in CSS pixels. */
-function remPixels(rem: number): number {
-    const root = parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-    );
-
-    return rem * (root > 0 ? root : 16);
 }
 
 export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {

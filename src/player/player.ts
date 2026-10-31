@@ -60,8 +60,9 @@ import type {
 import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
 import { prefersReducedMotion } from '../dom/motion';
-import { marqueeTiming } from '../core/marquee';
-import { sharedTooltip } from '../dom/tooltip';
+import type { TooltipColors } from '../dom/tooltip';
+import { remPixels } from '../dom/units';
+import { LongName } from './long-name';
 import { pageLanguage } from '../dom/page-language';
 import { observeSize } from '../dom/observe';
 import { canSpeak } from '../dom/speak';
@@ -427,15 +428,6 @@ function count(
         : fallback;
 }
 
-/** CSS pixels in `rem` of the page's root text size. */
-function remPixels(rem: number): number {
-    const root = parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-    );
-
-    return rem * (root > 0 ? root : 16);
-}
-
 /**
  * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
  * `narrowLine` names), goes under the wave on the left (what `narrowStart` names) or on the right
@@ -667,14 +659,7 @@ export class Player {
     /** Where a finger came down off the wave, for the swipe that opens the list. */
     private swipeStart: { id: number; x: number; y: number } | null = null;
     /** The built parts that show the chapter playing, and the buttons that open the list. */
-    private chapterNames: HTMLElement[] = [];
-    /** The names too long for their room, as last measured. */
-    private readonly longNames = new WeakSet<HTMLElement>();
-    /** The walks of the names too long for their room, each with what it was measured for. */
-    private readonly walks = new Map<
-        HTMLElement,
-        { key: string; animation: Animation }
-    >();
+    private chapterNames: LongName[] = [];
     private listButtons: HTMLButtonElement[] = [];
     private times: TimePart[] = [];
     private partCleanups: (() => void)[] = [];
@@ -740,7 +725,7 @@ export class Player {
             this.width = size.width / size.pixelRatio;
             this.arrange();
             this.alignToBars();
-            this.walkNames();
+            this.fitNames();
         });
     }
 
@@ -1666,7 +1651,7 @@ export class Player {
         this.partCleanups.push(
             frame.on('resize', () => {
                 this.alignToBars();
-                this.walkNames();
+                this.fitNames();
             }),
         );
         this.alignToBars();
@@ -1996,8 +1981,11 @@ export class Player {
 
         this.partCleanups = [];
         this.times = [];
+        for (const name of this.chapterNames) {
+            name.destroy();
+        }
+
         this.chapterNames = [];
-        this.stopWalks();
         this.listButtons = [];
         this.layout = null;
         this.buttonRef?.destroy();
@@ -2376,187 +2364,34 @@ export class Player {
         return button;
     }
 
-    /**
-     * The chapter playing, by name; hidden from screen readers, since the slider's value says it.
-     * Its text sits in a span of its own, the part that walks when the name is too long.
-     */
+    /** The chapter playing, by name, in a room that may be too short for it (see `LongName`). */
     private chapterPart(): HTMLElement {
-        const name = document.createElement('span');
-        const text = document.createElement('span');
-        name.className = 'sonicframe-chapter-now';
-        name.setAttribute('aria-hidden', 'true');
-        name.setAttribute('dir', 'auto');
-        name.append(text);
-        css(name, [
-            ['min-width', '0'],
-            ['flex', '1 1 6rem'],
-            ['overflow', 'hidden'],
-            ['white-space', 'nowrap'],
-            ['text-overflow', 'ellipsis'],
-        ]);
+        const name = new LongName(this.look, () => this.tooltipColors());
         this.chapterNames.push(name);
 
-        if (this.look.nameTooltip) {
-            this.nameTooltip(name, text);
-        }
-
-        return name;
+        return name.element;
     }
 
-    /** The whole of a name too long for its room, in the page's tooltip while the mouse is on it. */
-    private nameTooltip(name: HTMLElement, text: HTMLElement): void {
-        let shown = false;
-        const hide = (): void => {
-            if (shown) {
-                sharedTooltip().hide();
-                shown = false;
-            }
+    /** The page's tooltip in the played color, its text readable on it. */
+    private tooltipColors(): TooltipColors {
+        const background =
+            this.frameRef?.color('var(--sonicframe-progress, #2f6fdb)') ||
+            '#2f6fdb';
+
+        return {
+            background,
+            text: readableText(
+                readColor(background) ?? [47, 111, 219, 1],
+                [255, 255, 255, 1],
+            ),
         };
-
-        name.addEventListener('pointerenter', (event) => {
-            if (event.pointerType !== 'mouse' || !this.longNames.has(name)) {
-                return;
-            }
-
-            const background =
-                this.frameRef?.color('var(--sonicframe-progress, #2f6fdb)') ||
-                '#2f6fdb';
-            sharedTooltip().show(name, [text.textContent ?? ''], {
-                background,
-                text: readableText(
-                    readColor(background) ?? [47, 111, 219, 1],
-                    [255, 255, 255, 1],
-                ),
-            });
-            shown = true;
-        });
-        name.addEventListener('pointerleave', hide);
-        this.partCleanups.push(hide);
     }
 
-    /**
-     * Ends each chapter's name too long for its room as the look says (an ellipsis, a fade or a
-     * cut), and walks it across its room (`look.marquee`) unless motion is unwelcome; a faded
-     * name walks out from under its fade too. A walk keeps going while its name and its room stay
-     * the same.
-     */
-    private walkNames(): void {
-        const look = this.look;
-        const moving = look.marquee && !prefersReducedMotion();
-
+    /** Fits each chapter's name to its room: its end, its walk (see `LongName`). */
+    private fitNames(): void {
         for (const name of this.chapterNames) {
-            const text = name.firstElementChild;
-
-            if (!(text instanceof HTMLElement)) {
-                continue;
-            }
-
-            // Measured as a block of its own, the text keeps its full width past the room.
-            text.style.setProperty('display', 'inline-block');
-            const overflow =
-                text.getBoundingClientRect().width -
-                name.getBoundingClientRect().width;
-            const long = overflow > 0;
-            const rtl = getComputedStyle(text).direction === 'rtl';
-            const fade =
-                long && look.nameOverflow === 'fade'
-                    ? remPixels(look.nameFade)
-                    : 0;
-            const bounce = look.marqueeType === 'bounce';
-            // Walking back and forth waits at each end twice a round: half the pause each time.
-            const timing =
-                moving && typeof text.animate === 'function'
-                    ? marqueeTiming(
-                          overflow + fade,
-                          remPixels(look.marqueeSpeed),
-                          bounce ? look.marqueePause / 2 : look.marqueePause,
-                      )
-                    : null;
-
-            this.endName(name, text, long, timing !== null, rtl);
-
-            if (long) {
-                this.longNames.add(name);
-            } else {
-                this.longNames.delete(name);
-            }
-
-            if (timing === null) {
-                this.walks.get(name)?.animation.cancel();
-                this.walks.delete(name);
-                continue;
-            }
-
-            const distance = overflow + fade;
-            const key = `${distance}|${text.textContent ?? ''}|${look.marqueeType}|${timing.duration}`;
-
-            if (this.walks.get(name)?.key === key) {
-                continue;
-            }
-
-            this.walks.get(name)?.animation.cancel();
-            // A right-to-left name walks the other way, its end being on the left.
-            const far = `translateX(${rtl ? distance : -distance}px)`;
-            const animation = text.animate(
-                [
-                    { transform: 'translateX(0px)', offset: 0 },
-                    { transform: 'translateX(0px)', offset: timing.start },
-                    { transform: far, offset: timing.end },
-                    { transform: far, offset: 1 },
-                ],
-                {
-                    duration: timing.duration,
-                    iterations: Number.POSITIVE_INFINITY,
-                    direction: bounce ? 'alternate' : 'normal',
-                    easing: 'linear',
-                },
-            );
-            // Cancelling the walk rejects `finished`; that is how it ends, never an error.
-            animation.finished.catch(() => undefined);
-            this.walks.set(name, { key, animation });
+            name.fit();
         }
-    }
-
-    /**
-     * How a name ends in its room. An ellipsis needs the text inline and still; a walking text is a
-     * block of its own and is cut, under a fade when the look asks for one; a name that fits has
-     * no fade, so its last letters never dim.
-     */
-    private endName(
-        name: HTMLElement,
-        text: HTMLElement,
-        long: boolean,
-        walking: boolean,
-        rtl: boolean,
-    ): void {
-        const end = this.look.nameOverflow;
-        const ellipsis = end === 'ellipsis' && !walking;
-
-        if (ellipsis) {
-            text.style.removeProperty('display');
-        }
-
-        name.style.setProperty('text-overflow', ellipsis ? 'ellipsis' : 'clip');
-
-        for (const property of ['mask-image', '-webkit-mask-image']) {
-            if (long && end === 'fade') {
-                name.style.setProperty(
-                    property,
-                    `linear-gradient(to ${rtl ? 'left' : 'right'}, #000 calc(100% - ${this.look.nameFade}rem), transparent)`,
-                );
-            } else {
-                name.style.removeProperty(property);
-            }
-        }
-    }
-
-    /** Stops every walking name. */
-    private stopWalks(): void {
-        for (const { animation } of this.walks.values()) {
-            animation.cancel();
-        }
-
-        this.walks.clear();
     }
 
     /** Shows the chapter playing in the parts that name it: its title, or its place when untitled. */
@@ -2573,14 +2408,10 @@ export class Player {
                   });
 
         for (const name of this.chapterNames) {
-            const span = name.firstElementChild;
-
-            if (span !== null) {
-                span.textContent = text;
-            }
+            name.text = text;
         }
 
-        this.walkNames();
+        this.fitNames();
     }
 
     /** A button to the previous chapter (like a previous track) or the next one; says when there is none. */

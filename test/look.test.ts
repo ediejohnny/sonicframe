@@ -153,6 +153,14 @@ describe('resolveLook', () => {
         expect(DEFAULT_LOOK.nameOverflow).toBe('ellipsis');
         expect(DEFAULT_LOOK.nameFade).toBe(1.5);
         expect(DEFAULT_LOOK.nameTooltip).toBe(false);
+        expect(DEFAULT_LOOK.nameFadeStart).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameFadeStart: false }).nameFadeStart,
+        ).toBe(false);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameFadeStart: 0 as never })
+                .nameFadeStart,
+        ).toBe(true);
 
         for (const end of ['fade', 'clip'] as const) {
             expect(
@@ -180,14 +188,35 @@ describe('resolveLook', () => {
         expect(DEFAULT_LOOK.marquee).toBe(false);
         expect(DEFAULT_LOOK.marqueeSpeed).toBe(2);
         expect(DEFAULT_LOOK.marqueePause).toBe(1500);
-        expect(DEFAULT_LOOK.marqueeType).toBe('restart');
+        expect(DEFAULT_LOOK.marqueeType).toBe('loop');
+
+        for (const type of ['restart', 'bounce'] as const) {
+            expect(
+                resolveLook(DEFAULT_LOOK, { marqueeType: type }).marqueeType,
+            ).toBe(type);
+        }
+
         expect(
-            resolveLook(DEFAULT_LOOK, { marqueeType: 'bounce' }).marqueeType,
-        ).toBe('bounce');
-        expect(
-            resolveLook(DEFAULT_LOOK, { marqueeType: 'loop' as never })
+            resolveLook(DEFAULT_LOOK, { marqueeType: 'spin' as never })
                 .marqueeType,
-        ).toBe('restart');
+        ).toBe('loop');
+        expect(DEFAULT_LOOK.marqueeHoverPause).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeHoverPause: false })
+                .marqueeHoverPause,
+        ).toBe(false);
+        expect(
+            resolveLook(DEFAULT_LOOK, { marqueeHoverPause: 'no' as never })
+                .marqueeHoverPause,
+        ).toBe(true);
+        expect(DEFAULT_LOOK.marqueeGap).toBe(2.5);
+        expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 4 }).marqueeGap).toBe(4);
+        expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 0 }).marqueeGap).toBe(
+            0.5,
+        );
+        expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 99 }).marqueeGap).toBe(
+            10,
+        );
         expect(resolveLook(DEFAULT_LOOK, { marquee: true }).marquee).toBe(true);
         expect(
             resolveLook(DEFAULT_LOOK, { marquee: 'yes' as never }).marquee,
