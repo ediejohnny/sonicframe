@@ -3,13 +3,13 @@
  * https://www.npmjs.com/package/sonicframe (MIT)
  */
 
+export { SonicFrame } from './dom/frame';
 export {
     DEFAULT_BAR,
     DEFAULT_COLORS,
-    SonicFrame,
     type SonicFrameA11y,
     type SonicFrameOptions,
-} from './dom/frame';
+} from './dom/frame-options';
 export {
     DEFAULT_BUTTON_COLORS,
     PlayButton,

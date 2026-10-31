@@ -7,7 +7,7 @@ import type { PlayerLook } from '../core/look';
 import type { PaletteChoice } from '../core/palettes';
 import type { ThemeInput } from '../core/theme';
 import type { ZoomOptions } from '../core/zoom';
-import type { SonicFrameOptions } from '../dom/frame';
+import type { SonicFrameOptions } from '../dom/frame-options';
 import type {
     ChapterListLook,
     ChaptersOptions,
