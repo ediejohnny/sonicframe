@@ -33,6 +33,13 @@ export function within<Fallback>(
         : Math.min(max, Math.max(min, whole ? whole(number) : number));
 }
 
+/** Whether `value` is a plain object of named fields (not null, not a list). */
+export function isRecord(
+    value: unknown,
+): value is Readonly<Record<string, unknown>> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /** Whether `value` is one of the `allowed` names. */
 export function isOneOf<Name extends string>(
     value: unknown,

@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Backgrounds · SonicFrame</title>
+        <meta
+            name="description"
+            content="Give a player its own background: a color, a gradient or an image, with filters, ready-made effects, transparency and a gentle animation."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Backgrounds</h1>
+                <p class="lede">
+                    A player can wear its own background: a color, a gradient or
+                    an image, with filters, ready-made effects, transparency and
+                    an animation. All of it is off until the look asks for it.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>A color or a gradient</h2>
+                    <p>
+                        <code>look.background</code> takes the place of the
+                        player's surface. A gradient has two to five colors, an
+                        <code>angle</code> in degrees and a <code>kind</code>:
+                        <code>'linear'</code>, <code>'radial'</code> or
+                        <code>'conic'</code>.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"palette":"dark","look":{"background":{"gradient":{"colors":["#1b1f5e","#7b3fa0","#ef6f6c"],"angle":120}}}}'
+                    ></div>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    palette: 'dark',
+    look: {
+        background: {
+            gradient: { colors: ['#1b1f5e', '#7b3fa0', '#ef6f6c'], angle: 120 },
+        },
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>An image</h2>
+                    <p>
+                        An image comes from a web, relative or
+                        <code>blob:</code> address; any other address is left
+                        out. It covers the player by default, centered.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"palette":"dark","look":{"background":{"image":{"src":"./sounds/covers/dusk.svg","position":"bottom"},"effects":["dim","vignette"]}}}'
+                    ></div>
+                    <div class="code">
+                        <pre><code>look: {
+    background: {
+        image: { src: '/covers/dusk.jpg', position: 'bottom' },
+        effects: ['dim', 'vignette'],
+    },
+},</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>image.src</code></td>
+                                    <td></td>
+                                    <td>
+                                        A web, relative or <code>blob:</code>
+                                        address, without quotes or parentheses.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>image.size</code></td>
+                                    <td><code>'cover'</code></td>
+                                    <td>
+                                        <code>'cover'</code>,
+                                        <code>'contain'</code>,
+                                        <code>'auto'</code>, or a width in rem
+                                        (0.5 to 50).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>image.position</code></td>
+                                    <td>centered</td>
+                                    <td>
+                                        Keywords (<code>'top'</code>,
+                                        <code>'bottom right'</code>…) or
+                                        <code>{ x, y }</code> in percent from
+                                        the top left.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>image.repeat</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Tiles the image.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td></td>
+                                    <td>
+                                        A color background, or the color behind
+                                        an image or a gradient.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Effects</h2>
+                    <p>
+                        Ready-made effects go in <code>effects</code>, by name
+                        or with their own <code>amount</code> (0 to 1) and
+                        colors. Each one is drawn by SonicFrame, with no image
+                        file.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"palette":"dark","look":{"background":{"image":{"src":"./sounds/covers/dusk.svg"},"effects":["duotone","grain"]}}}'
+                    ></div>
+                    <div class="code">
+                        <pre><code>effects: [
+    'duotone',
+    { type: 'grain', amount: 0.2 },
+    { type: 'tint', color: '#1f4fbf' },
+],</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Effect</th>
+                                    <th>Amount</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>'dim'</code></td>
+                                    <td>0.5</td>
+                                    <td>
+                                        Lays the surface color over it, so the
+                                        text and buttons stay easy to read;
+                                        <code>color</code> changes it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'vignette'</code></td>
+                                    <td>0.5</td>
+                                    <td>
+                                        Darkens the edges (black, or
+                                        <code>color</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'frost'</code></td>
+                                    <td>0.5</td>
+                                    <td>
+                                        Frosted glass: a blur and a light veil.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'tint'</code></td>
+                                    <td>0.6</td>
+                                    <td>
+                                        Colors it in the played color, or
+                                        <code>color</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'duotone'</code></td>
+                                    <td>1</td>
+                                    <td>
+                                        Two colors, dark and light: the text and
+                                        played colors, or <code>colors</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'grain'</code></td>
+                                    <td>0.15</td>
+                                    <td>A fine grain, like film.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Filters and transparency</h2>
+                    <p>
+                        <code>filters</code> change the picture itself:
+                        <code>blur</code> (in pixels, up to 64),
+                        <code>brightness</code>, <code>contrast</code> and
+                        <code>saturate</code> (0 to 3, 1 leaves it),
+                        <code>grayscale</code> and <code>sepia</code> (0 to 1).
+                        <code>opacity</code> (0 to 1) lets the page show
+                        through.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"palette":"dark","look":{"background":{"image":{"src":"./sounds/covers/dusk.svg"},"filters":{"blur":6,"saturate":1.4},"effects":["dim"],"opacity":0.85}}}'
+                    ></div>
+                    <div class="code">
+                        <pre><code>background: {
+    image: { src: '/covers/dusk.jpg' },
+    filters: { blur: 6, saturate: 1.4 },
+    effects: ['dim'],
+    opacity: 0.85,
+},</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Animation</h2>
+                    <p>
+                        <code>look.backgroundAnimation</code> moves the
+                        background. By default it moves only while the sound
+                        plays, so it is still whenever nobody is listening; it
+                        never runs when the person asks for reduced motion.
+                        Press play to see this one.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"palette":"dark","look":{"background":{"gradient":{"colors":["#1b1f5e","#7b3fa0","#ef6f6c","#ffc56b"],"angle":90}},"backgroundAnimation":{"type":"flow","duration":8}}}'
+                    ></div>
+                    <div class="code">
+                        <pre><code>look: {
+    background: { gradient: { colors: ['#1b1f5e', '#7b3fa0', '#ef6f6c', '#ffc56b'], angle: 90 } },
+    backgroundAnimation: { type: 'flow', duration: 8 },
+},</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>type</code></td>
+                                    <td><code>'pan'</code></td>
+                                    <td>
+                                        <code>'pan'</code> glides it,
+                                        <code>'zoom'</code> swells it,
+                                        <code>'pulse'</code> breathes its
+                                        opacity, <code>'hue'</code> turns its
+                                        colors round, <code>'flow'</code> drifts
+                                        a gradient's colors.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>duration</code></td>
+                                    <td><code>20</code></td>
+                                    <td>Seconds for one way (2 to 600).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>strength</code></td>
+                                    <td><code>0.5</code></td>
+                                    <td>How far it moves (0 to 1).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>while</code></td>
+                                    <td><code>'playing'</code></td>
+                                    <td>
+                                        Moves while the sound plays, or
+                                        <code>'always'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>pauseOnHover</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Holds still while the mouse or the focus
+                                        is on the player.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>In a theme and on the tag</h2>
+                    <p>
+                        The background is part of the look, so a theme can bring
+                        one, and a player's own look changes only what it gives
+                        (<code>background: null</code> turns it off).
+                    </p>
+                    <div class="code">
+                        <pre><code>registerTheme('dusk', {
+    extends: 'bubble',
+    look: { background: { image: { src: '/covers/dusk.jpg' }, effects: ['dim'] } },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player
+    src="/episode.mp3"
+    background-image="/covers/dusk.jpg"
+    background-options="bottom"
+    background-effects="dim vignette"
+    background-animation="zoom hover-pause"
+&gt;&lt;/sonic-player&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Every <code>background-</code> attribute is in
+                        <a href="./tag-attributes.html">Tag attributes</a>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Safe by design</h2>
+                    <p>
+                        Colors are read as numbers before any style gets them,
+                        gradients are written from those numbers, and an image's
+                        address is checked first, so no text of the app ever
+                        reaches a style as it was given. The background is
+                        hidden from screen readers and sits behind the controls,
+                        never over them.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

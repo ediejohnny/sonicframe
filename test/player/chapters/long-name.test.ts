@@ -7,6 +7,10 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
 import type { PlayerOptions } from '../../../src/player';
+import {
+    recordAnimations,
+    type RecordedAnimation,
+} from '../../support/animations';
 import { triggerResize, triggerVisible } from '../../support/fakes';
 import { boxOf, stubMedia } from '../../support/helpers';
 import { cleanUp, host, ITEMS, make, part, player } from './chapters-harness';
@@ -14,42 +18,10 @@ import { cleanUp, host, ITEMS, make, part, player } from './chapters-harness';
 afterEach(cleanUp);
 
 describe('a chapter name too long for its room', () => {
-    type Walk = {
-        keyframes: Keyframe[];
-        options: KeyframeAnimationOptions;
-        cancelled: boolean;
-        paused: boolean;
-    };
+    type Walk = RecordedAnimation;
 
     /** Records each `element.animate`: its keyframes and options, whether paused or cancelled. */
-    function walks(): Walk[] {
-        const started: Walk[] = [];
-        vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(
-            (keyframes, options) => {
-                const walk = {
-                    keyframes: keyframes as Keyframe[],
-                    options: options as KeyframeAnimationOptions,
-                    cancelled: false,
-                    paused: false,
-                    finished: Promise.resolve(),
-                    cancel(): void {
-                        walk.cancelled = true;
-                    },
-                    pause(): void {
-                        walk.paused = true;
-                    },
-                    play(): void {
-                        walk.paused = false;
-                    },
-                };
-                started.push(walk);
-
-                return walk as unknown as Animation;
-            },
-        );
-
-        return started;
-    }
+    const walks = recordAnimations;
 
     /** The walk of the name itself, and the walk of its start fade, last started. */
     const strip = (started: Walk[]): Walk | undefined =>

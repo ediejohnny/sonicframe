@@ -9,11 +9,13 @@
  * start with `a11y-`: `a11y-lang` is the language of the player's words, and the description is off
  * unless `a11y-description` is there. Zoom is off unless `zoom` is there; its words turn on its
  * ways, and `minimap` adds the strip. The `peaks-` attributes say how the peaks file is read.
- * `chapters` takes the address of a chapters file, and `chapter-options` its extras. Each attribute
- * is read in `element-attributes.ts`.
+ * `chapters` takes the address of a chapters file, and `chapter-options` its extras; the
+ * `background-` attributes give the player a background and its animation. Each attribute is read in
+ * `element-attributes.ts` (the background's in `background-attributes.ts`).
  */
 
 import { Player } from '../player/player';
+import { BACKGROUND_ATTRIBUTES } from './background-attributes';
 import { fontOf, optionsOf, paletteOf, waveOf } from './element-attributes';
 
 /** The attributes the tag reads. */
@@ -42,6 +44,7 @@ export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
     'a11y-description',
     'a11y-zoom',
     'a11y-minimap',
+    ...BACKGROUND_ATTRIBUTES,
 ]);
 
 /** Attributes that need a new player (a new sound, or parts built once). */
@@ -63,6 +66,7 @@ const REBUILD = new Set([
     'a11y-description',
     'a11y-zoom',
     'a11y-minimap',
+    ...BACKGROUND_ATTRIBUTES,
 ]);
 
 const EVENTS = [

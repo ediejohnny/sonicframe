@@ -4,16 +4,13 @@
  * both pass this check.
  */
 
+import { isRecord } from '../shared/checked';
 import { EN } from './en';
 
 /** The longest phrase a language may have, in characters. */
 export const MAX_PHRASE = 200;
 
 const MARK = /\{(\w+)\}/g;
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 /** The marks of a phrase, each once, in order of name: `'{from} {to}'`. */
 function marksOf(phrase: string): string {

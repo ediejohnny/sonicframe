@@ -5,6 +5,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createPlayer, type Player } from '../../../src/player';
+import { recordAnimations } from '../../support/animations';
 import { fakeMedia, stubMedia } from '../../support/helpers';
 import { NOTE } from '../../support/sounds';
 import { cleanUp, container, host, labelOf, within } from './player-harness';
@@ -25,7 +26,6 @@ type Started = { keyframes: unknown; cancelled: boolean };
  * elements (`element.animate`), each marked once cancelled.
  */
 function readingVoice(): Started[] {
-    const pulses: Started[] = [];
     vi.stubGlobal('speechSynthesis', {
         getVoices: () => [
             { name: 'David', lang: 'en-US', localService: true, default: true },
@@ -41,23 +41,8 @@ function readingVoice(): Started[] {
             constructor(readonly text: string) {}
         },
     );
-    vi.spyOn(HTMLElement.prototype, 'animate').mockImplementation(
-        (keyframes) => {
-            const pulse = {
-                keyframes,
-                cancelled: false,
-                finished: Promise.resolve(),
-                cancel(): void {
-                    pulse.cancelled = true;
-                },
-            };
-            pulses.push(pulse);
 
-            return pulse as unknown as Animation;
-        },
-    );
-
-    return pulses;
+    return recordAnimations();
 }
 
 function described(): string | null {
