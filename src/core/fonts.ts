@@ -6,6 +6,7 @@
  * `url("…")`.
  */
 
+import { isOneOf } from './checked';
 import { cleanText } from './text';
 import { safeUrl } from './url';
 
@@ -71,10 +72,7 @@ const MAX_FAMILY = 200;
 const MAX_NAME = 100;
 
 export function isFontName(value: unknown): value is FontName {
-    return (
-        typeof value === 'string' &&
-        (FONT_NAMES as readonly string[]).includes(value)
-    );
+    return isOneOf(value, FONT_NAMES);
 }
 
 /**

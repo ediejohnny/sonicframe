@@ -8,11 +8,14 @@
  * unchanged.
  */
 
+import { within } from '../core/checked';
 import { groupMarks } from '../core/clusters';
 import { clamp01, positive } from '../core/math';
 import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
+import { ON_PROGRESS } from '../core/variables';
 import { FULL_VIEW, viewX, type View } from '../core/view';
+import { onProgressColors, sharedTooltip } from '../dom/tooltip';
 import type {
     PaintContext,
     Plugin,
@@ -20,7 +23,6 @@ import type {
     SeekSource,
     WavePoint,
 } from '../types';
-import { sharedTooltip } from '../dom/tooltip';
 
 /** One marker: a moment in seconds, with an optional label, color and id. */
 export type Mark = {
@@ -65,9 +67,6 @@ export type MarkersPlugin = Plugin & {
 
 const MAX_MARKS = 2000;
 const TOOLTIP_LINES = 5;
-
-/** Text over the played color and the markers: the pill's count and the tooltip. */
-const ON_PROGRESS = 'var(--sonicframe-on-progress, #ffffff)';
 
 /** Whether a ratio of the sound is in `view` (its ends included). */
 function inView(ratio: number, view: View): boolean {
@@ -134,9 +133,12 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const withTooltip = options.tooltip ?? true;
     const max = Math.min(MAX_MARKS, Math.max(0, options.max ?? MAX_MARKS));
     // Never under a hundredth of a second, so a marker just landed on is never chosen again.
-    const backGrace = Number.isFinite(options.backGrace)
-        ? Math.max(0.01, options.backGrace ?? 1)
-        : 1;
+    const backGrace = within(
+        options.backGrace,
+        1,
+        0.01,
+        Number.POSITIVE_INFINITY,
+    );
     const defaultColor = options.color ?? 'var(--sonicframe-marker, #e5484d)';
 
     let marks: Mark[] = toMarks(options.marks ?? options.times ?? []).slice(
@@ -335,13 +337,11 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
             const frame = host;
 
             if (frame !== null) {
-                const background =
-                    frame.color('var(--sonicframe-progress, #2f6fdb)') ||
-                    '#2f6fdb';
-                sharedTooltip().show(frame.container, lines, {
-                    background,
-                    text: frame.color(ON_PROGRESS) || '#ffffff',
-                });
+                sharedTooltip().show(
+                    frame.container,
+                    lines,
+                    onProgressColors(frame),
+                );
                 openedTooltip = true;
             }
 

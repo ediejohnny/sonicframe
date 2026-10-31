@@ -16,6 +16,8 @@ import {
 } from '../core/button';
 import { Emitter } from '../core/emitter';
 import { applyStyles } from '../core/styles';
+import { BUTTON, BUTTON_ICON } from '../core/variables';
+import { iconElement, iconPath } from '../dom/icon';
 import { hideFocusRing, showFocusRing } from './focus';
 
 export type PlayButtonOptions = {
@@ -44,11 +46,10 @@ export type PlayButtonEvents = {
 };
 
 export const DEFAULT_BUTTON_COLORS: Readonly<ButtonColors> = Object.freeze({
-    background: 'var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))',
-    icon: 'var(--sonicframe-button-icon, #fff)',
+    background: BUTTON,
+    icon: BUTTON_ICON,
 });
 
-const SVG = 'http://www.w3.org/2000/svg';
 const MEDIA_EVENTS = ['play', 'pause', 'ended', 'emptied'] as const;
 
 /** Media with an exclusive button: when one starts, the others pause. */
@@ -98,21 +99,13 @@ export class PlayButton {
         this.element.type = 'button';
         this.element.className = 'sonicframe-play';
 
-        this.icon = document.createElementNS(SVG, 'svg');
-        this.icon.setAttribute('viewBox', '0 0 24 24');
-        this.icon.setAttribute('aria-hidden', 'true');
-        this.icon.setAttribute('focusable', 'false');
-        this.path = document.createElementNS(SVG, 'path');
-
-        for (const [name, value] of [
-            ['fill', 'currentColor'],
-            ['stroke', 'currentColor'],
-            ['stroke-width', '1.5'],
-            ['stroke-linejoin', 'round'],
-        ]) {
-            this.path.setAttribute(name, value);
-        }
-
+        this.icon = iconElement();
+        this.path = iconPath({
+            fill: 'currentColor',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linejoin': 'round',
+        });
         this.icon.append(this.path);
         this.element.append(this.icon);
         this.element.addEventListener('click', this.onClick);

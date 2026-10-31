@@ -7,6 +7,7 @@
  */
 
 import type { BarStyle, WaveName, WaveStyle } from '../types';
+import { isOneOf, within } from './checked';
 import { layoutBars, type Bar, type BarWindow } from './layout';
 import { clamp01 } from './math';
 
@@ -59,21 +60,7 @@ export type WaveShape = {
 const STROKED: readonly WaveName[] = ['line', 'scope', 'pulse'];
 
 export function isWaveName(value: unknown): value is WaveName {
-    return (
-        typeof value === 'string' &&
-        (WAVE_NAMES as readonly string[]).includes(value)
-    );
-}
-
-function within(
-    value: number | undefined,
-    fallback: number,
-    lo: number,
-    hi: number,
-): number {
-    return value !== undefined && Number.isFinite(value)
-        ? Math.min(hi, Math.max(lo, value))
-        : fallback;
+    return isOneOf(value, WAVE_NAMES);
 }
 
 /** A drawing by name, or details laid over `base`; unknown names and stray numbers fall back. */

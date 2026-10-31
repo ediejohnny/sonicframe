@@ -7,6 +7,7 @@
 
 import { stackLanes } from '../core/lanes';
 import type { Lane } from '../types';
+import { css } from './css';
 
 type Side = 'above' | 'below';
 type Record = { side: Side; size: number; element: HTMLElement };
@@ -25,8 +26,7 @@ export class LaneManager {
     /** Adds a lane and asks the frame to lay out again. */
     add(side: Side, size: number): Lane {
         const element = document.createElement('div');
-
-        for (const [property, value] of [
+        css(element, [
             ['position', 'absolute'],
             ['left', '0'],
             ['right', '0'],
@@ -34,10 +34,7 @@ export class LaneManager {
             // Display-only by default; a plugin opts its own lane into pointer events.
             ['pointer-events', 'none'],
             ['display', 'none'],
-        ]) {
-            element.style.setProperty(property, value);
-        }
-
+        ]);
         this.container.append(element);
         const record: Record = { side, size: Math.max(0, size), element };
         this.records.push(record);

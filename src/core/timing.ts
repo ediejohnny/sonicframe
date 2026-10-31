@@ -86,6 +86,13 @@ export function formatPosition(
     );
 }
 
+/** A point of the sound, as a ratio, in words: its time ("1:05"), or its percent while the length is unknown. */
+export function ratioText(ratio: number, duration: number | null): string {
+    return duration === null
+        ? `${Math.round(ratio * 100)}%`
+        : formatTime(Math.round(ratio * duration));
+}
+
 /** What a screen reader announces for the position: `0:12 / 0:45`, or a percentage without a duration. */
 export function defaultValueText(
     time: number | null,

@@ -18,13 +18,15 @@ import {
     type ChapterInput,
     type LoadChaptersOptions,
 } from '../core/chapters';
+import { within } from '../core/checked';
 import { clamp01, positive } from '../core/math';
 import { cleanText, fillTemplate } from '../core/text';
 import { formatTime } from '../core/timing';
 import { FULL_VIEW, viewX } from '../core/view';
-import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
-import { sharedTooltip } from '../dom/tooltip';
+import { css } from '../dom/css';
+import { onProgressColors, sharedTooltip } from '../dom/tooltip';
 import { remPixels } from '../dom/units';
+import type { Lane, Plugin, PluginHost, SeekSource, WavePoint } from '../types';
 import { ChapterListView, type ChapterListLook } from './chapter-list';
 
 export type { ChapterListLook };
@@ -131,18 +133,6 @@ const SLOP = 6;
 /** The longest word taken from the app, in characters. */
 const MAX_WORD = 120;
 
-/** Text over the played color: the tooltip. */
-const ON_PROGRESS = 'var(--sonicframe-on-progress, #ffffff)';
-
-function css(
-    element: HTMLElement,
-    pairs: readonly (readonly [string, string])[],
-): void {
-    for (const [name, value] of pairs) {
-        element.style.setProperty(name, value);
-    }
-}
-
 function wordsOf(own: Partial<ChapterWords> | undefined): ChapterWords {
     const words = { ...CHAPTER_WORDS };
 
@@ -168,20 +158,17 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
               : keys.letter !== false && keys.letter.length === 1
                 ? keys.letter.toLowerCase()
                 : null;
-    const asked = typeof keys === 'object' ? keys.backGrace : undefined;
-    const backGrace =
-        typeof asked === 'number' && Number.isFinite(asked)
-            ? Math.max(0, asked)
-            : 1;
+    const backGrace = within(
+        typeof keys === 'object' ? keys.backGrace : undefined,
+        1,
+        0,
+        Number.POSITIVE_INFINITY,
+    );
     const color = options.color ?? 'var(--sonicframe-chapter, #6b7280)';
     const withLines = options.lines !== false;
     const withTooltip = options.tooltip !== false;
     const snap = options.snap !== false;
-    const laneHeight =
-        typeof options.laneHeight === 'number' &&
-        Number.isFinite(options.laneHeight)
-            ? Math.min(4, Math.max(0.5, options.laneHeight))
-            : 1.25;
+    const laneHeight = within(options.laneHeight, 1.25, 0.5, 4);
 
     let all: Chapter[] = [];
     let shown: Chapter[] = [];
@@ -572,17 +559,10 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             }
 
             if (withTooltip) {
-                const chapter = shown[at];
-                const background =
-                    current.color('var(--sonicframe-progress, #2f6fdb)') ||
-                    '#2f6fdb';
                 sharedTooltip().show(
                     current.container,
-                    [`${formatTime(chapter.start)} · ${label(at)}`],
-                    {
-                        background,
-                        text: current.color(ON_PROGRESS) || '#ffffff',
-                    },
+                    [`${formatTime(shown[at].start)} · ${label(at)}`],
+                    onProgressColors(current),
                 );
                 openedTooltip = true;
             }

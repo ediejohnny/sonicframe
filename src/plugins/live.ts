@@ -6,6 +6,8 @@
  */
 
 import { frequencyBands } from '../core/bands';
+import { within } from '../core/checked';
+import { powerOfTwo } from '../core/math';
 import { resumeAudio, tapMedia, type MediaTap } from '../dom/audio-graph';
 import type { Plugin, PluginHost } from '../types';
 
@@ -21,27 +23,14 @@ export type LiveFrequencyOptions = {
     bars?: number;
 };
 
-function powerOfTwo(value: number): number {
-    const wanted = Number.isFinite(value) ? value : 512;
-    let size = 32;
-
-    while (size < wanted && size < 2048) {
-        size <<= 1;
-    }
-
-    return size;
-}
-
 export function liveFrequency(options: LiveFrequencyOptions = {}): Plugin {
-    const fftSize = powerOfTwo(options.fftSize ?? 512);
-    const requested = options.smoothing ?? 0.8;
-    const smoothing = Number.isFinite(requested)
-        ? Math.min(0.99, Math.max(0, requested))
-        : 0.8;
-    const bars = Math.max(
-        1,
-        Number.isFinite(options.bars) ? (options.bars ?? 48) : 48,
+    const fftSize = powerOfTwo(
+        within(options.fftSize, 512, 32, 2048),
+        32,
+        2048,
     );
+    const smoothing = within(options.smoothing, 0.8, 0, 0.99);
+    const bars = within(options.bars, 48, 1, Number.POSITIVE_INFINITY);
 
     let host: PluginHost | null = null;
     let tap: MediaTap | null = null;

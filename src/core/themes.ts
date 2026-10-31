@@ -5,6 +5,7 @@
  * any product.
  */
 
+import { isOneOf } from './checked';
 import type { Theme } from './theme';
 
 export type ThemeName =
@@ -424,8 +425,5 @@ export const THEME_NAMES: readonly ThemeName[] = Object.freeze(
 );
 
 export function isThemeName(value: unknown): value is ThemeName {
-    return (
-        typeof value === 'string' &&
-        (THEME_NAMES as readonly string[]).includes(value)
-    );
+    return isOneOf(value, THEME_NAMES);
 }

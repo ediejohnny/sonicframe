@@ -13,9 +13,12 @@
 import { hideFocusRing, showFocusRing } from '../controls/focus';
 import { PlayButton } from '../controls/play-button';
 import { VolumeControl } from '../controls/volume';
-import { readableText, rgbaString, type Rgba } from '../core/color';
+import { iconButtonBox } from '../core/button';
+import type { Chapter, ChapterInput } from '../core/chapters';
+import { oneOf, within } from '../core/checked';
+import { rgbaString, type Rgba } from '../core/color';
 import { Emitter } from '../core/emitter';
-import { resolveFont, type FontChoice } from '../core/fonts';
+import type { FontChoice } from '../core/fonts';
 import {
     playerWords,
     type PlayerLabels,
@@ -31,24 +34,56 @@ import {
     type PlayerLook,
 } from '../core/look';
 import {
+    choosePalette,
     DEFAULT_PALETTE,
-    PALETTES,
     paletteVariables,
-    pickPalette,
+    unknownPalette,
     type Palette,
     type PaletteChoice,
 } from '../core/palettes';
 import { peaksFromChannel } from '../core/peaks';
 import { DEFAULT_WAVE, resolveWave } from '../core/shapes';
 import { cleanText } from '../core/text';
-import { resolveZoom, type ZoomOptions } from '../core/zoom';
 import {
     defineTheme,
     findTheme,
     themeParts,
+    type OwnChoices,
     type Theme,
     type ThemeInput,
 } from '../core/theme';
+import { BUTTON, BUTTON_ICON, MUTED, PROGRESS, WAVE } from '../core/variables';
+import { resolveZoom, type ZoomOptions } from '../core/zoom';
+import { css } from '../dom/css';
+import { decodeAudio } from '../dom/decode';
+import { useFont } from '../dom/fonts';
+import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
+import { iconElement, iconPath } from '../dom/icon';
+import { prefersReducedMotion } from '../dom/motion';
+import { observeSize } from '../dom/observe';
+import { pageLanguage } from '../dom/page-language';
+import { readColor } from '../dom/paint';
+import { onSchemeChange, prefersDark } from '../dom/scheme';
+import { canSpeak } from '../dom/speak';
+import { readableColors } from '../dom/tooltip';
+import { remPixels } from '../dom/units';
+import {
+    chapters,
+    type ChapterListLook,
+    type ChaptersOptions,
+    type ChaptersPlugin,
+} from '../plugins/chapters';
+import {
+    soundDescription,
+    type SoundDescriptionOptions,
+    type SoundDescriptionPlugin,
+} from '../plugins/description';
+import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
+import {
+    spectrogram,
+    type ColorStops,
+    type DecodedAudio,
+} from '../plugins/spectrogram';
 import type {
     BarStyle,
     PeaksSource,
@@ -57,38 +92,10 @@ import type {
     WaveName,
     WaveStyle,
 } from '../types';
-import { decodeAudio } from '../dom/decode';
-import { loadFont } from '../dom/fonts';
-import { prefersReducedMotion } from '../dom/motion';
-import type { TooltipColors } from '../dom/tooltip';
-import { remPixels } from '../dom/units';
-import { LongName } from './long-name';
-import { pageLanguage } from '../dom/page-language';
-import { observeSize } from '../dom/observe';
-import { canSpeak } from '../dom/speak';
-import {
-    soundDescription,
-    type SoundDescriptionOptions,
-    type SoundDescriptionPlugin,
-} from '../plugins/description';
-import {
-    spectrogram,
-    type ColorStops,
-    type DecodedAudio,
-} from '../plugins/spectrogram';
-import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
-import {
-    chapters,
-    type ChapterListLook,
-    type ChaptersOptions,
-    type ChaptersPlugin,
-} from '../plugins/chapters';
-import type { Chapter, ChapterInput } from '../core/chapters';
 import { FloatingList, type ListSettings } from './chapter-panel';
+import { LongName } from './long-name';
 
 export type { ChapterListLook, ChaptersPlugin };
-import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
-import { readColor } from '../dom/paint';
 
 export type PlayerOptions = {
     /** The element the player is added to. */
@@ -291,40 +298,23 @@ function shadowOf(
 /** The list's options checked: unknown names fall back, sizes stay in range. */
 function listSettings(list: true | PlayerChapterList): ListSettings {
     const own: PlayerChapterList = list === true ? {} : list;
-    const pick = <Value extends string>(
-        value: unknown,
-        allowed: readonly Value[],
-        fallback: Value,
-    ): Value =>
-        (allowed as readonly unknown[]).includes(value)
-            ? (value as Value)
-            : fallback;
-    const size = (
-        value: unknown,
-        fallback: number,
-        min: number,
-        max: number,
-    ): number =>
-        typeof value === 'number' && Number.isFinite(value)
-            ? Math.min(max, Math.max(min, value))
-            : fallback;
-    const type = pick(own.type, ['inline', 'popover', 'drawer'], 'inline');
+    const type = oneOf(own.type, ['inline', 'popover', 'drawer'], 'inline');
 
     return {
         type,
         open: own.open === true,
-        placement: pick(own.placement, ['auto', 'above', 'below'], 'auto'),
-        side: pick(own.side, ['left', 'right'], 'right'),
-        width: size(own.width, type === 'drawer' ? 20 : 18, 10, 40),
-        maxHeight: size(own.maxHeight, 20, 6, 60),
+        placement: oneOf(own.placement, ['auto', 'above', 'below'], 'auto'),
+        side: oneOf(own.side, ['left', 'right'], 'right'),
+        width: within(own.width, type === 'drawer' ? 20 : 18, 10, 40),
+        maxHeight: within(own.maxHeight, 20, 6, 60),
         header:
             typeof own.header === 'boolean' ? own.header : type !== 'inline',
         stayOpen: own.stayOpen === true,
         backdrop: own.backdrop === true,
         animation: own.animation === true,
-        animationType: pick(own.animationType, ['fade', 'slide'], 'fade'),
+        animationType: oneOf(own.animationType, ['fade', 'slide'], 'fade'),
         swipe: own.swipe === true,
-        swipeDirection: pick(
+        swipeDirection: oneOf(
             own.swipeDirection,
             ['up', 'down', 'left', 'right'],
             'up',
@@ -416,18 +406,6 @@ const ZOOM_BUTTONS = {
 /** The zoom buttons the player adds at the end of the line when the look places none. */
 const ZOOM_PARTS: readonly Part[] = ['zoomOut', 'zoomReset', 'zoomIn'];
 
-/** A whole number from `min` to `max`; anything that is not a finite number is `fallback`. */
-function count(
-    value: unknown,
-    fallback: number,
-    min: number,
-    max: number,
-): number {
-    return typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(max, Math.max(min, Math.round(value)))
-        : fallback;
-}
-
 /**
  * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
  * `narrowLine` names), goes under the wave on the left (what `narrowStart` names) or on the right
@@ -497,25 +475,15 @@ type Layout = {
     narrow: boolean;
 };
 
-/** The longest a palette color may be. */
-const MAX_COLOR = 64;
-
 /** The spectrogram's colors: from the player's surface, through the wave, to the played color. */
 const SPECTRUM: ColorStops = {
     from: 'var(--sonicframe-surface, #ffffff)',
-    via: 'var(--sonicframe-wave, #c4cad4)',
-    to: 'var(--sonicframe-progress, #2f6fdb)',
+    via: WAVE,
+    to: PROGRESS,
 };
 
 /** The knob takes its own variable, so it can differ from the played color. */
-const KNOB = 'var(--sonicframe-knob, var(--sonicframe-progress, #2f6fdb))';
-
-/** The play button's colors, which the reading button wears while it reads. */
-const BUTTON_FILL =
-    'var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))';
-const BUTTON_ICON = 'var(--sonicframe-button-icon, #fff)';
-
-const SVG = 'http://www.w3.org/2000/svg';
+const KNOB = `var(--sonicframe-knob, ${PROGRESS})`;
 
 /** Back and forward: two triangles each, on the 24 × 24 grid of the play icon. */
 const SKIP_ICONS = {
@@ -578,15 +546,6 @@ export type PlayerEvents = SonicFrameEvents & {
     chapterchange: [chapter: Chapter | null, index: number];
 };
 
-function css(
-    element: HTMLElement | SVGElement,
-    pairs: readonly (readonly [string, string])[],
-): void {
-    for (const [name, value] of pairs) {
-        element.style.setProperty(name, value);
-    }
-}
-
 /** Names a button for screen readers, with the same words as a tooltip. */
 function nameButton(button: HTMLButtonElement, label: string): void {
     button.setAttribute('aria-label', label);
@@ -599,20 +558,9 @@ function withAlpha(color: Rgba | null, alpha: number): string {
     return rgbaString([red, green, blue, alpha]);
 }
 
-/** Your own palette, each color cleaned and capped; a missing one comes from the light palette. */
-function cleanPalette(colors: Palette): Palette {
-    const base: Palette = PALETTES.light;
-    const clean = { ...base };
-
-    for (const key of Object.keys(base) as (keyof Palette)[]) {
-        const value: unknown = colors[key];
-
-        if (typeof value === 'string' && value.trim() !== '') {
-            clean[key] = cleanText(value, MAX_COLOR);
-        }
-    }
-
-    return clean;
+/** The error for a theme or palette name that does not exist, the name cleaned and cut. */
+function unknownName(kind: 'theme' | 'palette', name: string): Error {
+    return new Error(`sonicframe: unknown ${kind} "${cleanText(name, 40)}"`);
 }
 
 export class Player {
@@ -624,13 +572,7 @@ export class Player {
     private readonly options: PlayerOptions;
     private readonly events = new Emitter<PlayerEvents>();
     private readonly abort = new AbortController();
-    /** The player's own choices, at creation or through a setter: they always win over the theme. */
-    private readonly own: {
-        look?: Partial<PlayerLook>;
-        palette?: PaletteChoice;
-        wave?: WaveName | Partial<WaveStyle>;
-        bar?: Partial<BarStyle>;
-    };
+    private readonly own: OwnChoices;
     private theme: Theme | null = null;
     private showVolume: boolean;
     private look: PlayerLook = DEFAULT_LOOK;
@@ -866,11 +808,7 @@ export class Player {
         const theme = findTheme(choice);
 
         if (theme === null) {
-            this.later(
-                new Error(
-                    `sonicframe: unknown theme "${cleanText(choice, 40)}"`,
-                ),
-            );
+            this.later(unknownName('theme', choice));
         }
 
         return theme;
@@ -1115,17 +1053,8 @@ export class Player {
     ): Pick<PlayerChapterList, 'palette' | 'font' | 'style'> {
         const { palette, font, style } = list;
 
-        if (
-            typeof palette === 'string' &&
-            palette !== 'auto' &&
-            palette !== 'default' &&
-            pickPalette(palette, false) === null
-        ) {
-            this.later(
-                new Error(
-                    `sonicframe: unknown palette "${cleanText(palette, 40)}"`,
-                ),
-            );
+        if (unknownPalette(palette)) {
+            this.later(unknownName('palette', palette));
 
             return { font, style };
         }
@@ -1140,49 +1069,21 @@ export class Player {
      */
     private dressList(box: HTMLElement): void {
         const { palette: choice, font, style = {} } = this.listOwn;
-        let palette: Palette | null = null;
-
-        if (typeof choice === 'object' && choice !== null) {
-            palette = cleanPalette(choice);
-        } else if (choice === 'auto') {
-            palette = pickPalette(
-                'auto',
-                typeof window.matchMedia === 'function' &&
-                    window.matchMedia('(prefers-color-scheme: dark)').matches,
-            );
-        } else if (choice !== undefined && choice !== 'default') {
-            palette = pickPalette(choice, false);
-        }
+        const palette =
+            choice === undefined ? null : choosePalette(choice, prefersDark());
 
         if (palette !== null) {
-            for (const [name, value] of paletteVariables(palette)) {
-                box.style.setProperty(name, value);
-            }
+            css(box, paletteVariables(palette));
         }
 
         if (font !== undefined) {
-            const resolved = resolveFont(font, this.look.font);
-            box.style.setProperty('font-family', resolved.family);
-
-            if (resolved.load !== null) {
-                loadFont(resolved.load).catch((error: unknown) =>
-                    this.frameRef?.reportError(error),
-                );
-            }
+            useFont(box, font, this.look.font, this.reportError);
         }
 
-        const size = (
-            value: unknown,
-            min: number,
-            max: number,
-        ): number | null =>
-            typeof value === 'number' && Number.isFinite(value)
-                ? Math.min(max, Math.max(min, value))
-                : null;
-        const corner = size(style.corner, 0, 4);
-        const border = size(style.border, 0, 4);
-        const padding = size(style.padding, 0, 3);
-        const fontSize = size(style.fontSize, 0.5, 2);
+        const corner = within(style.corner, null, 0, 4);
+        const border = within(style.border, null, 0, 4);
+        const padding = within(style.padding, null, 0, 3);
+        const fontSize = within(style.fontSize, null, 0.5, 2);
         const shadow: unknown = style.shadow;
 
         if (corner !== null) {
@@ -1304,17 +1205,18 @@ export class Player {
     /** How many peaks to decode: `decode.peaks`, or per second of sound with zoom on (never fewer). */
     private peakCount(duration: number | undefined): number {
         const decode = this.options.decode ?? {};
-        const base = count(decode.peaks, PEAKS, 100, 100_000);
+        const base = within(decode.peaks, PEAKS, 100, 100_000, Math.round);
 
         if (!this.options.zoom || duration === undefined || !(duration > 0)) {
             return base;
         }
 
-        const perSecond = count(
+        const perSecond = within(
             decode.peaksPerSecond,
             PEAKS_PER_SECOND,
             1,
             1000,
+            Math.round,
         );
 
         return Math.min(
@@ -1587,7 +1489,7 @@ export class Player {
                 ['align-items', 'center'],
                 ['gap', '0.5rem'],
                 ['font-size', '0.85em'],
-                ['color', 'var(--sonicframe-muted, currentColor)'],
+                ['color', MUTED],
             ]);
 
             // One line by default: a chapter's name takes the room left and gives it up first.
@@ -2108,7 +2010,7 @@ export class Player {
             ['display', 'inline-grid'],
             ['white-space', 'nowrap'],
             ['flex-shrink', '0'],
-            ['color', 'var(--sonicframe-muted, currentColor)'],
+            ['color', MUTED],
         ]);
         css(text, [['grid-area', '1 / 1']]);
         css(mold, [
@@ -2231,34 +2133,19 @@ export class Player {
     ): HTMLButtonElement {
         const button = document.createElement('button');
         const size = `${Math.round(this.look.button.size * 0.75)}px`;
-        const icon = document.createElementNS(SVG, 'svg');
-        const path = document.createElementNS(SVG, 'path');
+        const icon = iconElement();
 
         button.type = 'button';
         button.className = className;
         nameButton(button, label);
-        icon.setAttribute('viewBox', '0 0 24 24');
-        icon.setAttribute('aria-hidden', 'true');
-        icon.setAttribute('focusable', 'false');
-        path.setAttribute('d', d);
-        path.setAttribute('fill', 'currentColor');
-        icon.append(path);
+        icon.append(iconPath({ d, fill: 'currentColor' }));
         button.append(icon);
         css(button, [
-            ['display', 'inline-grid'],
-            ['place-items', 'center'],
-            ['flex-shrink', '0'],
-            ['width', size],
-            ['height', size],
-            ['margin', '0'],
-            ['padding', '0'],
+            ...iconButtonBox(size),
             ['border-width', '0'],
             ['border-radius', '50%'],
             ['background-color', 'transparent'],
             ['color', 'inherit'],
-            ['cursor', 'pointer'],
-            ['appearance', 'none'],
-            ['line-height', '0'],
         ]);
         css(icon, [
             ['width', '70%'],
@@ -2366,25 +2253,12 @@ export class Player {
 
     /** The chapter playing, by name, in a room that may be too short for it (see `LongName`). */
     private chapterPart(): HTMLElement {
-        const name = new LongName(this.look, () => this.tooltipColors());
+        const name = new LongName(this.look, () =>
+            readableColors(this.frameRef),
+        );
         this.chapterNames.push(name);
 
         return name.element;
-    }
-
-    /** The page's tooltip in the played color, its text readable on it. */
-    private tooltipColors(): TooltipColors {
-        const background =
-            this.frameRef?.color('var(--sonicframe-progress, #2f6fdb)') ||
-            '#2f6fdb';
-
-        return {
-            background,
-            text: readableText(
-                readColor(background) ?? [47, 111, 219, 1],
-                [255, 255, 255, 1],
-            ),
-        };
     }
 
     /** Fits each chapter's name to its room: its end, its walk (see `LongName`). */
@@ -2509,8 +2383,9 @@ export class Player {
         const show = (): void => {
             const reading = this.descriptionRef?.speaking === true;
             nameButton(button, reading ? labels.stopListening : labels.listen);
+            // While it reads, it wears the play button's colors.
             css(button, [
-                ['background-color', reading ? BUTTON_FILL : 'transparent'],
+                ['background-color', reading ? BUTTON : 'transparent'],
                 ['color', reading ? BUTTON_ICON : 'inherit'],
             ]);
 
@@ -2570,7 +2445,7 @@ export class Player {
     private ring(button: HTMLButtonElement): void {
         button.addEventListener('focus', () => {
             if (button.matches(':focus-visible')) {
-                showFocusRing(button, 'var(--sonicframe-progress, #2f6fdb)');
+                showFocusRing(button, PROGRESS);
             }
         });
         button.addEventListener('blur', () => hideFocusRing(button));
@@ -2582,39 +2457,20 @@ export class Player {
 
         const choice = this.palette;
 
-        if (typeof choice !== 'string') {
-            this.paint(cleanPalette(choice));
+        if (choice === 'auto') {
+            const follow = (dark: boolean): void =>
+                this.paint(choosePalette('auto', dark));
+            this.stopScheme = onSchemeChange(follow);
+            follow(prefersDark());
 
             return;
         }
 
-        if (choice === 'auto' && typeof window.matchMedia === 'function') {
-            const query = window.matchMedia('(prefers-color-scheme: dark)');
-            const follow = (): void => {
-                this.paint(
-                    pickPalette('auto', query.matches) ?? PALETTES.light,
-                );
-            };
-
-            query.addEventListener('change', follow);
-            this.stopScheme = () => query.removeEventListener('change', follow);
-            follow();
-
-            return;
+        if (unknownPalette(choice)) {
+            this.later(unknownName('palette', choice));
         }
 
-        const palette =
-            choice === 'default' ? null : pickPalette(choice, false);
-
-        if (palette === null && choice !== 'default') {
-            this.later(
-                new Error(
-                    `sonicframe: unknown palette "${cleanText(choice, 40)}"`,
-                ),
-            );
-        }
-
-        this.paint(palette);
+        this.paint(choosePalette(choice, false));
     }
 
     /**
@@ -2624,12 +2480,12 @@ export class Player {
     private paint(palette: Palette | null): void {
         this.colors = palette ?? DEFAULT_PALETTE;
 
-        for (const [name, value] of paletteVariables(this.colors)) {
-            if (palette === null) {
+        if (palette === null) {
+            for (const [name] of paletteVariables(this.colors)) {
                 this.element.style.removeProperty(name);
-            } else {
-                this.element.style.setProperty(name, value);
             }
+        } else {
+            css(this.element, paletteVariables(palette));
         }
 
         this.finish();
@@ -2677,15 +2533,13 @@ export class Player {
     }
 
     private applyFont(): void {
-        const font = resolveFont(this.font, this.look.font);
-        this.element.style.setProperty('font-family', font.family);
-
-        if (font.load !== null) {
-            loadFont(font.load).catch((error: unknown) =>
-                this.frameRef?.reportError(error),
-            );
-        }
+        useFont(this.element, this.font, this.look.font, this.reportError);
     }
+
+    /** Hands an error of the player's own work (a font that fails to load) to the wave's `error` event. */
+    private readonly reportError = (error: unknown): void => {
+        this.frameRef?.reportError(error);
+    };
 }
 
 /** Makes a player inside `options.container`. */

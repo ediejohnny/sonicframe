@@ -71,4 +71,36 @@ describe('decodeAudio', () => {
             }),
         ).rejects.toThrow('too large');
     });
+
+    it('stops a download as soon as it grows past maxBytes, its size never announced', async () => {
+        fakeDecoder(3);
+        let sent = 0;
+        const body = new ReadableStream<Uint8Array>({
+            pull(controller): void {
+                // Four bytes at a time, 4000 in all, as long as someone reads.
+                sent += 4;
+                controller.enqueue(new Uint8Array(4));
+
+                if (sent >= 4000) {
+                    controller.close();
+                }
+            },
+        });
+        vi.stubGlobal('fetch', () =>
+            Promise.resolve({
+                ok: true,
+                status: 200,
+                headers: { get: (): null => null },
+                body,
+                arrayBuffer: (): Promise<ArrayBuffer> =>
+                    Promise.reject(new Error('test: read as a stream')),
+            }),
+        );
+
+        await expect(
+            decodeAudio('/sounds/endless.mp3', { maxBytes: 10 }),
+        ).rejects.toThrow('too large');
+        // The third piece passed the ceiling; nothing more was read.
+        expect(sent).toBeLessThanOrEqual(16);
+    });
 });

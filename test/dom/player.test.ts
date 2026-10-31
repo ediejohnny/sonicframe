@@ -266,6 +266,61 @@ describe('the player', () => {
         );
     });
 
+    it('wears the dark palette from the start, for the auto palette, when the system is dark', () => {
+        vi.stubGlobal('matchMedia', (query: string) => ({
+            matches: query.includes('dark'),
+            addEventListener: (): void => undefined,
+            removeEventListener: (): void => undefined,
+        }));
+
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            palette: 'auto',
+        });
+
+        expect(surface()).toBe(PALETTES.dark.surface);
+    });
+
+    it('says when a palette does not exist, and keeps SonicFrame’s own colors', async () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            palette: 'lava' as 'light',
+        });
+        const errors: unknown[] = [];
+        player.on('error', (error) => errors.push(error));
+        await Promise.resolve();
+
+        expect(errors.map(String)).toEqual([
+            'Error: sonicframe: unknown palette "lava"',
+        ]);
+        expect(surface()).toBe('');
+    });
+
+    it('hides every icon from screen readers, and names every button', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            look: { line: ['back', 'play', 'forward', 'wave', 'volume'] },
+            volume: true,
+            zoom: { buttons: true },
+        });
+        const icons = [...root().querySelectorAll('svg')];
+        const buttons = [...root().querySelectorAll('button')];
+
+        // Back, play, forward, the speaker and the three zoom buttons.
+        expect(icons).toHaveLength(7);
+        expect(
+            icons.every((icon) => icon.getAttribute('aria-hidden') === 'true'),
+        ).toBe(true);
+        expect(
+            buttons.every(
+                (button) => (button.getAttribute('aria-label') ?? '') !== '',
+            ),
+        ).toBe(true);
+    });
+
     it('shows the time as the media moves', () => {
         const media = fakeMedia({ duration: 40 });
         player = createPlayer({ container: container(), media });
@@ -344,6 +399,33 @@ describe('the player', () => {
             /^"?Brand"?, system-ui,/,
         );
         expect(faces).toEqual(['Brand url("/fonts/brand.woff2")']);
+    });
+
+    it('tells the app when a font it brings cannot load', async () => {
+        const failure = new Error('font file missing');
+        vi.stubGlobal(
+            'FontFace',
+            class {
+                load(): Promise<void> {
+                    return Promise.reject(failure);
+                }
+            },
+        );
+        Object.defineProperty(document, 'fonts', {
+            configurable: true,
+            value: { add: (): void => undefined },
+        });
+
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            font: { family: 'Missing', src: '/fonts/missing.woff2' },
+        });
+        const errors: unknown[] = [];
+        player.on('error', (error) => errors.push(error));
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(errors).toEqual([failure]);
     });
 
     it('decodes peaks from the sound only once it is near the screen', async () => {

@@ -7,6 +7,7 @@
  */
 
 import type { ButtonFill, ButtonShape } from './button';
+import { isOneOf, oneOf, within } from './checked';
 import { isFontName, type FontName } from './fonts';
 import { formatPosition, formatTime } from './timing';
 
@@ -220,30 +221,8 @@ const MAX_PARTS = 12;
 /** The most speeds the speed button steps through. */
 const MAX_SPEEDS = 6;
 
-function oneOf<Value extends string>(
-    value: unknown,
-    allowed: readonly Value[],
-    fallback: Value,
-): Value {
-    return typeof value === 'string' &&
-        (allowed as readonly string[]).includes(value)
-        ? (value as Value)
-        : fallback;
-}
-
-function within(
-    value: unknown,
-    fallback: number,
-    lo: number,
-    hi: number,
-): number {
-    return typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(hi, Math.max(lo, value))
-        : fallback;
-}
-
 function isPart(value: unknown): value is Part {
-    return (PART_NAMES as readonly unknown[]).includes(value);
+    return isOneOf(value, PART_NAMES);
 }
 
 /** Known parts only, each once (spacers may repeat), at most `MAX_PARTS`. */

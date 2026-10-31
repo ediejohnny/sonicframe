@@ -5,22 +5,41 @@
  * page's Content-Security-Policy still decides what may load.
  */
 
-import type { FontLoad } from '../core/fonts';
+import { oncePerPage } from '../core/fetch';
+import {
+    resolveFont,
+    type FontChoice,
+    type FontLoad,
+    type FontName,
+} from '../core/fonts';
 
 const loads = new Map<string, Promise<void>>();
 
+/**
+ * Sets the font `choice` names on `element` (the `fallback` stack without one) and loads a font the
+ * app brings; a load that fails goes to `failed`.
+ */
+export function useFont(
+    element: HTMLElement,
+    choice: FontChoice | undefined,
+    fallback: FontName,
+    failed: (error: unknown) => void,
+): void {
+    const font = resolveFont(choice, fallback);
+    element.style.setProperty('font-family', font.family);
+
+    if (font.load !== null) {
+        loadFont(font.load).catch(failed);
+    }
+}
+
 /** Loads what `load` names, once per page; resolves when it is ready to use. */
 export function loadFont(load: FontLoad): Promise<void> {
-    const key = `${load.family}\n${load.src ?? ''}\n${load.stylesheet ?? ''}`;
-    let pending = loads.get(key);
-
-    if (pending === undefined) {
-        pending = start(load);
-        loads.set(key, pending);
-        pending.catch(() => loads.delete(key));
-    }
-
-    return pending;
+    return oncePerPage(
+        loads,
+        `${load.family}\n${load.src ?? ''}\n${load.stylesheet ?? ''}`,
+        () => start(load),
+    );
 }
 
 async function start(load: FontLoad): Promise<void> {

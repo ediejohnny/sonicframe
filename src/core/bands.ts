@@ -4,6 +4,8 @@
  * into one bar. Pure, so it is tested without Web Audio.
  */
 
+import { within } from './checked';
+
 /** The most bands a spectrum is split into; more would cost every frame and add nothing visible. */
 export const MAX_BANDS = 512;
 
@@ -14,9 +16,7 @@ export function frequencyBands(
     sampleRate: number,
     options: { minHz?: number; maxHz?: number } = {},
 ): number[] {
-    const total = Number.isFinite(count)
-        ? Math.min(MAX_BANDS, Math.max(0, Math.floor(count)))
-        : 0;
+    const total = within(count, 0, 0, MAX_BANDS, Math.floor);
     const bins = spectrum.length;
     const nyquist = sampleRate / 2;
 

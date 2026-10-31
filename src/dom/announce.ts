@@ -3,6 +3,8 @@
  * region selected, a marker reached) without any visible change. Created on first use and reused.
  */
 
+import { css, VISUALLY_HIDDEN } from './css';
+
 class Announcer {
     private readonly element: HTMLElement;
 
@@ -10,20 +12,7 @@ class Announcer {
         const element = document.createElement('div');
         element.setAttribute('role', 'status');
         element.setAttribute('aria-live', 'polite');
-
-        for (const [property, value] of [
-            ['position', 'absolute'],
-            ['width', '1px'],
-            ['height', '1px'],
-            ['margin', '-1px'],
-            ['padding', '0'],
-            ['overflow', 'hidden'],
-            ['clip-path', 'inset(50%)'],
-            ['white-space', 'nowrap'],
-        ]) {
-            element.style.setProperty(property, value);
-        }
-
+        css(element, VISUALLY_HIDDEN);
         document.body.append(element);
         this.element = element;
     }

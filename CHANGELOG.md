@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The README keeps only the logo, the badges and one picture of the player; every theme, palette and drawing is
   live in the docs' [theme gallery](https://ediejohnny.github.io/sonicframe/themes.html) instead.
 
+### Fixed
+
+- The shared tooltip (markers, chapters, captions, a long chapter name) keeps clear of the page's scrollbars, as
+  the chapters popover already did.
+
 ## [0.5.0] - 2026-10-31
 
 ### Added

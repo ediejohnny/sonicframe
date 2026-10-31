@@ -6,14 +6,17 @@
  * follow the page's theme variables.
  */
 
+import { within } from '../core/checked';
 import { overlayOf } from '../core/scene';
 import { barMetrics } from '../core/layout';
 import { clamp01 } from '../core/math';
 import { resample } from '../core/peaks';
 import { DEFAULT_WAVE, resolveWave, waveShape } from '../core/shapes';
-import { formatTime } from '../core/timing';
+import { ratioText } from '../core/timing';
+import { PROGRESS, REGION, WAVE } from '../core/variables';
 import { zoomView, type View } from '../core/view';
 import { wheelFactor } from '../core/zoom';
+import { css } from '../dom/css';
 import { drawingOf, paintWave, type Drawing } from '../dom/paint';
 import type {
     BarStyle,
@@ -90,10 +93,10 @@ const MINIMAP_BAR: Readonly<BarStyle> = Object.freeze({
 const ARROW_STEP = 0.25;
 
 const COLORS = {
-    wave: 'var(--sonicframe-wave, #c4cad4)',
-    progress: 'var(--sonicframe-progress, #2f6fdb)',
-    view: 'var(--sonicframe-minimap-view, var(--sonicframe-region, rgba(47, 111, 219, 0.18)))',
-    edge: 'var(--sonicframe-minimap-edge, var(--sonicframe-progress, #2f6fdb))',
+    wave: WAVE,
+    progress: PROGRESS,
+    view: `var(--sonicframe-minimap-view, ${REGION})`,
+    edge: `var(--sonicframe-minimap-edge, ${PROGRESS})`,
 };
 
 function isFull(view: View): boolean {
@@ -109,11 +112,8 @@ export function minimapSize(options: Pick<MinimapOptions, 'height' | 'gap'>): {
     gap: number;
 } {
     return {
-        height: Math.max(
-            4,
-            Number.isFinite(options.height) ? (options.height ?? 24) : 24,
-        ),
-        gap: Math.max(0, Number.isFinite(options.gap) ? (options.gap ?? 4) : 4),
+        height: within(options.height, 24, 4, Number.POSITIVE_INFINITY),
+        gap: within(options.gap, 4, 0, Number.POSITIVE_INFINITY),
     };
 }
 
@@ -295,10 +295,7 @@ export function minimap(options: MinimapOptions = {}): Plugin {
 
         const { start, end } = frame.view;
         const duration = frame.duration;
-        const at = (ratio: number): string =>
-            duration === null
-                ? `${Math.round(ratio * 100)}%`
-                : formatTime(Math.round(ratio * duration));
+        const at = (ratio: number): string => ratioText(ratio, duration);
         const room = 1 - (end - start);
 
         element.setAttribute(
@@ -417,16 +414,12 @@ export function minimap(options: MinimapOptions = {}): Plugin {
             const element = lane.element;
             element.classList.add('sonicframe-minimap');
             canvas = document.createElement('canvas');
-
-            for (const [property, value] of [
+            css(canvas, [
                 ['display', 'block'],
                 ['width', '100%'],
                 ['height', `${height}px`],
                 [side === 'below' ? 'margin-top' : 'margin-bottom', `${gap}px`],
-            ]) {
-                canvas.style.setProperty(property, value);
-            }
-
+            ]);
             canvas.setAttribute('aria-hidden', 'true');
             element.append(canvas);
 

@@ -17,9 +17,10 @@ import {
 } from '../core/clip';
 import { overlayOf } from '../core/scene';
 import { DEFAULT_WAVE, knobSpot } from '../core/shapes';
+import { within } from '../core/checked';
 import { cleanText } from '../core/text';
 import type { BarStyle, WaveStyle } from '../types';
-import { readCapped } from './decode';
+import { fetchAudio } from './decode';
 import {
     drawingOf,
     paintKnob,
@@ -32,7 +33,8 @@ const MAX_WIDTH = 1920;
 const MAX_HEIGHT = 1080;
 const MAX_FPS = 60;
 const MAX_BITRATE = 8_000_000;
-const MAX_BYTES = 100 * 1024 * 1024;
+/** The largest sound a clip is recorded from, in bytes (100 MiB). */
+const MAX_BYTES = 104_857_600;
 const MAX_CAPTION = 200;
 
 export type ClipOptions = {
@@ -70,18 +72,6 @@ export type ClipOptions = {
     onProgress?: (fraction: number) => void;
 };
 
-function whole(
-    value: number | undefined,
-    fallback: number,
-    lo: number,
-    hi: number,
-): number {
-    const chosen =
-        value !== undefined && Number.isFinite(value) ? value : fallback;
-
-    return Math.min(hi, Math.max(lo, Math.round(chosen)));
-}
-
 /** Whether the sound is already decoded (and needs neither a download nor a decode). */
 function isDecoded(audio: AudioBuffer | Blob | string): audio is AudioBuffer {
     return typeof audio !== 'string' && 'getChannelData' in audio;
@@ -106,15 +96,7 @@ async function toBuffer(
     let data: ArrayBuffer;
 
     if (typeof audio === 'string') {
-        const response = await fetch(audio, { signal });
-
-        if (!response.ok) {
-            throw new Error(
-                `sonicframe: could not fetch audio (${response.status})`,
-            );
-        }
-
-        data = await readCapped(response, MAX_BYTES);
+        data = await fetchAudio(audio, MAX_BYTES, signal);
     } else {
         if (audio.size > MAX_BYTES) {
             throw new Error('sonicframe: audio is too large to record');
@@ -157,9 +139,9 @@ export async function exportClip(
         throw tooLong(options.sourceSeconds, limit);
     }
 
-    const width = whole(options.width, 1280, 16, MAX_WIDTH);
-    const height = whole(options.height, 720, 16, MAX_HEIGHT);
-    const fps = whole(options.fps, 30, 1, MAX_FPS);
+    const width = within(options.width, 1280, 16, MAX_WIDTH, Math.round);
+    const height = within(options.height, 720, 16, MAX_HEIGHT, Math.round);
+    const fps = within(options.fps, 30, 1, MAX_FPS, Math.round);
 
     const canvas = document.createElement('canvas');
     canvas.width = width;

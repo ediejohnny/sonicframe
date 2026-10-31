@@ -10,6 +10,7 @@
  * shown; with `detail`, a sharp picture of that part is computed once the view rests.
  */
 
+import { within } from '../core/checked';
 import { buildColormap, colormap, type ColormapName } from '../core/colormap';
 import {
     createSpectrogram,
@@ -78,11 +79,11 @@ export function spectrogram(options: SpectrogramPluginOptions = {}): Plugin {
     let controller: AbortController | null = null;
     let destroyed = false;
     const sharp = options.detail === true;
-    const detailDelay = Math.max(
+    const detailDelay = within(
+        options.detailDelay,
+        200,
         0,
-        Number.isFinite(options.detailDelay)
-            ? (options.detailDelay ?? 200)
-            : 200,
+        Number.POSITIVE_INFINITY,
     );
     /** The decoded sound, kept only for sharp pictures. */
     let audio: DecodedAudio | null = null;

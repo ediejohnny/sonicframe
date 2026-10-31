@@ -8,7 +8,11 @@
  */
 
 import { arrowOffset, placeTooltip } from '../core/place';
+import { MUTED } from '../core/variables';
+import { css } from '../dom/css';
+import { iconElement, iconPath } from '../dom/icon';
 import { prefersReducedMotion } from '../dom/motion';
+import { pageSize } from '../dom/units';
 
 /** The player's chapters list settings, already checked. */
 export type ListSettings = {
@@ -38,8 +42,6 @@ const CARRIED = [
     '--sonicframe-progress',
 ];
 
-const SVG = 'http://www.w3.org/2000/svg';
-
 /** The arrow's side, in CSS pixels, and how far it keeps from the list's ends. */
 const ARROW = 12;
 const ARROW_INSET = 16;
@@ -53,15 +55,6 @@ const ENTER_MS = 180;
 
 /** Over every page element; just under the shared tooltip. */
 const LAYER = '2147483645';
-
-function css(
-    element: HTMLElement | SVGElement,
-    pairs: readonly (readonly [string, string])[],
-): void {
-    for (const [name, value] of pairs) {
-        element.style.setProperty(name, value);
-    }
-}
 
 export class FloatingList {
     private readonly arrow: HTMLElement | null = null;
@@ -91,10 +84,7 @@ export class FloatingList {
         css(content, [
             ['overflow-y', 'auto'],
             ['scrollbar-width', 'thin'],
-            [
-                'scrollbar-color',
-                'var(--sonicframe-muted, currentColor) transparent',
-            ],
+            ['scrollbar-color', `${MUTED} transparent`],
         ]);
         css(box, [
             ['position', 'fixed'],
@@ -232,21 +222,20 @@ export class FloatingList {
     /** A cross drawn in SVG, so its middle is the button's whatever the font. */
     private closeButton(label: string): HTMLButtonElement {
         const button = document.createElement('button');
-        const icon = document.createElementNS(SVG, 'svg');
-        const path = document.createElementNS(SVG, 'path');
+        const icon = iconElement();
         button.type = 'button';
         button.className = 'sonicframe-chapter-close';
         button.setAttribute('aria-label', label);
         button.title = label;
-        icon.setAttribute('viewBox', '0 0 24 24');
-        icon.setAttribute('aria-hidden', 'true');
-        icon.setAttribute('focusable', 'false');
-        path.setAttribute('d', 'M6 6 18 18M18 6 6 18');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'currentColor');
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('stroke-linecap', 'round');
-        icon.append(path);
+        icon.append(
+            iconPath({
+                d: 'M6 6 18 18M18 6 6 18',
+                fill: 'none',
+                stroke: 'currentColor',
+                'stroke-width': '2',
+                'stroke-linecap': 'round',
+            }),
+        );
         button.append(icon);
         css(button, [
             // On the list's head, set by `placeCloser` when the list opens.
@@ -342,12 +331,7 @@ export class FloatingList {
             return;
         }
 
-        // The page's own width and height leave its scrollbars out; the window's would not.
-        const page = document.documentElement;
-        const view = {
-            width: page.clientWidth || window.innerWidth,
-            height: page.clientHeight || window.innerHeight,
-        };
+        const view = pageSize();
         this.box.style.setProperty(
             'max-width',
             `${Math.max(0, view.width - MARGIN * 2)}px`,

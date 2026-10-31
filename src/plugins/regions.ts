@@ -17,7 +17,9 @@ import {
 import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
 import { placeX } from '../core/scene';
+import { PROGRESS, REGION } from '../core/variables';
 import { FULL_VIEW, viewX } from '../core/view';
+import { css } from '../dom/css';
 import type { Plugin, PluginHost, WavePoint } from '../types';
 
 /** A region, in seconds. */
@@ -79,8 +81,7 @@ let counter = 0;
 export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const create = options.create ?? 'shift-drag';
     const minLength = Math.max(0.01, options.minLength ?? 0.25);
-    const bandColor =
-        options.color ?? 'var(--sonicframe-region, rgba(47, 111, 219, 0.18))';
+    const bandColor = options.color ?? REGION;
     const keys = options.keys ?? true;
     const max = Math.min(200, Math.max(0, options.max ?? 200));
 
@@ -274,8 +275,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
             if (node === undefined) {
                 node = document.createElement('span');
-
-                for (const [property, value] of [
+                css(node, [
                     ['position', 'absolute'],
                     ['top', '0'],
                     ['font-size', '10px'],
@@ -285,10 +285,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                     ['overflow', 'hidden'],
                     ['max-width', '40%'],
                     ['text-overflow', 'ellipsis'],
-                ]) {
-                    node.style.setProperty(property, value);
-                }
-
+                ]);
                 labelLayer.append(node);
                 labelSpans.set(region.id, node);
             }
@@ -470,7 +467,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 return;
             }
 
-            const edge = paint.color('var(--sonicframe-progress, #2f6fdb)');
+            const edge = paint.color(PROGRESS);
 
             for (const region of items) {
                 const from = placeX(paint, region.start / span, snap);

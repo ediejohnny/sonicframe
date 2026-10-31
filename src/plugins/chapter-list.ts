@@ -8,7 +8,11 @@
  */
 
 import type { Chapter } from '../core/chapters';
+import { within } from '../core/checked';
 import { formatTime } from '../core/timing';
+import { MUTED, PROGRESS, REGION } from '../core/variables';
+import { css } from '../dom/css';
+import { iconElement, iconPath } from '../dom/icon';
 
 /** How the list's items look; each left out keeps its default. */
 export type ChapterListLook = {
@@ -42,34 +46,22 @@ export type ChapterListLook = {
 
 type ListLook = Required<ChapterListLook>;
 
-/** A number from `min` to `max`, or `fallback` when it is not a finite number. */
-function size(
-    value: unknown,
-    fallback: number,
-    min: number,
-    max: number,
-): number {
-    return typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(max, Math.max(min, value))
-        : fallback;
-}
-
 /** The look asked for, checked: known values only, sizes in range. */
 function resolveListLook(look: ChapterListLook = {}): ListLook {
     return {
-        thumbWidth: size(look.thumbWidth, 3.5, 1, 12),
+        thumbWidth: within(look.thumbWidth, 3.5, 1, 12),
         thumbShape: look.thumbShape === 'wide' ? 'wide' : 'square',
-        thumbCorner: size(look.thumbCorner, 0.25, 0, 2),
+        thumbCorner: within(look.thumbCorner, 0.25, 0, 2),
         numbers: look.numbers !== false,
         playingMark: look.playingMark !== false,
         span: look.span !== false,
         length: look.length !== false,
         progress: look.progress !== false,
         tint: look.tint !== false,
-        titleLines: Math.round(size(look.titleLines, 2, 1, 4)),
-        itemPadding: size(look.itemPadding, 0.375, 0, 2),
-        itemCorner: size(look.itemCorner, 0.25, 0, 2),
-        gap: size(look.gap, 0.125, 0, 2),
+        titleLines: Math.round(within(look.titleLines, 2, 1, 4)),
+        itemPadding: within(look.itemPadding, 0.375, 0, 2),
+        itemCorner: within(look.itemCorner, 0.25, 0, 2),
+        gap: within(look.gap, 0.125, 0, 2),
     };
 }
 
@@ -84,23 +76,8 @@ export type ChapterListOptions = {
     look?: ChapterListLook;
 };
 
-const SVG = 'http://www.w3.org/2000/svg';
-
 /** Three bars of different heights, the mark of the chapter playing (on a 12 × 12 grid). */
 const PLAYING = 'M1 5h2v6H1zM5 1h2v10H5zM9 4h2v7H9z';
-
-const TINT = 'var(--sonicframe-region, rgba(47, 111, 219, 0.18))';
-const MUTED = 'var(--sonicframe-muted, currentColor)';
-const PLAYED = 'var(--sonicframe-progress, #2f6fdb)';
-
-function css(
-    element: HTMLElement | SVGElement,
-    pairs: readonly (readonly [string, string])[],
-): void {
-    for (const [name, value] of pairs) {
-        element.style.setProperty(name, value);
-    }
-}
 
 function span(className: string, text: string): HTMLSpanElement {
     const element = document.createElement('span');
@@ -289,7 +266,7 @@ export class ChapterListView {
                 css(link, [
                     ['flex-shrink', '0'],
                     ['font-size', '0.75rem'],
-                    ['color', PLAYED],
+                    ['color', PROGRESS],
                     ['padding', '0 0.25rem'],
                 ]);
                 item.append(link);
@@ -320,7 +297,7 @@ export class ChapterListView {
 
                 button.style.setProperty(
                     'background-color',
-                    on && this.look.tint ? TINT : 'transparent',
+                    on && this.look.tint ? REGION : 'transparent',
                 );
                 mark?.replaceChildren(
                     on && this.look.playingMark
@@ -368,7 +345,7 @@ export class ChapterListView {
             ['height', `${height}rem`],
             ['overflow', 'hidden'],
             ['border-radius', `${thumbCorner}rem`],
-            ['background-color', TINT],
+            ['background-color', REGION],
         ]);
         const image = document.createElement('img');
         image.alt = '';
@@ -411,18 +388,13 @@ export class ChapterListView {
 
     /** The still mark of the chapter playing: three sound bars in the played color. */
     private playing(): SVGSVGElement {
-        const icon = document.createElementNS(SVG, 'svg');
-        const path = document.createElementNS(SVG, 'path');
+        const icon = iconElement(12);
         icon.setAttribute('class', 'sonicframe-chapter-playing');
-        icon.setAttribute('viewBox', '0 0 12 12');
-        icon.setAttribute('focusable', 'false');
-        path.setAttribute('d', PLAYING);
-        path.setAttribute('fill', 'currentColor');
-        icon.append(path);
+        icon.append(iconPath({ d: PLAYING, fill: 'currentColor' }));
         css(icon, [
             ['width', '0.75rem'],
             ['height', '0.75rem'],
-            ['color', PLAYED],
+            ['color', PROGRESS],
             ['vertical-align', 'middle'],
         ]);
 
@@ -450,7 +422,7 @@ export class ChapterListView {
             ['display', 'block'],
             ['height', '100%'],
             ['width', '0%'],
-            ['background-color', PLAYED],
+            ['background-color', PROGRESS],
         ]);
         track.append(fill);
         button.append(track);

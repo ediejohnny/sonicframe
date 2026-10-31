@@ -27,6 +27,7 @@ import { overlayOf, sameOverlay, type Overlay } from '../core/scene';
 import { DEFAULT_WAVE, knobSpot, resolveWave, waveShape } from '../core/shapes';
 import { cleanText } from '../core/text';
 import { defaultValueText, easeOut } from '../core/timing';
+import { PROGRESS, WAVE } from '../core/variables';
 import {
     FULL_VIEW,
     fitView,
@@ -70,9 +71,11 @@ import type {
 } from '../types';
 import { announce } from './announce';
 import { exportClip, type ClipOptions } from './clip';
+import { css } from './css';
 import { LaneManager } from './lanes';
 import { prefersReducedMotion } from './motion';
 import { observeSize, observeVisibility, type Size } from './observe';
+import { onSchemeChange } from './scheme';
 import {
     drawingOf,
     linePath,
@@ -151,8 +154,8 @@ export const DEFAULT_BAR: Readonly<BarStyle> = Object.freeze({
 });
 
 export const DEFAULT_COLORS: Readonly<Colors> = Object.freeze({
-    wave: 'var(--sonicframe-wave, #c4cad4)',
-    progress: 'var(--sonicframe-progress, #2f6fdb)',
+    wave: WAVE,
+    progress: PROGRESS,
     hover: 'auto',
     cursor: null,
     waveHover: null,
@@ -296,17 +299,14 @@ export class SonicFrame implements PluginHost {
         this.canvas = document.createElement('canvas');
         this.canvas.setAttribute('aria-hidden', 'true');
 
-        for (const [property, value] of [
+        css(this.canvas, [
             ['position', 'absolute'],
             ['inset', '0'],
             ['width', '100%'],
             ['height', '100%'],
             ['display', 'block'],
             ['pointer-events', 'none'],
-        ]) {
-            this.canvas.style.setProperty(property, value);
-        }
-
+        ]);
         this.canvas.width = 0;
         this.canvas.height = 0;
         this.container.append(this.canvas);
@@ -497,16 +497,12 @@ export class SonicFrame implements PluginHost {
     overlay(): HTMLElement {
         if (this.overlayEl === null) {
             const element = document.createElement('div');
-
-            for (const [property, value] of [
+            css(element, [
                 ['position', 'absolute'],
                 ['left', '0'],
                 ['right', '0'],
                 ['pointer-events', 'none'],
-            ]) {
-                element.style.setProperty(property, value);
-            }
-
+            ]);
             this.container.append(element);
             this.lanes.fitToBars(element);
             this.overlayEl = element;
@@ -841,14 +837,7 @@ export class SonicFrame implements PluginHost {
             );
         }
 
-        if (typeof window.matchMedia === 'function') {
-            const scheme = window.matchMedia('(prefers-color-scheme: dark)');
-            const changed = (): void => this.refresh();
-            scheme.addEventListener('change', changed);
-            this.cleanups.push(() =>
-                scheme.removeEventListener('change', changed),
-            );
-        }
+        this.cleanups.push(onSchemeChange(() => this.refresh()));
     }
 
     private readonly onMedia = (event: Event): void => {

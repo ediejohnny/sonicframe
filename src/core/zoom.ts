@@ -3,8 +3,9 @@
  * and the words said about a view. Nothing here touches the page.
  */
 
+import { oneOf, within } from './checked';
 import type { KeyModifiers } from './keys';
-import { formatTime } from './timing';
+import { ratioText } from './timing';
 import { FULL_VIEW, fitView, viewLevel, type View } from './view';
 
 /** What moved the view. */
@@ -109,25 +110,6 @@ const DEFAULT_KEYS: ZoomKeys = Object.freeze({
     reset: ['0'],
 });
 
-function within(
-    value: unknown,
-    fallback: number,
-    min: number,
-    max: number,
-): number {
-    return typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(max, Math.max(min, value))
-        : fallback;
-}
-
-function oneOf<T extends string>(
-    value: unknown,
-    choices: readonly T[],
-    fallback: T,
-): T {
-    return choices.includes(value as T) ? (value as T) : fallback;
-}
-
 function keyList(
     value: ZoomKey | undefined,
     fallback: readonly string[],
@@ -163,10 +145,7 @@ export function resolveZoom(
             options.view === undefined
                 ? FULL_VIEW
                 : fitView(options.view.start, options.view.end, MAX_ZOOM),
-        max:
-            typeof options.max === 'number' && Number.isFinite(options.max)
-                ? within(options.max, 1, 1, MAX_ZOOM)
-                : null,
+        max: within(options.max, null, 1, MAX_ZOOM),
         step: within(options.step, 2, 1.01, 100),
         anchor: oneOf(options.anchor, ['position', 'center'], 'position'),
         wheel: options.wheel === true,
@@ -245,14 +224,9 @@ export function viewWords(
     view: View,
     duration: number | null,
 ): string {
-    const at = (ratio: number): string =>
-        duration === null
-            ? `${Math.round(ratio * 100)}%`
-            : formatTime(Math.round(ratio * duration));
-
     return words.view(
         Math.round(viewLevel(view) * 10) / 10,
-        at(view.start),
-        at(view.end),
+        ratioText(view.start, duration),
+        ratioText(view.end, duration),
     );
 }

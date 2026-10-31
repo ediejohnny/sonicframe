@@ -78,20 +78,32 @@ function cornerRadius(look: ButtonLook): string {
     }
 }
 
-/** The inline styles that draw a button, as CSS property and value pairs. */
-export function buttonStyles(look: ButtonLook): [string, string][] {
-    const size = `${Math.max(1, look.size)}px`;
-    const solid = look.fill === 'solid';
-
+/**
+ * What every button drawn around an icon sets, whatever its look: the icon in the middle of a
+ * `size` square, no margin or padding, and none of the page's own button look.
+ */
+export function iconButtonBox(size: string): [string, string][] {
     return [
         ['display', 'inline-grid'],
         ['place-items', 'center'],
-        ['box-sizing', 'border-box'],
         ['flex-shrink', '0'],
         ['width', size],
         ['height', size],
         ['margin', '0'],
         ['padding', '0'],
+        ['line-height', '0'],
+        ['cursor', 'pointer'],
+        ['appearance', 'none'],
+    ];
+}
+
+/** The inline styles that draw a button, as CSS property and value pairs. */
+export function buttonStyles(look: ButtonLook): [string, string][] {
+    const solid = look.fill === 'solid';
+
+    return [
+        ...iconButtonBox(`${Math.max(1, look.size)}px`),
+        ['box-sizing', 'border-box'],
         [
             'border',
             look.fill === 'outline'
@@ -102,9 +114,6 @@ export function buttonStyles(look: ButtonLook): [string, string][] {
         // Not the `background` shorthand: it would take url(...) from a color and fetch it.
         ['background-color', solid ? look.colors.background : 'transparent'],
         ['color', solid ? look.colors.icon : look.colors.background],
-        ['line-height', '0'],
-        ['cursor', 'pointer'],
-        ['appearance', 'none'],
         ['-webkit-tap-highlight-color', 'transparent'],
         ['transition', 'opacity 120ms, transform 120ms'],
     ];

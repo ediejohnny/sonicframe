@@ -9,6 +9,7 @@
  */
 
 import type { BarStyle, WaveName, WaveStyle } from '../types';
+import { within } from './checked';
 import { DEFAULT_LOOK, resolveLook, type PlayerLook } from './look';
 import type { PaletteChoice, PaletteName } from './palettes';
 import { THEMES, isThemeName } from './themes';
@@ -27,6 +28,14 @@ export type Theme = {
 /** A theme to make: any part of one, laid over the theme named in `extends`. */
 export type ThemeInput = Partial<Theme> & { extends?: string };
 
+/** A player's own choices, at creation or through a setter: they always win over its theme. */
+export type OwnChoices = {
+    look?: Partial<PlayerLook>;
+    palette?: PaletteChoice;
+    wave?: WaveName | Partial<WaveStyle>;
+    bar?: Partial<BarStyle>;
+};
+
 /** What a player is built from, once its options and its theme are combined. */
 export type ThemeParts = {
     look: PlayerLook;
@@ -43,12 +52,6 @@ const MAX_REGISTERED = 100;
 
 const registry = new Map<string, Theme>();
 
-function within(value: unknown, lo: number, hi: number): number | undefined {
-    return typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(hi, Math.max(lo, value))
-        : undefined;
-}
-
 /** The bar details that are valid, numbers kept in range; anything else is left to the default. */
 export function cleanBar(
     bar: Partial<BarStyle> | undefined,
@@ -64,7 +67,7 @@ export function cleanBar(
     ];
 
     for (const [key, lo, hi] of ranges) {
-        const value = within(given[key], lo, hi);
+        const value = within(given[key], undefined, lo, hi);
 
         if (value !== undefined) {
             (clean as Record<string, number>)[key] = value;
@@ -139,12 +142,7 @@ export function registerTheme(name: string, input: ThemeInput): boolean {
 /** A player's own options laid over its theme (the default theme when there is none). */
 export function themeParts(
     theme: Theme | null,
-    options: {
-        look?: Partial<PlayerLook>;
-        palette?: PaletteChoice;
-        wave?: WaveName | Partial<WaveStyle>;
-        bar?: Partial<BarStyle>;
-    },
+    options: OwnChoices,
 ): ThemeParts {
     const base = theme ?? THEMES.default;
     const own: Partial<WaveStyle> =

@@ -5,6 +5,9 @@
  * controls visible on its own surface (WCAG contrast, checked by the tests).
  */
 
+import { isOneOf } from './checked';
+import { cleanText } from './text';
+
 export type Palette = {
     /** The player's background. */
     surface: string;
@@ -178,10 +181,7 @@ export const PALETTE_NAMES: readonly PaletteName[] = Object.freeze(
 );
 
 export function isPaletteName(value: unknown): value is PaletteName {
-    return (
-        typeof value === 'string' &&
-        (PALETTE_NAMES as readonly string[]).includes(value)
-    );
+    return isOneOf(value, PALETTE_NAMES);
 }
 
 /** A palette by name; `'auto'` follows the system (dark or light). Unknown names give null. */
@@ -194,6 +194,50 @@ export function pickPalette(
     }
 
     return isPaletteName(name) ? PALETTES[name] : null;
+}
+
+/** The longest a palette color may be. */
+const MAX_COLOR = 64;
+
+/** Your own palette, each color cleaned and capped; a missing one comes from the light palette. */
+export function cleanPalette(colors: Palette): Palette {
+    const base: Palette = PALETTES.light;
+    const clean = { ...base };
+
+    for (const key of Object.keys(base) as (keyof Palette)[]) {
+        const value: unknown = colors[key];
+
+        if (typeof value === 'string' && value.trim() !== '') {
+            clean[key] = cleanText(value, MAX_COLOR);
+        }
+    }
+
+    return clean;
+}
+
+/**
+ * The palette a choice names: your own colors cleaned, a built-in one, or for `'auto'` the light or
+ * the dark one as `dark` says; null for `'default'` (SonicFrame's own colors) and an unknown name.
+ */
+export function choosePalette(
+    choice: PaletteChoice,
+    dark: boolean,
+): Readonly<Palette> | null {
+    if (typeof choice !== 'string') {
+        return cleanPalette(choice);
+    }
+
+    return choice === 'default' ? null : pickPalette(choice, dark);
+}
+
+/** Whether a choice is a name no palette has (the app hears about it; the palette is left out). */
+export function unknownPalette(choice: unknown): choice is string {
+    return (
+        typeof choice === 'string' &&
+        choice !== 'auto' &&
+        choice !== 'default' &&
+        !isPaletteName(choice)
+    );
 }
 
 /** The custom properties a palette sets, read by the frame, the button and the plugins. */

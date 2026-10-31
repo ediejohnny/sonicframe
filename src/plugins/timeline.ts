@@ -8,6 +8,7 @@
 
 import { niceTicks } from '../core/ticks';
 import { formatTime } from '../core/timing';
+import { css } from '../dom/css';
 import type { Plugin, PluginHost } from '../types';
 
 export type TimelineOptions = {
@@ -49,31 +50,25 @@ export function timeline(options: TimelineOptions = {}): Plugin {
 
     function mark(height: string): HTMLElement {
         const tick = document.createElement('span');
-
-        for (const [property, value] of [
+        css(tick, [
             ['position', 'absolute'],
             ['bottom', '0'],
             ['width', '1px'],
             ['height', height],
             ['background', 'currentColor'],
-        ]) {
-            tick.style.setProperty(property, value);
-        }
+        ]);
 
         return tick;
     }
 
     function text(): HTMLElement {
         const span = document.createElement('span');
-
-        for (const [property, value] of [
+        css(span, [
             ['position', 'absolute'],
             ['top', '0'],
             ['font-size', '9px'],
             ['white-space', 'nowrap'],
-        ]) {
-            span.style.setProperty(property, value);
-        }
+        ]);
 
         return span;
     }

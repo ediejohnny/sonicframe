@@ -5,7 +5,9 @@
  * dimension is capped, so neither memory nor time can run away.
  */
 
+import { within } from './checked';
 import { fft } from './fft';
+import { powerOfTwo } from './math';
 
 const MIN_FFT = 32;
 const MAX_FFT = 8192;
@@ -37,16 +39,6 @@ export type SpectrogramJob = {
     step(maxColumns: number): void;
 };
 
-function toPowerOfTwo(value: number): number {
-    let size = MIN_FFT;
-
-    while (size < value && size < MAX_FFT) {
-        size <<= 1;
-    }
-
-    return Math.min(MAX_FFT, Math.max(MIN_FFT, size));
-}
-
 function hann(size: number): Float64Array {
     const weights = new Float64Array(size);
 
@@ -62,16 +54,13 @@ export function createSpectrogram(
     sampleRate: number,
     options: SpectrogramOptions = {},
 ): SpectrogramJob {
-    const whole = (value: number | undefined, fallback: number): number =>
-        value !== undefined && Number.isFinite(value)
-            ? Math.floor(value)
-            : fallback;
-    const fftSize = toPowerOfTwo(whole(options.fftSize, 1024));
-    const columns = Math.max(
-        1,
-        Math.min(MAX_COLUMNS, whole(options.columns, 512)),
+    const fftSize = powerOfTwo(
+        within(options.fftSize, 1024, MIN_FFT, MAX_FFT, Math.floor),
+        MIN_FFT,
+        MAX_FFT,
     );
-    const rows = Math.max(1, Math.min(MAX_ROWS, whole(options.rows, 256)));
+    const columns = within(options.columns, 512, 1, MAX_COLUMNS, Math.floor);
+    const rows = within(options.rows, 256, 1, MAX_ROWS, Math.floor);
     const minDb = options.minDb ?? -90;
     const maxDb = options.maxDb ?? -20;
     const logScale = options.scale === 'log';

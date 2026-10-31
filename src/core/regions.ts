@@ -5,14 +5,12 @@
  * wide enough to grab on a touch screen (WCAG 2.5.8).
  */
 
+import { clamp } from './math';
+
 export type RegionPart = 'start' | 'end' | 'body';
 
 /** A region laid out in pixels, for hit-testing. */
 export type LaidRegion = { start: number; end: number };
-
-function clamp(value: number, min: number, max: number): number {
-    return Math.max(min, Math.min(value, Math.max(min, max)));
-}
 
 /** Orders `start`/`end`, clamps them to `0..duration`, and keeps the region at least `minLength`. */
 export function normalizeRegion(

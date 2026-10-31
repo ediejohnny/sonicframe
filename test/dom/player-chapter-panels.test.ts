@@ -483,6 +483,32 @@ describe("the list's own look", () => {
         expect(list().style.getPropertyValue('box-shadow')).not.toBe('loud');
         expect(list().style.getPropertyValue('--sonicframe-surface')).toBe('');
     });
+
+    it('says when its own palette does not exist', async () => {
+        make({ type: 'popover', palette: 'nope' as never });
+        const errors: unknown[] = [];
+        player?.on('error', (error) => errors.push(error));
+        await Promise.resolve();
+
+        expect(errors.map(String)).toEqual([
+            'Error: sonicframe: unknown palette "nope"',
+        ]);
+    });
+
+    it('wears the dark palette, with its own palette on auto, while the system is dark', () => {
+        vi.stubGlobal('matchMedia', (query: string) => ({
+            matches: query.includes('dark'),
+            addEventListener: (): void => undefined,
+            removeEventListener: (): void => undefined,
+        }));
+        make({ type: 'popover', palette: 'auto' });
+        sizes({ left: 100, top: 100 });
+        toggle().click();
+
+        expect(list().style.getPropertyValue('--sonicframe-surface')).toBe(
+            PALETTES.dark.surface,
+        );
+    });
 });
 
 describe('every form', () => {

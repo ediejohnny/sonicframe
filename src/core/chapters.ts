@@ -6,7 +6,13 @@
  * they are web or relative addresses. Nothing here touches the page.
  */
 
-import { readCapped, type FetchedResponse } from './fetch';
+import { within } from './checked';
+import {
+    fetchOk,
+    oncePerPage,
+    readCapped,
+    type FetchedResponse,
+} from './fetch';
 import { positive } from './math';
 import { LANDING, stepIndex } from './steps';
 import { cleanText } from './text';
@@ -417,37 +423,24 @@ export function loadChapters(
     url: string,
     options: LoadChaptersOptions = {},
 ): Promise<Chapter[]> {
-    const asked = options.maxBytes;
-    const maxBytes =
-        typeof asked === 'number' && Number.isFinite(asked)
-            ? Math.min(MAX_TEXT, Math.max(1, Math.floor(asked)))
-            : MAX_TEXT;
+    const maxBytes = within(
+        options.maxBytes,
+        MAX_TEXT,
+        1,
+        MAX_TEXT,
+        Math.floor,
+    );
     const fetcher = options.fetcher ?? ((address: string) => fetch(address));
-    const load = (): Promise<Chapter[]> =>
-        fetcher(url).then(async (response) => {
-            if (!response.ok) {
-                throw new Error(
-                    `sonicframe: chapters request failed (${response.status})`,
-                );
-            }
+    const load = async (): Promise<Chapter[]> => {
+        const response = await fetchOk(fetcher, url, 'chapters');
+        const bytes = await readCapped(response, maxBytes, tooLarge);
 
-            const bytes = await readCapped(response, maxBytes, tooLarge);
-
-            return readChapters(new TextDecoder('utf-8').decode(bytes));
-        });
+        return readChapters(new TextDecoder('utf-8').decode(bytes));
+    };
 
     if (options.shared === false) {
         return load();
     }
 
-    const key = JSON.stringify([url, maxBytes]);
-    let pending = loading.get(key);
-
-    if (!pending) {
-        pending = load();
-        pending.catch(() => loading.delete(key));
-        loading.set(key, pending);
-    }
-
-    return pending;
+    return oncePerPage(loading, JSON.stringify([url, maxBytes]), load);
 }

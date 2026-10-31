@@ -7,6 +7,7 @@
  * shows.
  */
 
+import { iconButtonBox } from '../core/button';
 import { Emitter } from '../core/emitter';
 import {
     clampLevel,
@@ -18,6 +19,10 @@ import {
     volumeIcon,
     volumeText,
 } from '../core/volume';
+import { BUTTON, PROGRESS, WAVE } from '../core/variables';
+import { css } from '../dom/css';
+import { iconElement, iconPath } from '../dom/icon';
+import { prefersReducedMotion } from '../dom/motion';
 import { hideFocusRing, showFocusRing } from './focus';
 
 export type VolumeColors = {
@@ -51,12 +56,10 @@ export type VolumeControlEvents = {
 };
 
 export const DEFAULT_VOLUME_COLORS: Readonly<VolumeColors> = Object.freeze({
-    icon: 'var(--sonicframe-button, var(--sonicframe-progress, #2f6fdb))',
-    track: 'var(--sonicframe-wave, #c4cad4)',
-    fill: 'var(--sonicframe-progress, #2f6fdb)',
+    icon: BUTTON,
+    track: WAVE,
+    fill: PROGRESS,
 });
-
-const SVG = 'http://www.w3.org/2000/svg';
 
 let settable: boolean | undefined;
 
@@ -73,15 +76,6 @@ function volumeIsSettable(): boolean {
     }
 
     return settable;
-}
-
-function css(
-    element: HTMLElement | SVGElement,
-    pairs: readonly (readonly [string, string])[],
-): void {
-    for (const [name, value] of pairs) {
-        element.style.setProperty(name, value);
-    }
 }
 
 export class VolumeControl {
@@ -133,25 +127,17 @@ export class VolumeControl {
         this.button = document.createElement('button');
         this.button.type = 'button';
         this.button.className = 'sonicframe-volume-button';
-        this.icon = document.createElementNS(SVG, 'svg');
-        this.icon.setAttribute('viewBox', '0 0 24 24');
-        this.icon.setAttribute('aria-hidden', 'true');
-        this.icon.setAttribute('focusable', 'false');
-        const speaker = document.createElementNS(SVG, 'path');
-        speaker.setAttribute('d', SPEAKER_PATH);
-        speaker.setAttribute('fill', 'currentColor');
-        this.marks = document.createElementNS(SVG, 'path');
-
-        for (const [name, value] of [
-            ['fill', 'none'],
-            ['stroke', 'currentColor'],
-            ['stroke-width', '1.8'],
-            ['stroke-linecap', 'round'],
-        ]) {
-            this.marks.setAttribute(name, value);
-        }
-
-        this.icon.append(speaker, this.marks);
+        this.icon = iconElement();
+        this.marks = iconPath({
+            fill: 'none',
+            stroke: 'currentColor',
+            'stroke-width': '1.8',
+            'stroke-linecap': 'round',
+        });
+        this.icon.append(
+            iconPath({ d: SPEAKER_PATH, fill: 'currentColor' }),
+            this.marks,
+        );
         this.button.append(this.icon);
 
         this.bar = document.createElement('div');
@@ -188,12 +174,14 @@ export class VolumeControl {
         this.bind(options.media ?? null);
     }
 
+    // jscpd:ignore-start: the same `on` as every control with events, the shape of the API, not a copy.
     on<Name extends keyof VolumeControlEvents>(
         event: Name,
         listener: (...args: VolumeControlEvents[Name]) => void,
     ): () => void {
         return this.events.on(event, listener);
     }
+    // jscpd:ignore-end
 
     /** Controls another media element, or none (`null`: the control is disabled). */
     bind(media: HTMLMediaElement | null): void {
@@ -250,22 +238,13 @@ export class VolumeControl {
             ['flex-shrink', '0'],
         ]);
         css(this.button, [
-            ['display', 'inline-grid'],
-            ['place-items', 'center'],
+            ...iconButtonBox(size),
             ['box-sizing', 'border-box'],
-            ['flex-shrink', '0'],
-            ['width', size],
-            ['height', size],
-            ['margin', '0'],
-            ['padding', '0'],
             ['border-width', '0'],
             ['border-radius', '50%'],
             // Not the `background` shorthand: it would take url(...) from a color and fetch it.
             ['background-color', 'transparent'],
             ['color', this.colors.icon],
-            ['line-height', '0'],
-            ['cursor', 'pointer'],
-            ['appearance', 'none'],
             ['-webkit-tap-highlight-color', 'transparent'],
         ]);
         css(this.icon, [
@@ -284,7 +263,10 @@ export class VolumeControl {
             ['overflow', 'hidden'],
             ['cursor', 'pointer'],
             ['touch-action', 'none'],
-            ['transition', reducedMotion() ? 'none' : 'width 120ms ease-out'],
+            [
+                'transition',
+                prefersReducedMotion() ? 'none' : 'width 120ms ease-out',
+            ],
         ]);
         css(this.rail, [
             ['position', 'relative'],
@@ -472,11 +454,4 @@ export class VolumeControl {
     private readonly onBlur = (event: FocusEvent): void => {
         hideFocusRing(event.currentTarget as HTMLElement);
     };
-}
-
-function reducedMotion(): boolean {
-    return (
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    );
 }

@@ -6,57 +6,34 @@
  */
 
 import { mixdown } from '../core/analysis';
+import { readCapped } from '../core/fetch';
 
 /** The largest download decoded, in bytes (50 MiB). */
 export const MAX_DECODE_BYTES = 52_428_800;
 /** The most seconds of sound decoded; a longer sound is read evenly through (30 minutes). */
 export const MAX_DECODE_SECONDS = 1800;
 
-export async function readCapped(
-    response: Response,
+/** A sound's bytes, downloaded from its address; the download stops as soon as they pass `maxBytes`. */
+export async function fetchAudio(
+    url: string,
     maxBytes: number,
+    signal: AbortSignal | undefined,
 ): Promise<ArrayBuffer> {
-    const announced = Number(response.headers.get('content-length') ?? '0');
+    const response = await fetch(url, { signal });
 
-    if (announced > maxBytes) {
-        throw new Error('sonicframe: audio is too large to decode');
+    if (!response.ok) {
+        throw new Error(
+            `sonicframe: could not fetch audio (${response.status})`,
+        );
     }
 
-    const reader = response.body?.getReader();
+    const bytes = await readCapped(
+        response,
+        maxBytes,
+        () => new Error('sonicframe: audio is too large to decode'),
+    );
 
-    if (reader === undefined) {
-        return response.arrayBuffer();
-    }
-
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-
-    for (;;) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        total += value.byteLength;
-
-        if (total > maxBytes) {
-            await reader.cancel();
-            throw new Error('sonicframe: audio is too large to decode');
-        }
-
-        chunks.push(value);
-    }
-
-    const out = new Uint8Array(total);
-    let at = 0;
-
-    for (const chunk of chunks) {
-        out.set(chunk, at);
-        at += chunk.byteLength;
-    }
-
-    return out.buffer;
+    return bytes.buffer;
 }
 
 /** A cap the app asks for, kept at or under SonicFrame's own. */
@@ -88,15 +65,7 @@ export async function decodeAudio(
     let data: ArrayBuffer;
 
     if (typeof source === 'string') {
-        const response = await fetch(source, { signal: options.signal });
-
-        if (!response.ok) {
-            throw new Error(
-                `sonicframe: could not fetch audio (${response.status})`,
-            );
-        }
-
-        data = await readCapped(response, maxBytes);
+        data = await fetchAudio(source, maxBytes, options.signal);
     } else {
         if (source.size > maxBytes) {
             throw new Error('sonicframe: audio is too large to decode');

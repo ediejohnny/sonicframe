@@ -5,7 +5,13 @@
  * decoded samples. Nothing here touches the page.
  */
 
-import { readCapped, type FetchedResponse } from './fetch';
+import { within } from './checked';
+import {
+    fetchOk,
+    oncePerPage,
+    readCapped,
+    type FetchedResponse,
+} from './fetch';
 import { clamp01 } from './math';
 import { MAX_PEAKS, normalize as normalizePeaks } from './peaks';
 
@@ -105,28 +111,23 @@ type Header = {
     length: number;
 };
 
-/** A whole number from `min` to `max` (rounded down); anything that is not a finite number is `fallback`. */
-function bounded(
-    value: unknown,
-    fallback: number,
-    min: number,
-    max: number,
-): number {
-    return typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(max, Math.max(min, Math.floor(value)))
-        : fallback;
-}
-
 function settings(options: ReadWaveformOptions = {}): Settings {
     const channel = options.channel;
 
     return {
-        maxPeaks: bounded(options.maxPeaks, MAX_PEAKS, 1, MAX_PEAKS_CEILING),
-        maxBytes: bounded(
+        maxPeaks: within(
+            options.maxPeaks,
+            MAX_PEAKS,
+            1,
+            MAX_PEAKS_CEILING,
+            Math.floor,
+        ),
+        maxBytes: within(
             options.maxBytes,
             DEFAULT_MAX_BYTES,
             1,
             MAX_BYTES_CEILING,
+            Math.floor,
         ),
         channel:
             typeof channel === 'number' &&
@@ -499,19 +500,14 @@ export function loadWaveform(
 ): Promise<WaveformData> {
     const resolved = settings(options);
     const fetcher = options.fetcher ?? ((address: string) => fetch(address));
-    const load = (): Promise<WaveformData> =>
-        fetcher(url).then(async (response) => {
-            if (!response.ok) {
-                throw new Error(
-                    `sonicframe: waveform request failed (${response.status})`,
-                );
-            }
+    const load = async (): Promise<WaveformData> => {
+        const response = await fetchOk(fetcher, url, 'waveform');
 
-            return read(
-                await readCapped(response, resolved.maxBytes, tooLarge),
-                resolved,
-            );
-        });
+        return read(
+            await readCapped(response, resolved.maxBytes, tooLarge),
+            resolved,
+        );
+    };
 
     if (options.shared === false) {
         return load();
@@ -524,15 +520,8 @@ export function loadWaveform(
         resolved.channel,
         resolved.normalize,
     ]);
-    let pending = loading.get(key);
 
-    if (!pending) {
-        pending = load();
-        pending.catch(() => loading.delete(key));
-        loading.set(key, pending);
-    }
-
-    return pending;
+    return oncePerPage(loading, key, load);
 }
 
 /** A sample from -1 to 1 as a whole number of the file's scale (128 or 32768), kept in range. */
@@ -590,7 +579,13 @@ export function writeWaveform(
         );
     }
 
-    const perPeak = bounded(options.samplesPerPeak, 256, 1, MAX_INT32);
+    const perPeak = within(
+        options.samplesPerPeak,
+        256,
+        1,
+        MAX_INT32,
+        Math.floor,
+    );
     const bits = options.bits === 8 ? 8 : 16;
     const scale = bits === 8 ? 128 : 32768;
     const each = options.channels === 'each';

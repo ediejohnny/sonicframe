@@ -5,9 +5,40 @@
  * fetch a `url()`), and it is `aria-hidden` because the full text reaches assistive tech another way.
  */
 
+import { readableText, type Rgba } from '../core/color';
 import { placeTooltip, type Rect } from '../core/place';
+import { ON_PROGRESS, PROGRESS } from '../core/variables';
+import { css } from './css';
+import { readColor } from './paint';
+import { pageSize } from './units';
 
 export type TooltipColors = { background: string; text: string };
+
+/** What resolves a CSS color as the page computes it (a frame, a plugin's host); '' when it cannot. */
+type ColorSource = { color(value: string): string };
+
+/** The played color without a page or a palette, as text and as numbers. */
+const PLAYED = '#2f6fdb';
+const PLAYED_RGBA: Rgba = [47, 111, 219, 1];
+const WHITE: Rgba = [255, 255, 255, 1];
+
+/** The tooltip in the played color, its text the page's color for text on it (white without one). */
+export function onProgressColors(source: ColorSource): TooltipColors {
+    return {
+        background: source.color(PROGRESS) || PLAYED,
+        text: source.color(ON_PROGRESS) || '#ffffff',
+    };
+}
+
+/** The tooltip in the played color, its text white where that reads (4.5:1), otherwise black or white. */
+export function readableColors(source: ColorSource | null): TooltipColors {
+    const background = source?.color(PROGRESS) || PLAYED;
+
+    return {
+        background,
+        text: readableText(readColor(background) ?? PLAYED_RGBA, WHITE),
+    };
+}
 
 class Tooltip {
     readonly element: HTMLElement;
@@ -15,8 +46,7 @@ class Tooltip {
     constructor() {
         const element = document.createElement('div');
         element.setAttribute('aria-hidden', 'true');
-
-        for (const [property, value] of [
+        css(element, [
             ['position', 'fixed'],
             ['z-index', '2147483646'],
             ['max-width', '280px'],
@@ -30,10 +60,7 @@ class Tooltip {
             ['display', 'none'],
             ['top', '0'],
             ['left', '0'],
-        ]) {
-            element.style.setProperty(property, value);
-        }
-
+        ]);
         document.body.append(element);
         this.element = element;
     }
@@ -77,7 +104,7 @@ class Tooltip {
                 height: anchor.height,
             } satisfies Rect,
             { width: tip.width, height: tip.height },
-            { width: window.innerWidth, height: window.innerHeight },
+            pageSize(),
         );
 
         this.element.style.setProperty('left', `${spot.left}px`);

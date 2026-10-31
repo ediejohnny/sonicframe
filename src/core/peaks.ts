@@ -4,6 +4,7 @@
  * preview). Nothing here touches the page.
  */
 
+import { fetchOk, oncePerPage, readBody } from './fetch';
 import { clamp01 } from './math';
 
 /** The most peaks accepted from a file: plenty for any screen, small enough to read quickly. */
@@ -31,42 +32,24 @@ function tooLarge(): RangeError {
 }
 
 /** The response as text, refusing it once it passes `MAX_PEAKS_BYTES`. */
-async function readCapped(response: PeaksResponse): Promise<string> {
+async function readText(response: PeaksResponse): Promise<string> {
     if (Number(response.headers?.get('content-length')) > MAX_PEAKS_BYTES) {
         throw tooLarge();
     }
 
-    if (!response.body) {
-        const text = await response.text();
-
-        if (text.length > MAX_PEAKS_BYTES) {
-            throw tooLarge();
-        }
-
-        return text;
+    if (response.body) {
+        return new TextDecoder().decode(
+            await readBody(response.body, MAX_PEAKS_BYTES, tooLarge),
+        );
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let size = 0;
-    let text = '';
+    const text = await response.text();
 
-    for (;;) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            return text + decoder.decode();
-        }
-
-        size += value.byteLength;
-
-        if (size > MAX_PEAKS_BYTES) {
-            void reader.cancel();
-            throw tooLarge();
-        }
-
-        text += decoder.decode(value, { stream: true });
+    if (text.length > MAX_PEAKS_BYTES) {
+        throw tooLarge();
     }
+
+    return text;
 }
 
 /**
@@ -110,23 +93,11 @@ export function loadPeaks(
     url: string,
     fetcher: PeaksFetcher = (address) => fetch(address),
 ): Promise<number[]> {
-    let pending = loading.get(url);
+    return oncePerPage(loading, url, async () => {
+        const response = await fetchOk(fetcher, url, 'peaks');
 
-    if (!pending) {
-        pending = fetcher(url).then(async (response) => {
-            if (!response.ok) {
-                throw new Error(
-                    `sonicframe: peaks request failed (${response.status})`,
-                );
-            }
-
-            return readPeaks(JSON.parse(await readCapped(response)));
-        });
-        pending.catch(() => loading.delete(url));
-        loading.set(url, pending);
-    }
-
-    return pending;
+        return readPeaks(JSON.parse(await readText(response)));
+    });
 }
 
 /**

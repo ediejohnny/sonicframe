@@ -7,12 +7,11 @@
  * away from the wave.
  */
 
-import { readableText } from '../core/color';
 import { cleanText, truncateWords } from '../core/text';
-import type { Lane, Plugin, PluginHost } from '../types';
+import { css, VISUALLY_HIDDEN } from '../dom/css';
 import { addDescribedBy, removeDescribedBy } from '../dom/describedby';
-import { readColor } from '../dom/paint';
-import { sharedTooltip } from '../dom/tooltip';
+import { readableColors, sharedTooltip } from '../dom/tooltip';
+import type { Lane, Plugin, PluginHost } from '../types';
 
 /** One block of tooltip text: a `label` (e.g. "Auto-transcript") and the text, with its own cap. */
 export type TooltipSection = { label?: string; text: string; limit?: number };
@@ -45,6 +44,9 @@ const MAX_TOOLTIP = 2000;
 const MAX_BADGES = 3;
 const MAX_BADGE = 16;
 const CLOSE_DELAY = 150;
+
+/** A fixed fade on the line's right; the mask is a constant, never built from a user color. */
+const FADE = 'linear-gradient(to right, #000 calc(100% - 24px), transparent)';
 
 let counter = 0;
 
@@ -125,13 +127,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
             return;
         }
 
-        const background =
-            current.color('var(--sonicframe-progress, #2f6fdb)') || '#2f6fdb';
-        const asColor = readColor(background) ?? [47, 111, 219, 1];
-        sharedTooltip().show(anchor, lines, {
-            background,
-            text: readableText(asColor, [255, 255, 255, 1]),
-        });
+        sharedTooltip().show(anchor, lines, readableColors(current));
     }
 
     function closeNow(): void {
@@ -169,22 +165,18 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
 
         lane = current.addLane('below', laneSize);
         const root = lane.element;
-
-        for (const [property, value] of [
+        css(root, [
             ['display', 'flex'],
             ['align-items', 'center'],
             ['gap', '6px'],
             ['font-size', '12px'],
             ['line-height', '1.3'],
-        ]) {
-            root.style.setProperty(property, value);
-        }
+        ]);
 
         for (const badge of (options.badges ?? []).slice(0, MAX_BADGES)) {
             const pill = document.createElement('span');
             pill.textContent = cleanText(badge, MAX_BADGE);
-
-            for (const [property, value] of [
+            css(pill, [
                 ['flex', '0 0 auto'],
                 ['padding', '0 4px'],
                 ['border-radius', '2px'],
@@ -195,52 +187,26 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
                 ['font-size', '10px'],
                 ['text-transform', 'uppercase'],
                 ['letter-spacing', '0.04em'],
-            ]) {
-                pill.style.setProperty(property, value);
-            }
-
+            ]);
             root.append(pill);
         }
 
         const span = document.createElement('span');
         span.setAttribute('dir', 'auto');
-
-        for (const [property, value] of [
+        css(span, [
             ['flex', '1 1 auto'],
             ['min-width', '0'],
             ['white-space', 'nowrap'],
             ['overflow', 'hidden'],
             ['unicode-bidi', 'isolate'],
             ['pointer-events', 'auto'],
-            // A fixed fade on the right; the mask is a constant, never built from a user color.
-            [
-                '-webkit-mask-image',
-                'linear-gradient(to right, #000 calc(100% - 24px), transparent)',
-            ],
-            [
-                'mask-image',
-                'linear-gradient(to right, #000 calc(100% - 24px), transparent)',
-            ],
-        ]) {
-            span.style.setProperty(property, value);
-        }
+            ['-webkit-mask-image', FADE],
+            ['mask-image', FADE],
+        ]);
 
         const full = document.createElement('span');
         full.id = describedId;
-
-        for (const [property, value] of [
-            ['position', 'absolute'],
-            ['width', '1px'],
-            ['height', '1px'],
-            ['margin', '-1px'],
-            ['padding', '0'],
-            ['overflow', 'hidden'],
-            ['clip-path', 'inset(50%)'],
-            ['white-space', 'nowrap'],
-        ]) {
-            full.style.setProperty(property, value);
-        }
-
+        css(full, VISUALLY_HIDDEN);
         root.append(span, full);
         textSpan = span;
         fullSpan = full;
