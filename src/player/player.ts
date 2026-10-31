@@ -962,12 +962,10 @@ export class Player {
         // of spilling out of a narrow player. With zoom buttons on the line, the wave keeps its
         // least width and the line wraps, so the buttons go under it rather than crush it.
         const line = document.createElement('div');
+        const wrap = look.wavePlace === 'top' || roomy ? 'wrap' : 'nowrap';
         css(line, [
             ['display', 'flex'],
-            [
-                'flex-wrap',
-                look.wavePlace === 'top' || roomy ? 'wrap' : 'nowrap',
-            ],
+            ['flex-wrap', wrap],
             ['align-items', 'center'],
             ['gap', `${look.gap}rem`],
             ['min-width', '0'],
@@ -1060,8 +1058,9 @@ export class Player {
         this.element.toggleAttribute('data-narrow', narrow);
 
         if (narrow) {
-            // The controls keep to the right; when they do not fit beside the time, they wrap under it.
-            const gap = `${this.look.gap}rem`;
+            // The controls keep to the right of the time and take the room left there; only the ones
+            // that do not fit wrap, and the whole group goes under the time when not even one fits.
+            const gap = `${this.look.narrowGap}rem`;
             const under = document.createElement('div');
             const controls = document.createElement('div');
             under.className = 'sonicframe-under';
@@ -1079,8 +1078,8 @@ export class Player {
                 ['justify-content', 'flex-end'],
                 ['align-items', 'center'],
                 ['gap', gap],
-                ['margin-inline-start', 'auto'],
-                ['min-width', '0'],
+                ['flex', '1 1 0px'],
+                ['min-width', 'min-content'],
             ]);
             const nodes = (place: Place): ChildNode[] =>
                 layout.pieces
@@ -1116,6 +1115,8 @@ export class Player {
             }
         }
 
+        this.placeVoiceNote(layout, narrow);
+
         if (
             focused instanceof HTMLElement &&
             focused !== document.activeElement &&
@@ -1123,6 +1124,71 @@ export class Player {
         ) {
             focused.focus({ preventScroll: true });
         }
+    }
+
+    /**
+     * The voice note's line is a grid: its first row holds the line's parts and the wave, each one
+     * centered on the wave, and the rows under the wave keep to the wave's column. Outside the voice
+     * note the line is the flexible row it was built as.
+     */
+    private placeVoiceNote(layout: Layout, narrow: boolean): void {
+        const { line, box } = layout;
+        const column = box.parentElement as HTMLElement;
+        const parts = [...line.children] as HTMLElement[];
+        const below = [...column.children].filter(
+            (row) => row !== box,
+        ) as HTMLElement[];
+        const placed = [...parts, box, ...below];
+
+        if (!narrow) {
+            css(line, [
+                ['display', 'flex'],
+                ['gap', `${this.look.gap}rem`],
+            ]);
+            css(column, [['display', 'flex']]);
+            line.style.removeProperty('grid-template-columns');
+
+            for (const element of placed) {
+                element.style.removeProperty('grid-row');
+                element.style.removeProperty('grid-column');
+            }
+
+            return;
+        }
+
+        const wave = `${parts.indexOf(column) + 1}`;
+        css(line, [
+            ['display', 'grid'],
+            [
+                'grid-template-columns',
+                parts
+                    .map((part) =>
+                        part === column ? 'minmax(0, 1fr)' : 'auto',
+                    )
+                    .join(' '),
+            ],
+            ['column-gap', `${this.look.gap}rem`],
+            ['row-gap', '0.25rem'],
+        ]);
+        css(column, [['display', 'contents']]);
+        parts.forEach((part, index) => {
+            if (part !== column) {
+                css(part, [
+                    ['grid-row', '1'],
+                    ['grid-column', `${index + 1}`],
+                ]);
+            }
+        });
+        css(box, [
+            ['grid-row', '1'],
+            ['grid-column', wave],
+        ]);
+        below.forEach((row, index) =>
+            css(row, [
+                ['grid-row', `${index + 2}`],
+                ['grid-column', wave],
+            ]),
+        );
     }
 
     private teardown(): void {

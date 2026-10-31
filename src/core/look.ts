@@ -66,6 +66,8 @@ export type PlayerLook = {
      * on the right. Both keep the order of `line`.
      */
     narrowStart: Part[];
+    /** In a voice note, the space between the parts under the wave, in rem. */
+    narrowGap: number;
     /** Corner radius of the player, in rem. */
     corner: number;
     /** Space inside the player, in rem. */
@@ -123,6 +125,7 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     narrow: 22,
     narrowLine: ['play', 'wave', 'slot'],
     narrowStart: ['time', 'elapsed', 'remaining', 'duration'],
+    narrowGap: 0.375,
     corner: 0.75,
     padding: 0.5,
     gap: 0.625,
@@ -261,6 +264,7 @@ export function resolveLook(
         narrow: within(given.narrow, base.narrow, 0, 60),
         narrowLine: parts(given.narrowLine, base.narrowLine),
         narrowStart: parts(given.narrowStart, base.narrowStart),
+        narrowGap: within(given.narrowGap, base.narrowGap, 0, 3),
         corner: within(given.corner, base.corner, 0, 4),
         padding: within(given.padding, base.padding, 0, 3),
         gap: within(given.gap, base.gap, 0, 3),
