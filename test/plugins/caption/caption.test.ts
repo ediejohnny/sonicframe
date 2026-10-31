@@ -68,6 +68,34 @@ describe('the caption plugin', () => {
         );
     });
 
+    it('keeps the usual 20 px lane when the size is not a number', () => {
+        for (const size of [Number.NaN, '30' as unknown as number]) {
+            mounted = mount({ plugins: [caption({ text: 'hello', size })] });
+
+            expect(mounted.canvas.style.getPropertyValue('height')).toBe(
+                'calc(100% - 20px)',
+            );
+        }
+    });
+
+    it('cuts the tooltip at the usual 280 characters when a limit is not a number', () => {
+        for (const limit of [Number.NaN, '3' as unknown as number]) {
+            // The section's own limit first, then the plugin's, once the tooltip is plain text.
+            const plugin = caption({
+                text: 'hello there',
+                tooltip: [{ text: 'hello there', limit }],
+                tooltipLimit: limit,
+            });
+            mounted = mount({ plugins: [plugin] });
+            fire(line() as HTMLElement, 'pointerenter');
+            expect(sharedTooltip().element.textContent).toBe('hello there');
+
+            plugin.setTooltip('hello there');
+            fire(line() as HTMLElement, 'pointerenter');
+            expect(sharedTooltip().element.textContent).toBe('hello there');
+        }
+    });
+
     it('gives the room back when the caption is cleared', () => {
         const plugin: CaptionPlugin = caption({ text: 'hello' });
         mounted = mount({ plugins: [plugin] });

@@ -5,6 +5,7 @@
  */
 
 import { nextSkip, type Silence } from '../../core/analysis/analysis';
+import { within } from '../../core/shared/checked';
 import { clamp01 } from '../../core/shared/math';
 import { placeX } from '../../core/wave/scene';
 import type { Plugin, PluginHost } from '../../types';
@@ -33,7 +34,7 @@ export type SkipSilencesPlugin = Plugin & {
 export function skipSilences(
     options: SkipSilencesOptions = {},
 ): SkipSilencesPlugin {
-    const lead = Math.max(0, options.lead ?? 0.1);
+    const lead = within(options.lead, 0.1, 0, Number.POSITIVE_INFINITY);
     const snap = options.snap === true;
     const dimColor =
         options.dimColor ?? 'var(--sonicframe-dim, rgba(0, 0, 0, 0.12))';

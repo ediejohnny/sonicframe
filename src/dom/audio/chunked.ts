@@ -3,6 +3,8 @@
  * never freezes. Each slice runs for a few milliseconds; an `AbortSignal` stops it (on destroy).
  */
 
+import { within } from '../../core/shared/checked';
+
 export type Resumable = {
     step(maxColumns: number): void;
     readonly done: boolean;
@@ -17,7 +19,7 @@ export function runChunked(
         onProgress?: () => void;
     } = {},
 ): Promise<void> {
-    const slice = Math.max(1, options.slice ?? 8);
+    const slice = within(options.slice, 8, 1, Number.POSITIVE_INFINITY);
 
     return new Promise((resolve, reject) => {
         const tick = (): void => {

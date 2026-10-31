@@ -6,6 +6,8 @@
  * utterance midway; starting a new text stops the one before.
  */
 
+import { within } from '../../core/shared/checked';
+
 export type SpeechOptions = {
     /** `'local'` (the default) uses only voices on the device; `'any'` also online ones. */
     voices?: 'local' | 'any';
@@ -88,7 +90,7 @@ export function speak(
 ): Speaking {
     const synth =
         typeof speechSynthesis === 'undefined' ? null : speechSynthesis;
-    const rate = Math.min(2, Math.max(0.5, options.rate ?? 1));
+    const rate = within(options.rate, 1, 0.5, 2);
     let stopped = false;
     let finish: () => void = () => undefined;
 

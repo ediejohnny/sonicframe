@@ -68,7 +68,12 @@ export type RegionsPlugin = Plugin & {
 };
 
 export function regions(options: RegionsOptions = {}): RegionsPlugin {
-    const minLength = Math.max(0.01, options.minLength ?? 0.25);
+    const minLength = within(
+        options.minLength,
+        0.25,
+        0.01,
+        Number.POSITIVE_INFINITY,
+    );
     const bandColor = options.color ?? REGION;
     const keys = options.keys ?? true;
     const max = within(options.max, 200, 0, 200);

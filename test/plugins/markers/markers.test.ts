@@ -37,6 +37,17 @@ function marked(
     return { ...mounted, media };
 }
 
+/** The lines of the tooltip over two markers 2 px apart (5 s and 5.4 s of 40 s, across 200 px). */
+function crowdedLines(options: MarkersOptions = {}): number {
+    const { container } = mount({
+        media: fakeMedia({ duration: 40 }),
+        plugins: [markers({ marks: [{ time: 5 }, { time: 5.4 }], ...options })],
+    });
+    firePointer(container, 'pointermove', 26);
+
+    return sharedTooltip().element.childElementCount;
+}
+
 describe('markers on the page', () => {
     it('seeks to a marker when it is clicked', () => {
         const media = fakeMedia({ duration: 40 });
@@ -105,15 +116,14 @@ describe('markers on the page', () => {
     });
 
     it('shows a tooltip for crowded markers on hover', () => {
-        const { container } = mount({
-            media: fakeMedia({ duration: 40 }),
-            plugins: [markers({ marks: [{ time: 5 }, { time: 5.4 }] })],
-        });
-
-        firePointer(container, 'pointermove', 26);
-
+        expect(crowdedLines()).toBe(2);
         expect(sharedTooltip().open).toBe(true);
-        expect(sharedTooltip().element.childElementCount).toBe(2);
+    });
+
+    it('groups markers by the usual 12 px when group is not a number', () => {
+        for (const group of [Number.NaN, '0' as unknown as number]) {
+            expect(crowdedLines({ group })).toBe(2);
+        }
     });
 
     it("writes the tooltip in the page's color for text on the played color, or in black or white that reads when asked", () => {

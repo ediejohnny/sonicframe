@@ -68,9 +68,12 @@ frame.use(liveFrequency({ bars: 48 }));</code></pre>
                                     <td>
                                         <code>minHz</code>, <code>maxHz</code>
                                     </td>
-                                    <td></td>
+                                    <td><code>40</code>, <code>16000</code></td>
                                     <td>
-                                        The frequency range across the bars.
+                                        The frequency range across the bars, in
+                                        Hz: from at least 1 to at most half the
+                                        sample rate. Anything that is not a
+                                        number is the default.
                                     </td>
                                 </tr>
                                 <tr>

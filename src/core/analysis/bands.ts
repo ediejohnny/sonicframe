@@ -24,8 +24,8 @@ export function frequencyBands(
         return Array.from({ length: total }, () => 0);
     }
 
-    const minHz = Math.max(1, options.minHz ?? 40);
-    const maxHz = Math.min(nyquist, options.maxHz ?? Math.min(16000, nyquist));
+    const minHz = within(options.minHz, 40, 1, Number.POSITIVE_INFINITY);
+    const maxHz = within(options.maxHz, Math.min(16000, nyquist), 1, nyquist);
     const ratio = maxHz / minHz;
     const bands: number[] = [];
 

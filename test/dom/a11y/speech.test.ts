@@ -115,6 +115,17 @@ describe("the browser's voice", () => {
         ).toBe(true);
     });
 
+    it('speaks at the usual rate when the rate is not a number', async () => {
+        synthesis.voices = VOICES;
+
+        for (const rate of [Number.NaN, '1.5' as unknown as number]) {
+            synthesis.spoken = [];
+            await described({ speech: { rate } }).speak();
+
+            expect(synthesis.spoken[0]?.rate).toBe(1);
+        }
+    });
+
     it('never sends the text to an online voice unless the app allows it', async () => {
         synthesis.voices = [VOICES[0]];
 
