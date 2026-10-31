@@ -2135,6 +2135,10 @@ export class Player {
         }
     }
 
+    /**
+     * Writes where the sound is. The frame's time, never the media's own: before the media loads
+     * (`preload="none"`) a seek waits in the frame, and the media still says 0.
+     */
     private showTime(): void {
         const frame = this.frameRef;
 
@@ -2143,12 +2147,7 @@ export class Player {
         }
 
         const duration = frame.duration;
-        const time =
-            this.media !== null
-                ? this.media.currentTime
-                : duration === null
-                  ? null
-                  : frame.progress * duration;
+        const time = frame.time;
 
         for (const { text, mold, format } of this.times) {
             const longest = timeMold(format, time, duration);
@@ -2288,7 +2287,8 @@ export class Player {
                 return;
             }
 
-            const now = this.media?.currentTime ?? frame.progress * duration;
+            // From where the sound is, or will start once a seek waiting for it to load lands.
+            const now = frame.time ?? 0;
             const target = now + (direction === 'back' ? -seconds : seconds);
             frame.seekTo(Math.min(1, Math.max(0, target / duration)));
         });

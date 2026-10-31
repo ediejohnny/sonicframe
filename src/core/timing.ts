@@ -34,6 +34,18 @@ export function stepRatio(
     return clamp01(ratio + direction * delta);
 }
 
+/** Steps in a second a time is kept to: microseconds. */
+const STEPS_PER_SECOND = 1000000;
+
+/**
+ * The time at `ratio` of a `duration`-second sound, in seconds. The bare product carries float
+ * noise (5 / 77 * 77 is 4.999…), so a time chosen as a whole second would show one second less;
+ * kept to the microsecond, it comes back whole, and nothing heard or shown changes.
+ */
+export function timeAt(ratio: number, duration: number): number {
+    return Math.round(ratio * duration * STEPS_PER_SECOND) / STEPS_PER_SECOND;
+}
+
 /** Starts fast and settles softly; `t` runs from 0 to 1. */
 export function easeOut(t: number): number {
     return 1 - (1 - clamp01(t)) ** 3;

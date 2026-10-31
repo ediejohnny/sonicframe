@@ -46,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   under the wave break in two, the parts after a spacer together on the far side; by default it keeps one line.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
 - The docs' Chapters page, with a WebVTT and a JSON example.
+- `frame.time`: where the sound is, in seconds. The media's own time, or, before the media loads
+  (`preload="none"`), where a seek will start it, while the media itself still says 0.
 
 ### Changed
 
@@ -65,6 +67,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The chapters popover's arrow sat one border-width off its button's middle, and its border stayed 1 px whatever
   the list's `style.border`; the drawer's close button sat above the list's head and off its right edge. Both now
   line up, measured when the list opens.
+- With `preload="none"`, a seek before play left the player's time at 0:00 while the wave showed the place
+  chosen, and the skip buttons started from 0:00. Both now go by the frame's time.
+- A step to a whole second could land a hair before it (in floating point, 5 / 77 × 77 is 4.999…), so the time
+  and the slider's words showed one second less (0:04 for 0:05). Every time the frame works out from a ratio
+  (the seek itself, its event, `timeupdate` and the slider's words) is now kept to the microsecond.
 
 ## [0.4.1] - 2026-10-31
 

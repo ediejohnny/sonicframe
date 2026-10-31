@@ -158,10 +158,18 @@
                     <p>
                         <code>progress</code> (0 to 1),
                         <code>duration</code> (seconds or <code>null</code>),
+                        <code>time</code> (seconds or <code>null</code>),
                         <code>peaksDuration</code>, <code>peaks</code>,
                         <code>container</code> and <code>view</code> (<code
                             >{ start, end, level, maxLevel }</code
                         >, the whole sound while zoom is off), all read-only.
+                    </p>
+                    <p>
+                        <code>time</code> is where the sound is: the media's own
+                        time, or, before the media loads
+                        (<code>preload="none"</code>), where a seek will start
+                        it, while the media itself still says 0. Show it rather
+                        than <code>media.currentTime</code>.
                     </p>
                 </section>
 
