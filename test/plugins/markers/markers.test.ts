@@ -8,7 +8,12 @@ import { sharedTooltip } from '../../../src/dom/shared/tooltip';
 import { markers, type MarkersOptions } from '../../../src/index';
 import type { PluginHost } from '../../../src/types';
 import { firePointer, playTo, pressKey } from '../../support/events';
-import { fakeMedia, mount, type Mounted } from '../../support/helpers';
+import {
+    fakeMedia,
+    mount,
+    tooltipTextOnPale,
+    type Mounted,
+} from '../../support/helpers';
 
 afterEach(() => {
     sharedTooltip().hide();
@@ -109,6 +114,24 @@ describe('markers on the page', () => {
 
         expect(sharedTooltip().open).toBe(true);
         expect(sharedTooltip().element.childElementCount).toBe(2);
+    });
+
+    it("writes the tooltip in the page's color for text on the played color, or in black or white that reads when asked", () => {
+        const hovered = (options: MarkersOptions): string => {
+            const { container } = mount({
+                media: fakeMedia({ duration: 40 }),
+                plugins: [markers({ marks: [{ time: 5 }], ...options })],
+            });
+
+            return tooltipTextOnPale(container, () =>
+                firePointer(container, 'pointermove', 25),
+            );
+        };
+
+        expect(hovered({})).toBe('#ffffff');
+        expect(hovered({ a11y: { tooltip: { readable: true } } })).toBe(
+            'rgba(0, 0, 0, 1)',
+        );
     });
 });
 

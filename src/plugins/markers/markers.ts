@@ -20,7 +20,11 @@ import { positive } from '../../core/shared/math';
 import { formatTime } from '../../core/shared/timing';
 import { ON_PROGRESS } from '../../core/shared/variables';
 import { FULL_VIEW } from '../../core/view/view';
-import { onProgressColors, sharedTooltip } from '../../dom/shared/tooltip';
+import {
+    sharedTooltip,
+    tooltipColors,
+    type TooltipA11y,
+} from '../../dom/shared/tooltip';
 import type {
     PaintContext,
     Plugin,
@@ -53,6 +57,7 @@ export type MarkersOptions = {
     backGrace?: number;
     /** Called when a marker or a group is chosen (click or keyboard). */
     onSelect?: (marks: Mark[]) => void;
+    a11y?: TooltipA11y;
 };
 
 export type MarkersPlugin = Plugin & {
@@ -255,7 +260,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                 sharedTooltip().show(
                     frame.container,
                     lines,
-                    onProgressColors(frame),
+                    tooltipColors(frame, options.a11y),
                 );
                 openedTooltip = true;
             }

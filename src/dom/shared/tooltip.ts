@@ -14,6 +14,15 @@ import { pageSize } from './units';
 
 export type TooltipColors = { background: string; text: string };
 
+/** The accessibility of a plugin's tooltip. */
+export type TooltipA11y = {
+    /**
+     * `readable` writes the text in black or white, whichever reads on the tooltip's color (4.5:1),
+     * as the caption does. Off by default: the page's color for text on the played color.
+     */
+    tooltip?: { readable?: boolean };
+};
+
 /** What resolves a CSS color as the page computes it (a frame, a plugin's host); '' when it cannot. */
 type ColorSource = { color(value: string): string };
 
@@ -38,6 +47,16 @@ export function readableColors(source: ColorSource | null): TooltipColors {
         background,
         text: readableText(readColor(background) ?? PLAYED_RGBA, WHITE),
     };
+}
+
+/** The colors of a plugin's tooltip: readable ones when its `a11y` asks, the page's otherwise. */
+export function tooltipColors(
+    source: ColorSource,
+    a11y: TooltipA11y | undefined,
+): TooltipColors {
+    return a11y?.tooltip?.readable === true
+        ? readableColors(source)
+        : onProgressColors(source);
 }
 
 class Tooltip {

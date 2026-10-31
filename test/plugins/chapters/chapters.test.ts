@@ -9,7 +9,13 @@ import { sharedTooltip } from '../../../src/dom/shared/tooltip';
 import { chapters, type ChaptersFetcher } from '../../../src/index';
 import { firePointer, playTo, pressKey } from '../../support/events';
 import { recordingOf } from '../../support/fakes';
-import { fakeMedia, mount, nextFrame, takeOff } from '../../support/helpers';
+import {
+    fakeMedia,
+    mount,
+    nextFrame,
+    takeOff,
+    tooltipTextOnPale,
+} from '../../support/helpers';
 import { plugin, said, showFrame } from './chapters-harness';
 
 afterEach(() => {
@@ -58,6 +64,21 @@ describe('chapters on the wave', () => {
         firePointer(container, 'pointerdown', 52);
         firePointer(container, 'pointerup', 52);
         expect(media.currentTime).toBe(25);
+    });
+
+    it("writes the tooltip in the page's color for text on the played color, or in black or white that reads when asked", () => {
+        const hovered = (readable?: boolean): string => {
+            const { container } = showFrame([
+                plugin({ a11y: { tooltip: { readable } } }),
+            ]);
+
+            return tooltipTextOnPale(container, () =>
+                firePointer(container, 'pointermove', 52),
+            );
+        };
+
+        expect(hovered()).toBe('#ffffff');
+        expect(hovered(true)).toBe('rgba(0, 0, 0, 1)');
     });
 
     it('still seeks normally away from the lines, and with snap off', () => {

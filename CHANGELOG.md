@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `a11y.tooltip.readable` for `markers()` and `chapters()` (and so the player's `chapters`; on the tag, the
+  word `readable` in `chapter-options`): the tooltip's text in black or white, whichever reads on its color
+  (4.5:1), as the caption and the long chapter name already do. Off by default: the page's color for text on
+  the played color (`--sonicframe-on-progress`), as before.
+
 ### Changed
 
 - The README keeps only the logo, the badges and one picture of the player; every theme, palette and drawing is

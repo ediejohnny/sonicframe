@@ -246,6 +246,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         width: options.width ?? 2,
         tooltip: options.tooltip !== false,
         snap: options.snap !== false,
+        a11y: options.a11y,
     });
 
     return {

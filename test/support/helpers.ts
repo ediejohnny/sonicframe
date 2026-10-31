@@ -6,6 +6,7 @@
  */
 
 import { vi } from 'vite-plus/test';
+import { sharedTooltip } from '../../src/dom/shared/tooltip';
 import { SonicFrame, type SonicFrameOptions } from '../../src/index';
 import { firePointer } from './events';
 import {
@@ -130,6 +131,21 @@ export async function drawnHalfway(mounted: Mounted): Promise<Recorded> {
     await nextFrame();
 
     return recordingOf(mounted.canvas);
+}
+
+/**
+ * The color of the tooltip's text after `hover`, over a frame whose played color is pale yellow
+ * (#ffff66) and whose page writes white on it: 1.1:1, unreadable.
+ */
+export function tooltipTextOnPale(
+    container: HTMLElement,
+    hover: () => void,
+): string {
+    container.style.setProperty('--sonicframe-progress', '#ffff66');
+    container.style.setProperty('--sonicframe-on-progress', '#ffffff');
+    hover();
+
+    return sharedTooltip().element.style.getPropertyValue('color');
 }
 
 /** Puts a tag on the page and gives its wave's canvas pixels (200 × 40) and the screen. */
