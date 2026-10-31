@@ -147,6 +147,9 @@ Sound is for everyone, so accessibility is where SonicFrame starts, not an add-o
   reader: "33 seconds. Sound until 20 seconds, a pause of 4 seconds, then sound to the end. Loudest at 12 seconds."
   With `keys`, D says it again and P moves between the parts; with `button`, a button reads it in the browser's own
   voice. Off until you turn it on.
+- **Chapters you can hear.** With chapters, C and Shift+C go to the next and the previous one and say where they
+  landed ("Chapter 3 of 8: Interview, 12:30"); the slider's words name the chapter playing, and the list of
+  chapters is a `nav` that marks the current one.
 - **Captions:** a line of text under the wave (a transcript's first words, a title) whose full text reaches screen
   readers through the wave's description.
 - **Motion is opt-in.** Animations are off by default and never run when the person asks for reduced motion.
@@ -161,14 +164,15 @@ More in the docs: [Accessibility](https://ediejohnny.github.io/sonicframe/access
 
 ## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/inside.svg" alt="" width="24" height="24"> What's inside
 
-| Part                             | What it does                                                                                 | Docs                                                                 |
-| -------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| The frame (`sonicframe`)         | The waveform: draws it, follows an `<audio>` or `<video>`, seeks by click, drag and keys.    | [The frame](https://ediejohnny.github.io/sonicframe/frame.html)      |
-| The player (`sonicframe/player`) | A whole player: play, time, speed, skip, volume, zoom buttons, and the `<sonic-player>` tag. | [Player basics](https://ediejohnny.github.io/sonicframe/player.html) |
-| Themes and palettes              | A whole look in one word; make your own from any of them.                                    | [Themes](https://ediejohnny.github.io/sonicframe/theming.html)       |
-| Plugins                          | Markers, regions, a timeline, captions, a spectrogram, skipped silences and live frequency.  | [Plugins](https://ediejohnny.github.io/sonicframe/plugins.html)      |
-| Long sounds                      | Zoom, scroll, a minimap, and audiowaveform `.dat` and JSON files, read and written.          | [Zoom and scroll](https://ediejohnny.github.io/sonicframe/zoom.html) |
-| Analysis (`sonicframe/analysis`) | Levels, silences, the wave in words and waveform files, pure, in the browser or in Node.     | [Analysis](https://ediejohnny.github.io/sonicframe/analysis.html)    |
+| Part                             | What it does                                                                                          | Docs                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| The frame (`sonicframe`)         | The waveform: draws it, follows an `<audio>` or `<video>`, seeks by click, drag and keys.             | [The frame](https://ediejohnny.github.io/sonicframe/frame.html)      |
+| The player (`sonicframe/player`) | A whole player: play, time, speed, skip, volume, zoom buttons, and the `<sonic-player>` tag.          | [Player basics](https://ediejohnny.github.io/sonicframe/player.html) |
+| Themes and palettes              | A whole look in one word; make your own from any of them.                                             | [Themes](https://ediejohnny.github.io/sonicframe/theming.html)       |
+| Plugins                          | Markers, chapters, regions, a timeline, captions, a spectrogram, skipped silences and live frequency. | [Plugins](https://ediejohnny.github.io/sonicframe/plugins.html)      |
+| Long sounds                      | Zoom, scroll, a minimap, and audiowaveform `.dat` and JSON files, read and written.                   | [Zoom and scroll](https://ediejohnny.github.io/sonicframe/zoom.html) |
+| Chapters                         | WebVTT and Podcasting 2.0 JSON chapters: lines on the wave, keys, and a list in the player.           | [Chapters](https://ediejohnny.github.io/sonicframe/chapters.html)    |
+| Analysis (`sonicframe/analysis`) | Levels, silences, the wave in words and waveform files, pure, in the browser or in Node.              | [Analysis](https://ediejohnny.github.io/sonicframe/analysis.html)    |
 
 Every option, method, event and attribute is in the
 [Reference](https://ediejohnny.github.io/sonicframe/frame-options.html).

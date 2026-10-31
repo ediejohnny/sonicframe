@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
 ### Added
 
 - Chapters. `readChapters` reads WebVTT (`kind="chapters"`, as the specification's parser reads it), the
@@ -45,7 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   mouse (`marqueeHoverPause`), never with reduced motion. `metaWrap` lets the row
   under the wave break in two, the parts after a spacer together on the far side; by default it keeps one line.
 - The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
-- The docs' Chapters page, with a WebVTT and a JSON example.
+- The docs' Chapters page, with a WebVTT and a JSON example, and an upgrade guide from 0.4 to 0.5.
 - `frame.time`: where the sound is, in seconds. The media's own time, or, before the media loads
   (`preload="none"`), where a seek will start it, while the media itself still says 0.
 - `formatPosition(time, duration)`: a position for a clock. A seek can land a hair before the time it
