@@ -112,12 +112,12 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
                 <section class="section">
                     <h2>From a CDN</h2>
                     <p>
-                        No build step? Any npm CDN serves the package as plain
-                        modules. Pin the version you tested:
+                        No build step? An npm CDN serves the package as plain
+                        modules. This address always brings the latest version:
                     </p>
                     <div class="code">
                         <pre><code>&lt;script type="module"&gt;
-    import { createPlayer } from 'https://cdn.jsdelivr.net/npm/sonicframe@0.4.1/dist/player.js';
+    import { createPlayer } from 'https://unpkg.com/sonicframe/dist/player.js';
 
     createPlayer({
         container: document.querySelector('#player'),
@@ -126,6 +126,11 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
 &lt;/script&gt;</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                    <p>
+                        unpkg sends an address without a version on to the
+                        latest version's own address, so the entry file and the
+                        pieces it imports always come from the same version.
+                    </p>
                     <div class="callout tip">
                         <strong>Tip</strong>
                         A strict Content-Security-Policy keeps working: add the
@@ -133,6 +138,24 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
                         needed. SonicFrame sets no inline styles, runs no
                         <code>eval</code> and starts no blob workers.
                     </div>
+
+                    <h3 id="cdn-specific-version">Want a specific version?</h3>
+                    <p>Put it in the address, after an <code>@</code>:</p>
+                    <div class="code">
+                        <pre><code>import { createPlayer } from 'https://unpkg.com/sonicframe@x.y.z/dist/player.js';</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Replace <code>x.y.z</code> with the numbers of the
+                        version you want. The
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/blob/main/CHANGELOG.md"
+                            >changelog</a
+                        >
+                        lists every version. On a live site, a fixed version is
+                        the safer choice: while SonicFrame is on 0.x, a new
+                        version may change how things work.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -152,17 +175,23 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
                     </p>
 
                     <h3>1. Get the code</h3>
-                    <p>Clone the version you want, by its tag:</p>
+                    <p>
+                        Clone the repository. Its <code>main</code> branch
+                        always holds the latest version:
+                    </p>
                     <div class="code">
-                        <pre><code>git clone --depth 1 --branch v0.4.1 https://github.com/ediejohnny/sonicframe.git
+                        <pre><code>git clone https://github.com/ediejohnny/sonicframe.git
 cd sonicframe</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <p>
-                        No Git? Open the project's
-                        <a href="https://github.com/ediejohnny/sonicframe/tags"
-                            >tags on GitHub</a
-                        >, download the zip of the version and unzip it.
+                        No Git?
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/archive/refs/heads/main.zip"
+                            >Download the latest version as a zip</a
+                        >
+                        and unzip it; the folder is named
+                        <code>sonicframe-main</code>.
                     </p>
 
                     <h3>2. Build it</h3>
@@ -247,13 +276,57 @@ npm run build</code></pre>
 
                     <h3>Updating</h3>
                     <p>
-                        Get the new version's tag, build again and replace the
-                        whole folder. The
+                        Inside the folder you cloned, get the latest code and
+                        build again:
+                    </p>
+                    <div class="code">
+                        <pre><code>git pull
+npm ci
+npm run build</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Without Git, download the zip again. Then replace the
+                        whole folder in your site. The
                         <a
                             href="https://github.com/ediejohnny/sonicframe/blob/main/CHANGELOG.md"
                             >changelog</a
                         >
                         says what changed.
+                    </p>
+
+                    <h3 id="source-specific-version">
+                        Want a specific version?
+                    </h3>
+                    <p>Clone it by its tag:</p>
+                    <div class="code">
+                        <pre><code>git clone --branch vx.y.z https://github.com/ediejohnny/sonicframe.git
+cd sonicframe</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Replace <code>x.y.z</code> with the numbers of the
+                        version you want, and keep the <code>v</code> in front
+                        of them. The
+                        <a href="https://github.com/ediejohnny/sonicframe/tags"
+                            >tags on GitHub</a
+                        >
+                        list every version. Git then says the folder is in a
+                        "detached HEAD" state: that is expected, and only means
+                        it holds that one version.
+                    </p>
+                    <p>
+                        Without Git, download the zip of the version, with the
+                        same numbers in place of the letters:
+                    </p>
+                    <div class="code">
+                        <pre><code>https://github.com/ediejohnny/sonicframe/archive/refs/tags/vx.y.z.zip</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Then build, copy and import it as in steps 2 to 4. To
+                        move to another version, clone or download that one the
+                        same way.
                     </p>
                 </section>
 
