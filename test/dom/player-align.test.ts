@@ -36,6 +36,13 @@ function make(options: Partial<PlayerOptions> = {}): HTMLElement {
     return host.querySelector('.sonicframe-player') as HTMLElement;
 }
 
+/** The wave's own box: the first child of the line's part that holds the canvas (its column). */
+function waveBoxOf(line: HTMLElement, canvas: HTMLCanvasElement): HTMLElement {
+    const column = [...line.children].find((part) => part.contains(canvas));
+
+    return column?.firstElementChild as HTMLElement;
+}
+
 describe('the parts beside the wave', () => {
     it("center on the bars, whatever sits under them in the wave's column", () => {
         const root = make({
@@ -69,6 +76,64 @@ describe('the parts beside the wave', () => {
         triggerVisible(canvas, true);
 
         expect(play.style.getPropertyValue('translate')).toBe('0px 0px');
+    });
+
+    it("bring short bars down when the play button centered on them would leave the line's top", () => {
+        const root = make({
+            chapters: { items: [{ start: 0, title: 'A' }], lane: 'below' },
+            look: { line: ['play', 'wave'] },
+        });
+        const canvas = root.querySelector('canvas') as HTMLCanvasElement;
+        const play = root.querySelector('.sonicframe-play') as HTMLElement;
+        const line = play.parentElement as HTMLElement;
+        const box = waveBoxOf(line, canvas);
+        // The line runs from 0 to 60. The bars run from 2 to 22 (middle 12), so the play button
+        // (36 tall) centered on them would start at -6: six pixels above the line.
+        boxOf(line, { left: 0, top: 0, width: 480, height: 60 });
+        boxOf(canvas, { left: 60, top: 2, width: 300, height: 20 });
+        boxOf(play, { left: 0, top: 12, width: 36, height: 36 });
+
+        triggerResize(canvas, { width: 300, height: 20 });
+        triggerVisible(canvas, true);
+
+        expect(box.style.getPropertyValue('margin-top')).toBe('6px');
+        expect(box.style.getPropertyValue('margin-bottom')).toBe('0px');
+    });
+
+    it("bring the bars up when the play button centered on them would leave the line's bottom", () => {
+        const root = make({ look: { line: ['play', 'wave'] } });
+        const canvas = root.querySelector('canvas') as HTMLCanvasElement;
+        const play = root.querySelector('.sonicframe-play') as HTMLElement;
+        const line = play.parentElement as HTMLElement;
+        const box = waveBoxOf(line, canvas);
+        // The line runs from 0 to 60. The bars run from 44 to 64 (middle 54), so the play button
+        // would end at 72: twelve pixels under the line.
+        boxOf(line, { left: 0, top: 0, width: 480, height: 60 });
+        boxOf(canvas, { left: 60, top: 44, width: 300, height: 20 });
+        boxOf(play, { left: 0, top: 12, width: 36, height: 36 });
+
+        triggerResize(canvas, { width: 300, height: 20 });
+        triggerVisible(canvas, true);
+
+        expect(box.style.getPropertyValue('margin-top')).toBe('0px');
+        expect(box.style.getPropertyValue('margin-bottom')).toBe('12px');
+    });
+
+    it('leave the bars where they are when the play button fits the line', () => {
+        const root = make({ look: { line: ['play', 'wave'] } });
+        const canvas = root.querySelector('canvas') as HTMLCanvasElement;
+        const play = root.querySelector('.sonicframe-play') as HTMLElement;
+        const line = play.parentElement as HTMLElement;
+        const box = waveBoxOf(line, canvas);
+        boxOf(line, { left: 0, top: 0, width: 480, height: 60 });
+        boxOf(canvas, { left: 60, top: 10, width: 300, height: 40 });
+        boxOf(play, { left: 0, top: 12, width: 36, height: 36 });
+
+        triggerResize(canvas, { width: 300, height: 40 });
+        triggerVisible(canvas, true);
+
+        expect(box.style.getPropertyValue('margin-top')).toBe('0px');
+        expect(box.style.getPropertyValue('margin-bottom')).toBe('0px');
     });
 
     it('let the rows under the wave start at the line, under the play button, when asked', () => {

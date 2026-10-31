@@ -299,6 +299,33 @@ describe('chapters on the player', () => {
         ).toBe('');
     });
 
+    it("keeps the parts after the spacer together on the row's far side when the row breaks", () => {
+        make({
+            chapters: { items: ITEMS, list: true },
+            look: {
+                line: ['play', 'wave'],
+                meta: [
+                    'time',
+                    'chapter',
+                    'spacer',
+                    'prevChapter',
+                    'nextChapter',
+                    'chapters',
+                ],
+            },
+        });
+        const name = part('chapter-now') as HTMLElement;
+        const group = part('prev-chapter')?.parentElement as HTMLElement;
+
+        // One group that never breaks, pushed to the far side on whichever line it lands.
+        expect(group).not.toBe(name.parentElement);
+        expect(group.parentElement).toBe(name.parentElement);
+        expect(part('next-chapter')?.parentElement).toBe(group);
+        expect(part('chapters-toggle')?.parentElement).toBe(group);
+        expect(group.style.getPropertyValue('flex-wrap')).toBe('nowrap');
+        expect(group.style.getPropertyValue('margin-left')).toBe('auto');
+    });
+
     it('puts the list under the controls when the wave is on top', () => {
         make({
             chapters: { items: ITEMS, list: true },

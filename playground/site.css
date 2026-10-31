@@ -860,8 +860,9 @@ html {
     opacity: 1;
 }
 
-/* Running text keeps to a readable measure; demos, code and tables use the full width. */
-.doc :is(p, ul, ol):not([class]) {
+/* Running text keeps to a readable measure; demos, code and tables use the full width. The text rules never
+   reach inside a player, whose lists lay themselves out. */
+.doc :is(p, ul, ol):not([class], .sonicframe-player *) {
     max-width: 44rem;
 }
 
@@ -898,11 +899,11 @@ html {
     margin-top: 1rem;
 }
 
-.doc :is(ul, ol):not([class]) {
+.doc :is(ul, ol):not([class], .sonicframe-player *) {
     padding-left: 1.25rem;
 }
 
-.doc li + li {
+.doc li:not(.sonicframe-player *) + li {
     margin-top: 0.375rem;
 }
 

@@ -453,6 +453,32 @@ function placeOf(part: Part, look: PlayerLook): Place {
     return look.narrowStart.includes(part) ? 'start' : 'end';
 }
 
+/**
+ * The far side of a row under the wave that may break: its parts stay together, with the row's
+ * gap, and keep to the far side on whichever line the group lands.
+ */
+function farGroup(): HTMLElement {
+    const group = document.createElement('div');
+    css(group, [
+        ['display', 'flex'],
+        ['flex-wrap', 'nowrap'],
+        ['align-items', 'center'],
+        ['gap', '0.5rem'],
+        ['margin-left', 'auto'],
+    ]);
+
+    return group;
+}
+
+/** The vertical shift, in pixels, a part was given to meet the bars; 0 when it has none. */
+function givenShift(part: HTMLElement): number {
+    return (
+        parseFloat(
+            part.style.getPropertyValue('translate').split(' ')[1] ?? '',
+        ) || 0
+    );
+}
+
 /** The side of its room a time's text keeps to; `auto` in the look picks one by the time's place. */
 type Side = 'start' | 'end';
 
@@ -1570,22 +1596,31 @@ export class Player {
             ]);
 
             // A chapter's name takes the room left; where there is too little, the parts after it
-            // go to a second line rather than squeeze the name away.
-            if (meta.includes('chapter')) {
+            // go to a second line rather than squeeze the name away. The parts after the spacer go
+            // as one group that never breaks, kept to the far side on whichever line it lands.
+            const wraps = meta.includes('chapter');
+
+            if (wraps) {
                 css(row, [['flex-wrap', 'wrap']]);
             }
 
             column.append(row);
             let metaSide: Side = 'start';
+            let target: HTMLElement = row;
 
             for (const part of meta) {
-                this.addPart(part, row, column, {
+                this.addPart(part, target, column, {
                     side: metaSide,
                     narrowSide: null,
                 });
 
                 if (part === 'spacer') {
                     metaSide = 'end';
+
+                    if (wraps) {
+                        target = farGroup();
+                        row.append(target);
+                    }
                 }
             }
         }
@@ -1626,7 +1661,10 @@ export class Player {
      * Lines up the parts beside a wave in the line with the bars themselves. The line centers its
      * parts on the wave's box, which also holds the strips plugins stack above and below the bars,
      * or on the whole column when rows sit under the wave; each part is moved by `translate` alone,
-     * so nothing around it moves.
+     * so nothing around it moves. A part centered on bars near the line's edge would stick out of
+     * the line, into the player's padding; the wave's box then takes a margin on that side, by the
+     * overshoot, which moves the bars in until every part fits. The box, not its column: with
+     * `underStart: 'line'` the column is `display: contents` and takes no margin.
      */
     private alignToBars(): void {
         const layout = this.layout;
@@ -1640,37 +1678,113 @@ export class Player {
             return;
         }
 
-        const bars = canvas.getBoundingClientRect();
+        const column = layout.box.parentElement;
+        const parts = [...layout.line.children].filter(
+            (part): part is HTMLElement =>
+                part !== column &&
+                part instanceof HTMLElement &&
+                part.getBoundingClientRect().height > 0,
+        );
+        const shifts = this.barShifts(canvas, parts);
 
-        if (bars.height <= 0) {
+        if (shifts === null) {
             return;
         }
 
-        const middle = bars.top + bars.height / 2;
-        const column = layout.box.parentElement;
+        if (column?.parentElement === layout.line) {
+            const line = layout.line.getBoundingClientRect();
 
-        for (const part of layout.line.children) {
-            if (part === column || !(part instanceof HTMLElement)) {
-                continue;
+            if (
+                line.height > 0 &&
+                this.fitBars(layout.box, line, parts, shifts)
+            ) {
+                // The bars moved: measure them again.
+                this.applyShifts(
+                    parts,
+                    this.barShifts(canvas, parts) ?? shifts,
+                );
+
+                return;
             }
+        }
 
+        this.applyShifts(parts, shifts);
+    }
+
+    /**
+     * How far each part must move, from where it sits now, for its middle to meet the bars'
+     * middle, in whole pixels; `null` while the bars have no height.
+     */
+    private barShifts(
+        canvas: HTMLCanvasElement,
+        parts: readonly HTMLElement[],
+    ): number[] | null {
+        const bars = canvas.getBoundingClientRect();
+
+        if (bars.height <= 0) {
+            return null;
+        }
+
+        const middle = bars.top + bars.height / 2;
+
+        return parts.map((part) => {
             const rect = part.getBoundingClientRect();
 
-            if (rect.height <= 0) {
-                continue;
-            }
+            return Math.round(middle - (rect.top + rect.height / 2));
+        });
+    }
 
-            // The box measured already carries the shift given last time.
-            const given =
-                parseFloat(
-                    part.style.getPropertyValue('translate').split(' ')[1] ??
-                        '',
-                ) || 0;
-            const shift = Math.round(
-                given + middle - (rect.top + rect.height / 2),
-            );
+    /** Moves each part by its shift, on top of the shift it was given last time. */
+    private applyShifts(
+        parts: readonly HTMLElement[],
+        shifts: readonly number[],
+    ): void {
+        parts.forEach((part, index) => {
+            const shift = Math.round(givenShift(part) + (shifts[index] ?? 0));
             part.style.setProperty('translate', `0px ${shift}px`);
-        }
+        });
+    }
+
+    /**
+     * Gives the wave's box the margins that keep every shifted part inside the line, and says
+     * whether they changed. The margins already given count: the overshoot measured now is added
+     * to them, and a part with room to spare takes them back, never below 0.
+     */
+    private fitBars(
+        box: HTMLElement,
+        line: DOMRect,
+        parts: readonly HTMLElement[],
+        shifts: readonly number[],
+    ): boolean {
+        let overTop = Number.NEGATIVE_INFINITY;
+        let overBottom = Number.NEGATIVE_INFINITY;
+
+        parts.forEach((part, index) => {
+            const rect = part.getBoundingClientRect();
+            const shift = shifts[index] ?? 0;
+            overTop = Math.max(overTop, line.top - (rect.top + shift));
+            overBottom = Math.max(
+                overBottom,
+                rect.bottom + shift - line.bottom,
+            );
+        });
+
+        const margin = (side: 'top' | 'bottom', over: number): boolean => {
+            const name = `margin-${side}`;
+            const given = parseFloat(box.style.getPropertyValue(name)) || 0;
+            const next =
+                over === Number.NEGATIVE_INFINITY
+                    ? 0
+                    : Math.max(0, Math.round(given + over));
+            box.style.setProperty(name, `${next}px`);
+
+            return next !== given;
+        };
+
+        const top = margin('top', overTop);
+        const bottom = margin('bottom', overBottom);
+
+        return top || bottom;
     }
 
     /**
