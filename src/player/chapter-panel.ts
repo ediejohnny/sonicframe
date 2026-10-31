@@ -270,12 +270,22 @@ export class FloatingList {
             return;
         }
 
+        // The page's own width and height leave its scrollbars out; the window's would not.
+        const page = document.documentElement;
+        const view = {
+            width: page.clientWidth || window.innerWidth,
+            height: page.clientHeight || window.innerHeight,
+        };
+        this.box.style.setProperty(
+            'max-width',
+            `${Math.max(0, view.width - MARGIN * 2)}px`,
+        );
         const at = anchor.getBoundingClientRect();
         const size = this.box.getBoundingClientRect();
         const spot = placeTooltip(
             at,
             { width: size.width, height: size.height },
-            { width: window.innerWidth, height: window.innerHeight },
+            view,
             {
                 prefer: this.settings.placement === 'above' ? 'above' : 'below',
                 gap: GAP,

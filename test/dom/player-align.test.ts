@@ -71,6 +71,30 @@ describe('the parts beside the wave', () => {
         expect(play.style.getPropertyValue('translate')).toBe('0px 0px');
     });
 
+    it('let the rows under the wave start at the line, under the play button, when asked', () => {
+        const root = make({
+            look: {
+                line: ['play', 'wave'],
+                meta: ['time'],
+                underStart: 'line',
+            },
+        });
+        const row = (root.querySelector('.sonicframe-time') as HTMLElement)
+            .parentElement as HTMLElement;
+        const play = root.querySelector('.sonicframe-play') as HTMLElement;
+
+        expect(row.style.getPropertyValue('grid-column')).toBe('1 / -1');
+        expect(play.style.getPropertyValue('grid-row')).toBe('1');
+    });
+
+    it("keep the rows on the wave's left edge by default, as before", () => {
+        const root = make({ look: { line: ['play', 'wave'], meta: ['time'] } });
+        const row = (root.querySelector('.sonicframe-time') as HTMLElement)
+            .parentElement as HTMLElement;
+
+        expect(row.style.getPropertyValue('grid-column')).toBe('');
+    });
+
     it('are left alone when the wave has its own line on top', () => {
         const root = make({
             look: { wavePlace: 'top', line: ['play', 'time'] },

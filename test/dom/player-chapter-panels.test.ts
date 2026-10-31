@@ -140,6 +140,22 @@ describe('the popover', () => {
         expect(arrow.style.getPropertyValue('top')).not.toBe('');
     });
 
+    it("keeps clear of the page's scrollbar", () => {
+        // A 16 px scrollbar: the page shows 1008 of the window's 1024 pixels.
+        vi.spyOn(
+            document.documentElement,
+            'clientWidth',
+            'get',
+        ).mockReturnValue(1008);
+        make({ type: 'popover' });
+        sizes({ left: 1000, top: 100 });
+        toggle().click();
+
+        expect(px(list(), 'left')).toBe(760);
+        // Never wider than the page between its margins.
+        expect(list().style.getPropertyValue('max-width')).toBe('992px');
+    });
+
     it('opens above its button when there is no room below, or when asked', () => {
         make({ type: 'popover' });
         sizes({ left: 100, top: 700 });

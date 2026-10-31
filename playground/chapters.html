@@ -44,6 +44,7 @@ new SonicFrame({
     src: '/episodes/12.mp3',
     chapters: { src: '/episodes/12-chapters.vtt', list: true, lane: 'below' },
     look: {
+        underStart: 'line',
         line: ['play', 'wave'],
         meta: ['time', 'chapter', 'spacer', 'prevChapter', 'nextChapter', 'chapters'],
     },
@@ -53,7 +54,7 @@ new SonicFrame({
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":"below"},"look":{"line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":"below"},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
                     ></div>
                     <p>
                         Hover a line to see its chapter, click it to go there,
@@ -332,12 +333,12 @@ The meeting</code></pre>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"popover","animation":true,"swipe":true}},"look":{"line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"popover","animation":true,"swipe":true}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
                     ></div>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","style":{"shadow":"glow"}}},"look":{"line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","style":{"shadow":"glow"}}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
                     ></div>
                     <p>
                         The first opens a popover; the second, a drawer on the

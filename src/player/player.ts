@@ -1774,10 +1774,11 @@ export class Player {
     }
 
     /**
-     * A voice note's line, and the line of a player with its chapters list under the wave, is a grid:
-     * its first row holds the line's parts and the wave, each one centered on the wave, and the rows
-     * under the wave (the small line, the list) keep to the wave's column, so opening the list never
-     * moves the parts beside the wave. Otherwise the line is the flexible row it was built as.
+     * A voice note's line, the line of a player with its chapters list under the wave, and one whose
+     * rows under the wave start at the line (`underStart`) are a grid: its first row holds the line's
+     * parts and the wave, and the rows under the wave (the small line, the list) keep to the wave's
+     * column, or span the whole line from under the play button, so opening the list never moves
+     * the parts beside the wave. Otherwise the line is the flexible row it was built as.
      */
     private placeRows(layout: Layout, narrow: boolean): void {
         const { line, box } = layout;
@@ -1787,8 +1788,13 @@ export class Player {
             (row) => row !== box,
         ) as HTMLElement[];
         const placed = [...parts, box, ...below];
+        const fromLine =
+            this.look.underStart === 'line' &&
+            this.look.wavePlace === 'inline' &&
+            below.length > 0 &&
+            !this.zoomOnLine();
 
-        if (!narrow && !this.listUnderWave()) {
+        if (!narrow && !this.listUnderWave() && !fromLine) {
             css(line, [
                 ['display', 'flex'],
                 ['gap', `${this.look.gap}rem`],
@@ -1834,7 +1840,10 @@ export class Player {
         below.forEach((row, index) =>
             css(row, [
                 ['grid-row', `${index + 2}`],
-                ['grid-column', wave],
+                [
+                    'grid-column',
+                    this.look.underStart === 'line' ? '1 / -1' : wave,
+                ],
             ]),
         );
     }
