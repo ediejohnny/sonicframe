@@ -19,6 +19,8 @@ import { LongName } from './long-name';
 export type ChapterHost = ListHost & {
     /** Hears that the chapter playing changed. */
     changed(chapter: Chapter | null, index: number): void;
+    /** Hears the chapters shown, whenever they change. */
+    listed(chapters: readonly Chapter[]): void;
 };
 
 /** The parts that show only when the player has chapters. */
@@ -202,7 +204,10 @@ export class ChapterParts {
                 this.showChapter();
                 this.host.changed(chapter, index);
             },
-            onChapters: () => this.showChapter(),
+            onChapters: (list) => {
+                this.showChapter();
+                this.host.listed(list);
+            },
         });
     }
 }

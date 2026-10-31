@@ -10,13 +10,28 @@
  * unless `a11y-description` is there. Zoom is off unless `zoom` is there; its words turn on its
  * ways, and `minimap` adds the strip. The `peaks-` attributes say how the peaks file is read.
  * `chapters` takes the address of a chapters file, and `chapter-options` its extras; the
- * `background-` attributes give the player a background and its animation. Each attribute is read in
+ * `background-` attributes give the player a background and its animation; `media-session` turns
+ * on the system's media controls, which show the `media-` attributes. Each attribute is read in
  * `element-attributes.ts` (the background's in `background-attributes.ts`).
  */
 
 import { Player } from '../player/player';
 import { BACKGROUND_ATTRIBUTES } from './background-attributes';
-import { fontOf, optionsOf, paletteOf, waveOf } from './element-attributes';
+import {
+    fontOf,
+    optionsOf,
+    paletteOf,
+    sessionDetailsOf,
+    waveOf,
+} from './element-attributes';
+
+/** What the system's media controls show: changed, they show at once, the player kept. */
+const SESSION_DETAILS = [
+    'media-title',
+    'media-artist',
+    'media-album',
+    'media-artwork',
+];
 
 /** The attributes the tag reads. */
 export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
@@ -40,6 +55,8 @@ export const PLAYER_ATTRIBUTES: readonly string[] = Object.freeze([
     'minimap',
     'chapters',
     'chapter-options',
+    'media-session',
+    ...SESSION_DETAILS,
     'a11y-lang',
     'a11y-description',
     'a11y-zoom',
@@ -62,6 +79,7 @@ const REBUILD = new Set([
     'minimap',
     'chapters',
     'chapter-options',
+    'media-session',
     'a11y-lang',
     'a11y-description',
     'a11y-zoom',
@@ -139,6 +157,8 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                     player.setWave(waveOf(this));
                 } else if (attribute === 'volume') {
                     player.setVolume(after !== null);
+                } else if (SESSION_DETAILS.includes(attribute)) {
+                    player.mediaSession?.set(sessionDetailsOf(this));
                 } else {
                     player.setFont(fontOf(this));
                 }

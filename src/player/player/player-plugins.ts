@@ -1,7 +1,7 @@
 /**
  * The plugins a player adds from its options, after the app's own: a spectrogram in the palette's
- * colors (first, under everything), the chapters, the minimap and the sound in words, each only when
- * asked. The minimap's room is added to the wave's box, so the strip never takes from the wave.
+ * colors (first, under everything), the chapters, the media controls, the minimap and the sound in
+ * words, each only when asked. The minimap's room is added to the wave's box, so the strip never takes from the wave.
  */
 
 import type { PlayerWords } from '../../core/player/labels';
@@ -9,6 +9,7 @@ import type { PlayerLook } from '../../core/player/look';
 import { PROGRESS, WAVE } from '../../core/shared/variables';
 import { remPixels } from '../../dom/shared/units';
 import type { ChaptersPlugin } from '../../plugins/chapters/chapters-options';
+import type { MediaSessionPlugin } from '../../plugins/media-session/media-session';
 import {
     soundDescription,
     type SoundDescriptionPlugin,
@@ -43,6 +44,8 @@ export type PluginParts = {
     words: PlayerWords;
     media: HTMLMediaElement | null;
     chapters: ChaptersPlugin | null;
+    /** The system's media controls, made once, or null while they are off. */
+    session: MediaSessionPlugin | null;
     /** The sound decoded once, shared with the peaks. */
     decoded: () => Promise<DecodedAudio>;
     /** Hears the description's new text (or null). */
@@ -119,6 +122,10 @@ export function playerPlugins(
 
     if (parts.chapters !== null) {
         plugins.push(parts.chapters);
+    }
+
+    if (parts.session !== null) {
+        plugins.push(parts.session);
     }
 
     if (options.spectrogram && parts.media !== null) {

@@ -84,6 +84,17 @@ export {
 } from './plugins/description/description';
 export type { SpeechOptions } from './dom/a11y/speak';
 export {
+    MEDIA_SESSION_ACTIONS,
+    mediaSession,
+    type MediaSessionActionName,
+    type MediaSessionOptions,
+    type MediaSessionPlugin,
+} from './plugins/media-session/media-session';
+export type {
+    MediaSessionArtwork,
+    MediaSessionDetails,
+} from './core/session/media-session';
+export {
     skipSilences,
     type SkipSilencesOptions,
     type SkipSilencesPlugin,

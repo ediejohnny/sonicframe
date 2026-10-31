@@ -9,28 +9,11 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { defineSonicPlayer, PALETTES } from '../../../src/player';
 import { triggerResize } from '../../support/fakes';
 import { boxOf, showTag } from '../../support/helpers';
-
-const made: HTMLElement[] = [];
+import { tag } from './element-harness';
 
 afterEach(() => {
-    for (const element of made.splice(0)) {
-        element.remove();
-    }
-
     vi.unstubAllGlobals();
 });
-
-function tag(attributes: Record<string, string>): HTMLElement {
-    const element = document.createElement('sonic-player');
-
-    for (const [name, value] of Object.entries(attributes)) {
-        element.setAttribute(name, value);
-    }
-
-    made.push(element);
-
-    return element;
-}
 
 function player(element: HTMLElement): HTMLElement | null {
     return element.querySelector<HTMLElement>('.sonicframe-player');

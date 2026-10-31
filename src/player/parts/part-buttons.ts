@@ -9,6 +9,7 @@ import { iconButtonBox } from '../../core/controls/button';
 import type { PlayerWords } from '../../core/player/labels';
 import type { PlayerLook } from '../../core/player/look';
 import { nextSpeed, speedText } from '../../core/player/part-text';
+import { skipRatio } from '../../core/shared/steps';
 import { PROGRESS } from '../../core/shared/variables';
 import type { SonicFrame } from '../../dom/frame/frame';
 import { css } from '../../dom/shared/css';
@@ -182,9 +183,13 @@ export function skipPart(
         }
 
         // From where the sound is, or will start once a seek waiting for it to load lands.
-        const now = frame.time ?? 0;
-        const target = now + (direction === 'back' ? -seconds : seconds);
-        frame.seekTo(Math.min(1, Math.max(0, target / duration)));
+        frame.seekTo(
+            skipRatio(
+                frame.time ?? 0,
+                direction === 'back' ? -seconds : seconds,
+                duration,
+            ),
+        );
     });
 
     return button;
