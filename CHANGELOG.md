@@ -31,6 +31,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   tag, build with Node, copy the whole `dist/` folder with the license, and import by path or through an import map
   (with the hash a strict Content-Security-Policy needs), plus the TypeScript `paths`.
 
+### Security
+
+- The build and test tools move to vite-plus 1.4.0, which fixes GHSA-p458-7748-mcp3 (Vitest's own servers could
+  serve protected files such as `.env`). Only the machine building the project was ever concerned, and only with
+  those servers on; the published package has no dependencies and was never affected.
+
 ## [0.4.0] - 2026-10-30
 
 ### Added
