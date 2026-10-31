@@ -55,6 +55,8 @@ export type PlayerLabels = {
     chapterLink: string;
     previousChapter: string;
     nextChapter: string;
+    /** The button that closes the chapters drawer. */
+    closeChapters: string;
 };
 
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
@@ -86,6 +88,7 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             chapterLink: 'Link',
             previousChapter: 'Previous chapter',
             nextChapter: 'Next chapter',
+            closeChapters: 'Close the chapters',
         }),
         pt: Object.freeze({
             player: 'Player de áudio',
@@ -114,6 +117,7 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             chapterLink: 'Link',
             previousChapter: 'Capítulo anterior',
             nextChapter: 'Próximo capítulo',
+            closeChapters: 'Fechar os capítulos',
         }),
     });
 

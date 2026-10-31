@@ -172,8 +172,9 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
 
 /**
  * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
- * `chapter-options`: `list` (inside the player) and `open`, `lane` (a strip of titles under the wave)
- * or `above`, `announce`, `images`, `links`, `no-keys` and `no-lines`; any other word is ignored.
+ * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
+ * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
+ * `above`, `announce`, `images`, `links`, `no-keys` and `no-lines`; any other word is ignored.
  */
 function chaptersOf(
     src: string | null,
@@ -187,8 +188,22 @@ function chaptersOf(
 
     return {
         src,
-        list: words.has('list'),
-        listOpen: words.has('open'),
+        list: words.has('list')
+            ? {
+                  type: words.has('drawer')
+                      ? 'drawer'
+                      : words.has('popover')
+                        ? 'popover'
+                        : 'inline',
+                  open: words.has('open'),
+                  side: words.has('left') ? 'left' : 'right',
+                  stayOpen: words.has('stay'),
+                  backdrop: words.has('backdrop'),
+                  animation: words.has('animation'),
+                  animationType: words.has('slide') ? 'slide' : 'fade',
+                  swipe: words.has('swipe'),
+              }
+            : false,
         lane: words.has('above')
             ? 'above'
             : words.has('lane')

@@ -231,7 +231,7 @@ describe('chapters on the player', () => {
         host?.remove();
 
         make({
-            chapters: { items: ITEMS, list: true, listOpen: true },
+            chapters: { items: ITEMS, list: { open: true } },
             look: CHAPTER_LINE,
         });
         expect((part('chapter-list') as HTMLElement).hidden).toBe(false);
