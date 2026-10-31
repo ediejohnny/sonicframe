@@ -1,121 +1,16 @@
 /**
  * The player's chapters list in its other forms: a popover over the page with an arrow at its
  * button, kept inside the edges, and a drawer along a side of the page; both close by Escape, a
- * press outside, focus leaving or a choice, and give the focus back. Off the wave, a finger's swipe
- * opens and closes the list when asked.
+ * press outside, focus leaving or a choice, and give the focus back.
  */
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import {
-    createPlayer,
-    defineSonicPlayer,
-    FONT_STACKS,
-    PALETTES,
-    type Player,
-    type PlayerChapterList,
-    type PlayerOptions,
-} from '../../../src/player';
-import { boxOf, fakeMedia } from '../../support/helpers';
+import { defineSonicPlayer } from '../../../src/player';
+import { boxOf } from '../../support/helpers';
+import { cleanUp, host, keep, player } from './chapters-harness';
+import { key, list, make, px, sizes, toggle, touch } from './panels-harness';
 
-let player: Player | null = null;
-let host: HTMLElement | null = null;
-
-afterEach(() => {
-    player?.destroy();
-    host?.remove();
-    player = null;
-    host = null;
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-});
-
-const ITEMS = [
-    { start: 0, title: 'Intro' },
-    { start: 25, title: 'Interview' },
-    { start: 50, title: 'Songs' },
-];
-
-const LOOK: PlayerOptions['look'] = {
-    line: ['play', 'wave'],
-    meta: ['time', 'chapter', 'spacer', 'chapters'],
-};
-
-type Media = ReturnType<typeof fakeMedia>;
-
-function make(
-    list: boolean | PlayerChapterList,
-    options: Partial<PlayerOptions> = {},
-): { player: Player; media: Media } {
-    host = document.createElement('div');
-    document.body.append(host);
-    boxOf(host, { left: 0, top: 0, width: 480, height: 48 });
-    const media = fakeMedia({ duration: 100 });
-    player = createPlayer({
-        container: host,
-        peaks: [0.5, 0.5, 0.5, 0.5],
-        media,
-        chapters: { items: ITEMS, list },
-        look: LOOK,
-        ...options,
-    });
-
-    return { player, media };
-}
-
-function toggle(): HTMLButtonElement {
-    return (host as HTMLElement).querySelector(
-        '.sonicframe-chapters-toggle',
-    ) as HTMLButtonElement;
-}
-
-function list(): HTMLElement {
-    return document.querySelector('.sonicframe-chapter-list') as HTMLElement;
-}
-
-/** Gives the button and the list their on-screen boxes (happy-dom has no layout): a 240 × 200 list. */
-function sizes(button: { left: number; top: number }): void {
-    boxOf(toggle(), { ...button, width: 24, height: 24 });
-    boxOf(list(), { left: 0, top: 0, width: 240, height: 200 });
-}
-
-function px(element: HTMLElement, name: string): number {
-    return parseFloat(element.style.getPropertyValue(name));
-}
-
-function key(name: string): void {
-    document.activeElement?.dispatchEvent(
-        new KeyboardEvent('keydown', { key: name, bubbles: true }),
-    );
-}
-
-function touch(
-    target: Element,
-    type: string,
-    x: number,
-    y: number,
-    pointerType = 'touch',
-): void {
-    target.dispatchEvent(
-        Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
-            clientX: x,
-            clientY: y,
-            pointerId: 7,
-            pointerType,
-            isPrimary: true,
-            button: 0,
-        }),
-    );
-}
-
-function swipe(
-    target: Element,
-    dx: number,
-    dy: number,
-    pointerType = 'touch',
-): void {
-    touch(target, 'pointerdown', 100, 100, pointerType);
-    touch(target, 'pointerup', 100 + dx, 100 + dy, pointerType);
-}
+afterEach(cleanUp);
 
 describe('the popover', () => {
     it('opens over the page under its button, inside the edges, with the arrow at the button', () => {
@@ -410,107 +305,6 @@ describe('the drawer', () => {
     });
 });
 
-describe("the list's own look", () => {
-    it("takes its own palette over the player's, by name or as colors", () => {
-        make({ type: 'popover', palette: 'berry' }, { palette: 'ocean' });
-        sizes({ left: 100, top: 100 });
-        toggle().click();
-        expect(list().style.getPropertyValue('--sonicframe-surface')).toBe(
-            PALETTES.berry.surface,
-        );
-        player?.destroy();
-        host?.remove();
-
-        make({
-            type: 'drawer',
-            palette: { ...PALETTES.light, surface: '#101820', text: '#f0f0f0' },
-        });
-        toggle().click();
-        expect(list().style.getPropertyValue('--sonicframe-surface')).toBe(
-            '#101820',
-        );
-        expect(list().style.getPropertyValue('--sonicframe-text')).toBe(
-            '#f0f0f0',
-        );
-    });
-
-    it('dresses the list in the player too', () => {
-        make({ palette: 'berry', style: { corner: 1 } });
-
-        expect(list().style.getPropertyValue('--sonicframe-surface')).toBe(
-            PALETTES.berry.surface,
-        );
-        expect(list().style.getPropertyValue('border-radius')).toBe('1rem');
-    });
-
-    it('takes its own font, and its own corners, border, shadow, padding and text size', () => {
-        make({
-            type: 'popover',
-            font: 'mono',
-            style: {
-                corner: 1,
-                border: 0,
-                shadow: 'none',
-                padding: 1.5,
-                fontSize: 1,
-            },
-        });
-        sizes({ left: 100, top: 100 });
-        toggle().click();
-        const style = list().style;
-
-        // The page may write the stack's quotes its own way.
-        expect(style.getPropertyValue('font-family').replace(/["']/g, '')).toBe(
-            FONT_STACKS.mono.replace(/["']/g, ''),
-        );
-        expect(style.getPropertyValue('border-radius')).toBe('1rem');
-        expect(style.getPropertyValue('border-width')).toBe('0px');
-        expect(style.getPropertyValue('box-shadow')).toBe('none');
-        expect(style.getPropertyValue('padding')).toBe('1.5rem');
-        expect(style.getPropertyValue('font-size')).toBe('1rem');
-    });
-
-    it('keeps sizes in range, and an unknown palette or shadow leaves the defaults', () => {
-        make({
-            type: 'popover',
-            palette: 'nope' as never,
-            style: { corner: 99, shadow: 'loud' as never },
-        });
-        sizes({ left: 100, top: 100 });
-        toggle().click();
-
-        expect(list().style.getPropertyValue('border-radius')).toBe('4rem');
-        expect(list().style.getPropertyValue('box-shadow')).not.toBe('loud');
-        expect(list().style.getPropertyValue('--sonicframe-surface')).toBe('');
-    });
-
-    it('says when its own palette does not exist', async () => {
-        make({ type: 'popover', palette: 'nope' as never });
-        const errors: unknown[] = [];
-        player?.on('error', (error) => errors.push(error));
-        await Promise.resolve();
-
-        expect(errors.map(String)).toEqual([
-            'Error: sonicframe: unknown palette "nope"',
-        ]);
-    });
-
-    it('wears the dark palette, with its own palette on auto, while the system is dark', () => {
-        vi.stubGlobal('matchMedia', (query: string) => ({
-            matches: query.includes('dark'),
-            addEventListener: (): void => undefined,
-            removeEventListener: (): void => undefined,
-        }));
-        make({ type: 'popover', palette: 'auto' });
-        sizes({ left: 100, top: 100 });
-        toggle().click();
-
-        expect(list().style.getPropertyValue('--sonicframe-surface')).toBe(
-            PALETTES.dark.surface,
-        );
-    });
-});
-
 describe('every form', () => {
     it('adds its button at the end of the line when the look places none, so it can always open', () => {
         make({ type: 'popover' }, { look: { line: ['play', 'wave', 'time'] } });
@@ -563,63 +357,6 @@ describe('every form', () => {
     });
 });
 
-describe('the swipe', () => {
-    function meta(): HTMLElement {
-        return (host as HTMLElement).querySelector('.sonicframe-chapter-now')
-            ?.parentElement as HTMLElement;
-    }
-
-    it('opens the list with a finger swiping up off the wave, and closes it the other way', () => {
-        make({ type: 'popover', swipe: true });
-        sizes({ left: 100, top: 100 });
-
-        swipe(meta(), 0, -80);
-        expect(list().hidden).toBe(false);
-
-        swipe(meta(), 0, 80);
-        expect(list().hidden).toBe(true);
-    });
-
-    it('leaves the wave, the mouse, short moves and the other axis alone', () => {
-        make({ type: 'popover', swipe: true });
-        sizes({ left: 100, top: 100 });
-        const wave = (host as HTMLElement).querySelector(
-            '[role="slider"]',
-        ) as HTMLElement;
-
-        // One at a time: a press outside an open list would close it and hide a wrong opening.
-        swipe(wave, 0, -80);
-        expect(list().hidden).toBe(true);
-        swipe(meta(), 0, -80, 'mouse');
-        expect(list().hidden).toBe(true);
-        swipe(meta(), 0, -20);
-        expect(list().hidden).toBe(true);
-        // Long enough up, but more sideways than up.
-        swipe(meta(), -90, -60);
-        expect(list().hidden).toBe(true);
-    });
-
-    it('takes its own direction, and keeps the page scrolling the other way', () => {
-        make({ type: 'popover', swipe: true, swipeDirection: 'left' });
-        sizes({ left: 100, top: 100 });
-
-        expect(meta().style.getPropertyValue('touch-action')).toBe('pan-y');
-        swipe(meta(), 0, -80);
-        expect(list().hidden).toBe(true);
-        swipe(meta(), -80, 0);
-        expect(list().hidden).toBe(false);
-    });
-
-    it('is off by default, and touches nothing', () => {
-        make({ type: 'popover' });
-        sizes({ left: 100, top: 100 });
-
-        swipe(meta(), 0, -80);
-        expect(list().hidden).toBe(true);
-        expect(meta().style.getPropertyValue('touch-action')).toBe('');
-    });
-});
-
 describe('on the tag', () => {
     it('reads the list form, its side and the swipe from chapter-options', () => {
         defineSonicPlayer();
@@ -631,7 +368,7 @@ describe('on the tag', () => {
             'list drawer left backdrop swipe',
         );
         vi.stubGlobal('fetch', () => new Promise(() => undefined));
-        host = element;
+        keep(element);
         document.body.append(element);
 
         const button = element.querySelector(
