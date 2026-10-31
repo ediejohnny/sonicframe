@@ -5,7 +5,7 @@
         <title>Keyboard · SonicFrame</title>
         <meta
             name="description"
-            content="Every key SonicFrame answers: the wave, zoom, markers, regions, the description and the minimap."
+            content="Every key SonicFrame answers: the wave, zoom, markers, chapters, regions, the description and the minimap."
         />
     </head>
     <body>
@@ -85,6 +85,27 @@
                 </section>
 
                 <section class="section">
+                    <h2>Chapters</h2>
+                    <ul class="keys">
+                        <li>
+                            <kbd>C</kbd> goes to the next chapter,
+                            <kbd>Shift</kbd> + <kbd>C</kbd> to the previous one,
+                            and they say where ("Chapter 2 of 4: The meeting,
+                            0:02")
+                        </li>
+                        <li>
+                            Within <code>backGrace</code> seconds after a
+                            chapter's start (1), <kbd>Shift</kbd> +
+                            <kbd>C</kbd> goes to the one before it
+                        </li>
+                    </ul>
+                    <p>
+                        <code>keys: { letter: 'k' }</code> picks another letter,
+                        <code>keys: false</code> turns them off.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>Regions</h2>
                     <ul class="keys">
                         <li>
@@ -135,8 +156,9 @@
                     <h2>Caps Lock changes nothing</h2>
                     <p>
                         The direction comes from <kbd>Shift</kbd>, never from
-                        the letter's case, so <kbd>M</kbd>, <kbd>R</kbd> and
-                        <kbd>P</kbd> work the same with Caps Lock on.
+                        the letter's case, so <kbd>M</kbd>, <kbd>C</kbd>,
+                        <kbd>R</kbd> and <kbd>P</kbd> work the same with Caps
+                        Lock on.
                     </p>
                 </section>
             </div>

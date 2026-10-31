@@ -61,6 +61,7 @@ export const PAGES: readonly DocsGroup[] = [
         pages: [
             { file: 'zoom.html', name: 'Zoom and scroll' },
             { file: 'minimap.html', name: 'The minimap' },
+            { file: 'chapters.html', name: 'Chapters' },
             { file: 'waveform-files.html', name: 'Ready-made peaks' },
             { file: 'long-sound.html', name: 'A one-hour sound' },
         ],
