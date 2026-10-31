@@ -7,6 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Chapters. `readChapters` reads WebVTT (`kind="chapters"`, as the specification's parser reads it), the
+  Podcasting 2.0 JSON chapters (text or parsed) or a list, from the content; `loadChapters` fetches a file once
+  per page; `chapterAt`, `chapterEnds` and `nextChapter` answer which chapter plays, where it ends and where a
+  step lands. All are on `sonicframe` and `sonicframe/analysis`. Read as untrusted: at most 512 KB and 1000
+  chapters, titles cleaned to one line of 120 characters, pictures and links kept only from web or relative
+  addresses (`safeUrl`, now exported).
+- The `chapters()` plugin: a line where each chapter starts (`--sonicframe-chapter`), its name in the tooltip, a
+  click on a line to go there, C and Shift+C (configurable, with a back grace like a previous track) that say
+  where they landed, and the chapter in the slider's value in words. Off until asked: saying the chapter
+  playback enters, a strip of titles above or below the wave, and a list (`nav` with `aria-current`) in an
+  element of the app, with pictures and links only when asked.
+- The player's `chapters` option (an address, a list or the plugin's options, plus `list` and `listOpen`), off
+  by default, with words in English and Portuguese; the look parts `chapter`, `prevChapter`, `nextChapter` and
+  `chapters` (the list's button), shown only with chapters; `player.chapters`; and the `chapterchange` event.
+- The tag's `chapters` and `chapter-options` attributes, and the `sonicframe:chapterchange` event.
+- The docs' Chapters page, with a WebVTT and a JSON example.
+
 ### Changed
 
 - The docs' Installation page now starts from the latest version: the CDN address carries no version (unpkg sends

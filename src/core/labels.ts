@@ -45,6 +45,16 @@ export type PlayerLabels = {
     minimap: string;
     /** The minimap's value: `{from}`, `{to}`, `{total}`. */
     minimapValue: string;
+    /** A chapter's place: `{index}`, `{count}`; its title follows after a colon. */
+    chapter: string;
+    /** The list of chapters, and the button that opens it. */
+    chapters: string;
+    /** Said when a step finds no chapter that way. */
+    noChapter: string;
+    /** The text of a chapter's link in the list. */
+    chapterLink: string;
+    previousChapter: string;
+    nextChapter: string;
 };
 
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
@@ -70,6 +80,12 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             zoomView: 'Zoom {level}×, {from} to {to}',
             minimap: 'Visible part',
             minimapValue: '{from} to {to} of {total}',
+            chapter: 'Chapter {index} of {count}',
+            chapters: 'Chapters',
+            noChapter: 'No more chapters',
+            chapterLink: 'Link',
+            previousChapter: 'Previous chapter',
+            nextChapter: 'Next chapter',
         }),
         pt: Object.freeze({
             player: 'Player de áudio',
@@ -92,6 +108,12 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             zoomView: 'Zoom {level}×, de {from} a {to}',
             minimap: 'Parte visível',
             minimapValue: '{from} a {to} de {total}',
+            chapter: 'Capítulo {index} de {count}',
+            chapters: 'Capítulos',
+            noChapter: 'Não há mais capítulos',
+            chapterLink: 'Link',
+            previousChapter: 'Capítulo anterior',
+            nextChapter: 'Próximo capítulo',
         }),
     });
 

@@ -1,0 +1,9 @@
+{
+    "version": "1.2.0",
+    "chapters": [
+        { "startTime": 0, "title": "The title" },
+        { "startTime": 2.4, "title": "The meeting" },
+        { "startTime": 9, "title": "The question" },
+        { "startTime": 21, "title": "The answer", "endTime": 33 }
+    ]
+}

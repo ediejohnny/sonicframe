@@ -7,6 +7,7 @@
  */
 
 import { cleanText } from './text';
+import { safeUrl } from './url';
 
 export type FontName =
     | 'system'
@@ -68,7 +69,6 @@ export type ResolvedFont = {
 
 const MAX_FAMILY = 200;
 const MAX_NAME = 100;
-const MAX_URL = 2048;
 
 export function isFontName(value: unknown): value is FontName {
     return (
@@ -83,22 +83,7 @@ export function isFontName(value: unknown): value is FontName {
  * otherwise null.
  */
 export function safeFontUrl(url: string): string | null {
-    if (url.length === 0 || url.length > MAX_URL || url.startsWith('//')) {
-        return null;
-    }
-
-    // oxlint-disable-next-line no-control-regex -- control characters are exactly what is refused
-    if (/["'()\\\s\u0000-\u001f\u007f]/.test(url)) {
-        return null;
-    }
-
-    const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url);
-
-    if (scheme !== null) {
-        return /^https?$/i.test(scheme[1]) ? url : null;
-    }
-
-    return url;
+    return /["'()]/.test(url) ? null : safeUrl(url);
 }
 
 function checked(url: string | undefined): string | undefined {

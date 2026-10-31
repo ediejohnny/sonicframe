@@ -9,7 +9,9 @@ export {
     createPlayer,
     Player,
     type ButtonAnimation,
+    type ChaptersPlugin,
     type PlayerA11y,
+    type PlayerChapters,
     type PlayerDecode,
     type PlayerDescription,
     type PlayerEvents,
@@ -24,6 +26,13 @@ export {
     type ReadWaveformOptions,
     type WaveformData,
 } from './core/waveform';
+export {
+    loadChapters,
+    readChapters,
+    type Chapter,
+    type ChapterInput,
+    type LoadChaptersOptions,
+} from './core/chapters';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element';
 export {
     PLAYER_LABELS,

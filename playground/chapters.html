@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Chapters · SonicFrame</title>
+        <meta
+            name="description"
+            content="Chapters from WebVTT or Podcasting 2.0 JSON on the wave: lines, names, keys, a list and a strip of titles."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Chapters</h1>
+                <p class="lede">
+                    Name the stretches of a long sound with the files podcasts
+                    already publish. SonicFrame marks where each chapter starts,
+                    says it to screen readers and steps through them with one
+                    key.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding them</h2>
+                    <div class="code">
+                        <pre><code>import { chapters } from 'sonicframe';
+
+new SonicFrame({
+    container,
+    media,
+    peaks,
+    plugins: [chapters({ src: '/episodes/12-chapters.vtt' })],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        On the player, it is one option: the address, a list, or
+                        the options below.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/episodes/12.mp3',
+    chapters: { src: '/episodes/12-chapters.vtt', list: true, lane: 'below' },
+    look: {
+        line: ['play', 'prevChapter', 'wave', 'nextChapter', 'time'],
+        meta: ['chapter', 'spacer', 'chapters'],
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":"below"},"look":{"line":["play","prevChapter","wave","nextChapter","time"],"meta":["chapter","spacer","chapters"]}}'
+                    ></div>
+                    <p>
+                        Hover a line to see its chapter, click it to go there,
+                        or focus the wave and press <kbd>C</kbd> and
+                        <kbd>Shift</kbd> + <kbd>C</kbd>. The list button opens
+                        the chapters under the wave.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>The files</h2>
+                    <p>
+                        The format comes from the content, never from the
+                        address. A
+                        <a href="./sounds/little-elf-chapters.vtt">WebVTT</a>
+                        file, as <code>&lt;track kind="chapters"&gt;</code>
+                        uses:
+                    </p>
+                    <div class="code">
+                        <pre><code>WEBVTT
+
+intro
+00:00.000 --> 00:02.400
+The title
+
+00:02.400 --> 00:09.000
+The meeting</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Or the
+                        <a href="./sounds/little-elf-chapters.json"
+                            >Podcasting 2.0 JSON</a
+                        >
+                        chapters, with pictures, links and chapters left out of
+                        the contents (<code>"toc": false</code>):
+                    </p>
+                    <div class="code">
+                        <pre><code>{
+    "version": "1.2.0",
+    "chapters": [
+        { "startTime": 0, "title": "The title" },
+        { "startTime": 2.4, "title": "The meeting", "img": "/art/2.jpg", "url": "/notes#2" }
+    ]
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Or a list, written in code:
+                        <code>[{ start: 0, title: 'The title' }, …]</code>, with
+                        <code>end</code>, <code>image</code>,
+                        <code>url</code> and <code>toc</code> when you need
+                        them.
+                    </p>
+                    <div class="callout tip">
+                        <strong>Read as untrusted</strong>
+                        At most 512 KB and 1000 chapters. Titles become one line
+                        of plain text (120 characters at most). A picture or a
+                        link is kept only from a web or relative address, never
+                        <code>javascript:</code>, <code>data:</code> or another
+                        host by <code>//</code>.
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>items</code>, <code>text</code>,
+                                        <code>src</code>
+                                    </td>
+                                    <td>none</td>
+                                    <td>
+                                        The chapters: a list, WebVTT or JSON
+                                        text, or a file's address (fetched once
+                                        per page).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>load</code></td>
+                                    <td><code>{}</code></td>
+                                    <td>
+                                        How <code>src</code> is fetched:
+                                        <code>fetcher</code>,
+                                        <code>shared</code>,
+                                        <code>maxBytes</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>lines</code></td>
+                                    <td><code>true</code></td>
+                                    <td>A line where each chapter starts.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>color</code>, <code>width</code>
+                                    </td>
+                                    <td>
+                                        <code>--sonicframe-chapter</code>,
+                                        <code>2</code>
+                                    </td>
+                                    <td>
+                                        The lines' color and width (CSS px).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>tooltip</code></td>
+                                    <td><code>true</code></td>
+                                    <td>The chapter's name over its line.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>snap</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        A click on a line goes to its chapter's
+                                        start.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>lane</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A strip of titles,
+                                        <code>'above'</code> or
+                                        <code>'below'</code> the wave; a click
+                                        on a title goes there.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>laneHeight</code></td>
+                                    <td><code>1.25</code></td>
+                                    <td>The strip's height, in rem.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>keys</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        <kbd>C</kbd> and <kbd>Shift</kbd> +
+                                        <kbd>C</kbd>;
+                                        <code>{ letter, backGrace }</code> or
+                                        <code>false</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>valueNote</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The chapter in the slider's value in
+                                        words.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>announceChange</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Says the chapter playback enters.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>list</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        An element of yours that gets the list
+                                        (a <code>nav</code> of buttons).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>images</code>, <code>links</code>
+                                    </td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Pictures and links in the list; links
+                                        open in a new tab.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>words</code></td>
+                                    <td>English</td>
+                                    <td>
+                                        <code
+                                            >{ chapter, list, none, link }</code
+                                        >; <code>chapter</code> takes
+                                        <code>{index}</code> and
+                                        <code>{count}</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>onChange</code>,
+                                        <code>onChapters</code>
+                                    </td>
+                                    <td>none</td>
+                                    <td>
+                                        The chapter playing changed; the
+                                        chapters changed.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>On the player</h2>
+                    <p>
+                        <code>chapters</code> takes the address, a list or the
+                        options above, without <code>list</code> and
+                        <code>words</code>: the player's words come from its
+                        language (<code>a11y.lang</code>) and labels. It adds:
+                    </p>
+                    <ul>
+                        <li>
+                            <code>list: true</code>: the list inside the player,
+                            under the wave. With a <code>chapters</code> part in
+                            the look, a button opens and closes it
+                            (<code>listOpen</code>, closed by default); without
+                            one, it always shows.
+                        </li>
+                        <li>
+                            Four parts for the look, shown only with chapters:
+                            <code>chapter</code> (the one playing),
+                            <code>prevChapter</code>,
+                            <code>nextChapter</code> and <code>chapters</code>.
+                        </li>
+                        <li>
+                            The <code>chapterchange</code> event, with the
+                            chapter and its index.
+                        </li>
+                        <li>
+                            <code>player.chapters</code>, the plugin, to set,
+                            load or step through them.
+                        </li>
+                    </ul>
+                    <div class="code">
+                        <pre><code>&lt;sonic-player
+    src="/episodes/12.mp3"
+    chapters="/episodes/12-chapters.vtt"
+    chapter-options="list lane"
+&gt;&lt;/sonic-player&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>For screen readers</h2>
+                    <p>
+                        The slider's value says the chapter: "0:12 / 0:33,
+                        Chapter 3 of 4: The question". <kbd>C</kbd> and
+                        <kbd>Shift</kbd> + <kbd>C</kbd> say where they landed,
+                        or that there are no more chapters. The list is a
+                        <code>nav</code> named "Chapters" whose current chapter
+                        carries <code>aria-current</code>; the lines, the
+                        tooltip and the strip are hidden from screen readers,
+                        since the value and the list say the same.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>The plugin's methods</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>chapters</code>,
+                                        <code>index</code>,
+                                        <code>current</code>
+                                    </td>
+                                    <td>
+                                        The chapters shown, and the one playing
+                                        (-1 and null outside them).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>set(input)</code></td>
+                                    <td>
+                                        A list or text; <code>null</code> clears
+                                        them. Throws on anything else.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>load(url)</code></td>
+                                    <td>Fetches a file; rejects on failure.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>go(index)</code>,
+                                        <code>next()</code>,
+                                        <code>previous()</code>
+                                    </td>
+                                    <td>
+                                        Move playback; <code>false</code> when
+                                        there is nowhere to go.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Without the plugin, <code>readChapters</code>,
+                        <code>loadChapters</code>, <code>chapterAt</code>,
+                        <code>chapterEnds</code> and
+                        <code>nextChapter</code> work on their own, also from
+                        <code>sonicframe/analysis</code> on a server.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Styling the list</h2>
+                    <p>
+                        The list carries class names for your CSS:
+                        <code>.sonicframe-chapters</code> (the
+                        <code>nav</code>),
+                        <code>.sonicframe-chapter</code> (each button),
+                        <code>.sonicframe-chapter-time</code>,
+                        <code>.sonicframe-chapter-title</code> and
+                        <code>.sonicframe-chapter-link</code>. On the player,
+                        the list sits in <code>.sonicframe-chapter-list</code>
+                        and the name of the chapter playing in
+                        <code>.sonicframe-chapter-now</code>.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>
