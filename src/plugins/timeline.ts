@@ -1,8 +1,9 @@
 /**
  * A timeline: a thin ruler in a lane above or below the bars, with labels on round seconds and
- * minutes (`niceTicks`) and optional minor marks between them. It is `aria-hidden` (the slider
- * already speaks the position) and rebuilds when the frame resizes or the duration becomes known or
- * changes.
+ * minutes (`niceTicks`) and optional minor marks between them. Zoomed in, it marks the part in view,
+ * down to tenths of a second. It is `aria-hidden` (the slider already speaks the position) and is
+ * laid again when the frame resizes, the duration becomes known or changes, or the view moves,
+ * reusing its elements.
  */
 
 import { niceTicks } from '../core/ticks';
@@ -33,7 +34,11 @@ export function timeline(options: TimelineOptions = {}): Plugin {
 
     let host: PluginHost | null = null;
     let lane: { element: HTMLElement; remove(): void } | null = null;
-    let unsubscribe: (() => void) | null = null;
+    let unsubscribe: (() => void)[] = [];
+    /** The elements laid so far, reused from one layout to the next; extras are hidden. */
+    const majors: HTMLElement[] = [];
+    const minors: HTMLElement[] = [];
+    const labels: HTMLElement[] = [];
 
     function label(step: number): (seconds: number) => string {
         return (
@@ -42,13 +47,12 @@ export function timeline(options: TimelineOptions = {}): Plugin {
         );
     }
 
-    function mark(left: number, height: string): HTMLElement {
+    function mark(height: string): HTMLElement {
         const tick = document.createElement('span');
 
         for (const [property, value] of [
             ['position', 'absolute'],
             ['bottom', '0'],
-            ['left', `${left}%`],
             ['width', '1px'],
             ['height', height],
             ['background', 'currentColor'],
@@ -59,63 +63,102 @@ export function timeline(options: TimelineOptions = {}): Plugin {
         return tick;
     }
 
+    function text(): HTMLElement {
+        const span = document.createElement('span');
+
+        for (const [property, value] of [
+            ['position', 'absolute'],
+            ['top', '0'],
+            ['font-size', '9px'],
+            ['white-space', 'nowrap'],
+        ]) {
+            span.style.setProperty(property, value);
+        }
+
+        return span;
+    }
+
+    /** The `index`-th element of `pool`, made by `make` and added to the lane the first time. */
+    function take(
+        pool: HTMLElement[],
+        index: number,
+        make: () => HTMLElement,
+    ): HTMLElement {
+        let element = pool[index];
+
+        if (element === undefined) {
+            element = make();
+            pool.push(element);
+            lane?.element.append(element);
+        }
+
+        element.style.setProperty('display', '');
+
+        return element;
+    }
+
+    /** Hides the elements of `pool` from `used` on. */
+    function hideFrom(pool: HTMLElement[], used: number): void {
+        for (let index = used; index < pool.length; index++) {
+            pool[index].style.setProperty('display', 'none');
+        }
+    }
+
     function rebuild(): void {
         const frame = host;
         const geometry = frame?.geometry ?? null;
+        let major = 0;
+        let small = 0;
 
-        if (frame === null || lane === null || geometry === null) {
-            return;
-        }
+        if (frame !== null && lane !== null && geometry !== null) {
+            const duration = frame.duration;
 
-        const duration = frame.duration;
-        lane.element.replaceChildren();
-
-        if (duration === null) {
-            return;
-        }
-
-        const widthCss = geometry.width / geometry.pixelRatio;
-        const { step, times } = niceTicks(duration, widthCss, minSpacing);
-
-        if (step <= 0) {
-            return;
-        }
-
-        const text = label(step);
-
-        for (const time of times) {
-            const left = (time / duration) * 100;
-            lane.element.append(mark(left, '4px'));
-
-            if (minor && time + step / 2 <= duration + 1e-6) {
-                lane.element.append(
-                    mark(((time + step / 2) / duration) * 100, '2px'),
+            if (duration !== null) {
+                const view = frame.view;
+                const from = view.start * duration;
+                const to = view.end * duration;
+                const widthCss = geometry.width / geometry.pixelRatio;
+                const { step, times } = niceTicks(
+                    duration,
+                    widthCss,
+                    minSpacing,
+                    from,
+                    to,
                 );
+                const write = label(step);
+                const place = (time: number): string =>
+                    `${Math.round(((time - from) / (to - from)) * 100000) / 1000}%`;
+
+                for (const time of step > 0 ? times : []) {
+                    take(majors, major++, () => mark('4px')).style.setProperty(
+                        'left',
+                        place(time),
+                    );
+
+                    if (minor && time + step / 2 <= to + 1e-6) {
+                        take(minors, small++, () =>
+                            mark('2px'),
+                        ).style.setProperty('left', place(time + step / 2));
+                    }
+
+                    const span = take(labels, major - 1, text);
+                    span.textContent = write(time);
+                    span.style.setProperty('left', place(time));
+                    span.style.setProperty(
+                        'transform',
+                        time <= from + 1e-6
+                            ? 'none'
+                            : time >= to - step / 2
+                              ? 'translateX(-100%)'
+                              : 'translateX(-50%)',
+                    );
+                }
             }
-
-            const span = document.createElement('span');
-            span.textContent = text(time);
-
-            for (const [property, value] of [
-                ['position', 'absolute'],
-                ['top', '0'],
-                ['left', `${left}%`],
-                ['font-size', '9px'],
-                ['white-space', 'nowrap'],
-                [
-                    'transform',
-                    time === 0
-                        ? 'none'
-                        : time >= duration - step / 2
-                          ? 'translateX(-100%)'
-                          : 'translateX(-50%)',
-                ],
-            ]) {
-                span.style.setProperty(property, value);
-            }
-
-            lane.element.append(span);
         }
+
+        hideFrom(majors, major);
+        hideFrom(minors, small);
+        hideFrom(labels, major);
     }
 
     return {
@@ -127,7 +170,10 @@ export function timeline(options: TimelineOptions = {}): Plugin {
             lane.element.setAttribute('aria-hidden', 'true');
             lane.element.style.setProperty('color', color);
             lane.element.style.setProperty('overflow', 'hidden');
-            unsubscribe = frame.on('durationchange', () => rebuild());
+            unsubscribe = [
+                frame.on('durationchange', () => rebuild()),
+                frame.on('viewchange', () => rebuild()),
+            ];
             rebuild();
         },
 
@@ -136,7 +182,14 @@ export function timeline(options: TimelineOptions = {}): Plugin {
         },
 
         destroy(): void {
-            unsubscribe?.();
+            for (const stop of unsubscribe) {
+                stop();
+            }
+
+            unsubscribe = [];
+            majors.length = 0;
+            minors.length = 0;
+            labels.length = 0;
             lane?.remove();
             lane = null;
             host = null;

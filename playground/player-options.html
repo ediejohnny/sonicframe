@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Player options · SonicFrame</title>
+        <meta
+            name="description"
+            content="Every option of createPlayer(), its accessibility group and its decoding limits."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Player options</h1>
+                <p class="lede">
+                    Every option of <code>createPlayer(options)</code> from
+                    <code>sonicframe/player</code>. Your own options always win
+                    over the theme's.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>container</code></td>
+                                    <td>(required)</td>
+                                    <td>The element the player is added to.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>src</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        The sound's address; the player makes
+                                        its own <code>&lt;audio&gt;</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>preload</code></td>
+                                    <td><code>'metadata'</code></td>
+                                    <td>
+                                        <code>'none'</code> loads nothing until
+                                        play; <code>'auto'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>media</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        Your own audio or video element instead.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks</code></td>
+                                    <td>decoded</td>
+                                    <td>
+                                        Peaks or a loader, as for the frame.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>duration</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        The length, until the media knows its
+                                        own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>theme</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        A theme's name, or one from
+                                        <code>defineTheme</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>look</code></td>
+                                    <td>
+                                        see
+                                        <a
+                                            href="./layouts.html#every-look-option"
+                                            >Parts and layouts</a
+                                        >
+                                    </td>
+                                    <td>How the player is put together.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>palette</code></td>
+                                    <td>the theme's</td>
+                                    <td>
+                                        A name, <code>'auto'</code>,
+                                        <code>'default'</code> or your own
+                                        colors.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wave</code>, <code>bar</code></td>
+                                    <td><code>'bars'</code></td>
+                                    <td>How the sound is drawn.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>font</code></td>
+                                    <td>the look's</td>
+                                    <td>
+                                        A stack name, a
+                                        <code>font-family</code> list, or
+                                        <code
+                                            >{ family, src, stylesheet, fallback
+                                            }</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td>"Audio player"</td>
+                                    <td>The player's accessible name.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>volume</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Show the volume control.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>spectrogram</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        A spectrogram under the wave (the sound
+                                        is decoded once).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The
+                                        <a href="./zoom.html#options"
+                                            >zoom options</a
+                                        >, plus <code>buttons</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>minimap</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <code>true</code> or the
+                                        <a href="./minimap.html#options"
+                                            >minimap options</a
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>decode</code></td>
+                                    <td>see below</td>
+                                    <td>
+                                        How a sound is decoded for its peaks.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>slot</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        Your element for the
+                                        <code>slot</code> part.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>plugins</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Plugins on the wave.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y</code></td>
+                                    <td><code>{}</code></td>
+                                    <td>See below.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>frame</code></td>
+                                    <td><code>{}</code></td>
+                                    <td>
+                                        Any other frame option
+                                        (<code>lazy</code>, <code>colors</code>,
+                                        <code>stepSeconds</code>…).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Accessibility, <code>a11y</code></h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>lang</code></td>
+                                    <td><code>'en'</code></td>
+                                    <td>
+                                        <code>'pt'</code>,
+                                        <code>'pt-BR'</code>…, or
+                                        <code>'auto'</code>; also marks the
+                                        player with <code>lang</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>labels</code></td>
+                                    <td>the language's</td>
+                                    <td>
+                                        Your own names; see
+                                        <a
+                                            href="./announcements.html#your-own-words"
+                                            >Your own words</a
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>description</code></td>
+                                    <td>off</td>
+                                    <td>
+                                        <code>true</code>, or the
+                                        <a href="./words.html#options"
+                                            >wave in words options</a
+                                        >
+                                        plus <code>button</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>description.button</code></td>
+                                    <td>off</td>
+                                    <td>
+                                        A button that reads it aloud;
+                                        <code
+                                            >{ animation, animationType }</code
+                                        >
+                                        (off, <code>'pulse'</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom.announce</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Say the new view after a zoom.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>minimap.keys</code></td>
+                                    <td><code>false</code></td>
+                                    <td>The minimap as a keyboard slider.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Decoding, <code>decode</code></h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>peaks</code></td>
+                                    <td><code>1000</code></td>
+                                    <td>
+                                        Peaks a decoded sound gets (100 to
+                                        100,000).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaksPerSecond</code></td>
+                                    <td><code>100</code></td>
+                                    <td>
+                                        With zoom on, a long sound gets more (up
+                                        to 1,000,000).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSeconds</code></td>
+                                    <td>30 minutes</td>
+                                    <td>
+                                        Can only lower the decoder's ceiling; a
+                                        longer sound is read evenly through.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxBytes</code></td>
+                                    <td>50 MB</td>
+                                    <td>
+                                        Can only lower the download ceiling.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

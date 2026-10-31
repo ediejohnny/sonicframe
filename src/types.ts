@@ -1,12 +1,26 @@
 import type { KeyModifiers } from './core/keys';
+import type { ViewState } from './core/view';
+import type { ViewSource } from './core/zoom';
+
+/** Peaks with the duration they came with, as `readWaveform` and `loadWaveform` give them. */
+export type PeaksData = {
+    readonly peaks: readonly number[];
+    /**
+     * In seconds, used while neither the media nor the app gives one; anything but a number above
+     * zero is ignored.
+     */
+    readonly duration?: number | null;
+};
 
 /**
- * Where a frame gets its peaks: values from 0 to 1, the loudest point of each slice of the sound.
- * A function is called once, when the frame first comes near the screen (lazy loading).
+ * Where a frame gets its peaks: values from 0 to 1, the loudest point of each slice of the sound,
+ * alone or with their duration. A function is called once, when the frame first comes near the
+ * screen (lazy loading).
  */
 export type PeaksSource =
     | readonly number[]
-    | (() => Promise<readonly number[]>)
+    | PeaksData
+    | (() => Promise<readonly number[] | PeaksData>)
     | null;
 
 /** How the bars of a waveform look. Sizes are in CSS pixels. */
@@ -128,6 +142,8 @@ export type SonicFrameEvents = {
     resize: [geometry: FrameGeometry];
     /** A range being played reached its end or was abandoned. */
     rangeend: [];
+    /** The view moved (zoom on only), and what moved it. */
+    viewchange: [view: ViewState, source: ViewSource];
     /** Loading the peaks or drawing a plugin failed. */
     error: [error: unknown];
     destroy: [];
@@ -149,7 +165,7 @@ export type FrameGeometry = {
 
 /** A pointer on the wave, for a plugin: position as a ratio and seconds, and in CSS pixels. */
 export type WavePoint = {
-    /** 0..1 along the wave. */
+    /** 0..1 of the sound under the pointer (through the view). */
     ratio: number;
     /** In seconds, or null while the duration is unknown. */
     time: number | null;
@@ -191,6 +207,10 @@ export type PluginHost = {
     readonly media: HTMLMediaElement | null;
     /** The wave area's size and state, or null before the frame has pixels. */
     readonly geometry: FrameGeometry | null;
+    /** The part of the sound in view; always the whole sound while zoom is off. */
+    readonly view: ViewState;
+    /** Moves the view (ratios of the sound); does nothing while zoom is off. */
+    setView(start: number, end: number, source?: ViewSource): void;
     /** Overrides the bar heights with live values (e.g. a spectrum); null gives the peaks back. */
     setValues(values: readonly number[] | null): void;
     /** Resolves a CSS color (including `var(--name)`) against the frame's element. */
@@ -201,8 +221,11 @@ export type PluginHost = {
     addLane(side: 'above' | 'below', cssPixels: number): Lane;
     /** A layer over the canvas for text and tooltips (created once, shared by plugins). */
     overlay(): HTMLElement;
-    /** Moves to a position from 0 to 1 (the bound media too). */
-    seekTo(ratio: number): void;
+    /**
+     * Moves to a position from 0 to 1 (the bound media too). A seek a key asked for passes
+     * `'keyboard'`, so the view follows it like the frame's own keys.
+     */
+    seekTo(ratio: number, source?: SeekSource): void;
     /** Plays `start`..`end` seconds of the bound media, optionally looping. */
     playRange(start: number, end: number, options?: { loop?: boolean }): void;
     /** Forgets any range being played. */
@@ -231,8 +254,15 @@ export type PaintContext = {
     readonly duration: number | null;
     /** 0..1 under the mouse pointer, or null. */
     readonly hover: number | null;
-    /** The device-pixel x of a position from 0 to 1. */
+    /** The part of the sound in view. */
+    readonly view: ViewState;
+    /**
+     * The device-pixel x of a position of the sound from 0 to 1, through the view: a position out of
+     * view lands off the canvas.
+     */
     xAt(ratio: number): number;
+    /** The position of the sound (0..1) at a device-pixel x, through the view. */
+    ratioAt(x: number): number;
     /** Resolves a CSS color (including `var(--name)`) against the frame's element. */
     color(value: string): string;
 };

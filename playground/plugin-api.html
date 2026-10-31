@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Plugin API · SonicFrame</title>
+        <meta
+            name="description"
+            content="The types a SonicFrame plugin works with: Plugin, PluginHost, PaintContext and pointer events."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Plugin API</h1>
+                <p class="lede">
+                    The types a plugin works with, as TypeScript sees them. The
+                    API only ever gains members: a plugin written for an older
+                    version keeps working.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Plugin</h2>
+                    <div class="code">
+                        <pre><code>type Plugin = {
+    name: string;
+    layer?: 'under' | 'over'; // 'over' by default
+    setup?(host: PluginHost): void;
+    draw?(paint: PaintContext): void;
+    resize?(geometry: FrameGeometry): void;
+    pointerDown?(point: WavePoint): 'take' | 'drag' | void; // asked last-added first
+    pointerMove?(point: WavePoint): void;
+    pointerUp?(point: WavePoint): void;
+    pointerCancel?(): void;
+    pointerHover?(point: WavePoint | null): string | void; // a CSS cursor
+    keyDown?(key: string, modifiers: { ctrlKey?; altKey?; metaKey?; shiftKey? }): boolean;
+    valueNote?(time: number | null, ratio: number): string | void;
+    destroy?(): void;
+};</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>PaintContext</h2>
+                    <div class="code">
+                        <pre><code>type PaintContext = {
+    ctx: CanvasRenderingContext2D; // device pixels
+    width: number;
+    height: number;
+    pixelRatio: number;
+    progress: number; // 0..1
+    duration: number | null;
+    hover: number | null; // ratio under the pointer
+    view: ViewState; // { start, end, level, maxLevel }
+    xAt(ratio: number): number; // through the view
+    ratioAt(x: number): number;
+    color(value: string): string; // resolves var(--name, fallback)
+};</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>WavePoint</h2>
+                    <p>
+                        A press or hover, already in the sound's terms:
+                        <code>ratio</code> (through the view) and
+                        <code>time</code> (<code>null</code> while the length is
+                        unknown), the CSS pixel <code>x</code> and
+                        <code>y</code> in the wave box, its
+                        <code>width</code> and <code>height</code>, the
+                        <code>pointerType</code> (<code>'mouse'</code>,
+                        <code>'touch'</code> or <code>'pen'</code>) and
+                        <code>shiftKey</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>PluginHost</h2>
+                    <p>
+                        See
+                        <a href="./writing-plugins.html#what-host-gives"
+                            >what the host gives</a
+                        >
+                        for every member: the frame's state, repaints, lanes,
+                        the overlay, seeking, ranges, bar values, announcements
+                        and error reports.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

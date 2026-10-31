@@ -77,7 +77,7 @@ const SWATCHES = ['surface', 'wave', 'progress', 'marker'] as const;
 type Pick = { theme: ThemeName; palette: PaletteName };
 
 const audio = document.createElement('audio');
-audio.preload = 'metadata';
+audio.preload = 'none';
 document.body.append(audio);
 
 const gallery = byId('gallery');
@@ -88,7 +88,8 @@ const volumeBox = byId<HTMLInputElement>('volume');
 let players: Player[] = [];
 let set = 0;
 let sound: Sound | null = null;
-let picked: Pick = { theme: SETS[0][0], palette: 'light' };
+/** The player touched last; none until one is touched. */
+let picked: Pick | null = null;
 
 function chosenWave(): WaveName | undefined {
     return (waveSelect.value || undefined) as WaveName | undefined;
@@ -199,8 +200,8 @@ function build(): void {
         themeRow(theme, sound);
     }
 
-    if (!themes.includes(picked.theme)) {
-        picked = { theme: themes[0], palette: picked.palette };
+    if (picked !== null && !themes.includes(picked.theme)) {
+        picked = null;
     }
 
     showPick();
@@ -265,12 +266,20 @@ function tagCode(pick: Pick): string {
     ].join('\n');
 }
 
-/** Marks the picked player and shows its code. */
+/**
+ * Marks the picked player and shows its code in the bar and below the gallery; with none picked,
+ * both are hidden.
+ */
 function showPick(): void {
+    const pick = picked;
+    byId('pickbar').hidden = pick === null;
+    byId('picked').hidden = pick === null;
+
     for (const box of gallery.querySelectorAll<HTMLElement>('.cell')) {
         const on =
-            box.dataset.theme === picked.theme &&
-            box.dataset.palette === picked.palette;
+            pick !== null &&
+            box.dataset.theme === pick.theme &&
+            box.dataset.palette === pick.palette;
 
         if (on) {
             box.setAttribute('aria-current', 'true');
@@ -279,12 +288,27 @@ function showPick(): void {
         }
     }
 
-    const name = `The ${picked.theme} theme in the ${picked.palette} palette.`;
+    if (pick === null) {
+        return;
+    }
+
+    const name = `The ${pick.theme} theme in the ${pick.palette} palette.`;
     byId('picked-name').textContent = name;
     byId('pickbar-name').textContent = name;
-    byId('picked-js').textContent = jsCode(picked);
-    byId('picked-tag').textContent = tagCode(picked);
+    byId('picked-js').textContent = jsCode(pick);
+    byId('picked-tag').textContent = tagCode(pick);
 }
+
+/** Lets go of the picked player: its bar and code go away. */
+function unpick(): void {
+    if (picked !== null) {
+        picked = null;
+        showPick();
+    }
+}
+
+/** Where a press keeps the pick: a player, the bar, the code it shows, or the toolbar that changes that code. */
+const KEEPS_PICK = '.cell, .pickbar, .picked, .toolbar';
 
 function pickFrom(target: EventTarget | null): void {
     const box =
@@ -339,8 +363,25 @@ function setupToolbar(): void {
     });
     gallery.addEventListener('pointerdown', (event) => pickFrom(event.target));
     gallery.addEventListener('focusin', (event) => pickFrom(event.target));
-    copyOnClick(byId<HTMLButtonElement>('copy-js'), () => jsCode(picked));
-    copyOnClick(byId<HTMLButtonElement>('copy-tag'), () => tagCode(picked));
+    document.addEventListener('pointerdown', (event) => {
+        if (
+            !(event.target instanceof Element) ||
+            event.target.closest(KEEPS_PICK) === null
+        ) {
+            unpick();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            unpick();
+        }
+    });
+    copyOnClick(byId<HTMLButtonElement>('copy-js'), () =>
+        picked === null ? '' : jsCode(picked),
+    );
+    copyOnClick(byId<HTMLButtonElement>('copy-tag'), () =>
+        picked === null ? '' : tagCode(picked),
+    );
 }
 
 function use(next: Sound): void {

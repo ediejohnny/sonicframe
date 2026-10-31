@@ -7,6 +7,92 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-30
+
+### Added
+
+- Ready-made waveform files: `readWaveform` and `loadWaveform` read the audiowaveform formats (binary `.dat` and
+  JSON, versions 1 and 2, 8 or 16 bits, any channel or the loudest of all) and the simple peaks list, finding the
+  format in the content. A file with more points than `maxPeaks` is folded while it is read; one whose data does not
+  match its header is refused. Options: `maxPeaks`, `maxBytes`, `channel`, `normalize`, `shared` and `fetcher`.
+- `writeWaveform` writes the audiowaveform `.dat` or JSON (version 2) from decoded samples, in the browser or in Node.
+  The three are also on `sonicframe/analysis`.
+- `peaks` also takes `{ peaks, duration }` (what `loadWaveform` gives): the duration is used while neither the media
+  nor the app gives one. The frame's `peaksDuration` property.
+- The `<sonic-player>` tag reads its `peaks` address with `loadWaveform`, so it takes `.dat` files and their duration.
+- Zoom and scroll in the frame, off by default (`zoom: true` or `ZoomOptions`): `view`, `setView`, `zoomTo`,
+  `zoomBy`, `scrollTo` and the `viewchange` event (with what moved the view). Each way of moving it has its own
+  switch: zoom keys (`+`/`=`, `-`, `0`, or your own), the wheel with a modifier (Ctrl/⌘, Alt or none, and a
+  touchpad pinch), sideways scrolling, two fingers, following the playing position (by pages, or centered, which
+  falls back to pages with reduced motion; a scroll by the person holds it until the next seek or play), and
+  scrolling while dragging near an edge. A keyboard seek outside the view brings the view to it (`revealKeys`, on).
+  The bars of the view come from a pyramid of the peaks, so the cost follows the screen, and stay on the same piece
+  of sound while scrolling. The largest zoom is one peak per bar unless `max` says otherwise.
+- `a11y.zoom` on the frame: `announce` says the new view after a zoom by the keys, a button or two fingers, in
+  `words` of your own (English by default).
+- For plugins: `host.view`, `host.setView`, `paint.view`, `paint.ratioAt`, and `paint.xAt` through the view.
+  `host.seekTo(ratio, source)` takes an optional source: a seek a key asked for passes `'keyboard'`, so the view
+  follows it.
+- The plugins follow the view: regions (bands, grab zones and labels; `scrollIntoView` brings a region chosen by R
+  into view, off by default), markers (`markerSpans` takes an optional view; M brings the marker into view), the
+  silences' shade, and the timeline, which marks the part in view down to tenths of a second and reuses its
+  elements. The spectrogram shows its part of the picture; with `detail` (off by default) it computes a sharp
+  picture of the part in view once the view rests (`detailDelay`, `detailColumns`).
+
+- `minimap(options)`: a strip above or below the wave with the whole sound, the played part (`progress`) and a box
+  over the part in view, in the theme's colors (`--sonicframe-minimap-view` and `--sonicframe-minimap-edge`, which
+  fall back to the region and progress colors). Dragging the box and clicking beside it move the view, the wheel can
+  zoom (`controls.drag`, `controls.click`, `controls.wheel`); a press on it never seeks. `autoHide` takes no room at
+  the whole sound. Hidden from screen readers unless `a11y.keys` makes it a keyboard slider (arrows, Page Up/Down,
+  Home, End) with its own `a11y.label` and `a11y.words`; as a slider, a press on it gives it the focus. `gap` keeps
+  it apart from the wave (4 px), and `cursors` shows an open hand over the box, a closed one dragging it, a hand
+  beside it, and the arrow where a press does nothing.
+
+- The player takes `zoom` (the wave's zoom options plus `buttons`: zoom in, zoom out and back to the whole sound,
+  three new look parts `zoomIn`, `zoomOut` and `zoomReset`, placed by the look or at the end of the line, marked
+  `aria-disabled` at their limits so focus is never lost), `minimap` (its height and space from the look's new
+  `minimapHeight` and `minimapGap`, in rem; the player grows to fit it), `a11y.zoom.announce`, `a11y.minimap.keys`, and the `viewchange` event. Their words come in
+  English and Portuguese.
+- The player's `decode`: `peaks` (1000), `peaksPerSecond` (100, with zoom on, so zooming in shows detail), and
+  `maxSeconds` and `maxBytes`, which can only lower the decoder's ceilings.
+- The tag's `zoom` attribute (`zoom="wheel scroll pinch keys follow center edges buttons"`), `zoom-max`, `minimap`
+  (`above`, `autohide`, `wheel`), `a11y-zoom="announce"`, `a11y-minimap="keys"`, and the peaks file's
+  `peaks-channel`, `peaks-max` and `peaks-normalize`. The tag dispatches `sonicframe:viewchange`.
+- `loadWaveform` and `readWaveform` are on `sonicframe/player` too.
+- `snap` on `regions` and `skipSilences` (off by default): their edges on whole device pixels, a little crisper and
+  moved by less than half a pixel; without it they sit at fractions of a pixel, as before.
+- `cursors` on `regions`: the open hand over a region now turns into a closed one while it moves (`'grabbing'`) and
+  back after; each cursor can be changed. A plugin's mouse drag keeps that plugin's cursor while it lasts.
+- `narrow` in the player's look (22 rem; `0` turns it off): a narrower player with the wave in its line turns into a
+  voice note: the play button beside the wave and centered on it, the time under the wave on the left, and the
+  other controls on the right of the time, where only the ones that do not fit wrap. It is on by default and only
+  changes players narrower than that. The player gets `data-narrow` while it lasts. `narrowLine` and `narrowStart`
+  choose which parts stay on the line and which go under the wave on the left; `narrowGap` (0.5 rem) is the space
+  between the parts under the wave.
+- `preload` on the player and the tag: how much of `src` its own `<audio>` loads before play (`'metadata'`, as
+  before; `'none'`, so a page of many players fetches nothing until one plays; or `'auto'`).
+- `waveMin` in the look (8 rem): with zoom buttons on the line, the wave keeps at least this width and the buttons
+  wrap under it.
+
+### Fixed
+
+- A sound longer than the decoder's length ceiling is read evenly through, and the rate given back is now the rate of
+  the samples given back (it was the file's), so times computed from it stay right.
+- `exportClip` with `start`/`end` draws only that range across the clip, so the played part runs over the bars it
+  plays (it used to draw the whole sound under a progress bar of the range).
+- The plugins' shared overlay (`host.overlay()`) sits over the bars, as documented, and no longer over the lanes, so
+  a region's label no longer lands on a timeline placed above the wave.
+- On a 320 px screen the zoom buttons no longer crush the wave to a sliver beside them.
+
+### Changed
+
+- The tag's `peaks` file may now be up to 8 MB, and one with more than 20,000 values is folded instead of refused.
+- The README is short now, with an Accessibility section of its own; every detail moved to the docs site, which is
+  the package's homepage.
+- The package holds no web address but the SVG namespace (`http://www.w3.org/2000/svg`, a name the browser needs to
+  create the icons, never fetched); an example address left in a type comment is gone, and the build check now
+  fails on any other.
+
 ## [0.3.0] - 2026-10-29
 
 ### Added

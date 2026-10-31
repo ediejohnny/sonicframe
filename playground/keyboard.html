@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Keyboard · SonicFrame</title>
+        <meta
+            name="description"
+            content="Every key SonicFrame answers: the wave, zoom, markers, regions, the description and the minimap."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Keyboard</h1>
+                <p class="lede">
+                    Everything a pointer does, the keyboard does too. Keys work
+                    while the wave has focus, and never take a key held with
+                    Ctrl, Alt or ⌘, which belong to the browser and the page.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The wave</h2>
+                    <p>The keys of the WAI-ARIA slider pattern:</p>
+                    <ul class="keys">
+                        <li>
+                            <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd>
+                            <kbd>↓</kbd> step by <code>stepSeconds</code> (5
+                            seconds)
+                        </li>
+                        <li>
+                            <kbd>Page Up</kbd> <kbd>Page Down</kbd> step by
+                            <code>largeStepRatio</code> (a tenth of the sound)
+                        </li>
+                        <li>
+                            <kbd>Home</kbd> <kbd>End</kbd> go to the start and
+                            the end
+                        </li>
+                    </ul>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-plugins="markers regions"
+                    ></div>
+                    <p>
+                        Press <kbd>Tab</kbd> until the wave above is focused,
+                        and try the keys on this page.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Zoom</h2>
+                    <p>With <code>zoom: { keys: true }</code>:</p>
+                    <ul class="keys">
+                        <li>
+                            <kbd>+</kbd> (or <kbd>=</kbd>) zooms in,
+                            <kbd>-</kbd> zooms out, <kbd>0</kbd> shows the whole
+                            sound
+                        </li>
+                        <li>
+                            A key seek outside the view brings the view to it
+                            (<code>revealKeys</code>, on by default)
+                        </li>
+                    </ul>
+                    <p>
+                        <code>keys: { in: 'i', out: 'o', reset: false }</code>
+                        picks other keys or turns one off.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Markers</h2>
+                    <ul class="keys">
+                        <li>
+                            <kbd>M</kbd> goes to the next marker,
+                            <kbd>Shift</kbd> + <kbd>M</kbd> to the previous one
+                        </li>
+                        <li>
+                            Within <code>backGrace</code> seconds after a marker
+                            (1), <kbd>Shift</kbd> + <kbd>M</kbd> goes to the one
+                            before it, like a player's "previous track"
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Regions</h2>
+                    <ul class="keys">
+                        <li>
+                            <kbd>R</kbd> and <kbd>Shift</kbd> +
+                            <kbd>R</kbd> select the next and previous region
+                        </li>
+                        <li>
+                            <kbd>Enter</kbd> plays it, <kbd>L</kbd> loops it,
+                            <kbd>Delete</kbd> removes it
+                        </li>
+                        <li>
+                            <kbd>[</kbd> <kbd>]</kbd> move its start,
+                            <kbd>{</kbd> <kbd>}</kbd> move its end
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>The wave in words</h2>
+                    <p>With <code>description: { keys: true }</code>:</p>
+                    <ul class="keys">
+                        <li><kbd>D</kbd> says the description again</li>
+                        <li>
+                            <kbd>P</kbd> and <kbd>Shift</kbd> + <kbd>P</kbd> go
+                            to the next and previous part of sound, and say
+                            where ("Part 2 of 3, 24 seconds")
+                        </li>
+                        <li>
+                            <kbd>Escape</kbd> stops the browser's voice while it
+                            reads
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>The minimap and the volume</h2>
+                    <p>
+                        Both are sliders too. The minimap (with
+                        <code>a11y.minimap.keys</code>): arrows move a quarter
+                        of the view, Page Up and Page Down a whole view, Home
+                        and End go to the ends. The volume bar: arrows by
+                        <code>step</code> (5 %), Page Up and Page Down by a
+                        tenth, Home and End to silent and full.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Caps Lock changes nothing</h2>
+                    <p>
+                        The direction comes from <kbd>Shift</kbd>, never from
+                        the letter's case, so <kbd>M</kbd>, <kbd>R</kbd> and
+                        <kbd>P</kbd> work the same with Caps Lock on.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Frame options · SonicFrame</title>
+        <meta
+            name="description"
+            content="Every option of new SonicFrame(), with its default."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Frame options</h1>
+                <p class="lede">
+                    Every option of <code>new SonicFrame(options)</code>. Only
+                    <code>container</code> is required; a strange value falls
+                    back to its default.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>container</code></td>
+                                    <td>(required)</td>
+                                    <td>The element to draw in.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>media</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        An audio or video element to follow and
+                                        control.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>peaks</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        A list,
+                                        <code>{ peaks, duration }</code>, or a
+                                        function that loads either.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>duration</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        Seconds, used until the media knows its
+                                        own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>bar</code></td>
+                                    <td>
+                                        see
+                                        <a href="./drawings.html#the-bar-style"
+                                            >Drawings</a
+                                        >
+                                    </td>
+                                    <td>
+                                        <code
+                                            >{ width, gap, radius, minHeight,
+                                            align, curve }</code
+                                        >, CSS pixels.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wave</code></td>
+                                    <td><code>'bars'</code></td>
+                                    <td>
+                                        A drawing's name, or
+                                        <code
+                                            >{ style, lineWidth, glow, mirror,
+                                            smooth, knob }</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>colors</code></td>
+                                    <td>
+                                        see
+                                        <a href="./styling.html"
+                                            >Colors and CSS</a
+                                        >
+                                    </td>
+                                    <td>
+                                        <code
+                                            >{ wave, progress, hover, cursor,
+                                            waveHover, progressHover, knob
+                                            }</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>cursorWidth</code></td>
+                                    <td><code>2</code></td>
+                                    <td>
+                                        The cursor line's width, CSS pixels.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>interact</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Click, drag and keys seek;
+                                        <code>false</code> makes a picture
+                                        (<code>role="img"</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>label</code></td>
+                                    <td><code>'Audio position'</code></td>
+                                    <td>The accessible name.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>valueText</code></td>
+                                    <td><code>0:12 / 0:45</code></td>
+                                    <td>
+                                        <code
+                                            >(time, ratio, duration) =&gt;
+                                            string</code
+                                        >, the position in words.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>stepSeconds</code></td>
+                                    <td><code>5</code></td>
+                                    <td>
+                                        Seconds moved by an arrow key (5 % while
+                                        the length is unknown).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>largeStepRatio</code></td>
+                                    <td><code>0.1</code></td>
+                                    <td>
+                                        Part of the sound moved by Page Up /
+                                        Page Down.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>rewindOnEnd</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Show the start again when the media
+                                        ends.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>lazy</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Keep pixels and load peaks only near the
+                                        screen.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>animate</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Bars grow in when peaks arrive (never
+                                        with reduced motion).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zoom</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <code>true</code> or the
+                                        <a href="./zoom.html#options"
+                                            >zoom options</a
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y</code></td>
+                                    <td><code>{}</code></td>
+                                    <td>
+                                        <code>a11y.zoom.announce</code> and
+                                        <code>a11y.zoom.words</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>plugins</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>Plugins to start with.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

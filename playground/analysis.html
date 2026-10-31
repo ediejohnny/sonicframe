@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Analysis and clips · SonicFrame</title>
+        <meta
+            name="description"
+            content="Pure functions for levels, silences and mixdowns, and short video clips of the wave playing."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Analysis and clips</h1>
+                <p class="lede">
+                    Pure functions that measure a sound, safe in Node or a
+                    worker, and a recorder that turns a stretch of the wave into
+                    a short video to share.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Analysis</h2>
+                    <p>
+                        On <code>sonicframe/analysis</code> (and the main
+                        entry). None of them touch the DOM.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Function</th>
+                                    <th>What it gives</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code
+                                            >levels(samples, sampleRate,
+                                            …)</code
+                                        >
+                                    </td>
+                                    <td>Loudness over time.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>peakLevel(samples)</code></td>
+                                    <td>
+                                        The loudest sample, as
+                                        <code>{ peak, peakDb }</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code
+                                            >findSilences(samples, sampleRate,
+                                            options)</code
+                                        >
+                                    </td>
+                                    <td>Quiet stretches, from samples.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code
+                                            >silencesFromPeaks(peaks, duration,
+                                            options)</code
+                                        >
+                                    </td>
+                                    <td>Quiet stretches, from peaks.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>mixdown(source, max)</code></td>
+                                    <td>
+                                        One channel from many, at most
+                                        <code>max</code> samples.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>outlineSound</code>,
+                                        <code>describeSound</code>
+                                    </td>
+                                    <td>
+                                        The
+                                        <a href="./words.html">wave in words</a
+                                        >, ahead of time.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>writeWaveform</code></td>
+                                    <td>
+                                        An audiowaveform file; see
+                                        <a href="./waveform-files.html"
+                                            >Ready-made peaks</a
+                                        >.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Exporting a clip</h2>
+                    <p>
+                        <code>frame.exportClip(options)</code> records a short
+                        video of the wave playing, in the frame's drawing and
+                        colors, with the sound. It resolves with
+                        <code>{ blob, mimeType, duration }</code>.
+                    </p>
+                    <div class="code">
+                        <pre><code>button.addEventListener('click', async () =&gt; {
+    const clip = await frame.exportClip({ start: 8, end: 16, caption: 'The second verse' });
+    download(clip.blob, `verse.${clip.mimeType.includes('mp4') ? 'mp4' : 'webm'}`);
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>start</code>, <code>end</code>
+                                    </td>
+                                    <td>The stretch, in seconds.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>caption</code></td>
+                                    <td>A line of text in the video.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>width</code>, <code>height</code>,
+                                        <code>fps</code>
+                                    </td>
+                                    <td>
+                                        The video's size and frame rate
+                                        (capped).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>signal</code></td>
+                                    <td>
+                                        An <code>AbortSignal</code> that cancels
+                                        it, download included.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSourceSeconds</code></td>
+                                    <td>
+                                        The longest source decoded (600 by
+                                        default).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="callout warn">
+                        <strong>Call it from a click</strong>
+                        Browsers keep audio suspended until the person does
+                        something. A clip whose audio never starts is rejected
+                        instead of waiting forever.
+                    </div>
+                    <p>
+                        The source is decoded whole before the clip is cut,
+                        about 23 MB of memory per minute of stereo audio, so it
+                        is limited to <code>maxSourceSeconds</code>. Raise it
+                        where memory allows (<code>Infinity</code> lifts it), or
+                        pass a <code>Blob</code> or <code>AudioBuffer</code>
+                        holding just the part to clip.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

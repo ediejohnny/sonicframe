@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>A chat voice note · SonicFrame</title>
+        <meta
+            name="description"
+            content="Voice notes in a chat: a compact player, skipped silences, a caption, and a list that stays light."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>A chat voice note</h1>
+                <p class="lede">
+                    A message bubble with a voice note: a round play button, a
+                    slim wave, the length under it, a speed button, and the long
+                    pauses skipped. A chat can hold hundreds of them.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The bubble</h2>
+                    <div class="code">
+                        <pre><code>import { createPlayer } from 'sonicframe/player';
+
+createPlayer({
+    container: bubble,
+    src: note.url,
+    preload: 'none',
+    peaks: note.peaks, // saved with the message when it was recorded
+    theme: 'bubble',
+    label: `Voice note from ${note.author}, ${note.length}`,
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage narrow-demo"
+                        data-demo="player"
+                        data-options='{"theme":"bubble"}'
+                        data-label="Voice note from Avery"
+                    ></div>
+                    <p>
+                        The <code>bubble</code> theme already puts the time and
+                        the speed under the wave, like a messenger. On a phone,
+                        any player turns into this arrangement on its own; see
+                        <a href="./layouts.html#the-voice-note-on-phones"
+                            >the voice note on phones</a
+                        >.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Peaks when the note is recorded</h2>
+                    <p>
+                        The recorder already has the samples: compute 60 or so
+                        peaks and send them with the message, so the bubble
+                        draws at once and the audio loads only on play.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { peaksFromChannel, silencesFromPeaks } from 'sonicframe';
+
+const peaks = peaksFromChannel(recording.getChannelData(0), 60);
+const silences = silencesFromPeaks(peaks, recording.duration, { minDuration: 1.5 });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Skip the long pauses</h2>
+                    <div class="code">
+                        <pre><code>import { skipSilences } from 'sonicframe';
+
+createPlayer({
+    container: bubble,
+    src: note.url,
+    peaks: note.peaks,
+    theme: 'bubble',
+    plugins: [skipSilences({ silences: note.silences, dim: true })],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Hundreds in one chat</h2>
+                    <ul>
+                        <li>
+                            Each player keeps its pixels only near the screen
+                            and loads its peaks there.
+                        </li>
+                        <li>
+                            Every frame shares one resize observer, one
+                            visibility observer and one animation loop.
+                        </li>
+                        <li>
+                            Play buttons are exclusive: starting one note pauses
+                            the one playing.
+                        </li>
+                        <li>
+                            With <code>preload: 'none'</code>, nothing is
+                            downloaded until a note is played.
+                        </li>
+                    </ul>
+                    <p>
+                        See
+                        <a href="./performance.html">Many players on a page</a>
+                        for a live test.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

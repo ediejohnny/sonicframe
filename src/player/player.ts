@@ -6,7 +6,7 @@
  * from colors read back as numbers, never from a raw page value. Given only a sound address, the
  * player makes its own media element and decodes the peaks when it first comes near the screen. Its
  * words are English unless the app picks another language or its own labels; the description of the
- * sound in words is off until the app asks for it.
+ * sound in words, the zoom (with its buttons) and the minimap are off until the app asks for them.
  */
 
 import { hideFocusRing, showFocusRing } from '../controls/focus';
@@ -39,6 +39,7 @@ import {
 import { peaksFromChannel } from '../core/peaks';
 import { DEFAULT_WAVE, resolveWave } from '../core/shapes';
 import { cleanText } from '../core/text';
+import { resolveZoom, type ZoomOptions } from '../core/zoom';
 import {
     defineTheme,
     findTheme,
@@ -58,6 +59,7 @@ import { decodeAudio } from '../dom/decode';
 import { loadFont } from '../dom/fonts';
 import { prefersReducedMotion } from '../dom/motion';
 import { pageLanguage } from '../dom/page-language';
+import { observeSize } from '../dom/observe';
 import { canSpeak } from '../dom/speak';
 import {
     soundDescription,
@@ -69,6 +71,7 @@ import {
     type ColorStops,
     type DecodedAudio,
 } from '../plugins/spectrogram';
+import { minimap, minimapSize, type MinimapOptions } from '../plugins/minimap';
 import { SonicFrame, type SonicFrameOptions } from '../dom/frame';
 import { readColor } from '../dom/paint';
 
@@ -79,7 +82,15 @@ export type PlayerOptions = {
     media?: HTMLMediaElement | null;
     /** The sound's address, when the player should make its own media element. */
     src?: string;
-    /** Peaks, or a function that loads them; by default they are decoded from the sound. */
+    /**
+     * How much of the sound the player's own media loads before play: `'metadata'` (the default),
+     * `'none'` (nothing until play; give the duration with the peaks) or `'auto'`.
+     */
+    preload?: 'none' | 'metadata' | 'auto';
+    /**
+     * Peaks, alone or with their duration (`{ peaks, duration }`), or a function that loads them;
+     * by default they are decoded from the sound.
+     */
     peaks?: PeaksSource;
     /** Duration in seconds, used until the media knows its own. */
     duration?: number | null;
@@ -104,6 +115,16 @@ export type PlayerOptions = {
     volume?: boolean;
     /** Draw a spectrogram under the wave, in the palette's colors (one decode serves both). Off by default. */
     spectrogram?: boolean;
+    /**
+     * Zoom and scroll on the wave, off by default: the wave's zoom options, plus `buttons` (zoom in,
+     * zoom out and back to the whole sound, where the look places them or at the end of the line).
+     * Zoom works with or without the buttons, by the ways switched on.
+     */
+    zoom?: boolean | PlayerZoom;
+    /** A minimap strip under the wave, its height from the look (`minimapHeight`). Off by default. */
+    minimap?: boolean | MinimapOptions;
+    /** How a sound is decoded for its peaks, when none are given. */
+    decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
     slot?: HTMLElement | null;
     /** The player's accessible name (over the `player` label). */
@@ -140,6 +161,34 @@ export type PlayerA11y = {
      * `button`, a button that reads it with the browser's voice. Off by default.
      */
     description?: boolean | PlayerDescription;
+    /** `announce` says the new view after a zoom by the keys, the buttons or two fingers. Off by default. */
+    zoom?: { announce?: boolean };
+    /**
+     * `keys` makes the minimap a keyboard slider of the part in view, named in the player's language.
+     * Off by default: the minimap is hidden from screen readers.
+     */
+    minimap?: { keys?: boolean };
+};
+
+/** The player's zoom: the wave's zoom options, plus its buttons. */
+export type PlayerZoom = ZoomOptions & {
+    /** The zoom in, zoom out and whole-sound buttons. Off by default. */
+    buttons?: boolean;
+};
+
+/** How the player decodes a sound for its peaks. */
+export type PlayerDecode = {
+    /** How many peaks: 1000, from 100 to 100 000. */
+    peaks?: number;
+    /**
+     * With zoom on, peaks per second of sound, so zooming in shows detail: 100, from 1 to 1000. The
+     * count never falls below `peaks`, nor rises past 1 000 000.
+     */
+    peaksPerSecond?: number;
+    /** The longest sound decoded, in seconds; a longer one is read evenly through. Only lowers 1800. */
+    maxSeconds?: number;
+    /** The largest file decoded, in bytes. Only lowers 52 428 800. */
+    maxBytes?: number;
 };
 
 /** The description on a player: the plugin's options, plus a button that reads it aloud. */
@@ -183,8 +232,78 @@ function animationOf(settings: PlayerListenButton): ButtonAnimation | null {
     return type === 'fade' ? 'fade' : 'pulse';
 }
 
-/** How many peaks are decoded from a sound. */
+/** How many peaks are decoded from a sound, unless the app says otherwise. */
 const PEAKS = 1000;
+
+/** Peaks per second of sound decoded with zoom on, unless the app says otherwise. */
+const PEAKS_PER_SECOND = 100;
+
+/** The most peaks decoded from one sound. */
+const MAX_DECODED_PEAKS = 1_000_000;
+
+/** The zoom buttons: their class name and icon (on the 24 × 24 grid of the play icon). */
+const ZOOM_BUTTONS = {
+    zoomIn: { name: 'zoom-in', icon: 'M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z' },
+    zoomOut: { name: 'zoom-out', icon: 'M5 11h14v2H5z' },
+    zoomReset: {
+        name: 'zoom-reset',
+        icon: 'M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z',
+    },
+} as const;
+
+/** The zoom buttons the player adds at the end of the line when the look places none. */
+const ZOOM_PARTS: readonly Part[] = ['zoomOut', 'zoomReset', 'zoomIn'];
+
+/** A whole number from `min` to `max`; anything that is not a finite number is `fallback`. */
+function count(
+    value: unknown,
+    fallback: number,
+    min: number,
+    max: number,
+): number {
+    return typeof value === 'number' && Number.isFinite(value)
+        ? Math.min(max, Math.max(min, Math.round(value)))
+        : fallback;
+}
+
+/** CSS pixels in `rem` of the page's root text size. */
+function remPixels(rem: number): number {
+    const root = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+    );
+
+    return rem * (root > 0 ? root : 16);
+}
+
+/**
+ * Where a piece of the main line goes in a narrow player: it stays on the line (the wave, and what
+ * 
+arrowLine names), goes under the wave on the left (what 
+arrowStart names) or on the right
+ * (everything else), or is left out (the look's spacers).
+ */
+type Place = 'line' | 'start' | 'end' | 'spacer';
+
+function placeOf(part: Part, look: PlayerLook): Place {
+    if (part === 'wave' || look.narrowLine.includes(part)) {
+        return 'line';
+    }
+
+    if (part === 'spacer') {
+        return 'spacer';
+    }
+
+    return look.narrowStart.includes(part) ? 'start' : 'end';
+}
+
+/** The built main line, kept so a narrow player can move its pieces without building again. */
+type Layout = {
+    line: HTMLElement;
+    box: HTMLElement;
+    pieces: { place: Place; nodes: ChildNode[] }[];
+    under: HTMLElement | null;
+    narrow: boolean;
+};
 
 /** The longest a palette color may be. */
 const MAX_COLOR = 64;
@@ -225,6 +344,7 @@ const FORWARDED = [
     'peakschange',
     'resize',
     'rangeend',
+    'viewchange',
     'error',
 ] as const;
 
@@ -301,6 +421,10 @@ export class Player {
     private readonly words: PlayerWords;
     private times: [HTMLElement, PlayerLook['time']][] = [];
     private partCleanups: (() => void)[] = [];
+    private layout: Layout | null = null;
+    /** The player's width in CSS pixels, once measured. */
+    private width: number | null = null;
+    private readonly stopSize: () => void;
     private peaks: readonly number[] | null = null;
     private decoding: Promise<DecodedAudio> | null = null;
     private stopScheme: (() => void) | null = null;
@@ -352,6 +476,10 @@ export class Player {
         this.build();
         this.applyPalette();
         this.applyFont();
+        this.stopSize = observeSize(this.element, (size) => {
+            this.width = size.width / size.pixelRatio;
+            this.arrange();
+        });
     }
 
     /** The wave (a `SonicFrame`). */
@@ -459,6 +587,7 @@ export class Player {
         this.destroyed = true;
         this.abort.abort();
         this.stopScheme?.();
+        this.stopSize();
         this.teardown();
 
         if (this.ownMedia && this.media !== null) {
@@ -515,34 +644,74 @@ export class Player {
 
     private makeMedia(): HTMLMediaElement {
         const audio = document.createElement('audio');
-        audio.preload = 'metadata';
+        const preload = this.options.preload;
+        audio.preload =
+            preload === 'none' || preload === 'auto' ? preload : 'metadata';
         audio.setAttribute('src', this.options.src ?? '');
 
         return audio;
     }
 
-    /** The parts the volume option allows: placed by the look, or at the end of the line. */
-    private visibleLine(): Part[] {
-        const line = this.look.line;
+    /** Whether the zoom buttons are on (zoom on, with `buttons`). */
+    private zoomButtons(): boolean {
+        const zoom = this.options.zoom;
 
-        if (!this.showVolume) {
-            return line.filter((part) => part !== 'volume');
+        return typeof zoom === 'object' && zoom.buttons === true;
+    }
+
+    /** A part the options allow: the volume and the zoom buttons only when they are on. */
+    private allowed(part: Part): boolean {
+        if (part === 'volume') {
+            return this.showVolume;
         }
 
-        return line.includes('volume') || this.look.meta.includes('volume')
-            ? line
-            : [...line, 'volume'];
+        return ZOOM_PARTS.includes(part) ? this.zoomButtons() : true;
+    }
+
+    /**
+     * The parts the options allow: placed by the look, or at the end of the line (the volume, then
+     * the zoom buttons) when the look places none of them.
+     */
+    private visibleLine(): Part[] {
+        const { line, meta } = this.look;
+        const placed = (part: Part): boolean =>
+            line.includes(part) || meta.includes(part);
+        const extra: Part[] = [];
+
+        if (this.showVolume && !placed('volume')) {
+            extra.push('volume');
+        }
+
+        if (this.zoomButtons() && !ZOOM_PARTS.some(placed)) {
+            extra.push(...ZOOM_PARTS);
+        }
+
+        return [...line.filter((part) => this.allowed(part)), ...extra];
+    }
+
+    /** Whether a zoom button shares the main line with a wave beside it. */
+    private zoomOnLine(): boolean {
+        const line = this.visibleLine();
+
+        return (
+            this.look.wavePlace !== 'top' &&
+            line.includes('wave') &&
+            ZOOM_PARTS.some((part) => line.includes(part))
+        );
     }
 
     private visibleMeta(): Part[] {
-        return this.showVolume
-            ? this.look.meta
-            : this.look.meta.filter((part) => part !== 'volume');
+        return this.look.meta.filter((part) => this.allowed(part));
     }
 
     private peaksSource(): PeaksSource {
         if (this.options.peaks !== undefined) {
-            return this.frameRef?.peaks ?? this.options.peaks;
+            const frame = this.frameRef;
+
+            // A new build keeps what the old frame already has, with the duration it came with.
+            return frame?.peaks
+                ? { peaks: frame.peaks, duration: frame.peaksDuration }
+                : this.options.peaks;
         }
 
         if (this.peaks !== null) {
@@ -557,11 +726,33 @@ export class Player {
         }
 
         return async () => {
-            const { samples } = await this.decoded();
-            this.peaks = peaksFromChannel(samples, PEAKS);
+            const { samples, duration } = await this.decoded();
+            this.peaks = peaksFromChannel(samples, this.peakCount(duration));
 
             return this.peaks;
         };
+    }
+
+    /** How many peaks to decode: `decode.peaks`, or per second of sound with zoom on (never fewer). */
+    private peakCount(duration: number | undefined): number {
+        const decode = this.options.decode ?? {};
+        const base = count(decode.peaks, PEAKS, 100, 100_000);
+
+        if (!this.options.zoom || duration === undefined || !(duration > 0)) {
+            return base;
+        }
+
+        const perSecond = count(
+            decode.peaksPerSecond,
+            PEAKS_PER_SECOND,
+            1,
+            1000,
+        );
+
+        return Math.min(
+            MAX_DECODED_PEAKS,
+            Math.max(base, Math.round(duration * perSecond)),
+        );
     }
 
     /**
@@ -576,7 +767,11 @@ export class Player {
                 (media ? media.currentSrc || media.src : '');
 
             this.decoding = address
-                ? decodeAudio(address, { signal: this.abort.signal })
+                ? decodeAudio(address, {
+                      signal: this.abort.signal,
+                      maxSeconds: this.options.decode?.maxSeconds,
+                      maxBytes: this.options.decode?.maxBytes,
+                  })
                 : Promise.reject(
                       new Error('sonicframe: no sound to read peaks from'),
                   );
@@ -620,6 +815,27 @@ export class Player {
             );
         }
 
+        const own = this.minimapOptions();
+
+        if (own !== null) {
+            const words = this.words;
+            plugins.push(
+                minimap({
+                    ...own,
+                    a11y: {
+                        label: words.labels.minimap,
+                        words: {
+                            value: (from, to, total) =>
+                                words.say('minimapValue', { from, to, total }),
+                        },
+                        ...own.a11y,
+                        keys:
+                            this.options.a11y?.minimap?.keys ?? own.a11y?.keys,
+                    },
+                }),
+            );
+        }
+
         const settings = this.descriptionSettings();
 
         if (settings !== null) {
@@ -640,11 +856,45 @@ export class Player {
         return plugins;
     }
 
+    /** The minimap's options: the look's height and space, then the app's own. */
+    private minimapOptions(): MinimapOptions | null {
+        const strip = this.options.minimap;
+
+        if (!strip) {
+            return null;
+        }
+
+        return {
+            height: remPixels(this.look.minimapHeight),
+            gap: remPixels(this.look.minimapGap),
+            ...(strip === true ? {} : strip),
+        };
+    }
+
+    /**
+     * The wave box's height: the wave, plus the minimap's room so the strip never takes from the
+     * wave. A strip that hides itself at the whole sound adds none: it takes from the wave while it
+     * shows.
+     */
+    private boxHeight(): string {
+        const strip = this.minimapOptions();
+        const wave = `${this.look.waveHeight}rem`;
+
+        if (strip === null || strip.autoHide === true) {
+            return wave;
+        }
+
+        const { height, gap } = minimapSize(strip);
+
+        return `calc(${wave} + ${height + gap}px)`;
+    }
+
     private build(): void {
         const peaks = this.peaksSource();
         this.teardown();
 
         const look = this.look;
+        const roomy = this.zoomOnLine();
         const column = document.createElement('div');
         const box = document.createElement('div');
         column.append(box);
@@ -653,18 +903,39 @@ export class Player {
             ['flex-direction', 'column'],
             ['gap', '0.25rem'],
             ['flex', '1 1 auto'],
-            ['min-width', '0'],
+            ['min-width', roomy ? `${look.waveMin}rem` : '0'],
         ]);
         css(box, [
             ['position', 'relative'],
-            ['height', `${look.waveHeight}rem`],
+            ['height', this.boxHeight()],
             ['min-width', '0'],
         ]);
 
+        const words = this.words;
+        const frameA11y = this.options.frame?.a11y;
         const frame = new SonicFrame({
             label: this.words.labels.position,
             valueText: this.words.valueText,
             ...this.options.frame,
+            zoom: this.options.zoom ?? this.options.frame?.zoom,
+            a11y: {
+                ...frameA11y,
+                zoom: {
+                    ...frameA11y?.zoom,
+                    announce:
+                        this.options.a11y?.zoom?.announce ??
+                        frameA11y?.zoom?.announce,
+                    words: {
+                        view: (level, from, to) =>
+                            words.say('zoomView', {
+                                level: words.number(level),
+                                from,
+                                to,
+                            }),
+                        ...frameA11y?.zoom?.words,
+                    },
+                },
+            },
             container: box,
             media: this.media,
             peaks,
@@ -688,11 +959,13 @@ export class Player {
         }
 
         // Beside an inline wave the wave gives up the room; controls on their own line wrap instead
-        // of spilling out of a narrow player.
+        // of spilling out of a narrow player. With zoom buttons on the line, the wave keeps its
+        // least width and the line wraps, so the buttons go under it rather than crush it.
         const line = document.createElement('div');
+        const wrap = look.wavePlace === 'top' || roomy ? 'wrap' : 'nowrap';
         css(line, [
             ['display', 'flex'],
-            ['flex-wrap', look.wavePlace === 'top' ? 'wrap' : 'nowrap'],
+            ['flex-wrap', wrap],
             ['align-items', 'center'],
             ['gap', `${look.gap}rem`],
             ['min-width', '0'],
@@ -704,15 +977,27 @@ export class Player {
             this.element.prepend(line);
         }
 
+        const pieces: Layout['pieces'] = [];
+
         for (const part of this.visibleLine()) {
+            const before = line.childNodes.length;
             this.addPart(part, line, column);
+            pieces.push({
+                place: placeOf(part, look),
+                nodes: [...line.childNodes].slice(before),
+            });
         }
 
         const listen = this.listenButton();
 
         if (listen !== null && canSpeak()) {
-            line.append(this.listenPart(listen));
+            const node = this.listenPart(listen);
+            line.append(node);
+            pieces.push({ place: 'end', nodes: [node] });
         }
+
+        this.layout = { line, box, pieces, under: null, narrow: false };
+        this.element.removeAttribute('data-narrow');
 
         const meta = this.visibleMeta();
 
@@ -740,6 +1025,170 @@ export class Player {
         );
         this.showTime();
         this.finish();
+        this.arrange();
+    }
+
+    /**
+     * A narrow player (under the look's `narrow` width, with the wave in its line) turns into a voice
+     * note: the wave and the parts `narrowLine` names keep the line, the parts `narrowStart` names go
+     * under the wave on the left and every other part under it on the right. The pieces built are
+     * moved, never built again, so the wave and its state stay; a moved control that had the focus
+     * gets it back.
+     */
+    private arrange(): void {
+        const layout = this.layout;
+
+        if (layout === null) {
+            return;
+        }
+
+        const { narrow: width, wavePlace } = this.look;
+        const narrow =
+            wavePlace === 'inline' &&
+            width > 0 &&
+            this.width !== null &&
+            this.width < remPixels(width);
+
+        if (narrow === layout.narrow) {
+            return;
+        }
+
+        const focused = document.activeElement;
+        layout.narrow = narrow;
+        this.element.toggleAttribute('data-narrow', narrow);
+
+        if (narrow) {
+            // The controls keep to the right of the time and take the room left there; only the ones
+            // that do not fit wrap, and the whole group goes under the time when not even one fits.
+            const gap = `${this.look.narrowGap}rem`;
+            const under = document.createElement('div');
+            const controls = document.createElement('div');
+            under.className = 'sonicframe-under';
+            controls.className = 'sonicframe-under-controls';
+            css(under, [
+                ['display', 'flex'],
+                ['flex-wrap', 'wrap'],
+                ['align-items', 'center'],
+                ['gap', gap],
+                ['min-width', '0'],
+            ]);
+            css(controls, [
+                ['display', 'flex'],
+                ['flex-wrap', 'wrap'],
+                ['justify-content', 'flex-end'],
+                ['align-items', 'center'],
+                ['gap', gap],
+                ['flex', '1 1 0px'],
+                ['min-width', 'min-content'],
+            ]);
+            const nodes = (place: Place): ChildNode[] =>
+                layout.pieces
+                    .filter((piece) => piece.place === place)
+                    .flatMap((piece) => piece.nodes);
+
+            for (const node of nodes('spacer')) {
+                node.remove();
+            }
+
+            controls.append(...nodes('end'));
+            under.append(...nodes('start'), controls);
+            layout.box.after(under);
+            layout.under = under;
+        } else {
+            layout.under?.remove();
+            layout.under = null;
+            // The pieces that stayed keep their order; each moved one goes back after the piece before it.
+            let previous: ChildNode | null = null;
+
+            for (const { place, nodes } of layout.pieces) {
+                for (const node of nodes) {
+                    if (place !== 'line') {
+                        if (previous === null) {
+                            layout.line.prepend(node);
+                        } else {
+                            previous.after(node);
+                        }
+                    }
+
+                    previous = node;
+                }
+            }
+        }
+
+        this.placeVoiceNote(layout, narrow);
+
+        if (
+            focused instanceof HTMLElement &&
+            focused !== document.activeElement &&
+            this.element.contains(focused)
+        ) {
+            focused.focus({ preventScroll: true });
+        }
+    }
+
+    /**
+     * The voice note's line is a grid: its first row holds the line's parts and the wave, each one
+     * centered on the wave, and the rows under the wave keep to the wave's column. Outside the voice
+     * note the line is the flexible row it was built as.
+     */
+    private placeVoiceNote(layout: Layout, narrow: boolean): void {
+        const { line, box } = layout;
+        const column = box.parentElement as HTMLElement;
+        const parts = [...line.children] as HTMLElement[];
+        const below = [...column.children].filter(
+            (row) => row !== box,
+        ) as HTMLElement[];
+        const placed = [...parts, box, ...below];
+
+        if (!narrow) {
+            css(line, [
+                ['display', 'flex'],
+                ['gap', `${this.look.gap}rem`],
+            ]);
+            css(column, [['display', 'flex']]);
+            line.style.removeProperty('grid-template-columns');
+
+            for (const element of placed) {
+                element.style.removeProperty('grid-row');
+                element.style.removeProperty('grid-column');
+            }
+
+            return;
+        }
+
+        const wave = `${parts.indexOf(column) + 1}`;
+        css(line, [
+            ['display', 'grid'],
+            [
+                'grid-template-columns',
+                parts
+                    .map((part) =>
+                        part === column ? 'minmax(0, 1fr)' : 'auto',
+                    )
+                    .join(' '),
+            ],
+            ['column-gap', `${this.look.gap}rem`],
+            ['row-gap', '0.25rem'],
+        ]);
+        css(column, [['display', 'contents']]);
+        parts.forEach((part, index) => {
+            if (part !== column) {
+                css(part, [
+                    ['grid-row', '1'],
+                    ['grid-column', `${index + 1}`],
+                ]);
+            }
+        });
+        css(box, [
+            ['grid-row', '1'],
+            ['grid-column', wave],
+        ]);
+        below.forEach((row, index) =>
+            css(row, [
+                ['grid-row', `${index + 2}`],
+                ['grid-column', wave],
+            ]),
+        );
     }
 
     private teardown(): void {
@@ -749,6 +1198,7 @@ export class Player {
 
         this.partCleanups = [];
         this.times = [];
+        this.layout = null;
         this.buttonRef?.destroy();
         this.volumeRef?.destroy();
         this.frameRef?.destroy();
@@ -817,6 +1267,11 @@ export class Player {
                         volume: this.words.labels.volume,
                     },
                 });
+                break;
+            case 'zoomIn':
+            case 'zoomOut':
+            case 'zoomReset':
+                target.append(this.zoomPart(part));
                 break;
             case 'slot':
                 if (this.options.slot) {
@@ -997,6 +1452,74 @@ export class Player {
             const target = now + (direction === 'back' ? -seconds : seconds);
             frame.seekTo(Math.min(1, Math.max(0, target / duration)));
         });
+
+        return button;
+    }
+
+    /**
+     * A zoom button. At its limit (the largest zoom, or the whole sound) it is marked `aria-disabled`
+     * and does nothing, but keeps its place in the tab order, so focus is never lost under it.
+     */
+    private zoomPart(
+        part: 'zoomIn' | 'zoomOut' | 'zoomReset',
+    ): HTMLButtonElement {
+        const { name, icon } = ZOOM_BUTTONS[part];
+        const button = this.iconButton(
+            `sonicframe-${name}`,
+            icon,
+            this.words.labels[part],
+        );
+        const step = resolveZoom(this.options.zoom)?.step ?? 2;
+        const atLimit = (): boolean => {
+            const view = this.frameRef?.view;
+
+            if (view === undefined) {
+                return true;
+            }
+
+            return part === 'zoomIn'
+                ? view.level >= view.maxLevel - 1e-9
+                : view.level <= 1;
+        };
+        const show = (): void => {
+            const limit = atLimit();
+            button.setAttribute('aria-disabled', String(limit));
+            css(button, [
+                ['opacity', limit ? '0.5' : '1'],
+                ['cursor', limit ? 'default' : 'pointer'],
+            ]);
+        };
+
+        button.addEventListener('click', () => {
+            const frame = this.frameRef;
+
+            if (frame === null || atLimit()) {
+                return;
+            }
+
+            if (part === 'zoomReset') {
+                frame.setView(0, 1, 'button');
+            } else {
+                frame.zoomBy(
+                    part === 'zoomIn' ? step : 1 / step,
+                    undefined,
+                    'button',
+                );
+            }
+        });
+
+        const frame = this.frameRef;
+
+        if (frame !== null) {
+            // The largest zoom moves with the peaks and the size, not only with the view.
+            this.partCleanups.push(
+                frame.on('viewchange', show),
+                frame.on('peakschange', show),
+                frame.on('resize', show),
+            );
+        }
+
+        show();
 
         return button;
     }

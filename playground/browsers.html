@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Browser support · SonicFrame</title>
+        <meta
+            name="description"
+            content="Which browsers run SonicFrame, and what falls back where a browser lacks something."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Browser support</h1>
+                <p class="lede">
+                    Current Chrome, Edge, Firefox and Safari, on desktops and
+                    phones. Where a browser lacks a feature, SonicFrame falls
+                    back on its own; nothing needs a polyfill.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>What it needs</h2>
+                    <ul>
+                        <li>ES2022 modules (every current browser).</li>
+                        <li>
+                            A 2D canvas, <code>ResizeObserver</code> and
+                            <code>IntersectionObserver</code>.
+                        </li>
+                        <li>
+                            Pointer events, for the mouse, pen and touch alike.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Fallbacks</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Where the browser lacks</th>
+                                    <th>SonicFrame</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>roundRect</code> on the canvas
+                                    </td>
+                                    <td>draws rounded bars with arcs.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        sizes in device pixels
+                                        (<code>device-pixel-content-box</code>)
+                                    </td>
+                                    <td>
+                                        multiplies CSS pixels by the screen
+                                        density, and redraws when the window
+                                        moves to another screen.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>IntersectionObserver</code></td>
+                                    <td>
+                                        treats every frame as on screen (no lazy
+                                        loading).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>a settable volume (iOS)</td>
+                                    <td>
+                                        shows only the mute button of the volume
+                                        control.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        a local voice for
+                                        <code>speechSynthesis</code>
+                                    </td>
+                                    <td>
+                                        says so through the live region; the
+                                        screen reader still reads the
+                                        description.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Optional features</h2>
+                    <ul>
+                        <li>
+                            <strong>Live frequency</strong> and
+                            <strong>clip export</strong> need Web Audio; clips
+                            also need <code>MediaRecorder</code>. Without them,
+                            these plugins report an <code>error</code> and the
+                            rest keeps working.
+                        </li>
+                        <li>
+                            <strong>Reduced motion</strong> is read from
+                            <code>prefers-reduced-motion</code>: no grow-in, no
+                            animated buttons, and the zoom's centered follow
+                            turns a page at a time.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Servers and workers</h2>
+                    <p>
+                        <code>sonicframe/analysis</code> touches no DOM, so it
+                        runs in Node 18 and newer, Deno, Bun and web workers.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

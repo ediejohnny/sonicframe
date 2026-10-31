@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { barMetrics, layoutBars } from '../src/core/layout';
+import { barMetrics, barWindow, layoutBars } from '../src/core/layout';
 import {
     DEFAULT_WAVE,
     knobSpot,
@@ -184,6 +184,113 @@ describe('waveShape', () => {
         const ys = drawn.lines[0].points.filter((_, i) => i % 2 === 1);
 
         expect(new Set(ys)).toEqual(new Set([20]));
+    });
+
+    it('keeps the scope swinging up on the even bars of the whole row while the view scrolls', () => {
+        // At 4× over 300 px, the row has many bars; two scroll positions share some of them.
+        const swings = (start: number): Map<number, boolean> => {
+            const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
+            const drawn = waveShape(
+                Array.from({ length: grid.count }, () => 1),
+                300,
+                40,
+                BAR,
+                { ...DEFAULT_WAVE, style: 'scope' },
+                1,
+                grid,
+            );
+            const ys = drawn.lines[0].points.filter((_, i) => i % 2 === 1);
+
+            // The trace starts and ends on the middle line; between them, one point per bar.
+            return new Map(
+                ys.slice(1, -1).map((y, i) => [grid.first + i, y < 20]),
+            );
+        };
+
+        for (const [index, up] of swings(0.3)) {
+            expect(up).toBe(index % 2 === 0);
+        }
+
+        for (const [index, up] of swings(0.31)) {
+            expect(up).toBe(index % 2 === 0);
+        }
+    });
+
+    it('keeps each pulse beat on the same piece of sound while the view scrolls', () => {
+        const beats = (start: number): number[] => {
+            const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
+            const drawn = waveShape(
+                Array.from({ length: grid.count }, () => 1),
+                300,
+                40,
+                BAR,
+                { ...DEFAULT_WAVE, style: 'pulse' },
+                1,
+                grid,
+            );
+            const points = drawn.lines[0].points;
+            const tops: number[] = [];
+
+            // Each beat's top is its lowest y; its x, on the whole row, is x + the window's offset.
+            for (let i = 1; i < points.length; i += 2) {
+                if (points[i] < 20 - 1) {
+                    tops.push(Math.round((points[i - 1] + grid.offset) * 1000));
+                }
+            }
+
+            return tops;
+        };
+        const one = beats(0.3);
+        const two = new Set(beats(0.305));
+        const shared = one.filter((x) => two.has(x));
+
+        expect(shared.length).toBeGreaterThan(one.length / 2);
+    });
+
+    it('puts each pulse beat in the middle of its group of the whole row, even the one cut by the edge', () => {
+        for (const start of [0.3, 0.3013, 0.62]) {
+            const grid = barWindow(300, { start, end: start + 0.25 }, BAR, 1);
+            const slot = grid.virtualWidth / grid.total;
+            const group = Math.max(1, Math.round(12 / slot));
+            const points = waveShape(
+                Array.from({ length: grid.count }, () => 1),
+                300,
+                40,
+                BAR,
+                { ...DEFAULT_WAVE, style: 'pulse' },
+                1,
+                grid,
+            ).lines[0].points;
+
+            for (let i = 1; i < points.length; i += 2) {
+                if (points[i] < 19) {
+                    // The top sits half a group past a whole multiple of groups along the row.
+                    const groups =
+                        ((points[i - 1] + grid.offset) / slot - group / 2) /
+                        group;
+
+                    expect(groups).toBeCloseTo(Math.round(groups), 6);
+                }
+            }
+        }
+    });
+
+    it('lays the bars of a window exactly as the bar layout does', () => {
+        const grid = barWindow(300, { start: 0.4, end: 0.6 }, BAR, 1.5);
+        const values = wave(grid.count);
+
+        expect(
+            waveShape(
+                values,
+                300,
+                40,
+                BAR,
+                { ...DEFAULT_WAVE, style: 'bars' },
+                1.5,
+                grid,
+            ).rects,
+        ).toEqual(layoutBars(values, 300, 40, BAR, 1.5, grid));
+        expect(grid.first).toBeGreaterThan(0);
     });
 
     it('caps the blocks and dots on a huge frame', () => {

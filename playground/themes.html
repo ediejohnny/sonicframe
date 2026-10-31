@@ -2,45 +2,14 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>SonicFrame themes</title>
+        <title>Theme gallery · SonicFrame</title>
         <meta
             name="description"
             content="Every SonicFrame player theme in every palette, with the code for each."
         />
-        <link rel="icon" type="image/svg+xml" href="../assets/logo.svg" />
-        <link rel="stylesheet" href="./site.css" />
     </head>
     <body>
-        <header class="top">
-            <div class="wrap">
-                <a class="brand" href="./">
-                    <img src="../assets/logo.svg" alt="" />
-                    SonicFrame
-                    <span class="version" data-version></span>
-                </a>
-                <nav class="nav" aria-label="Main">
-                    <a href="./#use">Install</a>
-                    <a href="./#drawings">Drawings</a>
-                    <a href="./themes.html" aria-current="page">Themes</a>
-                    <a href="./#plugins">Plugins</a>
-                    <a href="https://github.com/ediejohnny/sonicframe"
-                        >GitHub</a
-                    >
-                    <a href="https://www.npmjs.com/package/sonicframe">npm</a>
-                    <button
-                        id="scheme"
-                        class="button small"
-                        type="button"
-                        aria-pressed="false"
-                    >
-                        Dark
-                    </button>
-                </nav>
-            </div>
-        </header>
-
-        <main class="wrap">
+        <main class="content gallery-page">
             <section class="gallery-head" aria-labelledby="title">
                 <h1 id="title">Themes</h1>
                 <p class="lede">
@@ -84,7 +53,7 @@
 
             <div id="gallery" class="gallery"></div>
 
-            <div class="pickbar">
+            <div class="pickbar" id="pickbar" hidden>
                 <p id="pickbar-name"></p>
                 <button id="copy-js" class="button small" type="button">
                     Copy JavaScript
@@ -95,7 +64,12 @@
                 <a class="button small" href="#picked-title">See the code</a>
             </div>
 
-            <section class="picked" aria-labelledby="picked-title">
+            <section
+                class="picked"
+                id="picked"
+                aria-labelledby="picked-title"
+                hidden
+            >
                 <h2 id="picked-title">The player you picked</h2>
                 <p id="picked-name" class="note"></p>
                 <div class="snippets">
@@ -120,17 +94,6 @@
                 </div>
             </section>
         </main>
-
-        <footer class="foot">
-            <div class="wrap">
-                <p>
-                    Sound: “The Little Elf”, a poem by John Kendrick Bangs, read
-                    by <a href="https://librivox.org/reader/1252">Avery</a> for
-                    LibriVox (public domain).
-                    <a href="./#credits">Full credits on the main page</a>.
-                </p>
-            </div>
-        </footer>
 
         <script type="module" src="./themes.ts"></script>
     </body>

@@ -7,6 +7,7 @@ export {
     DEFAULT_BAR,
     DEFAULT_COLORS,
     SonicFrame,
+    type SonicFrameA11y,
     type SonicFrameOptions,
 } from './dom/frame';
 export {
@@ -49,6 +50,12 @@ export {
     type RegionsPlugin,
 } from './plugins/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline';
+export {
+    minimap,
+    MINIMAP_WORDS,
+    type MinimapOptions,
+    type MinimapWords,
+} from './plugins/minimap';
 export {
     soundDescription,
     type SoundDescriptionKeys,
@@ -118,7 +125,29 @@ export {
     resample,
     type PeaksFetcher,
 } from './core/peaks';
+export {
+    loadWaveform,
+    readWaveform,
+    writeWaveform,
+    type LoadWaveformOptions,
+    type ReadWaveformOptions,
+    type WaveformData,
+    type WaveformFetcher,
+    type WaveformFormat,
+    type WaveformJson,
+    type WaveformResponse,
+    type WriteWaveformOptions,
+} from './core/waveform';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/shapes';
+export type { View, ViewState } from './core/view';
+export {
+    MAX_ZOOM,
+    ZOOM_WORDS,
+    type ViewSource,
+    type ZoomKey,
+    type ZoomOptions,
+    type ZoomWords,
+} from './core/zoom';
 export { formatTime } from './core/timing';
 export type { ValueText } from './core/controller';
 export type {
@@ -128,6 +157,7 @@ export type {
     Lane,
     MediaLike,
     PaintContext,
+    PeaksData,
     PeaksSource,
     Plugin,
     PluginHost,
@@ -139,4 +169,4 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '0.3.0';
+export const VERSION: string = '0.4.0';

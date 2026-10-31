@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>A one-hour sound · SonicFrame</title>
+        <meta
+            name="description"
+            content="An hour of peaks, written on this page as an audiowaveform file and read back, with no audio at all."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>A one-hour sound</h1>
+                <p class="lede">
+                    An hour of peaks, written right here as an audiowaveform
+                    <code>.dat</code> file and read back, with no audio at all.
+                    The length comes from the file, so it shows at once; zoom in
+                    to see the detail.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Try it</h2>
+                    <div class="words">
+                        <button id="long-make" class="button" type="button">
+                            Make an hour
+                        </button>
+                        <div id="long-wave" class="long-wave"></div>
+                        <p class="note" id="long-status"></p>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>What happens</h2>
+                    <ol>
+                        <li>
+                            The page makes an hour of samples and writes them
+                            with <code>writeWaveform</code>, as a server would
+                            when a file is uploaded.
+                        </li>
+                        <li>
+                            <code>readWaveform</code> reads the bytes back,
+                            folding them to the most peaks kept.
+                        </li>
+                        <li>
+                            A bare frame with zoom, a timeline above and a
+                            minimap below draws them. No audio is ever loaded.
+                        </li>
+                    </ol>
+                    <div class="code">
+                        <pre><code>// An hour of made-up speech, 100 points per second: bursts and pauses.
+const bytes = writeWaveform([points], { sampleRate: 100, samplesPerPeak: 1, bits: 8 });
+const waveform = readWaveform(bytes, { maxPeaks: points.length });
+
+new SonicFrame({
+    container,
+    peaks: waveform, // { peaks, duration, … }
+    zoom: { wheel: true, scroll: true, pinch: true, keys: true },
+    plugins: [timeline({ side: 'above' }), minimap({ a11y: { keys: true } })],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

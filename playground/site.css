@@ -18,11 +18,32 @@
     --code: #f5f7fa;
     --thumb: #b9c3d0;
     --thumb-hover: #8e9aac;
-    --sans:
+    --accent: #0b8f78;
+    --deck: #111820;
+    --deck-ink: #dfe7f1;
+    --deck-muted: #8d9bb0;
+    --sans: var(--stack-system);
+    --display: var(--stack-industrial);
+    --mono: var(--stack-mono);
+
+    /* The library's own font stacks (src/core/fonts.ts); the reader picks one in the header. */
+    --stack-system:
         system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
         sans-serif;
-    --mono:
-        ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+    --stack-industrial:
+        Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium',
+        'Nimbus Sans Narrow', var(--stack-system);
+    --stack-humanist:
+        Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', sans-serif;
+    --stack-geometric: Avenir, Montserrat, Corbel, 'URW Gothic', sans-serif;
+    --stack-serif:
+        Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+    --stack-rounded:
+        ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Quicksand,
+        Comfortaa, Manjari, 'Arial Rounded MT', Calibri, sans-serif;
+    --stack-mono:
+        ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+        'DejaVu Sans Mono', monospace;
 
     --sonicframe-surface: #ffffff;
     --sonicframe-text: #18202c;
@@ -54,6 +75,8 @@
         --on-brand: #0f141b;
         --link: #8fb6ff;
         --code: #121922;
+        --accent: #3ee6c1;
+        --deck: #0b1016;
         --thumb: #364252;
         --thumb-hover: #4d5c70;
 
@@ -87,6 +110,8 @@
     --on-brand: #0f141b;
     --link: #8fb6ff;
     --code: #121922;
+    --accent: #3ee6c1;
+    --deck: #0b1016;
     --thumb: #364252;
     --thumb-hover: #4d5c70;
 
@@ -113,12 +138,70 @@
     box-sizing: border-box;
 }
 
+/* The font the reader picked: the display stack for headings, the text stack for the rest. */
+:root[data-font='system'] {
+    --display: var(--stack-system);
+}
+
+:root[data-font='humanist'] {
+    --sans: var(--stack-humanist);
+    --display: var(--stack-humanist);
+}
+
+:root[data-font='geometric'] {
+    --sans: var(--stack-geometric);
+    --display: var(--stack-geometric);
+}
+
+:root[data-font='serif'] {
+    --sans: var(--stack-serif);
+    --display: var(--stack-serif);
+}
+
+:root[data-font='rounded'] {
+    --sans: var(--stack-rounded);
+    --display: var(--stack-rounded);
+}
+
 body {
     margin: 0;
     background: var(--page);
     color: var(--ink);
-    font: 1rem/1.55 var(--sans);
+    font: 1rem/1.65 var(--sans);
     -webkit-text-size-adjust: 100%;
+}
+
+/* Moving between pages fades the page body only; the header and sidebar stay put. */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    .content {
+        view-transition-name: page;
+    }
+
+    ::view-transition-old(page),
+    ::view-transition-new(page) {
+        animation-duration: 0.18s;
+    }
+}
+
+.skip {
+    position: absolute;
+    z-index: 50;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.125rem;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+
+.skip:focus {
+    transform: none;
 }
 
 /*
@@ -152,7 +235,7 @@ html {
 
     ::-webkit-scrollbar-thumb {
         border: 0.1875rem solid transparent;
-        border-radius: 62rem;
+        border-radius: 0.125rem;
         background: var(--thumb) padding-box;
     }
 
@@ -185,8 +268,10 @@ h1,
 h2,
 h3 {
     margin: 0;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
+    font-family: var(--display);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0;
 }
 
 p {
@@ -195,7 +280,7 @@ p {
 
 .wrap {
     width: 100%;
-    max-width: 70rem;
+    max-width: 90rem;
     margin: 0 auto;
     padding: 0 1rem;
 }
@@ -203,18 +288,64 @@ p {
 /* The header: the mark, the name and version, the links and the scheme switch. */
 
 .top {
+    position: sticky;
+    z-index: 20;
+    top: 0;
     border-bottom: 0.0625rem solid var(--line);
     background: var(--panel);
 }
 
+/* One line, 3.75rem tall: the sidebar and the drawer sit right under it. */
 .top .wrap {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
+    gap: 1rem;
     align-items: center;
-    min-height: 3.75rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    height: 3.75rem;
+}
+
+/*
+ * Narrower screens keep the one line by dropping words, never controls: first the far links and the
+ * version, then the search's words, then the name beside the mark (still read by screen readers),
+ * then the spaces between.
+ */
+@media (max-width: 50rem) {
+    .top .far,
+    .top .version {
+        display: none;
+    }
+}
+
+@media (max-width: 32rem) {
+    .top .brand-name {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 24rem) {
+    .top .wrap {
+        gap: 0.5rem;
+        padding: 0 0.75rem;
+    }
+
+    .top .nav {
+        gap: 0.5rem;
+    }
+
+    .top .brand img {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+}
+
+@media (max-width: 22rem) {
+    .top .font-pick select {
+        max-width: 5rem;
+    }
 }
 
 .brand {
@@ -222,9 +353,9 @@ p {
     gap: 0.625rem;
     align-items: center;
     color: inherit;
+    font-family: var(--display);
     font-size: 1.25rem;
-    font-weight: 750;
-    letter-spacing: -0.02em;
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -236,17 +367,110 @@ p {
 .version {
     padding: 0.0625rem 0.5rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 62rem;
+    border-radius: 0.125rem;
     color: var(--muted);
     font-size: 0.8125rem;
     font-weight: 500;
     letter-spacing: 0;
 }
 
+/* The search: an input-like button that opens the search dialog. */
+.search-open {
+    display: inline-flex;
+    gap: 2rem;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 15rem;
+    min-height: 2.25rem;
+    margin-left: 1.5rem;
+    padding: 0.25rem 0.375rem 0.25rem 0.75rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--page);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.search-open:hover {
+    border-color: var(--brand);
+    color: var(--ink);
+}
+
+kbd {
+    padding: 0.0625rem 0.375rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 59.99rem) {
+    .search-open {
+        min-width: 0;
+        margin-left: 0;
+    }
+
+    .search-open kbd {
+        display: none;
+    }
+}
+
+@media (max-width: 36rem) {
+    .search-open span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .search-open::before {
+        width: 0.75rem;
+        height: 0.75rem;
+        border: 0.125rem solid currentColor;
+        border-radius: 0.125rem;
+        content: '';
+    }
+}
+
+.font-pick {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.font-pick select {
+    min-height: 2rem;
+    padding: 0.125rem 0.375rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+}
+
+@media (max-width: 40rem) {
+    .font-pick span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
 .nav {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
+    gap: 0.75rem 1.25rem;
     align-items: center;
     margin-left: auto;
 }
@@ -272,7 +496,7 @@ p {
     min-height: 2.5rem;
     padding: 0.375rem 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     background: var(--panel);
     color: var(--ink);
     font: inherit;
@@ -312,16 +536,628 @@ p {
 /* Sections. */
 
 /* More specific than `.wrap`, whose padding shorthand would reset the bottom. */
-main.wrap {
+.content {
+    min-width: 0;
     padding-bottom: 4rem;
 }
 
-.section {
-    padding-top: 4.5rem;
+/*
+ * The docs layout: the pages on the left, the page in the middle, "On this page" on the right. The
+ * sidebar stays under the header from 60rem and is a drawer below that; "On this page" stays beside
+ * the text from 76rem and folds above it below that.
+ */
+
+html {
+    scroll-padding-top: 5rem;
 }
 
-.section > h2 {
-    font-size: 1.75rem;
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+}
+
+.side {
+    position: sticky;
+    top: 3.75rem;
+    max-height: calc(100vh - 3.75rem);
+    overflow-y: auto;
+    padding: 1.75rem 0.5rem 2rem 0;
+    font-size: 0.9375rem;
+}
+
+.side ul {
+    display: grid;
+    gap: 0.125rem;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.side-group {
+    margin: 0 0 0.375rem;
+    padding: 0 0.75rem;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.side a {
+    display: block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.125rem;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.side a:hover {
+    background: var(--sunken);
+    color: var(--ink);
+}
+
+/* The page being read wears the logo's tile. */
+.side a[aria-current='page'] {
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+.menu,
+.side-backdrop {
+    display: none;
+}
+
+@media (max-width: 59.99rem) {
+    .layout {
+        display: block;
+    }
+
+    .menu {
+        display: inline-flex;
+    }
+
+    .side {
+        position: fixed;
+        z-index: 30;
+        top: 3.75rem;
+        bottom: 0;
+        left: 0;
+        width: min(18rem, 85vw);
+        max-height: none;
+        padding: 1.25rem 0.75rem;
+        border-right: 0.0625rem solid var(--line);
+        background: var(--panel);
+        visibility: hidden;
+    }
+
+    .side.open {
+        visibility: visible;
+    }
+
+    .side-backdrop:not([hidden]) {
+        display: block;
+        position: fixed;
+        z-index: 25;
+        inset: 3.75rem 0 0;
+        background: rgb(0 0 0 / 0.4);
+    }
+}
+
+/* A page's title, its sentence and the sound its players play. */
+
+.page-head {
+    padding-top: 2.5rem;
+}
+
+/* A page with no "On this page" starts its content a full step below the head. */
+.page-head + .doc {
+    margin-top: 2.5rem;
+}
+
+.page-head h1 {
+    font-size: clamp(2rem, 4.5vw, 2.625rem);
+    line-height: 1.1;
+}
+
+/*
+ * "On this page": a track along the headings, filled up to the one being read (`--played`, set by
+ * the script) with a playhead on it, like the played part of a wave.
+ */
+
+.toc {
+    font-size: 0.875rem;
+}
+
+.toc-title {
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.toc-toggle {
+    display: none;
+}
+
+.toc-list {
+    position: relative;
+    display: grid;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0 0 0 1rem;
+    list-style: none;
+}
+
+.toc-list::before,
+.toc-list::after {
+    position: absolute;
+    top: 0;
+    left: 0.25rem;
+    width: 0.125rem;
+    border-radius: 0.125rem;
+    content: '';
+}
+
+.toc-list::before {
+    bottom: 0;
+    background: var(--line);
+}
+
+.toc-list::after {
+    height: var(--played, 0);
+    background: var(--brand);
+}
+
+.toc-list a {
+    position: relative;
+    display: block;
+    padding: 0.25rem 0.5rem;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.toc-sub a {
+    padding-left: 1.25rem;
+}
+
+.toc-list a:hover {
+    color: var(--ink);
+}
+
+.toc-list a[aria-current] {
+    color: var(--link);
+    font-weight: 600;
+}
+
+/* The playhead, centered on the track: the track's middle sits 0.3125rem in from the list. */
+.toc-list a[aria-current]::before {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: -1rem;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-top: -0.3125rem;
+    border-radius: 0.125rem;
+    background: var(--brand);
+    box-shadow: 0 0 0 0.1875rem var(--page);
+    content: '';
+}
+
+@media (min-width: 76rem) {
+    .content:has(> .toc) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 13rem;
+        column-gap: 3rem;
+    }
+
+    .content > .page-head {
+        grid-row: 1;
+        grid-column: 1;
+    }
+
+    .content > .toc {
+        position: sticky;
+        top: 3.75rem;
+        grid-row: 1 / span 2;
+        grid-column: 2;
+        align-self: start;
+        max-height: calc(100vh - 3.75rem);
+        overflow-y: auto;
+        padding: 2.75rem 0 2rem;
+    }
+
+    .content > .doc {
+        grid-row: 2;
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 75.99rem) {
+    .toc {
+        margin-top: 1.75rem;
+        border: 0.0625rem solid var(--line);
+        border-radius: 0.125rem;
+        background: var(--panel);
+    }
+
+    .toc-title {
+        display: none;
+    }
+
+    .toc-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 0;
+        background: none;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .toc-toggle::after {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-right: 0.125rem solid currentColor;
+        border-bottom: 0.125rem solid currentColor;
+        transform: rotate(45deg);
+        content: '';
+    }
+
+    .toc-toggle[aria-expanded='true']::after {
+        transform: rotate(-135deg);
+    }
+
+    .toc-list {
+        display: none;
+        margin: 0 1rem 1rem;
+    }
+
+    .toc-list.open {
+        display: grid;
+    }
+}
+
+.section {
+    padding-top: 3.5rem;
+}
+
+.doc h2 {
+    font-size: 1.625rem;
+}
+
+.doc h3 {
+    margin-top: 2rem;
+    font-size: 1.1875rem;
+}
+
+/* A heading's link to itself, shown on hover or focus. */
+.doc :is(h2, h3) {
+    position: relative;
+}
+
+.anchor {
+    margin-left: 0.5rem;
+    color: var(--muted);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+}
+
+.doc :is(h2, h3):hover .anchor,
+.anchor:focus-visible {
+    opacity: 1;
+}
+
+/* Running text keeps to a readable measure; demos, code and tables use the full width. */
+.doc :is(p, ul, ol):not([class]) {
+    max-width: 44rem;
+}
+
+/* Blocks in a section, the demos' shelves, word boxes and live tags included, keep 1rem apart. */
+.doc
+    > .section
+    > :is(
+        p,
+        ul,
+        ol,
+        .callout,
+        .code,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        sonic-player
+    )
+    + :is(
+        p,
+        ul,
+        ol,
+        .callout,
+        .code,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        sonic-player,
+        h3
+    ) {
+    margin-top: 1rem;
+}
+
+.doc :is(ul, ol):not([class]) {
+    padding-left: 1.25rem;
+}
+
+.doc li + li {
+    margin-top: 0.375rem;
+}
+
+.doc
+    h2
+    + :is(
+        p,
+        .lede,
+        .code,
+        .callout,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        ul,
+        ol
+    ),
+.doc
+    h3
+    + :is(
+        p,
+        .code,
+        .callout,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        ul,
+        ol
+    ) {
+    margin-top: 0.875rem;
+}
+
+:not(pre) > code {
+    padding: 0.0625rem 0.3125rem;
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    color: var(--ink);
+    font-size: 0.875em;
+}
+
+/* A tip, a note or a warning beside the text. */
+.callout {
+    max-width: 44rem;
+    padding: 0.875rem 1rem;
+    border: 0.0625rem solid var(--line);
+    border-left: 0.25rem solid var(--brand);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.callout.warn {
+    border-left-color: var(--sonicframe-marker);
+}
+
+.callout.tip {
+    border-left-color: var(--accent);
+}
+
+.callout > strong:first-child {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+/* Option tables: they scroll sideways on narrow screens instead of squeezing. */
+.table-wrap {
+    overflow-x: auto;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+}
+
+.table-wrap th,
+.table-wrap td {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 0.0625rem solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.table-wrap tr:last-child td {
+    border-bottom: 0;
+}
+
+.table-wrap th {
+    background: var(--sunken);
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+.table-wrap td:first-child {
+    white-space: nowrap;
+}
+
+/* Previous and next page, at the end of every page. */
+.pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 4rem;
+}
+
+.pager a {
+    display: grid;
+    gap: 0.25rem;
+    padding: 1rem 1.125rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+    font-family: var(--display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pager a:hover {
+    border-color: var(--brand);
+    color: var(--link);
+}
+
+.pager span {
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.pager-next {
+    grid-column: 2;
+    text-align: right;
+}
+
+@media (max-width: 30rem) {
+    .pager {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pager-next {
+        grid-column: 1;
+    }
+}
+
+/* The search dialog. */
+.search {
+    width: min(40rem, calc(100vw - 2rem));
+    max-height: min(36rem, calc(100vh - 6rem));
+    margin: 5rem auto auto;
+    padding: 1rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+}
+
+.search::backdrop {
+    background: rgb(0 0 0 / 0.45);
+}
+
+.search-label {
+    display: grid;
+    gap: 0.5rem;
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+.search-input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 0.125rem solid var(--brand);
+    border-radius: 0.125rem;
+    background: var(--page);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1.0625rem;
+}
+
+.search-status {
+    margin: 0.75rem 0 0.25rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.search-results {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.search-results a {
+    display: grid;
+    gap: 0.125rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.125rem;
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.search-results a span {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+}
+
+.search-results a[aria-selected='true'],
+.search-results a:hover {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.search-results a[aria-selected='true'] span,
+.search-results a:hover span {
+    color: inherit;
+}
+
+/* Keys and gestures: one per line, each key as a cap. */
+
+.keys,
+.next {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.keys {
+    color: var(--muted);
+}
+
+.keys kbd {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0 0.375em;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    text-align: center;
 }
 
 .lede {
@@ -342,9 +1178,8 @@ main.wrap {
 }
 
 .hero h1 {
-    font-size: clamp(2.25rem, 6vw, 3.75rem);
-    font-weight: 800;
-    letter-spacing: -0.035em;
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+    line-height: 1.05;
 }
 
 .hero .lede {
@@ -353,12 +1188,80 @@ main.wrap {
     font-size: 1.1875rem;
 }
 
+/*
+ * Where a player is coming: its height kept, and five square bars rising and falling in the logo's
+ * blue until the sound's peaks arrive. Still under reduced motion.
+ */
+.loading {
+    position: relative;
+    min-height: 3.5rem;
+}
+
+.loading::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.25rem;
+    height: 1.25rem;
+    background:
+        linear-gradient(var(--brand) 0 0) 0% 100%,
+        linear-gradient(var(--brand) 0 0) 25% 100%,
+        linear-gradient(var(--brand) 0 0) 50% 100%,
+        linear-gradient(var(--brand) 0 0) 75% 100%,
+        linear-gradient(var(--brand) 0 0) 100% 100%;
+    background-repeat: no-repeat;
+    background-size:
+        0.3125rem 40%,
+        0.3125rem 70%,
+        0.3125rem 100%,
+        0.3125rem 70%,
+        0.3125rem 40%;
+    content: '';
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .loading::before {
+        animation: loading-bars 0.9s ease-in-out infinite;
+    }
+}
+
+@keyframes loading-bars {
+    0%,
+    100% {
+        background-size:
+            0.3125rem 40%,
+            0.3125rem 70%,
+            0.3125rem 100%,
+            0.3125rem 70%,
+            0.3125rem 40%;
+    }
+
+    50% {
+        background-size:
+            0.3125rem 100%,
+            0.3125rem 50%,
+            0.3125rem 30%,
+            0.3125rem 90%,
+            0.3125rem 100%;
+    }
+}
+
 .stage {
     margin-top: 2.25rem;
     padding: 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 1.25rem;
+    border-radius: 0.125rem;
     background: var(--panel);
+}
+
+/* A player shown at phone width, so the voice note can be seen on any screen. */
+.narrow-demo {
+    max-width: 20rem;
+}
+
+.doc .stage {
+    margin-top: 1.25rem;
 }
 
 .source {
@@ -388,14 +1291,22 @@ main.wrap {
     position: relative;
 }
 
+/* Code sits on a dark deck in both schemes, like a console. */
 .code pre {
     margin: 0;
-    padding: 1rem 5.5rem 1rem 1rem;
+    padding: 1rem 5.5rem 1rem 1.125rem;
     overflow-x: auto;
-    border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem;
-    background: var(--code);
-    line-height: 1.6;
+    border: 0.0625rem solid var(--deck);
+    border-radius: 0.125rem;
+    background: var(--deck);
+    color: var(--deck-ink);
+    line-height: 1.65;
+}
+
+.code .button {
+    border-color: #2a3442;
+    background: #1c2531;
+    color: var(--deck-ink);
 }
 
 .code .button {
@@ -429,7 +1340,7 @@ main.wrap {
     margin-top: 1rem;
     padding: 0.875rem 1rem;
     border-left: 0.25rem solid var(--brand);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     background: var(--sunken);
     font-size: 1.0625rem;
 }
@@ -438,9 +1349,58 @@ main.wrap {
     display: none;
 }
 
-.words-code {
-    max-width: 42rem;
-    margin-top: 1.25rem;
+/* Zoom: the switches in two named rows, a roomy player, what is in view, then the gestures. */
+
+.zoom {
+    max-width: 52rem;
+    margin-top: 1rem;
+}
+
+.zoom-switches {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.zoom-group {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: baseline;
+}
+
+.zoom-group .buttons {
+    margin-bottom: 0;
+}
+
+.zoom-group-name {
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 36rem) {
+    .zoom-group {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.375rem;
+    }
+}
+
+.zoom-view {
+    margin-top: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9375rem;
+}
+
+/* A long sound: a bare wave with a ruler above and a minimap below, no player. */
+
+.long-wave {
+    position: relative;
+    height: 7rem;
+    margin-top: 1rem;
+}
+
+.long-wave:empty {
+    display: none;
 }
 
 /* Rows of players with a short name under each. */
@@ -516,6 +1476,7 @@ main.wrap {
 
 .plugins {
     display: grid;
+    margin-top: 2.5rem;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
     gap: 1.25rem;
 }
@@ -527,11 +1488,11 @@ main.wrap {
     min-width: 0;
     padding: 1.125rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
-.plugin h3 {
+.plugin h2 {
     font-size: 1.0625rem;
 }
 
@@ -548,7 +1509,7 @@ main.wrap {
 .buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.625rem 0.5rem;
     align-items: center;
     margin-bottom: 0.75rem;
 }
@@ -580,7 +1541,7 @@ main.wrap {
     margin-top: 1.25rem;
     padding: 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
@@ -602,14 +1563,99 @@ main.wrap {
 }
 
 .foot .wrap {
-    display: grid;
-    gap: 0.5rem;
-    padding-top: 1.75rem;
-    padding-bottom: 2rem;
+    padding-top: 2.5rem;
+    padding-bottom: 1.5rem;
 }
 
-.foot p {
-    max-width: 48rem;
+/* The name, the pages, the project and the sound: four columns, two on tablets, one on phones. */
+.foot-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)) minmax(
+            0,
+            1.4fr
+        );
+    gap: 2rem;
+}
+
+@media (max-width: 60rem) {
+    .foot-columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 30rem) {
+    .foot-columns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.foot-name,
+.foot-title {
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.foot-name {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 1.0625rem;
+}
+
+.foot-name img {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.foot-title {
+    font-size: 0.8125rem;
+}
+
+.foot ul {
+    display: grid;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.foot a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.foot a:hover {
+    color: var(--link);
+}
+
+.foot-columns p a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+/* Under the sounds' credits, a faint strip of square wave bars: the site's only ornament. */
+.foot-sound::after {
+    display: block;
+    width: min(100%, 12rem);
+    height: 0.625rem;
+    margin-top: 1.25rem;
+    background: var(--brand);
+    content: '';
+    opacity: 0.45;
+    -webkit-mask: url('./bars.svg') left center / auto 100% repeat-x;
+    mask: url('./bars.svg') left center / auto 100% repeat-x;
+}
+
+.foot-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 0.0625rem solid var(--line);
 }
 
 /* The theme gallery. */
@@ -619,8 +1665,8 @@ main.wrap {
 }
 
 .gallery-head h1 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    font-weight: 800;
+    font-size: clamp(2rem, 4.5vw, 2.625rem);
+    line-height: 1.1;
 }
 
 .toolbar {
@@ -633,10 +1679,10 @@ main.wrap {
 
 .tabs {
     display: inline-flex;
-    gap: 0.25rem;
+    gap: 0.5rem;
     padding: 0.25rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.625rem;
+    border-radius: 0.125rem;
     background: var(--panel);
 }
 
@@ -662,7 +1708,7 @@ main.wrap {
     min-height: 2.5rem;
     padding: 0.25rem 0.5rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     background: var(--panel);
     color: var(--ink);
     font: inherit;
@@ -724,7 +1770,7 @@ main.wrap {
     min-width: 0;
     padding: 0.75rem;
     border: 0.0625rem solid;
-    border-radius: 0.75rem;
+    border-radius: 0.125rem;
 }
 
 .cell[aria-current='true'] {
@@ -749,7 +1795,7 @@ main.wrap {
     width: 0.75rem;
     height: 0.75rem;
     border: 0.0625rem solid rgba(127, 127, 127, 0.4);
-    border-radius: 50%;
+    border-radius: 0.125rem;
 }
 
 /* The picked player stays in reach while the page scrolls. */
@@ -764,8 +1810,14 @@ main.wrap {
     margin-top: 2.5rem;
     padding: 0.75rem 1rem;
     border: 0.0625rem solid var(--line);
-    border-radius: 0.75rem 0.75rem 0 0;
+    border-radius: 0.125rem 0.125rem 0 0;
     background: var(--panel);
+}
+
+/* Nothing picked, no bar and no code: `hidden` wins over the display above. */
+.pickbar[hidden],
+.picked[hidden] {
+    display: none;
 }
 
 .pickbar p {

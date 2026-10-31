@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Skip silences · SonicFrame</title>
+        <meta
+            name="description"
+            content="Jump past the quiet stretches of a recording while it plays, without clipping the next word."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Skip silences</h1>
+                <p class="lede">
+                    Long pauses in a voice note or a lecture, skipped while it
+                    plays forward. It lands just before each pause ends, so the
+                    next word is never clipped.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding it</h2>
+                    <div class="code">
+                        <pre><code>import { silencesFromPeaks, skipSilences } from 'sonicframe';
+
+frame.use(
+    skipSilences({
+        silences: silencesFromPeaks(peaks, duration, { minDuration: 1 }),
+        dim: true,
+    }),
+);</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-plugins="skipSilences"
+                    ></div>
+                    <p>
+                        The shaded stretches are skipped. Seeking into one by
+                        hand still works.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Finding the silences</h2>
+                    <ul>
+                        <li>
+                            <code
+                                >silencesFromPeaks(peaks, duration, { threshold,
+                                minDuration })</code
+                            >
+                            works from the peaks you already have.
+                        </li>
+                        <li>
+                            <code
+                                >findSilences(samples, sampleRate, {
+                                thresholdDb, minDuration })</code
+                            >
+                            works from decoded samples, more precisely.
+                        </li>
+                    </ul>
+                    <p>
+                        Both are pure, on <code>sonicframe/analysis</code> too,
+                        so a server can find them once and store them.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>silences</code></td>
+                                    <td><code>[]</code></td>
+                                    <td>The stretches to skip.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>lead</code></td>
+                                    <td><code>0.1</code></td>
+                                    <td>
+                                        Seconds before a silence's end to land.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>dim</code></td>
+                                    <td></td>
+                                    <td>Shade the silences on the wave.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>dimColor</code></td>
+                                    <td><code>var(--sonicframe-dim)</code></td>
+                                    <td>The shade's color.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>snap</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The shade's edges on whole device
+                                        pixels.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

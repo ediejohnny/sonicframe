@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>A podcast player · SonicFrame</title>
+        <meta
+            name="description"
+            content="A podcast episode page: ready-made peaks, chapters, speed, skip buttons, zoom and the wave in words."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>A podcast player</h1>
+                <p class="lede">
+                    An hour-long episode that shows its whole wave at once,
+                    chapters to jump between, speed and skip buttons, zoom to
+                    find a moment, and a description for listeners who cannot
+                    see it.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>1. Prepare the peaks on upload</h2>
+                    <p>
+                        An hour of audio should never be decoded in the browser.
+                        When an episode is uploaded, write its peaks once, at 40
+                        points per second for zooming in:
+                    </p>
+                    <div class="code">
+                        <pre><code>// On your server (Node), after decoding the upload:
+import { writeFile } from 'node:fs/promises';
+import { describeSound, outlineSound, writeWaveform } from 'sonicframe/analysis';
+
+const bytes = writeWaveform(channels, {
+    sampleRate,
+    samplesPerPeak: Math.round(sampleRate / 40),
+    bits: 8,
+});
+await writeFile(`episodes/${id}.dat`, bytes);</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>2. Build the player</h2>
+                    <div class="code">
+                        <pre><code>import { markers } from 'sonicframe';
+import { createPlayer, loadWaveform } from 'sonicframe/player';
+
+const player = createPlayer({
+    container: document.querySelector('#episode'),
+    src: '/episodes/12.mp3',
+    preload: 'none',
+    peaks: () =&gt; loadWaveform('/episodes/12.dat', { maxPeaks: 200000 }),
+    theme: 'card',
+    look: { line: ['play', 'back', 'wave', 'forward', 'time', 'speed'], skip: 15 },
+    zoom: { wheel: true, keys: true, follow: true, buttons: true },
+    minimap: { autoHide: true },
+    label: 'Episode 12: the sound of cities',
+    a11y: { description: { keys: true }, zoom: { announce: true } },
+    plugins: [
+        markers({
+            marks: [
+                { time: 0, label: 'Intro' },
+                { time: 312, label: 'Interview' },
+                { time: 2410, label: 'Questions' },
+            ],
+        }),
+    ],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>The length shows at once</strong>, from the
+                            <code>.dat</code> file, and no audio loads until
+                            play.
+                        </li>
+                        <li>
+                            <strong>Chapters</strong> are markers: a click or
+                            <kbd>M</kbd> jumps to the next.
+                        </li>
+                        <li>
+                            <strong>Back and forward</strong> skip 15 seconds;
+                            <strong>speed</strong> steps through 1×, 1.5×, 2×.
+                        </li>
+                        <li>
+                            <strong>Zoom</strong> with Ctrl + wheel or
+                            <kbd>+</kbd>, and the view follows the sound while
+                            it plays.
+                        </li>
+                        <li>
+                            <strong>The wave in words</strong> tells a listener
+                            where the sound and the pauses are.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>3. Remember where they stopped</h2>
+                    <div class="code">
+                        <pre><code>const key = 'episode-12-position';
+const audio = player.media;
+
+audio.currentTime = Number(localStorage.getItem(key) ?? 0);
+player.on('timeupdate', (time) =&gt; localStorage.setItem(key, String(time)));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Try a smaller one</h2>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-plugins="markers"
+                        data-options='{"theme":"card","look":{"line":["play","back","wave","forward","time","speed"]},"zoom":{"wheel":true,"keys":true,"buttons":true}}'
+                    ></div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

@@ -10,7 +10,10 @@ import type { ButtonFill, ButtonShape } from './button';
 import { isFontName, type FontName } from './fonts';
 import { formatTime } from './timing';
 
-/** A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end. */
+/**
+ * A piece of the player. `wave` takes the free space; `spacer` pushes the next parts to the end; the
+ * zoom buttons show only when the player's zoom has `buttons`.
+ */
 export type Part =
     | 'play'
     | 'wave'
@@ -22,6 +25,9 @@ export type Part =
     | 'back'
     | 'forward'
     | 'volume'
+    | 'zoomIn'
+    | 'zoomOut'
+    | 'zoomReset'
     | 'slot'
     | 'spacer';
 
@@ -38,6 +44,30 @@ export type PlayerLook = {
     button: { shape: ButtonShape; fill: ButtonFill; size: number };
     /** Height of the wave, in rem. */
     waveHeight: number;
+    /** Height of the minimap strip (when the player has one), in rem. */
+    minimapHeight: number;
+    /** Space between the wave and the minimap strip, in rem. */
+    minimapGap: number;
+    /**
+     * The least width of a wave that shares its line with zoom buttons, in rem; narrower, the line
+     * wraps and the buttons go under it.
+     */
+    waveMin: number;
+    /**
+     * The width, in rem, under which a player with the wave in its line turns into a voice note:
+     * the play button and the wave keep the line, the time goes under the wave on the left and the
+     * other controls under it on the right. 0 keeps one line at any width.
+     */
+    narrow: number;
+    /** In a voice note, the parts that stay on the main line beside the wave. */
+    narrowLine: Part[];
+    /**
+     * In a voice note, the parts that go under the wave on the left; every other part goes under it
+     * on the right. Both keep the order of `line`.
+     */
+    narrowStart: Part[];
+    /** In a voice note, the space between the parts under the wave, in rem. */
+    narrowGap: number;
     /** Corner radius of the player, in rem. */
     corner: number;
     /** Space inside the player, in rem. */
@@ -75,6 +105,9 @@ export const PART_NAMES: readonly Part[] = Object.freeze([
     'back',
     'forward',
     'volume',
+    'zoomIn',
+    'zoomOut',
+    'zoomReset',
     'slot',
     'spacer',
 ] as const);
@@ -86,6 +119,13 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     time: 'both',
     button: { shape: 'circle', fill: 'solid', size: 36 },
     waveHeight: 2.5,
+    minimapHeight: 1.5,
+    minimapGap: 0.375,
+    waveMin: 8,
+    narrow: 22,
+    narrowLine: ['play', 'wave', 'slot'],
+    narrowStart: ['time', 'elapsed', 'remaining', 'duration'],
+    narrowGap: 0.5,
     corner: 0.75,
     padding: 0.5,
     gap: 0.625,
@@ -218,6 +258,13 @@ export function resolveLook(
             size: within(button.size, base.button.size, 16, 96),
         },
         waveHeight: within(given.waveHeight, base.waveHeight, 0.5, 12),
+        minimapHeight: within(given.minimapHeight, base.minimapHeight, 0.5, 6),
+        minimapGap: within(given.minimapGap, base.minimapGap, 0, 2),
+        waveMin: within(given.waveMin, base.waveMin, 0, 40),
+        narrow: within(given.narrow, base.narrow, 0, 60),
+        narrowLine: parts(given.narrowLine, base.narrowLine),
+        narrowStart: parts(given.narrowStart, base.narrowStart),
+        narrowGap: within(given.narrowGap, base.narrowGap, 0, 3),
         corner: within(given.corner, base.corner, 0, 4),
         padding: within(given.padding, base.padding, 0, 3),
         gap: within(given.gap, base.gap, 0, 3),

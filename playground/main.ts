@@ -1,24 +1,31 @@
 /**
- * The playground: SonicFrame's own page. Every player has its own `<audio>` on the same sound, so
- * only the one pressed plays (the play buttons are exclusive); the sound is decoded once and every
- * player is given its peaks and duration. Picking another sound builds every player again.
- * Run `npm run dev` and open /playground/.
+ * The docs pages' players: every page but the theme gallery runs this script and mounts only the
+ * parts it holds. Every player has its own `<audio>` on the same sound, so only the one pressed plays
+ * (the play buttons are exclusive); the sound is decoded once and every player is given its peaks
+ * and duration. Picking another sound builds every player again. Run `npm run dev` and open
+ * /playground/.
  */
 
 import {
     caption,
+    formatTime,
     liveFrequency,
+    loadWaveform,
     markers,
+    minimap,
     PlayButton,
+    readWaveform,
     regions,
     silencesFromPeaks,
     skipSilences,
     SonicFrame,
     timeline,
+    writeWaveform,
     type BarStyle,
     type ButtonFill,
     type ButtonShape,
     type WaveName,
+    type ViewState,
     type WaveStyle,
 } from '../src/index';
 import {
@@ -27,11 +34,13 @@ import {
     type PlayerOptions,
     type ThemeName,
 } from '../src/player';
+import { MUSIC } from './docs/sounds';
 import {
     bundledSound,
     byId,
     forget,
     pickSound,
+    setupContents,
     setupCopyButtons,
     setupHeader,
     type Sound,
@@ -137,7 +146,9 @@ const mounts: { host: HTMLElement; build: Build }[] = [];
 let teardowns: (() => void)[] = [];
 let current: Sound | null = null;
 
+/** A place for something built on the page's sound; it shows the loader, at a player's height, until then. */
 function mount(host: HTMLElement, build: Build): void {
+    host.classList.add('loading');
     mounts.push({ host, build });
 }
 
@@ -147,14 +158,17 @@ function player(
     sound: Sound,
     options: Omit<PlayerOptions, 'container' | 'src' | 'peaks' | 'duration'>,
     failed?: (error: unknown) => void,
+    ready?: (made: ReturnType<typeof createPlayer>) => void,
 ): () => void {
     const made = createPlayer({
         container: host,
         src: sound.url,
+        preload: 'none',
         peaks: sound.peaks,
         duration: sound.duration,
         ...options,
     });
+    ready?.(made);
     const repaint = (): void => made.frame.refresh();
     const stopErrors = made.on('error', (error) => {
         console.error(error);
@@ -251,6 +265,174 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
     };
 }
 
+/**
+ * The switches of the zoom demo: a name on the page, what it turns on, and its row (the ways to
+ * move the view, or the extras).
+ */
+const ZOOM_SWITCHES: {
+    name: string;
+    key: string;
+    on: boolean;
+    row: 'zoom-ways' | 'zoom-extras';
+}[] = [
+    { name: 'Wheel (Ctrl)', key: 'wheel', on: true, row: 'zoom-ways' },
+    { name: 'Scroll', key: 'scroll', on: true, row: 'zoom-ways' },
+    { name: 'Two fingers', key: 'pinch', on: true, row: 'zoom-ways' },
+    { name: 'Keys', key: 'keys', on: true, row: 'zoom-ways' },
+    { name: 'Buttons', key: 'buttons', on: true, row: 'zoom-ways' },
+    { name: 'Minimap', key: 'minimap', on: true, row: 'zoom-extras' },
+    { name: 'Follow', key: 'follow', on: false, row: 'zoom-extras' },
+    { name: 'Centered', key: 'center', on: false, row: 'zoom-extras' },
+    { name: 'Edges', key: 'edgeScroll', on: true, row: 'zoom-extras' },
+    { name: 'Announce', key: 'announce', on: false, row: 'zoom-extras' },
+];
+
+/** What is in view, in words: "Zoom 4×, 0:10 to 0:18", or the whole sound. */
+function viewWords(view: ViewState, duration: number): string {
+    if (view.level <= 1) {
+        return `Whole sound, ${formatTime(duration)}`;
+    }
+
+    const level = Math.round(view.level * 10) / 10;
+
+    return `Zoom ${level}×, ${formatTime(view.start * duration)} to ${formatTime(view.end * duration)}`;
+}
+
+/** Zoom: a player built again whenever a switch changes, each way of moving the view on or off. */
+function zoomDemo(host: HTMLElement, sound: Sound): () => void {
+    const status = byId('zoom-status');
+    const seen = byId('zoom-view');
+    const on = new Map(ZOOM_SWITCHES.map((item) => [item.key, item.on]));
+    let stop = (): void => undefined;
+
+    const build = (): void => {
+        stop();
+        const is = (key: string): boolean => on.get(key) === true;
+        const show = (view: ViewState): void => {
+            seen.textContent = viewWords(view, sound.duration);
+        };
+        stop = player(
+            host,
+            sound,
+            {
+                label: 'Zoom',
+                look: { waveHeight: 4.5 },
+                zoom: {
+                    wheel: is('wheel'),
+                    scroll: is('scroll'),
+                    pinch: is('pinch'),
+                    keys: is('keys'),
+                    buttons: is('buttons'),
+                    follow: is('follow'),
+                    followType: is('center') ? 'center' : 'page',
+                    edgeScroll: is('edgeScroll'),
+                },
+                minimap: is('minimap') ? { a11y: { keys: true } } : false,
+                a11y: { zoom: { announce: is('announce') } },
+                plugins: [
+                    timeline({ side: 'above' }),
+                    regions({
+                        items: [{ start: 5, end: 12, label: 'Verse' }],
+                        scrollIntoView: true,
+                    }),
+                ],
+            },
+            undefined,
+            (made) => {
+                show(made.frame.view);
+                made.on('viewchange', show);
+            },
+        );
+    };
+
+    const buttons = ZOOM_SWITCHES.map((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'button small';
+        button.textContent = item.name;
+        button.setAttribute('aria-pressed', String(item.on));
+        button.addEventListener('click', () => {
+            const next = !(on.get(item.key) === true);
+            on.set(item.key, next);
+            button.setAttribute('aria-pressed', String(next));
+            status.textContent = `${item.name} ${next ? 'on' : 'off'}.`;
+            build();
+        });
+        byId(item.row).append(button);
+
+        return button;
+    });
+
+    build();
+
+    return () => {
+        stop();
+        buttons.forEach((button) => button.remove());
+        status.textContent = '';
+        seen.textContent = '';
+    };
+}
+
+/** How long the long sound is, in seconds (one hour). */
+const LONG_SECONDS = 3600;
+
+/** Points per second of the long sound's peaks file. */
+const LONG_RATE = 100;
+
+/**
+ * A long sound with no audio: an hour of made-up speech (bursts and pauses) written as a `.dat`
+ * file by `writeWaveform`, read back by `readWaveform`, and drawn with zoom, a ruler and a minimap.
+ */
+function setupLongSound(): void {
+    const button = document.getElementById('long-make');
+
+    if (button === null) {
+        return;
+    }
+
+    const host = byId('long-wave');
+    const status = byId('long-status');
+    let frame: SonicFrame | null = null;
+
+    button.addEventListener('click', () => {
+        frame?.destroy();
+        host.replaceChildren();
+
+        const count = LONG_SECONDS * LONG_RATE;
+        const samples = new Float32Array(count);
+        let level = 0;
+
+        for (let i = 0; i < count; i++) {
+            // A burst every few seconds, quieter between them, with a slow wander.
+            if (i % 250 === 0) {
+                level = Math.random() < 0.2 ? 0.02 : 0.2 + Math.random() * 0.7;
+            }
+
+            samples[i] = (Math.random() * 2 - 1) * level;
+        }
+
+        const file = writeWaveform([samples], {
+            sampleRate: LONG_RATE,
+            samplesPerPeak: 1,
+            bits: 8,
+        });
+        const wave = readWaveform(file, { maxPeaks: count });
+
+        frame = SonicFrame.create({
+            container: host,
+            peaks: wave,
+            label: 'An hour of peaks',
+            zoom: { wheel: true, scroll: true, pinch: true, keys: true },
+            plugins: [
+                timeline({ side: 'above' }),
+                minimap({ a11y: { keys: true } }),
+            ],
+        });
+        status.textContent = `${Math.round(file.length / 1024)} KB .dat file, ${wave.peaks.length.toLocaleString('en')} peaks, ${formatTime(wave.duration ?? 0)} long. Ctrl and the wheel zoom; + and - too.`;
+        button.textContent = 'Make another hour';
+    });
+}
+
 function clipCard(): PluginCard {
     return {
         title: 'Export a clip',
@@ -270,6 +452,7 @@ function clipCard(): PluginCard {
             const made = createPlayer({
                 container: wave,
                 src: sound.url,
+                preload: 'none',
                 peaks: sound.peaks,
                 duration: sound.duration,
                 wave: 'line',
@@ -330,7 +513,7 @@ function buttonsCard(): PluginCard {
             const audio = document.createElement('audio');
             const row = document.createElement('div');
             const wave = document.createElement('div');
-            audio.preload = 'metadata';
+            audio.preload = 'none';
             audio.src = sound.url;
             row.className = 'buttons';
             wave.className = 'bare-wave';
@@ -480,72 +663,200 @@ function pluginCards(): PluginCard[] {
     ];
 }
 
-function setupPage(): void {
-    mount(byId('hero-player'), (host, sound) =>
-        player(host, sound, {
-            label: sound.name,
-            look: {
-                waveHeight: 5,
-                button: { shape: 'circle', fill: 'solid', size: 52 },
-                padding: 0,
-                border: 0,
-                gap: 1,
-                surface: 'none',
-                fontSize: 0.9375,
-            },
-            plugins: [timeline()],
+/**
+ * The plugins a `data-plugins` demo can name, each set up for the page's poem (33 seconds): marks on
+ * its lines, a region over the second line, its silences, and so on.
+ */
+const DEMO_PLUGINS: Record<string, (sound: Sound) => PlayerPlugin> = {
+    timeline: () => timeline(),
+    markers: () =>
+        markers({
+            marks: [
+                { time: 2.4, label: 'Title' },
+                { time: 9, label: 'Second line' },
+                { time: 21, label: 'Last lines' },
+            ],
         }),
-    );
+    regions: () =>
+        regions({ items: [{ start: 8.5, end: 16, label: 'Verse' }] }),
+    caption: () =>
+        caption({
+            text: 'I met a little elf-man, once, down where the lilies blow.',
+            badges: ['auto', 'en'],
+        }),
+    skipSilences: (sound) =>
+        skipSilences({
+            silences: silencesFromPeaks(sound.peaks, sound.duration),
+            dim: true,
+        }),
+    liveFrequency: () => liveFrequency({ bars: 48 }),
+    minimap: () => minimap(),
+};
 
-    const tag = byId('tag-player');
-    mount(tag, (host, sound) => {
-        host.setAttribute('src', sound.url);
+type PlayerPlugin = NonNullable<PlayerOptions['plugins']>[number];
 
-        return () => host.removeAttribute('src');
-    });
-    tag.addEventListener('sonicframe:error', (event) =>
-        console.error((event as CustomEvent<unknown[]>).detail[0]),
-    );
+/**
+ * Live demos written in a page's own markup: `data-demo="player"` builds a player on the page's
+ * sound, with the JSON in `data-options` (any player option) and the plugins `data-plugins` names.
+ */
+function setupDemos(): void {
+    for (const host of document.querySelectorAll<HTMLElement>(
+        '[data-demo="player"]',
+    )) {
+        const options = JSON.parse(host.dataset.options ?? '{}') as Omit<
+            PlayerOptions,
+            'container'
+        >;
+        const names = (host.dataset.plugins ?? '').split(/\s+/).filter(Boolean);
 
-    const drawings = byId('drawing-shelf');
-
-    for (const drawing of DRAWINGS) {
-        const host = figure(drawings, `wave: '${drawing.name}'`, drawing.text);
         mount(host, (box, sound) =>
             player(box, sound, {
-                label: `Drawn as ${drawing.name}`,
-                wave: { style: drawing.name, ...drawing.wave },
-                bar: drawing.bar,
+                label: host.dataset.label ?? sound.name,
+                ...options,
+                plugins: names.flatMap((name) =>
+                    name in DEMO_PLUGINS ? [DEMO_PLUGINS[name](sound)] : [],
+                ),
             }),
         );
     }
+}
 
-    const themes = byId('theme-shelf');
+/** Calls `use` with the element of that id, when this page has one. */
+function on(id: string, use: (element: HTMLElement) => void): void {
+    const element = document.getElementById(id);
 
-    for (const [name, text] of THEME_PREVIEW) {
-        const host = figure(themes, `theme: '${name}'`, text);
-        mount(host, (box, sound) =>
-            player(box, sound, { label: `The ${name} theme`, theme: name }),
+    if (element !== null) {
+        use(element);
+    }
+}
+
+/**
+ * The home page's music: one track, drawn at random on each visit, shows its ready-made peaks and
+ * loads nothing more until someone presses play. When a track ends the next one plays, and the
+ * tracks go round for as long as the page is open. The player itself stays, so focus stays on it.
+ */
+function musicPlayer(host: HTMLElement): void {
+    const line = document.getElementById('now-playing');
+    const audio = document.createElement('audio');
+    audio.preload = 'none';
+    host.classList.add('loading');
+    let index = Math.floor(Math.random() * MUSIC.length);
+    let made: ReturnType<typeof createPlayer> | null = null;
+
+    const show = async (play: boolean): Promise<void> => {
+        const track = MUSIC[index];
+        const waveform = await loadWaveform(`./${track.peaks}`);
+        audio.src = `./${track.audio}`;
+
+        if (made === null) {
+            host.classList.remove('loading');
+            const created = createPlayer({
+                container: host,
+                media: audio,
+                label: 'Music',
+                peaks: waveform.peaks,
+                duration: waveform.duration ?? undefined,
+                look: {
+                    waveHeight: 5,
+                    button: { shape: 'circle', fill: 'solid', size: 52 },
+                    padding: 0,
+                    border: 0,
+                    gap: 1,
+                    surface: 'none',
+                    fontSize: 0.9375,
+                },
+                plugins: [timeline()],
+            });
+            created.on('error', (error) => console.error(error));
+            painted.add(() => created.frame.refresh());
+            made = created;
+        } else {
+            made.frame.setPeaks(waveform.peaks);
+            made.frame.setDuration(waveform.duration);
+        }
+
+        if (line !== null) {
+            line.textContent = `Music: ${track.title} by ${track.artist}.`;
+        }
+
+        if (play) {
+            await audio.play();
+        }
+    };
+
+    audio.addEventListener('ended', () => {
+        index = (index + 1) % MUSIC.length;
+        show(true).catch((error: unknown) => console.error(error));
+    });
+    show(false).catch((error: unknown) => {
+        console.error(error);
+
+        if (line !== null) {
+            line.textContent = 'The music did not load.';
+        }
+    });
+}
+
+/** Mounts what this page has: every docs page shares this script and holds only its own parts. */
+function setupPage(): void {
+    on('hero-player', musicPlayer);
+
+    on('tag-player', (tag) => {
+        mount(tag, (host, sound) => {
+            host.setAttribute('preload', 'none');
+            host.setAttribute('src', sound.url);
+
+            return () => host.removeAttribute('src');
+        });
+        tag.addEventListener('sonicframe:error', (event) =>
+            console.error((event as CustomEvent<unknown[]>).detail[0]),
         );
-    }
+    });
 
-    mount(byId('words-player'), wordsDemo);
+    on('drawing-shelf', (drawings) => {
+        for (const drawing of DRAWINGS) {
+            const host = figure(
+                drawings,
+                `wave: '${drawing.name}'`,
+                drawing.text,
+            );
+            mount(host, (box, sound) =>
+                player(box, sound, {
+                    label: `Drawn as ${drawing.name}`,
+                    wave: { style: drawing.name, ...drawing.wave },
+                    bar: drawing.bar,
+                }),
+            );
+        }
+    });
 
-    const cards = byId('plugin-cards');
+    on('theme-shelf', (themes) => {
+        for (const [name, text] of THEME_PREVIEW) {
+            const host = figure(themes, `theme: '${name}'`, text);
+            mount(host, (box, sound) =>
+                player(box, sound, { label: `The ${name} theme`, theme: name }),
+            );
+        }
+    });
 
-    for (const card of pluginCards()) {
-        const box = document.createElement('article');
-        const title = document.createElement('h3');
-        const text = document.createElement('p');
-        const demo = document.createElement('div');
-        box.className = 'plugin';
-        demo.className = 'demo';
-        title.textContent = card.title;
-        text.textContent = card.text;
-        box.append(title, text, demo);
-        cards.append(box);
-        mount(demo, card.build);
-    }
+    on('words-player', (host) => mount(host, wordsDemo));
+    on('zoom-player', (host) => mount(host, zoomDemo));
+
+    on('plugin-cards', (cards) => {
+        for (const card of pluginCards()) {
+            const box = document.createElement('section');
+            const title = document.createElement('h2');
+            const text = document.createElement('p');
+            const demo = document.createElement('div');
+            box.className = 'plugin';
+            demo.className = 'demo';
+            title.textContent = card.title;
+            text.textContent = card.text;
+            box.append(title, text, demo);
+            cards.append(box);
+            mount(demo, card.build);
+        }
+    });
 }
 
 /** The load test: sixty bare waves on one `<audio>`, with one play button and a frame-rate readout. */
@@ -554,7 +865,7 @@ function crowd(sound: Sound): () => void {
     const playHost = byId('crowd-play');
     const fps = byId('fps');
     const audio = document.createElement('audio');
-    audio.preload = 'metadata';
+    audio.preload = 'none';
     audio.src = sound.url;
     playHost.append(audio);
 
@@ -617,9 +928,9 @@ function crowd(sound: Sound): () => void {
 let stopCrowd: (() => void) | null = null;
 
 function setupCrowd(): void {
-    const toggle = byId<HTMLButtonElement>('crowd-toggle');
+    const toggle = document.getElementById('crowd-toggle');
 
-    toggle.addEventListener('click', () => {
+    toggle?.addEventListener('click', () => {
         if (stopCrowd !== null) {
             stopCrowd();
             stopCrowd = null;
@@ -639,42 +950,59 @@ function render(sound: Sound): void {
     }
 
     current = sound;
-    teardowns = mounts.map(({ host, build }) => build(host, sound));
+    teardowns = mounts.map(({ host, build }) => {
+        host.classList.remove('loading');
+
+        return build(host, sound);
+    });
 
     if (stopCrowd !== null) {
         stopCrowd();
         stopCrowd = crowd(sound);
     }
 
-    byId('source').textContent = `Playing ${sound.name}.`;
+    say(`Playing ${sound.name}.`);
 
     if (previous !== null) {
         forget(previous);
     }
 }
 
+/** Says what the page plays, on a page that shows its sound. */
+function say(text: string): void {
+    const source = document.getElementById('source');
+
+    if (source !== null) {
+        source.textContent = text;
+    }
+}
+
 function showError(error: unknown): void {
     console.error(error);
-    byId('source').textContent =
+    say(
         current === null
             ? 'That file could not be read as audio. Try an MP3, WAV, OGG or M4A file.'
-            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`;
+            : `That file could not be read as audio, so the page still plays ${current.name}. Try an MP3, WAV, OGG or M4A file.`,
+    );
 }
 
 defineSonicPlayer();
 setupHeader(() => painted.forEach((repaint) => repaint()));
 setupCopyButtons();
 setupPage();
+setupDemos();
+setupContents();
 setupCrowd();
-pickSound(
-    byId<HTMLButtonElement>('pick'),
-    byId<HTMLInputElement>('file'),
-    render,
-    showError,
-);
+setupLongSound();
+
+const pick = document.getElementById('pick');
+const file = document.getElementById('file');
+
+if (pick instanceof HTMLButtonElement && file instanceof HTMLInputElement) {
+    pickSound(pick, file, render, showError);
+}
 
 bundledSound().then(render, (error: unknown) => {
     console.error(error);
-    byId('source').textContent =
-        'The page’s sound did not load. Use your own sound instead.';
+    say('The page’s sound did not load. Use your own sound instead.');
 });

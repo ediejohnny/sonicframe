@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Writing a plugin · SonicFrame</title>
+        <meta
+            name="description"
+            content="Draw under or over the bars, take the pointer and the keys, add lanes and speak through the live region."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Writing a plugin</h1>
+                <p class="lede">
+                    Every built-in feature beyond the bars is a plugin, and
+                    yours get the same tools: draw under or over the bars, take
+                    presses and keys, add lanes, and speak to screen readers.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The shape of a plugin</h2>
+                    <div class="code">
+                        <pre><code>const playhead = {
+    name: 'playhead-glow',
+    layer: 'over', // or 'under', before the bars
+    setup(host) {
+        // Called once; keep the host to ask for a redraw later.
+    },
+    draw(paint) {
+        const x = paint.xAt(paint.progress);
+        const ctx = paint.ctx;
+        ctx.fillStyle = paint.color('var(--sonicframe-progress, #2f6fdb)');
+        ctx.fillRect(x - 2 * paint.pixelRatio, 0, 4 * paint.pixelRatio, paint.height);
+    },
+    destroy() {},
+};
+
+frame.use(playhead); // returns the function that removes it</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        A plugin is an object with a <code>name</code> and any
+                        of the hooks below. One that throws from any hook is
+                        parked and the <code>error</code> event says why, so one
+                        broken plugin never breaks the wave.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Hooks</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hook</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>setup(host)</code></td>
+                                    <td>Once, when added.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>draw(paint)</code></td>
+                                    <td>Every repaint, in device pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>resize(geometry)</code></td>
+                                    <td>The wave changed size.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>pointerDown</code>,
+                                        <code>pointerMove</code>,
+                                        <code>pointerUp</code>,
+                                        <code>pointerCancel</code>
+                                    </td>
+                                    <td>
+                                        Presses.
+                                        <code>pointerDown</code> returns
+                                        <code>'take'</code> to own it now, or
+                                        <code>'drag'</code> to own it once it
+                                        moves (a tap still seeks).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>pointerHover</code></td>
+                                    <td>
+                                        The pointer moved; return a CSS cursor.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>keyDown</code></td>
+                                    <td>
+                                        Before the slider keys; return whether
+                                        you used the key.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>valueNote(time, ratio)</code></td>
+                                    <td>
+                                        A short note added to the wave's value
+                                        in words.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>destroy()</code></td>
+                                    <td>Removed, or the frame destroyed.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>What <code>paint</code> gives</h2>
+                    <p>
+                        The canvas context, <code>ctx</code>, in device pixels,
+                        <code>width</code>, <code>height</code>,
+                        <code>pixelRatio</code>, <code>progress</code>,
+                        <code>duration</code>, <code>hover</code>,
+                        <code>view</code>, <code>xAt(ratio)</code>,
+                        <code>ratioAt(x)</code> and <code>color(value)</code>
+                        (any CSS color or variable, resolved).
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>What <code>host</code> gives</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>container</code>,
+                                        <code>media</code>, <code>peaks</code>,
+                                        <code>duration</code>,
+                                        <code>progress</code>,
+                                        <code>geometry</code>, <code>view</code>
+                                    </td>
+                                    <td>The frame's state.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>invalidate()</code></td>
+                                    <td>Ask for a repaint.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>on(event, listener)</code></td>
+                                    <td>The frame's events.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>color(value)</code></td>
+                                    <td>Resolve a color.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>addLane(side, px)</code></td>
+                                    <td>
+                                        A strip above or below the bars; the
+                                        wave shrinks.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>overlay()</code></td>
+                                    <td>A layer over the bars, for text.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>seekTo(ratio, source)</code></td>
+                                    <td>
+                                        Seek; pass <code>'keyboard'</code> for a
+                                        key's seek, so the view follows it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>setView(start, end, source)</code>
+                                    </td>
+                                    <td>Move the view (zoom on).</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>playRange(start, end)</code>,
+                                        <code>stopRange()</code>
+                                    </td>
+                                    <td>Play a stretch.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>setValues(values)</code></td>
+                                    <td>
+                                        Override the bar heights (<code
+                                            >null</code
+                                        >
+                                        gives them back).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>announce(text)</code></td>
+                                    <td>
+                                        Say something through the shared live
+                                        region.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>updateValueText()</code></td>
+                                    <td>
+                                        Ask for the wave's value in words again.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>reportError(error)</code></td>
+                                    <td>
+                                        A failure outside the hooks (a
+                                        download), heard as <code>error</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Ready for zoom</h2>
+                    <p>
+                        Place things with <code>paint.xAt(ratio)</code>, which
+                        goes through the view (a position out of view lands off
+                        the canvas), and read presses from
+                        <code>point.ratio</code> and <code>point.time</code>,
+                        which are already the sound's. Listen to
+                        <code>host.on('viewchange', …)</code> when something
+                        outside the canvas must follow the view.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Accessible by design</h2>
+                    <ul>
+                        <li>
+                            Anything a press does, a key should do too
+                            (<code>keyDown</code>).
+                        </li>
+                        <li>
+                            Say what changed with <code>host.announce</code>,
+                            briefly, and only after the person acted.
+                        </li>
+                        <li>
+                            Add to the wave's value with
+                            <code>valueNote</code> instead of a new live message
+                            when it describes the position.
+                        </li>
+                        <li>
+                            Put text in as text (<code>textContent</code>),
+                            never as HTML.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

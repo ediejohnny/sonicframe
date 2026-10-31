@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Sixty at once · SonicFrame</title>
+        <meta
+            name="description"
+            content="Sixty waves on one sound, and the frame rate."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Sixty at once</h1>
+                <p class="lede">
+                    Pages with long lists of recordings stay smooth: frames draw
+                    only near the screen, and one shared loop moves every
+                    playhead. Draw sixty waves on one sound and watch the frame
+                    rate.
+                </p>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
+                    </button>
+                    <input id="file" type="file" accept="audio/*" hidden />
+                </div>
+            </div>
+
+            <div class="doc">
+                <div class="load">
+                    <button id="crowd-toggle" class="button" type="button">
+                        Draw 60 waves
+                    </button>
+                    <span id="crowd-play"></span>
+                    <span id="fps" class="fps" aria-live="off"></span>
+                </div>
+                <div id="crowd" class="crowd"></div>
+            </div>
+        </main>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

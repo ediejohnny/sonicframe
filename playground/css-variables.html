@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>CSS variables · SonicFrame</title>
+        <meta
+            name="description"
+            content="Every --sonicframe-* custom property, its default and what it paints."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>CSS variables</h1>
+                <p class="lede">
+                    Set any of these on an ancestor of your waves and players,
+                    and everything SonicFrame draws follows. A palette on a
+                    player sets them on the player itself.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>The wave and its controls</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Default</th>
+                                    <th>Paints</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>--sonicframe-wave</code></td>
+                                    <td><code>#c4cad4</code></td>
+                                    <td>
+                                        Bars not yet played; the volume track.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-progress</code></td>
+                                    <td><code>#2f6fdb</code></td>
+                                    <td>
+                                        Bars played; the plugins' tooltips; the
+                                        volume level.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-knob</code></td>
+                                    <td>the progress color</td>
+                                    <td>The dot riding the position.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-button</code></td>
+                                    <td>the progress color</td>
+                                    <td>
+                                        The play button and the volume icon.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>--sonicframe-button-icon</code>
+                                    </td>
+                                    <td><code>#fff</code></td>
+                                    <td>The icon on a solid play button.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>--sonicframe-on-progress</code>
+                                    </td>
+                                    <td><code>#ffffff</code></td>
+                                    <td>
+                                        Text over the played color and on
+                                        markers.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>The plugins</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Default</th>
+                                    <th>Paints</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>--sonicframe-marker</code></td>
+                                    <td><code>#e5484d</code></td>
+                                    <td>Markers.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-timeline</code></td>
+                                    <td><code>#8a94a6</code></td>
+                                    <td>The timeline ruler.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-region</code></td>
+                                    <td>
+                                        <code>rgba(47, 111, 219, 0.18)</code>
+                                    </td>
+                                    <td>A region's band.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-dim</code></td>
+                                    <td><code>rgba(0, 0, 0, 0.12)</code></td>
+                                    <td>Dimmed silences.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-badge</code></td>
+                                    <td><code>rgba(0, 0, 0, 0.08)</code></td>
+                                    <td>A caption's badges.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>--sonicframe-minimap-view</code>
+                                    </td>
+                                    <td>the region color</td>
+                                    <td>The minimap's box.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>--sonicframe-minimap-edge</code>
+                                    </td>
+                                    <td>the progress color</td>
+                                    <td>The box's edges.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>The player</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Paints</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>--sonicframe-surface</code></td>
+                                    <td>The player's background.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-text</code></td>
+                                    <td>Its text, such as the time.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-muted</code></td>
+                                    <td>Quieter text: labels, the time.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>--sonicframe-border</code></td>
+                                    <td>
+                                        Its border and its buttons' outlines.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        With the <code>'default'</code> palette, the player sets
+                        none of them, so your page's values show.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>

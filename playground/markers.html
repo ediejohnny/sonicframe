@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Markers · SonicFrame</title>
+        <meta
+            name="description"
+            content="Flags on moments of a sound: labels, colors, tooltips, keys and grouping."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Markers</h1>
+                <p class="lede">
+                    Flags on moments of the sound: chapters, comments, the
+                    places a teacher wants a student to hear. A click jumps to
+                    one, and <kbd>M</kbd> steps through them.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding markers</h2>
+                    <div class="code">
+                        <pre><code>import { markers } from 'sonicframe';
+
+const flags = markers({
+    marks: [
+        { time: 2.4, label: 'Title' },
+        { time: 9, label: 'Second line' },
+        { time: 21, label: 'Last lines', color: 'var(--danger)' },
+    ],
+});
+frame.use(flags);
+
+flags.set([3, 18]); // replace them; plain times work too</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-plugins="markers"
+                    ></div>
+                    <p>
+                        Times are in seconds, so markers stay in place when the
+                        wave changes size; nothing is drawn while the length is
+                        unknown. Markers that crowd together become one pill
+                        with a count.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>times</code></td>
+                                    <td>
+                                        Moments in seconds (the simple form).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marks</code></td>
+                                    <td>
+                                        <code>{ time, label, color, id }</code>
+                                        (the richer form).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>color</code></td>
+                                    <td>
+                                        Any CSS color or
+                                        <code>var(--name)</code> for a plain
+                                        marker.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>width</code></td>
+                                    <td>Line width in CSS pixels.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>group</code></td>
+                                    <td>
+                                        Markers closer than this many pixels
+                                        become one pill.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>snap</code></td>
+                                    <td>
+                                        A click on a marker seeks to its exact
+                                        moment.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>tooltip</code></td>
+                                    <td>Show a tooltip on hover.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>backGrace</code></td>
+                                    <td>
+                                        Seconds after a marker within which
+                                        <kbd>Shift</kbd> + <kbd>M</kbd> goes to
+                                        the one before (1; 0 lands on it).
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Keys</h2>
+                    <p>
+                        With the wave focused, <kbd>M</kbd> goes to the next
+                        marker and <kbd>Shift</kbd> + <kbd>M</kbd> to the
+                        previous, like a player's tracks. Zoomed in, a marker
+                        reached by a key comes into view. Caps Lock changes
+                        nothing.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

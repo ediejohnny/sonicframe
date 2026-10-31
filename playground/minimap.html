@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>The minimap · SonicFrame</title>
+        <meta
+            name="description"
+            content="A strip with the whole sound and a box over the part in view, to find your way in a long sound."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>The minimap</h1>
+                <p class="lede">
+                    While zoomed in, a strip shows the whole sound, the played
+                    part and a box over the part in view. Drag the box to move,
+                    click beside it to jump there.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Adding it</h2>
+                    <div class="code">
+                        <pre><code>import { minimap } from 'sonicframe';
+
+new SonicFrame({
+    container,
+    media,
+    peaks,
+    zoom: { wheel: true, keys: true },
+    plugins: [minimap({ a11y: { keys: true } })],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        On the player, it is one option:
+                        <code>minimap: true</code>, or its options.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"zoom":{"wheel":true,"keys":true,"buttons":true,"view":{"start":0.2,"end":0.45}},"minimap":{"a11y":{"keys":true}},"look":{"waveHeight":4}}'
+                    ></div>
+                    <p>
+                        A press on the strip never seeks: it only moves the
+                        view.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>side</code></td>
+                                    <td><code>'below'</code></td>
+                                    <td>
+                                        <code>'above'</code> or
+                                        <code>'below'</code> the wave.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>height</code></td>
+                                    <td><code>24</code></td>
+                                    <td>
+                                        The strip's height, in CSS pixels (the
+                                        player's <code>minimapHeight</code> in
+                                        rem).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>gap</code></td>
+                                    <td><code>4</code></td>
+                                    <td>
+                                        Space between the strip and the wave.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>cursors</code></td>
+                                    <td>hands</td>
+                                    <td>
+                                        <code>{ box, moving, beside }</code>:
+                                        <code>'grab'</code>,
+                                        <code>'grabbing'</code>,
+                                        <code>'pointer'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wave</code>, <code>bar</code></td>
+                                    <td>thin bars</td>
+                                    <td>
+                                        How the sound is drawn in the strip.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>colors</code></td>
+                                    <td>the theme's</td>
+                                    <td>
+                                        <code
+                                            >{ wave, progress, view, edge
+                                            }</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>progress</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Paints the played part.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>controls.drag</code>,
+                                        <code>controls.click</code>
+                                    </td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Dragging the box and clicking beside it
+                                        move the view.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>controls.wheel</code></td>
+                                    <td><code>false</code></td>
+                                    <td>The wheel over the strip zooms.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>autoHide</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Takes no room while the whole sound is
+                                        in view.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.keys</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Makes it a keyboard slider; off, it is
+                                        hidden from screen readers.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.label</code></td>
+                                    <td><code>'Visible part'</code></td>
+                                    <td>Its accessible name.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.words</code></td>
+                                    <td>English</td>
+                                    <td>
+                                        <code>{ value(from, to, total) }</code>:
+                                        "0:25 to 0:50 of 1:40".
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Colors</h2>
+                    <p>
+                        The box takes <code>--sonicframe-minimap-view</code> and
+                        its edges <code>--sonicframe-minimap-edge</code>, which
+                        fall back to the region and played colors, so every
+                        theme and palette dresses it.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>With the keyboard</h2>
+                    <p>
+                        With <code>a11y.keys</code>, the strip is a slider of
+                        the part in view: arrows move a quarter of the view,
+                        Page Up and Page Down a whole view, Home and End go to
+                        the ends, and its value says the part in words. A press
+                        on it also gives it the focus.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "sonicframe",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Audio visualization and interaction framework for the web.",
     "keywords": [
         "audio",
@@ -11,7 +11,7 @@
         "visualization",
         "waveform"
     ],
-    "homepage": "https://github.com/ediejohnny/sonicframe#readme",
+    "homepage": "https://ediejohnny.github.io/sonicframe/",
     "bugs": {
         "url": "https://github.com/ediejohnny/sonicframe/issues"
     },
@@ -46,6 +46,7 @@
     "scripts": {
         "build": "vp pack",
         "dev": "vp dev",
+        "docs:build": "vp build --config vite.docs.config.ts",
         "test": "vp test run",
         "lint": "vp check",
         "lint:fix": "vp check --fix",
@@ -54,6 +55,7 @@
     },
     "devDependencies": {
         "@types/node": "^26.6.4",
+        "fast-check": "4.10.2",
         "happy-dom": "^21.0.4",
         "typescript": "^7.0.2",
         "vite-plus": "1.1.0"

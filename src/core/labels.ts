@@ -35,6 +35,16 @@ export type PlayerLabels = {
     stopListening: string;
     /** Said when the browser cannot read the description aloud (no voice for the language, say). */
     speechFailed: string;
+    zoomIn: string;
+    zoomOut: string;
+    /** The button back to the whole sound. */
+    zoomReset: string;
+    /** A new view, said after a zoom: `{level}`, `{from}`, `{to}`. */
+    zoomView: string;
+    /** The minimap as a slider. */
+    minimap: string;
+    /** The minimap's value: `{from}`, `{to}`, `{total}`. */
+    minimapValue: string;
 };
 
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
@@ -54,6 +64,12 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             listen: 'Hear the description',
             stopListening: 'Stop the description',
             speechFailed: 'The description could not be read aloud here.',
+            zoomIn: 'Zoom in',
+            zoomOut: 'Zoom out',
+            zoomReset: 'Show the whole sound',
+            zoomView: 'Zoom {level}×, {from} to {to}',
+            minimap: 'Visible part',
+            minimapValue: '{from} to {to} of {total}',
         }),
         pt: Object.freeze({
             player: 'Player de áudio',
@@ -70,6 +86,12 @@ export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
             listen: 'Ouvir a descrição',
             stopListening: 'Parar a descrição',
             speechFailed: 'Não foi possível ler a descrição em voz alta aqui.',
+            zoomIn: 'Aproximar',
+            zoomOut: 'Afastar',
+            zoomReset: 'Mostrar o som inteiro',
+            zoomView: 'Zoom {level}×, de {from} a {to}',
+            minimap: 'Parte visível',
+            minimapValue: '{from} a {to} de {total}',
         }),
     });
 

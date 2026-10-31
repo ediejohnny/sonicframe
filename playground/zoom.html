@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Zoom and scroll · SonicFrame</title>
+        <meta
+            name="description"
+            content="Get close to a word or across an hour: zoom, scroll, follow the sound, and every switch for it."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Zoom and scroll</h1>
+                <p class="lede">
+                    Get close to a word, or across an hour. Every way of moving
+                    the view has its own switch; with zoom off, nothing changes.
+                </p>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
+                    </button>
+                    <input id="file" type="file" accept="audio/*" hidden />
+                </div>
+            </div>
+
+            <div class="doc">
+                <section class="section" id="try">
+                    <h2>Try it</h2>
+                    <div class="zoom">
+                        <div class="zoom-switches">
+                            <div class="zoom-group">
+                                <span
+                                    class="zoom-group-name"
+                                    id="zoom-ways-name"
+                                    >Ways to move</span
+                                >
+                                <div
+                                    class="buttons"
+                                    role="group"
+                                    aria-labelledby="zoom-ways-name"
+                                    id="zoom-ways"
+                                ></div>
+                            </div>
+                            <div class="zoom-group">
+                                <span
+                                    class="zoom-group-name"
+                                    id="zoom-extras-name"
+                                    >Extras</span
+                                >
+                                <div
+                                    class="buttons"
+                                    role="group"
+                                    aria-labelledby="zoom-extras-name"
+                                    id="zoom-extras"
+                                ></div>
+                            </div>
+                        </div>
+                        <div class="zoom-stage" id="zoom-player"></div>
+                        <p class="zoom-view" id="zoom-view"></p>
+                        <p class="note" id="zoom-status" aria-hidden="true"></p>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Turning it on</h2>
+                    <p>
+                        Zoom is off by default. <code>zoom: true</code> gives
+                        the frame a view of the sound and its methods; each way
+                        of moving the view has its own switch, so a page turns
+                        on exactly what it wants. Without zoom nothing changes,
+                        not even the cost.
+                    </p>
+                    <div class="code">
+                        <pre><code>new SonicFrame({
+    container,
+    media,
+    peaks: () =&gt; loadWaveform('/episode.dat'),
+    zoom: { wheel: true, scroll: true, pinch: true, keys: true, follow: true, edgeScroll: true },
+    a11y: { zoom: { announce: true } },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>view</code></td>
+                                    <td>the whole sound</td>
+                                    <td>
+                                        The view at the start,
+                                        <code>{ start, end }</code> as ratios.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>max</code></td>
+                                    <td>one peak per bar</td>
+                                    <td>
+                                        The largest zoom, from 1 to 10,000 (100
+                                        without peaks).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>step</code></td>
+                                    <td><code>2</code></td>
+                                    <td>How much one key or button zooms.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>anchor</code></td>
+                                    <td><code>'position'</code></td>
+                                    <td>
+                                        Keys and buttons zoom around the playing
+                                        position (when in view) or the
+                                        <code>'center'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wheel</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The wheel zooms around the pointer; a
+                                        touchpad pinch arrives as a wheel with
+                                        Ctrl.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wheelModifier</code></td>
+                                    <td><code>'ctrl'</code></td>
+                                    <td>
+                                        The key held for the wheel to zoom:
+                                        <code>'ctrl'</code> (Ctrl or ⌘),
+                                        <code>'alt'</code> or
+                                        <code>'none'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>wheelSpeed</code></td>
+                                    <td><code>1</code></td>
+                                    <td>
+                                        How fast the wheel zooms, from 0.1 to
+                                        10.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>scroll</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The sideways wheel, a touchpad swipe and
+                                        Shift + wheel scroll the view.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>pinch</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Two fingers zoom and drag the view.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>keys</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <code>true</code> gives <kbd>+</kbd>,
+                                        <kbd>-</kbd> and <kbd>0</kbd>;
+                                        <code>{ in, out, reset }</code> sets
+                                        your own.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>follow</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        While playing, the view follows the
+                                        position.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>followType</code></td>
+                                    <td><code>'page'</code></td>
+                                    <td>
+                                        <code>'page'</code> turns a whole view;
+                                        <code>'center'</code> keeps the position
+                                        in the middle.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>followHold</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        A scroll or zoom by the person holds the
+                                        following until the next seek or play.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>edgeScroll</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Dragging near an edge scrolls the view,
+                                        so a selection can grow past the screen.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>edgeSize</code>,
+                                        <code>edgeSpeed</code>
+                                    </td>
+                                    <td><code>32</code>, <code>1</code></td>
+                                    <td>
+                                        The edge zone (CSS pixels) and views
+                                        scrolled per second there.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>revealKeys</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        A keyboard seek outside the view brings
+                                        the view to it.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>From code</h2>
+                    <div class="code">
+                        <pre><code>frame.zoomTo(4); // 4× around the anchor
+frame.zoomBy(2, 0.5); // twice as close, around the middle
+frame.setView(0.25, 0.5); // show the second quarter
+frame.scrollTo(0.6); // move the view, keeping its size
+frame.on('viewchange', (view, source) =&gt; console.log(view.level, source));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>view</code> is
+                        <code>{ start, end, level, maxLevel }</code>. The bars
+                        come from a pyramid of the peaks built the first time
+                        the frame zooms in, so the cost follows the screen, not
+                        the file, and each bar stays on the same piece of sound
+                        while the view scrolls. Give a long sound many peaks (a
+                        <code>.dat</code> file, or the player's
+                        <code>decode.peaksPerSecond</code>) for detail up close.
+                    </p>
+                    <p>
+                        On the player, <code>zoom: { buttons: true }</code> adds
+                        zoom out, the whole sound and zoom in; see
+                        <a href="./layouts.html">Parts and layouts</a>. Plugins
+                        follow the view on their own: regions, markers, the
+                        timeline (down to tenths of a second), the silences'
+                        shade and the spectrogram.
+                    </p>
+                </section>
+
+                <section class="section" id="gestures">
+                    <h2>Gestures and keys</h2>
+                    <ul class="keys">
+                        <li>
+                            <kbd>Ctrl</kbd> + wheel zooms around the pointer
+                        </li>
+                        <li>
+                            <kbd>Shift</kbd> + wheel, or a sideways swipe,
+                            scrolls
+                        </li>
+                        <li>
+                            <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd> on the
+                            focused wave
+                        </li>
+                        <li>Two fingers pinch and pan on a touch screen</li>
+                        <li>
+                            Drag the box in the strip below to move the view
+                        </li>
+                        <li>
+                            <kbd>Shift</kbd> + drag past the edge draws a region
+                            and the view follows
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section" id="code">
+                    <h2>In code</h2>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/voice.mp3',
+    zoom: { wheel: true, keys: true, pinch: true, buttons: true },
+    minimap: true,
+    a11y: { zoom: { announce: true }, minimap: { keys: true } },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

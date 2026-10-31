@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Plugins and controls · SonicFrame</title>
+        <meta
+            name="description"
+            content="Regions, markers, a ruler, a spectrogram and the other plugins, live."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Plugins and controls</h1>
+                <p class="lede">
+                    Plugins draw under or over the wave and can take the pointer
+                    and the keyboard. Each one below is on its own player; press
+                    play on any of them.
+                </p>
+                <div class="source">
+                    <p id="source" aria-live="polite">Loading the sound…</p>
+                    <button id="pick" class="button small" type="button">
+                        Use your own sound
+                    </button>
+                    <input id="file" type="file" accept="audio/*" hidden />
+                </div>
+            </div>
+
+            <div class="doc">
+                <div class="plugins" id="plugin-cards"></div>
+            </div>
+        </main>
+
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

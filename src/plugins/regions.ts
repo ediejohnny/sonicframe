@@ -3,7 +3,8 @@
  * with its edges and an optional label; the pointer creates one by Shift-dragging (so a plain drag
  * still scrubs), moves it by its body and resizes it by an edge, and the keyboard selects, plays,
  * loops, nudges and deletes while the frame has focus. Regions never invert or fall below a minimum
- * length (pure `normalizeRegion`), and every edge has a touch-sized grab zone (`hitRegion`).
+ * length (pure `normalizeRegion`), and every edge has a touch-sized grab zone (`hitRegion`). Zoomed
+ * in, everything goes through the view: the bands, the grab zones and the labels.
  */
 
 import { clamp01, positive } from '../core/math';
@@ -15,6 +16,8 @@ import {
 } from '../core/regions';
 import { cleanText } from '../core/text';
 import { formatTime } from '../core/timing';
+import { placeX } from '../core/scene';
+import { FULL_VIEW, viewX } from '../core/view';
 import type { Plugin, PluginHost, WavePoint } from '../types';
 
 /** A region, in seconds. */
@@ -43,6 +46,18 @@ export type RegionsOptions = {
     onChange?: (regions: readonly Region[]) => void;
     /** Called when the selected region changes (null when none). */
     onSelect?: (region: Region | null) => void;
+    /** Zoomed in, a region chosen by the keys (R) is brought into view, centered. Off by default. */
+    scrollIntoView?: boolean;
+    /**
+     * Draws the bands' edges on whole device pixels (crisper, moved by less than half a pixel). Off by
+     * default: at fractions of a pixel, as always.
+     */
+    snap?: boolean;
+    /**
+     * The mouse cursor (any CSS cursor): `'grab'` over a region's body, `'grabbing'` while moving
+     * it, `'ew-resize'` over its edges and while resizing or drawing one.
+     */
+    cursors?: { body?: string; moving?: string; edge?: string };
 };
 
 export type RegionsPlugin = Plugin & {
@@ -69,8 +84,17 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const keys = options.keys ?? true;
     const max = Math.min(200, Math.max(0, options.max ?? 200));
 
+    const scrollIntoView = options.scrollIntoView === true;
+    const snap = options.snap === true;
+    const cursors = {
+        body: options.cursors?.body ?? 'grab',
+        moving: options.cursors?.moving ?? 'grabbing',
+        edge: options.cursors?.edge ?? 'ew-resize',
+    };
+
     let host: PluginHost | null = null;
     let stopFitting: (() => void) | null = null;
+    let stopViewing: (() => void) | null = null;
     let items: Region[] = [];
     let selectedId: string | null = null;
     let loop = false;
@@ -197,10 +221,12 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                       ...order.filter((region) => region.id !== selectedId),
                   ];
 
+        const view = host?.view ?? FULL_VIEW;
+
         return {
             laid: ranked.map((region) => ({
-                start: clamp01(region.start / span) * width,
-                end: clamp01(region.end / span) * width,
+                start: viewX(clamp01(region.start / span), view, width),
+                end: viewX(clamp01(region.end / span), view, width),
             })),
             ids: ranked.map((region) => region.id),
         };
@@ -267,12 +293,39 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 labelSpans.set(region.id, node);
             }
 
+            // Anchored at the region's start: shown while the start is in view.
+            const view = frame.view;
+            const at = clamp01(region.start / span);
+            const left = Math.round(viewX(at, view, 100) * 1000) / 1000;
             node.textContent = region.label;
+            node.style.setProperty('left', `${left}%`);
             node.style.setProperty(
-                'left',
-                `${clamp01(region.start / span) * 100}%`,
+                'display',
+                at >= view.start && at <= view.end ? '' : 'none',
             );
         }
+    }
+
+    /** Zoomed in, centers the view on a region (or on its start when it is longer than the view). */
+    function reveal(region: Region): void {
+        const frame = host;
+        const span = duration();
+
+        if (frame === null || span === null) {
+            return;
+        }
+
+        const { start, end } = frame.view;
+        const size = end - start;
+        const from = clamp01(region.start / span);
+        const to = clamp01(region.end / span);
+
+        if (from >= start && to <= end) {
+            return;
+        }
+
+        const begin = to - from <= size ? (from + to) / 2 - size / 2 : from;
+        frame.setView(begin, begin + size, 'keys');
     }
 
     function selectStep(back: boolean): void {
@@ -287,6 +340,10 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         const region = order[next];
         select(region.id);
         announce(region);
+
+        if (scrollIntoView) {
+            reveal(region);
+        }
     }
 
     function announce(region: Region): void {
@@ -398,6 +455,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         setup(frame): void {
             host = frame;
             stopFitting = frame.on('durationchange', fitToSound);
+            stopViewing = frame.on('viewchange', layoutLabels);
             fitToSound();
         },
 
@@ -415,8 +473,14 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             const edge = paint.color('var(--sonicframe-progress, #2f6fdb)');
 
             for (const region of items) {
-                const from = clamp01(region.start / span) * paint.width;
-                const to = clamp01(region.end / span) * paint.width;
+                const from = placeX(paint, region.start / span, snap);
+                const to = placeX(paint, region.end / span, snap);
+
+                // Zoomed in, a region wholly outside the view is not drawn.
+                if (to < 0 || from > paint.width) {
+                    continue;
+                }
+
                 paint.ctx.fillStyle = paint.color(region.color || bandColor);
                 paint.ctx.fillRect(
                     from,
@@ -440,13 +504,17 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 return;
             }
 
+            if (drag !== null) {
+                return drag.mode === 'move' ? cursors.moving : cursors.edge;
+            }
+
             const hit = hitAt(point);
 
             if (hit === null) {
                 return;
             }
 
-            return hit.part === 'body' ? 'grab' : 'ew-resize';
+            return hit.part === 'body' ? cursors.body : cursors.edge;
         },
 
         pointerDown(point): 'take' | 'drag' | void {
@@ -629,6 +697,8 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         destroy(): void {
             stopFitting?.();
             stopFitting = null;
+            stopViewing?.();
+            stopViewing = null;
 
             for (const node of labelSpans.values()) {
                 node.remove();

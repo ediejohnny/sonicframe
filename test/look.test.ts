@@ -60,6 +60,88 @@ describe('resolveLook', () => {
         expect(look.speeds).toEqual([1, 3]);
     });
 
+    it('knows the zoom buttons as parts, and keeps the minimap height in range', () => {
+        const look = resolveLook(DEFAULT_LOOK, {
+            line: ['play', 'zoomOut', 'wave', 'zoomIn'],
+            meta: ['zoomReset'],
+            minimapHeight: 40,
+        });
+
+        expect(look.line).toEqual(['play', 'zoomOut', 'wave', 'zoomIn']);
+        expect(look.meta).toEqual(['zoomReset']);
+        expect(look.minimapHeight).toBe(6);
+        expect(DEFAULT_LOOK.minimapHeight).toBe(1.5);
+        expect(
+            resolveLook(DEFAULT_LOOK, { minimapHeight: Number.NaN })
+                .minimapHeight,
+        ).toBe(1.5);
+        expect(
+            resolveLook(DEFAULT_LOOK, { minimapHeight: 0.1 }).minimapHeight,
+        ).toBe(0.5);
+    });
+
+    it('keeps the least width of a wave beside zoom buttons in range', () => {
+        expect(DEFAULT_LOOK.waveMin).toBe(8);
+        expect(resolveLook(DEFAULT_LOOK, { waveMin: 12 }).waveMin).toBe(12);
+        expect(resolveLook(DEFAULT_LOOK, { waveMin: 99 }).waveMin).toBe(40);
+        expect(resolveLook(DEFAULT_LOOK, { waveMin: -2 }).waveMin).toBe(0);
+        expect(resolveLook(DEFAULT_LOOK, { waveMin: Number.NaN }).waveMin).toBe(
+            8,
+        );
+    });
+
+    it('keeps the voice-note width in range, with 0 turning it off', () => {
+        expect(DEFAULT_LOOK.narrow).toBe(22);
+        expect(resolveLook(DEFAULT_LOOK, { narrow: 0 }).narrow).toBe(0);
+        expect(resolveLook(DEFAULT_LOOK, { narrow: 30 }).narrow).toBe(30);
+        expect(resolveLook(DEFAULT_LOOK, { narrow: 999 }).narrow).toBe(60);
+        expect(resolveLook(DEFAULT_LOOK, { narrow: -5 }).narrow).toBe(0);
+        expect(resolveLook(DEFAULT_LOOK, { narrow: Number.NaN }).narrow).toBe(
+            22,
+        );
+    });
+
+    it('keeps the space between the parts under a voice note’s wave in range', () => {
+        expect(DEFAULT_LOOK.narrowGap).toBe(0.5);
+        expect(resolveLook(DEFAULT_LOOK, { narrowGap: 0 }).narrowGap).toBe(0);
+        expect(resolveLook(DEFAULT_LOOK, { narrowGap: 1 }).narrowGap).toBe(1);
+        expect(resolveLook(DEFAULT_LOOK, { narrowGap: 9 }).narrowGap).toBe(3);
+        expect(resolveLook(DEFAULT_LOOK, { narrowGap: -1 }).narrowGap).toBe(0);
+        expect(
+            resolveLook(DEFAULT_LOOK, { narrowGap: Number.NaN }).narrowGap,
+        ).toBe(0.5);
+    });
+
+    it('reads the voice note’s part lists, keeping known parts only', () => {
+        expect(DEFAULT_LOOK.narrowLine).toEqual(['play', 'wave', 'slot']);
+        expect(DEFAULT_LOOK.narrowStart).toEqual([
+            'time',
+            'elapsed',
+            'remaining',
+            'duration',
+        ]);
+
+        const look = resolveLook(DEFAULT_LOOK, {
+            narrowLine: ['play', 'nope', 'speed'] as never,
+            narrowStart: ['volume', 'volume'],
+        });
+
+        expect(look.narrowLine).toEqual(['play', 'speed']);
+        expect(look.narrowStart).toEqual(['volume']);
+    });
+
+    it('keeps the space between the wave and the minimap in range', () => {
+        expect(DEFAULT_LOOK.minimapGap).toBe(0.375);
+        expect(resolveLook(DEFAULT_LOOK, { minimapGap: 0 }).minimapGap).toBe(0);
+        expect(resolveLook(DEFAULT_LOOK, { minimapGap: 9 }).minimapGap).toBe(2);
+        expect(resolveLook(DEFAULT_LOOK, { minimapGap: -1 }).minimapGap).toBe(
+            0,
+        );
+        expect(
+            resolveLook(DEFAULT_LOOK, { minimapGap: Number.NaN }).minimapGap,
+        ).toBe(0.375);
+    });
+
     it('caps the number of parts', () => {
         const many = Array.from({ length: 40 }, () => 'spacer' as Part);
 

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Upgrade guide · SonicFrame</title>
+        <meta
+            name="description"
+            content="Moving from SonicFrame 0.3 to 0.4: what changes, and what stays the same."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Upgrade guide</h1>
+                <p class="lede">
+                    From 0.3 to 0.4. Every new feature is off until you turn it
+                    on, so an upgrade changes almost nothing on its own; the two
+                    things that do are listed first.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Update the package</h2>
+                    <div class="code">
+                        <pre><code>npm install sonicframe@0.4</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>What can look different</h2>
+                    <h3>Narrow players become voice notes</h3>
+                    <p>
+                        A ready-made player narrower than 22 rem (about 352
+                        pixels), with the wave in its line, now keeps only the
+                        play button and the wave on that line; the time goes
+                        under the wave on the left and the other controls on the
+                        right. Wider players look exactly as before.
+                    </p>
+                    <p>To keep the old single line at every width:</p>
+                    <div class="code">
+                        <pre><code>createPlayer({ container, src, look: { narrow: 0 } });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        Or arrange the voice note your own way with
+                        <code>narrowLine</code>, <code>narrowStart</code> and
+                        <code>narrowGap</code>; see
+                        <a href="./layouts.html">Parts and layouts</a>.
+                    </p>
+
+                    <h3>The tag reads larger peaks files</h3>
+                    <p>
+                        <code>&lt;sonic-player peaks="…"&gt;</code> now reads
+                        its file with <code>loadWaveform</code>: up to 8 MB, and
+                        a file with more than 20,000 values is folded instead of
+                        refused. It also reads audiowaveform <code>.dat</code>
+                        files and takes their duration.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>What you can turn on</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>New</th>
+                                    <th>Where to read about it</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Zoom and scroll (<code>zoom</code>)</td>
+                                    <td>
+                                        <a href="./zoom.html"
+                                            >Zoom and scroll</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The minimap (<code>minimap()</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./minimap.html">The minimap</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Ready-made waveform files
+                                        (<code>loadWaveform</code>,
+                                        <code>readWaveform</code>,
+                                        <code>writeWaveform</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./waveform-files.html"
+                                            >Ready-made peaks</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>{ peaks, duration }</code> as a
+                                        peaks source
+                                    </td>
+                                    <td><a href="./peaks.html">Peaks</a></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Zoom buttons on the player,
+                                        <code>decode</code>,
+                                        <code>preload</code>
+                                    </td>
+                                    <td>
+                                        <a href="./player-options.html"
+                                            >Player options</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>narrow</code>,
+                                        <code>narrowLine</code>,
+                                        <code>narrowStart</code>,
+                                        <code>narrowGap</code>,
+                                        <code>waveMin</code>
+                                    </td>
+                                    <td>
+                                        <a href="./layouts.html"
+                                            >Parts and layouts</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>snap</code> and
+                                        <code>cursors</code> on regions
+                                    </td>
+                                    <td>
+                                        <a href="./regions.html">Regions</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>a11y.zoom.announce</code>,
+                                        <code>a11y.minimap.keys</code>
+                                    </td>
+                                    <td>
+                                        <a href="./announcements.html"
+                                            >Screen readers</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>For plugin authors</h2>
+                    <p>
+                        With zoom on, the canvas shows a part of the sound. A
+                        plugin written for 0.3 keeps working while zoom is off;
+                        to follow the view, place things with
+                        <code>paint.xAt(ratio)</code>, read presses from
+                        <code>point.ratio</code> and <code>point.time</code>,
+                        and listen to <code>host.on('viewchange', …)</code>. See
+                        <a href="./writing-plugins.html">Writing a plugin</a>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Fixed</h2>
+                    <ul>
+                        <li>
+                            A sound longer than the decoder's ceiling is read
+                            evenly through, and the sample rate given back
+                            matches the samples.
+                        </li>
+                        <li>
+                            <code>exportClip</code> with <code>start</code> and
+                            <code>end</code> draws only that range.
+                        </li>
+                        <li>
+                            The plugins' shared overlay sits over the bars,
+                            never over a timeline lane.
+                        </li>
+                        <li>
+                            On a phone, zoom buttons no longer crush the wave.
+                        </li>
+                    </ul>
+                    <p>
+                        Every change is in the
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/blob/main/CHANGELOG.md"
+                            >changelog</a
+                        >.
+                    </p>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>
