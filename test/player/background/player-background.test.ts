@@ -147,6 +147,19 @@ describe('the background', () => {
         expect(pieces.at(-1)?.tagName).toBe('CANVAS');
     });
 
+    it('lays the darker of the surface and the played color under the lighter in duotone', () => {
+        make({ background: { color: '#808080', effects: ['duotone'] } });
+        root().style.setProperty('--sonicframe-surface', '#ffffff');
+        root().style.setProperty('--sonicframe-progress', '#000080');
+        player?.setLook({});
+        const [, dark, light] = Array.from((layer() as HTMLElement).children);
+
+        expect(dark.getAttribute('style')).toContain('rgba(0, 0, 128, 1)');
+        expect(dark.getAttribute('style')).toContain('lighten');
+        expect(light.getAttribute('style')).toContain('rgba(255, 255, 255, 1)');
+        expect(light.getAttribute('style')).toContain('multiply');
+    });
+
     it("draws the grain itself at the player's size, gray dots only", () => {
         make({ background: { color: '#000000', effects: ['grain'] } });
         Object.defineProperty(root(), 'clientWidth', { value: 12 });

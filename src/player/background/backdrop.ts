@@ -91,7 +91,6 @@ export class PlayerBackdrop {
             animation,
             {
                 surface: `var(--sonicframe-surface, ${palette.surface})`,
-                text: `var(--sonicframe-text, ${palette.text})`,
                 progress: `var(--sonicframe-progress, ${palette.progress})`,
             },
             (color) =>

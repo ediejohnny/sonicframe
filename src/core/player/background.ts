@@ -26,7 +26,7 @@ export type BackgroundEffect = {
     amount?: number;
     /** `dim`, `vignette` and `tint`: the color laid over; by default the palette's (black for `vignette`). */
     color?: string;
-    /** `duotone`: the dark and the light color; the palette's text and played colors by default. */
+    /** `duotone`: the dark and the light color; the palette's surface and played colors by default. */
     colors?: [string, string];
 };
 

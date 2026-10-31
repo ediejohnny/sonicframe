@@ -30,7 +30,6 @@ export type ColorReader = (color: string) => Rgba | null;
 /** The palette's colors the effects take by default, as CSS colors. */
 export type BackdropColors = {
     surface: string;
-    text: string;
     progress: string;
 };
 
@@ -102,13 +101,15 @@ function pictureStyles(
     return styles;
 }
 
-/** The two duotone colors, dark first: the app's, or the palette's text and played colors by lightness. */
+/** The two duotone colors, dark first: the app's, or the palette's surface and played colors by lightness. */
 function duotoneColors(
     given: [string, string] | undefined,
     colors: BackdropColors,
     read: ColorReader,
 ): [Rgba, Rgba] | null {
-    const [first, second] = (given ?? [colors.text, colors.progress]).map(read);
+    const [first, second] = (given ?? [colors.surface, colors.progress]).map(
+        read,
+    );
 
     if (first === null || second === null) {
         return null;

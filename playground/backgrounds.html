@@ -27,21 +27,30 @@
                         player's surface. A gradient has two to five colors, an
                         <code>angle</code> in degrees and a <code>kind</code>:
                         <code>'linear'</code>, <code>'radial'</code> or
-                        <code>'conic'</code>.
+                        <code>'conic'</code>. Pick a palette whose bars and text
+                        read on the background, as this one does, or lay
+                        <code>'dim'</code> over it.
                     </p>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"palette":"dark","look":{"background":{"gradient":{"colors":["#1b1f5e","#7b3fa0","#ef6f6c"],"angle":120}}}}'
+                        data-options='{"palette":{"surface":"#161b22","text":"#ffffff","muted":"#e6e6f0","border":"#ffffff33","wave":"#ffffff66","progress":"#ffd27a","accent":"#ffd27a","onAccent":"#1b1f5e","marker":"#ef6f6c","region":"#ffd27a33","dim":"#00000033"},"look":{"waveHeight":4,"padding":0.75,"background":{"gradient":{"colors":["#1b1f5e","#5b2f8a","#a8406f"],"angle":120}}}}'
                     ></div>
                     <div class="code">
                         <pre><code>createPlayer({
     container,
     src,
-    palette: 'dark',
+    palette: {
+        ...PALETTES.dark,
+        text: '#ffffff',
+        wave: '#ffffff66',
+        progress: '#ffd27a',
+        accent: '#ffd27a',
+        onAccent: '#1b1f5e',
+    },
     look: {
         background: {
-            gradient: { colors: ['#1b1f5e', '#7b3fa0', '#ef6f6c'], angle: 120 },
+            gradient: { colors: ['#1b1f5e', '#5b2f8a', '#a8406f'], angle: 120 },
         },
     },
 });</code></pre>
@@ -59,13 +68,13 @@
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"palette":"dark","look":{"background":{"image":{"src":"./sounds/covers/dusk.svg","position":"bottom"},"effects":["dim","vignette"]}}}'
+                        data-options='{"palette":{"surface":"#161b22","text":"#ffffff","muted":"#e6e6f0","border":"#ffffff33","wave":"#ffffff66","progress":"#ffd27a","accent":"#ffd27a","onAccent":"#1b1f5e","marker":"#ef6f6c","region":"#ffd27a33","dim":"#00000033"},"look":{"waveHeight":4,"padding":0.75,"background":{"image":{"src":"./sounds/covers/dusk.svg"},"effects":[{"type":"dim","amount":0.3},"vignette"]}}}'
                     ></div>
                     <div class="code">
                         <pre><code>look: {
     background: {
-        image: { src: '/covers/dusk.jpg', position: 'bottom' },
-        effects: ['dim', 'vignette'],
+        image: { src: '/covers/dusk.jpg' },
+        effects: [{ type: 'dim', amount: 0.3 }, 'vignette'],
     },
 },</code></pre>
                         <button class="button small" type="button">Copy</button>
@@ -137,14 +146,10 @@
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"palette":"dark","look":{"background":{"image":{"src":"./sounds/covers/dusk.svg"},"effects":["duotone","grain"]}}}'
+                        data-options='{"palette":{"surface":"#161b22","text":"#ffffff","muted":"#e6e6f0","border":"#ffffff33","wave":"#ffffff66","progress":"#ffd27a","accent":"#ffd27a","onAccent":"#1b1f5e","marker":"#ef6f6c","region":"#ffd27a33","dim":"#00000033"},"look":{"waveHeight":4,"padding":0.75,"background":{"image":{"src":"./sounds/covers/dusk.svg"},"effects":["duotone","grain"]}}}'
                     ></div>
                     <div class="code">
-                        <pre><code>effects: [
-    'duotone',
-    { type: 'grain', amount: 0.2 },
-    { type: 'tint', color: '#1f4fbf' },
-],</code></pre>
+                        <pre><code>effects: ['duotone', { type: 'grain', amount: 0.15 }],</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <div class="table-wrap">
@@ -193,8 +198,9 @@
                                     <td><code>'duotone'</code></td>
                                     <td>1</td>
                                     <td>
-                                        Two colors, dark and light: the text and
-                                        played colors, or <code>colors</code>.
+                                        Two colors, dark and light: the surface
+                                        and played colors, or
+                                        <code>colors</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -221,7 +227,7 @@
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"palette":"dark","look":{"background":{"image":{"src":"./sounds/covers/dusk.svg"},"filters":{"blur":6,"saturate":1.4},"effects":["dim"],"opacity":0.85}}}'
+                        data-options='{"palette":{"surface":"#161b22","text":"#ffffff","muted":"#e6e6f0","border":"#ffffff33","wave":"#ffffff66","progress":"#ffd27a","accent":"#ffd27a","onAccent":"#1b1f5e","marker":"#ef6f6c","region":"#ffd27a33","dim":"#00000033"},"look":{"waveHeight":4,"padding":0.75,"background":{"image":{"src":"./sounds/covers/dusk.svg"},"filters":{"blur":6,"saturate":1.4},"effects":["dim"],"opacity":0.85}}}'
                     ></div>
                     <div class="code">
                         <pre><code>background: {
@@ -246,7 +252,7 @@
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"palette":"dark","look":{"background":{"gradient":{"colors":["#1b1f5e","#7b3fa0","#ef6f6c","#ffc56b"],"angle":90}},"backgroundAnimation":{"type":"flow","duration":8}}}'
+                        data-options='{"palette":{"surface":"#161b22","text":"#ffffff","muted":"#e6e6f0","border":"#ffffff33","wave":"#ffffff66","progress":"#ffd27a","accent":"#ffd27a","onAccent":"#1b1f5e","marker":"#ef6f6c","region":"#ffd27a33","dim":"#00000033"},"look":{"waveHeight":4,"padding":0.75,"background":{"gradient":{"colors":["#1b1f5e","#7b3fa0","#ef6f6c","#ffc56b"],"angle":90}},"backgroundAnimation":{"type":"flow","duration":8}}}'
                     ></div>
                     <div class="code">
                         <pre><code>look: {
