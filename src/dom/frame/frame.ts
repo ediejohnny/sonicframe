@@ -6,8 +6,7 @@
  * The frame holds the wave's own life: its peaks (loaded near the screen), its size and pixels, and
  * when to draw. Its collaborators do the rest: the element made ready (`prepareContainer`), the
  * colors read from the page (`FrameColors`), the plugins (`PluginSet`), the view and its zoom
- * (`FrameView`), the pointer (`FramePointer`) and the picture itself (`FramePicture`). It stays one
- * file because most of it is the public API of one class, each method handing its work on.
+ * (`FrameView`), the pointer (`FramePointer`) and the picture itself (`FramePicture`).
  */
 
 import { Controller, type ValueText } from '../../core/frame/controller';

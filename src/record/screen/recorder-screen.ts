@@ -6,8 +6,6 @@
  * change is said through the page's live region. The focus follows each stage's main button, and the
  * recording's object address is given back whenever the recording goes. The screen holds its state
  * and its actions; what runs while recording is `LiveView`, the player of the recording `ReviewPlayer`.
- * It stays one file: every action moves the state and draws it again, so split further, that state
- * would only be handed around.
  */
 
 import type { PlayerLook } from '../../core/player/look';

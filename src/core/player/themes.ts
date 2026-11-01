@@ -1,8 +1,7 @@
 /**
- * The built-in themes: `default` (SonicFrame as it always looked) and twenty-four more, from a chat
- * voice note to a heartbeat monitor. Each names its own palette, used unless the player picks
- * another, so any theme can wear any palette. They follow familiar kinds of players without copying
- * any product. It stays one file because it is one table of data, a few lines per theme.
+ * The built-in themes: `default` (SonicFrame's own look) and twenty-four more, from a chat voice note
+ * to a heartbeat monitor. Each names its own palette, used unless the player picks another, so any
+ * theme can wear any palette.
  */
 
 import { isOneOf } from '../shared/checked';
