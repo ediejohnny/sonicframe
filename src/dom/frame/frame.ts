@@ -172,7 +172,7 @@ export class SonicFrame implements PluginHost {
         this.container.append(this.canvas);
         this.context = this.canvas.getContext('2d');
         this.lanes = new LaneManager(this.container, this.canvas, () =>
-            this.relayoutLanes(),
+            this.lanesChanged(),
         );
         this.frameView = new FrameView(
             resolveZoom(options.zoom),
@@ -514,8 +514,12 @@ export class SonicFrame implements PluginHost {
         this.container.setAttribute('aria-label', label);
     }
 
-    /** Reads the colors again (after a theme change) and redraws. */
+    /**
+     * Reads the colors again (after a theme change) and the room the container gives the lanes (a
+     * frame made before its box joined the page), and redraws.
+     */
     refresh(): void {
+        this.relayoutLanes();
         this.colors.forget();
         this.layoutDirty = true;
         this.controller.refresh();
@@ -739,6 +743,25 @@ export class SonicFrame implements PluginHost {
         // painted, so painting now shows the new wave in this very frame instead of a blank one.
         if (this.allocated) {
             this.render(performance.now());
+        }
+    }
+
+    /**
+     * A lane came, went or changed size: the lanes are placed again and the canvas, which changed size
+     * right now, is measured right now, so plugins and listeners line up at once. Left to the browser's
+     * next size report, what they move in the page would be reported as a ResizeObserver loop.
+     */
+    private lanesChanged(): void {
+        this.relayoutLanes();
+        const box = this.canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
+
+        if (box.width > 0 && box.height > 0) {
+            this.resize({
+                width: Math.round(box.width * ratio),
+                height: Math.round(box.height * ratio),
+                pixelRatio: ratio,
+            });
         }
     }
 

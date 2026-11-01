@@ -3,10 +3,17 @@
  * holds strips of titles or timelines) nor with the rows under it.
  */
 
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
+import type { Plugin } from '../../../src/index';
 import { createPlayer, type PlayerOptions } from '../../../src/player';
 import { triggerResize, triggerVisible } from '../../support/fakes';
-import { afterTest, boxOf, fakeMedia, pageHost } from '../../support/helpers';
+import {
+    afterTest,
+    boxOf,
+    fakeMedia,
+    nextFrame,
+    pageHost,
+} from '../../support/helpers';
 
 function make(options: Partial<PlayerOptions> = {}): HTMLElement {
     const host = pageHost({ left: 0, top: 0, width: 480, height: 80 });
@@ -100,6 +107,85 @@ describe('the parts beside the wave', () => {
 
         expect(play.style.getPropertyValue('translate')).toBe('0px -18px');
         expect(time.style.getPropertyValue('translate')).toBe('0px -18px');
+    });
+
+    it('change nothing in the page while the browser hands out sizes, and line up at the next frame', async () => {
+        const root = make();
+        const canvas = root.querySelector('canvas') as HTMLCanvasElement;
+        const play = root.querySelector('.sonicframe-play') as HTMLElement;
+        const before = play.style.getPropertyValue('translate');
+        // The bars' middle is at 30, the play button's at 48: it must move up 18. The wave is on
+        // screen first, so the size the browser reports is what brings the bars.
+        boxOf(canvas, { left: 60, top: 10, width: 300, height: 40 });
+        boxOf(play, { left: 0, top: 30, width: 36, height: 36 });
+        triggerVisible(canvas, true);
+        triggerResize(canvas, { width: 300, height: 40 });
+
+        expect(play.style.getPropertyValue('translate')).toBe(before);
+
+        await nextFrame();
+
+        expect(play.style.getPropertyValue('translate')).toBe('0px -18px');
+    });
+
+    it('meet the bars before the first paint, once the strips beside the wave are in place', () => {
+        // Every box as the page lays it out: nothing while off the page; the bars 40 tall from 10,
+        // or 26 once a 14 px strip takes room under them; the play button from 30, 36 tall, moved by
+        // its translate.
+        const measure = vi
+            .spyOn(Element.prototype, 'getBoundingClientRect')
+            .mockImplementation(function (this: Element): DOMRect {
+                const box = (top: number, height: number): DOMRect =>
+                    ({
+                        left: 0,
+                        top,
+                        width: 300,
+                        height,
+                        right: 300,
+                        bottom: top + height,
+                        x: 0,
+                        y: top,
+                        toJSON: () => ({}),
+                    }) as DOMRect;
+
+                if (!this.isConnected) {
+                    return box(0, 0);
+                }
+
+                if (this instanceof HTMLCanvasElement) {
+                    return box(
+                        10,
+                        this.style.getPropertyValue('height').includes('14px')
+                            ? 26
+                            : 40,
+                    );
+                }
+
+                // The play button's box follows its own translate, as on a page.
+                return this.classList.contains('sonicframe-play')
+                    ? box(
+                          30 +
+                              (parseFloat(
+                                  (this as HTMLElement).style
+                                      .getPropertyValue('translate')
+                                      .split(' ')[1] ?? '',
+                              ) || 0),
+                          36,
+                      )
+                    : box(0, 60);
+            });
+        const strip: Plugin = {
+            name: 'strip',
+            setup: (host) => {
+                host.addLane('below', 14);
+            },
+        };
+        const root = make({ plugins: [strip] });
+        const play = root.querySelector('.sonicframe-play') as HTMLElement;
+        measure.mockRestore();
+
+        // The bars run from 10 to 36 (middle 23); the play button's middle is at 48.
+        expect(play.style.getPropertyValue('translate')).toBe('0px -25px');
     });
 
     it('stay put when they already center on the bars', () => {
