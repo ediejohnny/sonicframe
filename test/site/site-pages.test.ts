@@ -52,7 +52,7 @@ describe('a dressed docs page', () => {
             [...(elsewhere?.querySelectorAll('a, button, input') ?? [])].map(
                 (control) => `${control.tagName} ${nameOf(control)}`,
             ),
-        ).toEqual(['A GitHub', 'A npm']);
+        ).toEqual(['A GitHub', 'A npm', 'A Support SonicFrame']);
         expect(page.querySelector('header #font-open')).not.toBeNull();
         expect(page.querySelector('header #scheme')).not.toBeNull();
     });

@@ -10,6 +10,7 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 [![MIT license](https://img.shields.io/badge/license-MIT-1f4fbf)](LICENSE)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-1f4fbf)](package.json)
 [![Unpacked size](https://img.shields.io/npm/unpacked-size/sonicframe?color=1f4fbf)](https://www.npmjs.com/package/sonicframe)
+[![Support SonicFrame: buy me a coffee][coffee-badge]](https://www.doativa.com/support-sonicframe)
 
 **[Docs](https://ediejohnny.github.io/sonicframe/)** ·
 [Quickstart](https://ediejohnny.github.io/sonicframe/quickstart.html) ·
@@ -184,6 +185,14 @@ Report a vulnerability privately to the author (see the npm page) rather than in
   every example live. `npm test` runs the tests.
 - [CONTRIBUTING](CONTRIBUTING.md) says how to send a change, and how to add a language in one file.
 
+## Support SonicFrame
+
+SonicFrame is free, and it stays free. If it saves you time, you can
+[buy me a coffee](https://www.doativa.com/support-sonicframe): every donation goes into the work behind new releases,
+their tests and the docs.
+
 ## License
 
 [MIT](LICENSE) © Edie Johnny
+
+[coffee-badge]: https://img.shields.io/badge/support-buy%20me%20a%20coffee-1f4fbf?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik00IDloMTJ2NS41QTQuNSA0LjUgMCAwIDEgMTEuNSAxOWgtM0E0LjUgNC41IDAgMCAxIDQgMTQuNVoiLz48cGF0aCBkPSJNMTYgMTAuNWgxLjVhMi43NSAyLjc1IDAgMCAxIDAgNS41SDE2Ii8%2BPHBhdGggZD0iTTggMy41djIuNU0xMiAzLjV2Mi41Ii8%2BPC9zdmc%2B
