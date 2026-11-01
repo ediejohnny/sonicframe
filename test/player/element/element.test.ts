@@ -219,7 +219,7 @@ describe('the <sonic-player> tag', () => {
             src: 'note.ogg',
             peaks: '/map.json',
             zoom: '',
-            minimap: 'above autohide',
+            minimap: 'above auto-hide',
             'a11y-minimap': 'keys',
         });
         const always = tag({
@@ -246,7 +246,7 @@ describe('the <sonic-player> tag', () => {
 
         expect(strips[0]?.getAttribute('role')).toBe('slider');
         expect(strips[1]?.hasAttribute('role')).toBe(false);
-        // With autohide, no room while the whole sound is in view; without it, the strip is there.
+        // With auto-hide, no room while the whole sound is in view; without it, the strip is there.
         expect(strips[0]?.style.getPropertyValue('display')).toBe('none');
         expect(strips[1]?.style.getPropertyValue('display')).toBe('block');
         // Above: the strip at the top (1.5 rem, 24 px, and 0.375 rem, 6 px, of space), the wave under it.
@@ -349,5 +349,17 @@ describe('the <sonic-player> tag', () => {
         await Promise.resolve();
 
         expect(String(errors[0])).toContain('unknown theme');
+    });
+
+    it('gives the player it built through its player property, and null off the page', () => {
+        defineSonicPlayer();
+        const element = tag({ src: 'note.ogg' });
+        document.body.append(element);
+
+        expect(element.player).not.toBeNull();
+        expect(element.player?.element).toBe(player(element));
+
+        element.remove();
+        expect(element.player).toBeNull();
     });
 });

@@ -14,6 +14,7 @@ import { PROGRESS } from '../../core/shared/variables';
 import type { SonicFrame } from '../../dom/frame/frame';
 import { css } from '../../dom/shared/css';
 import { iconElement, iconPath } from '../../dom/shared/icon';
+import { sizePixels } from '../../dom/shared/units';
 
 /** What a part needs from the player that builds it, for as long as that build lives. */
 export type PartHost = {
@@ -75,7 +76,9 @@ export function iconButton(
     icon.append(iconPath({ d, fill: 'currentColor' }));
     button.append(icon);
     css(button, [
-        ...iconButtonBox(`${Math.round(look.button.size * 0.75)}px`),
+        ...iconButtonBox(
+            `${Math.round(sizePixels(look.button.size) * 0.75)}px`,
+        ),
         ['border-width', '0'],
         ['border-radius', '50%'],
         ['background-color', 'transparent'],

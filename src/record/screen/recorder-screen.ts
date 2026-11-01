@@ -56,6 +56,7 @@ import {
     type RecorderScreenOptions,
 } from './screen-options';
 import { mainButton, screenPart, type PartHost } from './screen-parts';
+import { sizePixels } from '../../dom/shared/units';
 
 /** The words that say why recording cannot happen, by reason. */
 const REASONS = {
@@ -181,7 +182,7 @@ export class RecorderScreen {
             css(this.row, [
                 [
                     'min-height',
-                    `max(${this.look.waveHeight}rem, ${this.look.button.size}px)`,
+                    `max(${this.look.waveHeight}rem, ${sizePixels(this.look.button.size)}px)`,
                 ],
             ]);
         }

@@ -7,7 +7,6 @@
 
 export { createPlayer, Player } from './player/player/player';
 export type {
-    ButtonAnimation,
     ChapterListLook,
     ChaptersPlugin,
     PlayerA11y,
@@ -19,6 +18,7 @@ export type {
     PlayerEvents,
     MediaSessionOptions,
     MediaSessionPlugin,
+    ListenButtonAnimation,
     PlayerListenButton,
     PlayerMediaSession,
     PlayerOptions,
@@ -57,7 +57,12 @@ export {
     type ChaptersSource,
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
-export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element/element';
+export {
+    defineSonicPlayer,
+    PLAYER_ATTRIBUTES,
+    type PlayerAttribute,
+    type SonicPlayerElement,
+} from './player/element/element';
 export type { PlayerLabels, Words } from './core/languages/words';
 export {
     LANGUAGE_NAMES,
@@ -71,10 +76,11 @@ export { PLAYER_LABELS } from './core/player/labels';
 export {
     DEFAULT_LOOK,
     PART_NAMES,
-    resolveLook,
     type Part,
     type PlayerLook,
+    type RemSize,
 } from './core/player/look';
+export { resolveLook } from './core/player/resolve-look';
 export {
     BACKGROUND_EFFECTS,
     type Background,
@@ -122,6 +128,7 @@ import {
     type PlayerWords as LabelWords,
 } from './core/player/labels';
 import { pickPalette as choosePalette } from './core/player/palettes';
+import type { ListenButtonAnimation as ReadingMotion } from './player/player/player-options';
 import {
     resolveFont as fontStack,
     safeFontUrl as fontUrl,
@@ -141,3 +148,6 @@ export const resolveFont: typeof fontStack = fontStack;
 
 /** @deprecated The player checks a font's address itself; goes in 2.0. */
 export const safeFontUrl: typeof fontUrl = fontUrl;
+
+/** @deprecated Use `ListenButtonAnimation`; `ButtonAnimation` goes in 2.0. */
+export type ButtonAnimation = ReadingMotion;

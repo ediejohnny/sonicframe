@@ -76,5 +76,12 @@ export function part(name: string): HTMLElement | null {
 }
 
 export const CHAPTER_LINE: PlayerOptions['look'] = {
-    line: ['play', 'prevChapter', 'wave', 'nextChapter', 'chapter', 'chapters'],
+    line: [
+        'play',
+        'previousChapter',
+        'wave',
+        'nextChapter',
+        'chapter',
+        'chapters',
+    ],
 };

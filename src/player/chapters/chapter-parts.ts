@@ -26,14 +26,14 @@ export type ChapterHost = ListHost & {
 /** The parts that show only when the player has chapters. */
 export const CHAPTER_PARTS: readonly Part[] = [
     'chapter',
-    'prevChapter',
+    'previousChapter',
     'nextChapter',
     'chapters',
 ];
 
 /** Previous and next chapter: a bar and a triangle each. */
 const CHAPTER_ICONS = {
-    prevChapter: 'M6 6h2v12H6zm3.5 6L18 6v12z',
+    previousChapter: 'M6 6h2v12H6zm3.5 6L18 6v12z',
     nextChapter: 'M16 6h2v12h-2zM6 6l8.5 6L6 18z',
 } as const;
 
@@ -103,21 +103,24 @@ export class ChapterParts {
     }
 
     /** A button to the previous chapter (like a previous track) or the next one; says when there is none. */
-    stepButton(part: 'prevChapter' | 'nextChapter'): HTMLButtonElement {
+    stepButton(part: 'previousChapter' | 'nextChapter'): HTMLButtonElement {
         const labels = this.host.words.labels;
         const button = iconButton(
             this.host.look(),
-            part === 'prevChapter'
-                ? 'sonicframe-prev-chapter'
+            // The previous chapter's button keeps its old class beside the new one until 2.0.
+            part === 'previousChapter'
+                ? 'sonicframe-previous-chapter sonicframe-prev-chapter'
                 : 'sonicframe-next-chapter',
             CHAPTER_ICONS[part],
-            labels[part === 'prevChapter' ? 'previousChapter' : 'nextChapter'],
+            labels[part],
         );
 
         button.addEventListener('click', () => {
             const plugin = this.plugin;
             const moved =
-                part === 'prevChapter' ? plugin?.previous() : plugin?.next();
+                part === 'previousChapter'
+                    ? plugin?.previous()
+                    : plugin?.next();
 
             if (moved === false) {
                 this.host.frame()?.announce(labels.noChapter);

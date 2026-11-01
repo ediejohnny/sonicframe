@@ -23,13 +23,26 @@ import { attributeNumber } from '../../dom/shared/custom-element';
 import { backgroundLookOf } from './background-attributes';
 
 /** The words of an attribute, lowercase. */
+/** The tag's older short words, each read as the option's name in kebab-case until 2.0. */
+const OLD_WORDS: Readonly<Record<string, string>> = {
+    edges: 'edge-scroll',
+    autohide: 'auto-hide',
+    pauses: 'pause-in-value',
+    stay: 'stay-open',
+};
+
 function wordsOf(value: string): Set<string> {
-    return new Set(value.toLowerCase().split(/\s+/));
+    return new Set(
+        value
+            .toLowerCase()
+            .split(/\s+/)
+            .map((word) => OLD_WORDS[word] ?? word),
+    );
 }
 
 /**
  * The zoom from the `zoom` attribute: present turns it on, and its words turn on its ways (`wheel`,
- * `scroll`, `pinch`, `keys`, `follow`, `center`, `edges`) and the `buttons`; `max` is `zoom-max`.
+ * `scroll`, `pinch`, `keys`, `follow`, `center`, `edge-scroll`) and the `buttons`; `max` is `zoom-max`.
  */
 function zoomOf(
     value: string | null,
@@ -48,13 +61,13 @@ function zoomOf(
         keys: words.has('keys'),
         follow: words.has('follow'),
         followType: words.has('center') ? 'center' : 'page',
-        edgeScroll: words.has('edges'),
+        edgeScroll: words.has('edge-scroll'),
         buttons: words.has('buttons'),
         max: attributeNumber(max),
     };
 }
 
-/** The minimap from the `minimap` attribute: present adds it; `above`, `autohide` and `wheel` change it. */
+/** The minimap from the `minimap` attribute: present adds it; `above`, `auto-hide` and `wheel` change it. */
 function minimapOf(value: string | null): MinimapOptions | undefined {
     if (value === null) {
         return undefined;
@@ -64,14 +77,14 @@ function minimapOf(value: string | null): MinimapOptions | undefined {
 
     return {
         side: words.has('above') ? 'above' : 'below',
-        autoHide: words.has('autohide'),
+        autoHide: words.has('auto-hide'),
         controls: { wheel: words.has('wheel') },
     };
 }
 
 /**
  * The description from the `a11y-description` attribute: present turns it on, and its words turn on
- * the extras (`keys`, `pauses`, `speech`, `button`, `announce`) and the button's `animation`, of the
+ * the extras (`keys`, `pause-in-value`, `speech`, `button`, `announce`) and the button's `animation`, of the
  * type `pulse` (the default) or `fade`; any other word is ignored.
  */
 function descriptionOf(value: string | null): PlayerDescription | undefined {
@@ -83,7 +96,7 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
 
     return {
         keys: words.has('keys'),
-        pauseInValue: words.has('pauses'),
+        pauseInValue: words.has('pause-in-value'),
         speech: words.has('speech'),
         button: words.has('button')
             ? {
@@ -97,11 +110,12 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
 
 /**
  * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
- * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
- * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
+ * `chapters-options` (or its old name, `chapter-options`): `list` (in the player, or `popover` or
+ * `drawer` with `left`, `backdrop`), with
+ * `open`, `stay-open`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
  * `above`, `images`, `links`, `no-keys` and `no-lines`; and the words of `a11y-chapters`: `announce`,
  * `readable` (the tooltip's text in black or white, whichever reads) and `no-value-note`. Any other word
- * is ignored; `announce` and `readable` are still read from `chapter-options` too.
+ * is ignored; `announce` and `readable` are still read from the options attribute too.
  */
 function chaptersOf(
     src: string | null,
@@ -126,7 +140,7 @@ function chaptersOf(
                         : 'inline',
                   open: words.has('open'),
                   side: words.has('left') ? 'left' : 'right',
-                  stayOpen: words.has('stay'),
+                  stayOpen: words.has('stay-open'),
                   backdrop: words.has('backdrop'),
                   animation: words.has('animation'),
                   animationType: words.has('slide') ? 'slide' : 'fade',
@@ -259,7 +273,8 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         minimap: minimapOf(element.getAttribute('minimap')),
         chapters: chaptersOf(
             element.getAttribute('chapters'),
-            element.getAttribute('chapter-options'),
+            element.getAttribute('chapters-options') ??
+                element.getAttribute('chapter-options'),
             element.getAttribute('a11y-chapters'),
         ),
         mediaSession: sessionOf(element),

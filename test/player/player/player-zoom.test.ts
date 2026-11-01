@@ -319,7 +319,20 @@ describe('decoding on the player', () => {
         player?.destroy();
         host?.remove();
         decodable(30);
-        expect(await peaksOf({ decode: { peaks: 300 } })).toBe(300);
+        expect(await peaksOf({ decode: { peakCount: 300 } })).toBe(300);
+
+        player?.destroy();
+        host?.remove();
+        decodable(30);
+        // The old name, alone, still counts; given both, the new one wins.
+        expect(await peaksOf({ decode: { peaks: 400 } })).toBe(400);
+
+        player?.destroy();
+        host?.remove();
+        decodable(30);
+        expect(await peaksOf({ decode: { peaks: 400, peakCount: 200 } })).toBe(
+            200,
+        );
     });
 
     it('decodes peaks per second of sound with zoom on, never fewer than the count', async () => {

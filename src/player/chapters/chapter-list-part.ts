@@ -205,7 +205,8 @@ export class ChapterListPart {
 
     /** The list's own look with an unknown palette name reported once and dropped. */
     private checkedLook(list: PlayerChapterList): OwnLook {
-        const { palette, font, style } = list;
+        const { palette, font } = list;
+        const style = list.box ?? list.style;
 
         if (unknownPalette(palette)) {
             this.host.later(unknownName('palette', palette));

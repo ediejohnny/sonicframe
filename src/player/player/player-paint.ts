@@ -188,7 +188,7 @@ export function finishBox(
         ['box-shadow', shadowOf(look.shadow, palette)],
         ['color', 'var(--sonicframe-text, inherit)'],
         ['font-size', `${look.fontSize}rem`],
-        ['font-weight', String(look.weight)],
+        ['font-weight', String(look.fontWeight)],
         ['text-transform', look.uppercase ? 'uppercase' : 'none'],
         ['font-variant-numeric', 'tabular-nums'],
         ['line-height', '1.25'],

@@ -12,6 +12,7 @@ import { BUTTON, BUTTON_ICON } from '../../core/shared/variables';
 import { css } from '../../dom/shared/css';
 import { iconButton } from '../../player/parts/part-buttons';
 import type { RecorderAction, RecorderIcon } from './screen-options';
+import { sizePixels } from '../../dom/shared/units';
 
 /** The buttons' icons, on the 24 × 24 grid of the play icon. */
 export const RECORDER_ICONS: Readonly<Record<RecorderIcon, string>> = {
@@ -86,7 +87,7 @@ export function actionButton(
 
 /** Fills `button` like the play button, at the size of a main button. */
 function fill(look: PlayerLook, button: HTMLButtonElement): void {
-    const size = `${look.button.size}px`;
+    const size = `${sizePixels(look.button.size)}px`;
     css(button, [
         ['width', size],
         ['height', size],

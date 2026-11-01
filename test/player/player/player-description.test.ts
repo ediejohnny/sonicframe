@@ -76,7 +76,9 @@ describe('the wave in words on the player', () => {
             peaks: NOTE,
             a11y: { lang: 'pt', description: true },
         });
-        player.on('description', (text) => heard.push(text));
+        const old: (string | null)[] = [];
+        player.on('descriptionchange', (text) => heard.push(text));
+        player.on('description', (text) => old.push(text));
         player.setTheme('bubble');
 
         expect(described()).toBe(
@@ -85,6 +87,8 @@ describe('the wave in words on the player', () => {
         );
         expect(player.description).toBe(described());
         expect(heard).toEqual([described()]);
+        // The old event name still tells the same.
+        expect(old).toEqual(heard);
     });
 
     it('brings a button that reads it with the browser voice, only when asked and able', async () => {

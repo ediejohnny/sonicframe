@@ -219,6 +219,8 @@ export type PlayerChapterList = {
     /** The list's own font, as the player's `font` takes it; the player's by default. */
     font?: FontChoice;
     /** The list's own box; each one left out keeps the list's default. */
+    box?: PlayerChapterListStyle;
+    /** @deprecated Use `box`; `style` goes in 2.0. */
     style?: PlayerChapterListStyle;
 };
 
@@ -255,10 +257,12 @@ export type PlayerZoom = ZoomOptions & {
 /** How the player decodes a sound for its peaks. */
 export type PlayerDecode = {
     /** How many peaks: 1000, from 100 to 100 000. */
+    peakCount?: number;
+    /** @deprecated Use `peakCount`; `peaks` goes in 2.0. */
     peaks?: number;
     /**
      * With zoom on, peaks per second of sound, so zooming in shows detail: 100, from 1 to 1000. The
-     * count never falls below `peaks`, nor rises past 1 000 000.
+     * count never falls below `peakCount`, nor rises past 1 000 000.
      */
     peaksPerSecond?: number;
     /** The longest sound decoded, in seconds; a longer one is read evenly through. Only lowers 1800. */
@@ -274,7 +278,7 @@ export type PlayerDescription = SoundDescriptionOptions & {
 };
 
 /** How the reading button moves while it reads: it grows and shrinks back, or fades and comes back. */
-export type ButtonAnimation = 'pulse' | 'fade';
+export type ListenButtonAnimation = 'pulse' | 'fade';
 
 /** The button that reads the description aloud. */
 export type PlayerListenButton = {
@@ -285,7 +289,7 @@ export type PlayerListenButton = {
      */
     animation?: boolean;
     /** `'pulse'` (the default: it grows a little and back) or `'fade'` (half transparent and back). */
-    animationType?: ButtonAnimation;
+    animationType?: ListenButtonAnimation;
 };
 
 /**
@@ -293,6 +297,9 @@ export type PlayerListenButton = {
  * playing when the player has chapters (null and -1 outside every chapter).
  */
 export type PlayerEvents = SonicFrameEvents & {
+    /** The sound in words arrived or changed (null while there is none). */
+    descriptionchange: [text: string | null];
+    /** @deprecated Use `descriptionchange`; `description` goes in 2.0. */
     description: [text: string | null];
     chapterchange: [chapter: Chapter | null, index: number];
 };

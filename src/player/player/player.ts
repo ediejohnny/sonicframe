@@ -47,11 +47,14 @@ import { DEFAULT_WAVE } from '../../core/wave/shapes';
 import { pageLanguage } from '../../dom/a11y/page-language';
 import { canSpeak } from '../../dom/a11y/speak';
 import { SonicFrame } from '../../dom/frame/frame';
-import type { SonicFrameOptions } from '../../dom/frame/frame-options';
+import {
+    DEFAULT_BAR,
+    type SonicFrameOptions,
+} from '../../dom/frame/frame-options';
 import { css } from '../../dom/shared/css';
 import { useFont } from '../../dom/shared/fonts';
 import { observeSize, outsideSizeReport } from '../../dom/shared/observe';
-import { remPixels } from '../../dom/shared/units';
+import { remPixels, sizePixels } from '../../dom/shared/units';
 import type { ChaptersPlugin } from '../../plugins/chapters/chapters-options';
 import type { SoundDescriptionPlugin } from '../../plugins/description/description';
 import type { MediaSessionPlugin } from '../../plugins/media-session/media-session';
@@ -109,7 +112,7 @@ export class Player {
     /** The player's own choices, at creation or through a setter: they always win over the theme. */
     private readonly own: OwnChoices;
     private theme: Theme | null = null;
-    private showVolume: boolean;
+    private volumeShown: boolean;
     private look: PlayerLook = DEFAULT_LOOK;
     private palette: PaletteChoice = 'default';
     /** The colors the player wears, as numbers for shadows and glass. */
@@ -149,7 +152,7 @@ export class Player {
             wave: options.wave,
             bar: options.bar,
         };
-        this.showVolume = options.volume === true;
+        this.volumeShown = options.volume === true;
         this.theme = this.pickTheme(options.theme);
         this.combine();
         this.font = options.font;
@@ -332,12 +335,37 @@ export class Player {
         }
     }
 
+    /** Changes the bars' density and shape; with no bars, the theme's come back. */
+    setBar(bar?: Partial<BarStyle>): void {
+        if (!this.destroyed) {
+            this.own.bar =
+                bar === undefined ? undefined : { ...this.own.bar, ...bar };
+            this.combine();
+            this.frameRef?.setBar({ ...DEFAULT_BAR, ...this.bar });
+        }
+    }
+
+    /** Changes the player's accessible name; with no name, its `player` word comes back. */
+    setLabel(label?: string): void {
+        if (!this.destroyed) {
+            this.element.setAttribute(
+                'aria-label',
+                cleanText(label ?? this.words.labels.player, 120),
+            );
+        }
+    }
+
     /** Shows or hides the volume control. */
-    setVolume(show: boolean): void {
-        if (!this.destroyed && show !== this.showVolume) {
-            this.showVolume = show;
+    showVolume(show: boolean): void {
+        if (!this.destroyed && show !== this.volumeShown) {
+            this.volumeShown = show;
             this.build();
         }
+    }
+
+    /** @deprecated Use `showVolume`; `setVolume` goes in 2.0. */
+    setVolume(show: boolean): void {
+        this.showVolume(show);
     }
 
     /** Removes the player; a media element it made is stopped, yours is left alone. Safe to call twice. */
@@ -430,7 +458,7 @@ export class Player {
      */
     private allowed(part: Part): boolean {
         if (part === 'volume') {
-            return this.showVolume;
+            return this.volumeShown;
         }
 
         if (CHAPTER_PARTS.includes(part)) {
@@ -450,7 +478,7 @@ export class Player {
             line.includes(part) || meta.includes(part);
         const extra: Part[] = [];
 
-        if (this.showVolume && !placed('volume')) {
+        if (this.volumeShown && !placed('volume')) {
             extra.push('volume');
         }
 
@@ -502,7 +530,10 @@ export class Player {
             chapters: this.chapterParts.plugin,
             session: this.session.plugin,
             decoded: () => this.sound.decoded(),
-            described: (text) => this.events.emit('description', text),
+            described: (text) => {
+                this.events.emit('descriptionchange', text);
+                this.events.emit('description', text);
+            },
         });
         this.descriptionRef = description;
 
@@ -566,7 +597,7 @@ export class Player {
             ['flex-direction', 'column'],
             ['gap', '0.25rem'],
             ['flex', '1 1 auto'],
-            ['min-width', roomy ? `${look.waveMin}rem` : '0'],
+            ['min-width', roomy ? `${look.waveMinWidth}rem` : '0'],
         ]);
         css(box, [
             ['position', 'relative'],
@@ -727,7 +758,7 @@ export class Player {
             return;
         }
 
-        const { narrow: width, wavePlace } = this.look;
+        const { narrowWidth: width, wavePlace } = this.look;
         const narrow =
             wavePlace === 'inline' &&
             width > 0 &&
@@ -809,10 +840,12 @@ export class Player {
                     media: this.media,
                     shape: look.button.shape,
                     fill: look.button.fill,
-                    size: look.button.size,
-                    labels: {
-                        play: this.words.labels.play,
-                        pause: this.words.labels.pause,
+                    size: sizePixels(look.button.size),
+                    a11y: {
+                        words: {
+                            play: this.words.labels.play,
+                            pause: this.words.labels.pause,
+                        },
                     },
                 });
                 break;
@@ -838,13 +871,15 @@ export class Player {
                 this.volumeRef = VolumeControl.create({
                     container: target,
                     media: this.media,
-                    slider: look.volume,
-                    size: Math.round(look.button.size * 0.875),
-                    labels: {
-                        mute: this.words.labels.mute,
-                        unmute: this.words.labels.unmute,
-                        volume: this.words.labels.volume,
-                        muted: this.words.labels.muted,
+                    slider: look.volumeSlider,
+                    size: Math.round(sizePixels(look.button.size) * 0.875),
+                    a11y: {
+                        words: {
+                            mute: this.words.labels.mute,
+                            unmute: this.words.labels.unmute,
+                            volume: this.words.labels.volume,
+                            muted: this.words.labels.muted,
+                        },
                     },
                 });
                 break;
@@ -862,7 +897,7 @@ export class Player {
             case 'chapter':
                 target.append(this.chapterParts.namePart());
                 break;
-            case 'prevChapter':
+            case 'previousChapter':
             case 'nextChapter':
                 target.append(this.chapterParts.stepButton(part));
                 break;

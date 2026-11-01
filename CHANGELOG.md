@@ -29,6 +29,15 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   `ChaptersA11y` name the groups.
 - The zoom's and the minimap's words can be phrases (`'Zoom {level}: {from} to {to}'`), like every other
   word, as well as functions; the minimap takes its name as `a11y.words.label`.
+- The player: `showVolume(show)`, `setBar(bar)` and `setLabel(label)`, and the `descriptionchange` event. The
+  look's names say what they measure: `narrowWidth`, `waveMinWidth`, `fontWeight`, `volumeSlider`,
+  `marqueePauseOnHover` and `marqueePauseSeconds` (in seconds, like every other time); the part
+  `previousChapter` (class `.sonicframe-previous-chapter`); `decode.peakCount`; the chapter list's `box`. The play
+  button's `size` takes rem too (`'2.5rem'`), so it grows with the page's text.
+- The tag: the `player` property gives the player it built (`chapters.go()`, `setLook()`), the
+  `SonicPlayerElement` type and `document.createElement('sonic-player')` know it, and `PlayerAttribute` names its
+  attributes. Its words follow the options' names in kebab-case: `chapters-options`, `stay-open`, `edge-scroll`,
+  `auto-hide`, `pause-in-value` and `pause-on-hover`.
 
 ### Changed
 
@@ -37,6 +46,9 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
 - A palette of your own may leave colors out (they come from `light`), a theme takes a palette of its own and a
   drawing by its name (`wave: 'bars'`), `outlineSound` and `resamplePeaks` read any list of numbers (a
   `Float32Array`), and `ChaptersPlugin.set` says what it takes.
+- A palette colors the chapters' lines too (`--sonicframe-chapter`, its quiet color), so they no longer stay gray
+  on a dark palette.
+- `PART_NAMES` lists `previousChapter` where it listed `prevChapter`; `prevChapter` is still read as it.
 
 ### Deprecated
 
@@ -50,6 +62,14 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   `a11y.labels` of the player and the recorder screen (`a11y.words`), the minimap's `a11y.label`
   (`a11y.words.label`), `soundDescription`'s `announceWhenReady` (`announce`), and the words `announce` and
   `readable` in the tag's `chapter-options` (`a11y-chapters`).
+- The player's names that did not say what they are: `setVolume` (`showVolume`), the look's `narrow`, `waveMin`,
+  `weight`, `volume`, `marqueeHoverPause` and `marqueePause` in milliseconds (`narrowWidth`, `waveMinWidth`,
+  `fontWeight`, `volumeSlider`, `marqueePauseOnHover`, `marqueePauseSeconds`), the part `prevChapter` and its
+  class `.sonicframe-prev-chapter` (`previousChapter`), `decode.peaks` (`decode.peakCount`), the chapter list's
+  `style` (`box`), the `description` event (`descriptionchange`) and the type `ButtonAnimation`
+  (`ListenButtonAnimation`). A resolved look gives each old name back with the same value.
+- The tag's older words: `chapter-options` (`chapters-options`), `stay`, `edges`, `autohide`, `pauses` and
+  `hover-pause` (`stay-open`, `edge-scroll`, `auto-hide`, `pause-in-value`, `pause-on-hover`).
 - Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,
   `soundWords`, `SoundWords`, `playerWords`, `PlayerWords`, `pickPalette`, `resolveFont`, `safeFontUrl`,
   `RecorderEvent` and `RECORDER_EVENTS`.

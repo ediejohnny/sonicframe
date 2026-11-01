@@ -12,19 +12,33 @@ import type {
 import type { BackgroundAnimation } from '../../core/player/background-animation';
 import type { PlayerLook } from '../../core/player/look';
 
+/** An attribute of the tag's background. */
+export type BackgroundAttribute =
+    | 'background-color'
+    | 'background-gradient'
+    | 'background-image'
+    | 'background-options'
+    | 'background-angle'
+    | 'background-blur'
+    | 'background-opacity'
+    | 'background-effects'
+    | 'background-animation'
+    | 'background-duration';
+
 /** The tag's attributes for the background. */
-export const BACKGROUND_ATTRIBUTES: readonly string[] = Object.freeze([
-    'background-color',
-    'background-gradient',
-    'background-image',
-    'background-options',
-    'background-angle',
-    'background-blur',
-    'background-opacity',
-    'background-effects',
-    'background-animation',
-    'background-duration',
-]);
+export const BACKGROUND_ATTRIBUTES: readonly BackgroundAttribute[] =
+    Object.freeze([
+        'background-color',
+        'background-gradient',
+        'background-image',
+        'background-options',
+        'background-angle',
+        'background-blur',
+        'background-opacity',
+        'background-effects',
+        'background-animation',
+        'background-duration',
+    ]);
 
 /** The words that place an image. */
 const PLACES = ['top', 'bottom', 'left', 'right', 'center'];
@@ -100,7 +114,8 @@ function backgroundOf(element: Element): Background | undefined {
 
 /**
  * The animation from the words of `background-animation` (its type: `pan`, `zoom`, `pulse`, `hue`
- * or `flow`; `always` to move while paused too; `hover-pause`) and `background-duration`, in seconds.
+ * or `flow`; `always` to move while paused too; `pause-on-hover`, or its old word `hover-pause`) and
+ * `background-duration`, in seconds.
  */
 function animationOf(element: Element): BackgroundAnimation | undefined {
     const value = element.getAttribute('background-animation');
@@ -114,7 +129,8 @@ function animationOf(element: Element): BackgroundAnimation | undefined {
     return {
         type: first(given, ['pan', 'zoom', 'pulse', 'hue', 'flow'] as const),
         while: given.includes('always') ? 'always' : 'playing',
-        pauseOnHover: given.includes('hover-pause'),
+        pauseOnHover:
+            given.includes('pause-on-hover') || given.includes('hover-pause'),
         duration: number(element.getAttribute('background-duration')),
     };
 }

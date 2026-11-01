@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { DEFAULT_LOOK, resolveLook } from '../../../src/core/player/look';
+import { DEFAULT_LOOK } from '../../../src/core/player/look';
+import { resolveLook } from '../../../src/core/player/resolve-look';
 import { isPaletteName } from '../../../src/core/player/palettes';
 import {
     cleanBar,

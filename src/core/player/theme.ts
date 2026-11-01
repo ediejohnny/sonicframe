@@ -10,7 +10,8 @@
 
 import type { BarStyle, WaveName, WaveStyle } from '../../types';
 import { within } from '../shared/checked';
-import { DEFAULT_LOOK, resolveLook, type PlayerLook } from './look';
+import { DEFAULT_LOOK, type PlayerLook } from './look';
+import { resolveLook } from './resolve-look';
 import type { PaletteChoice } from './palettes';
 import { THEMES, isThemeName, type ThemeName } from './themes';
 

@@ -10,7 +10,7 @@ import type { PlayerLook } from '../../core/player/look';
 import { css } from '../../dom/shared/css';
 import { iconElement, iconPath } from '../../dom/shared/icon';
 import { prefersReducedMotion } from '../../dom/shared/motion';
-import { remPixels } from '../../dom/shared/units';
+import { remPixels, sizePixels } from '../../dom/shared/units';
 
 /** The ground of the REC mark. */
 export const REC_GROUND = '#141414';
@@ -87,7 +87,7 @@ export function dressRec(
     paint(button, red);
     css(button, [
         ['width', 'auto'],
-        ['height', `${look.button.size}px`],
+        ['height', `${sizePixels(look.button.size)}px`],
         ['padding', '0 0.625rem'],
         ['font-size', '0.875rem'],
     ]);

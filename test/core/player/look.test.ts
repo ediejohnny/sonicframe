@@ -2,10 +2,10 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
 import {
     DEFAULT_LOOK,
-    resolveLook,
     type Part,
     type PlayerLook,
 } from '../../../src/core/player/look';
+import { resolveLook } from '../../../src/core/player/resolve-look';
 import {
     nextSpeed,
     speedText,
@@ -44,7 +44,7 @@ describe('resolveLook', () => {
         const look = resolveLook(DEFAULT_LOOK, {
             waveHeight: 500,
             corner: -3,
-            weight: 1234,
+            fontWeight: 1234,
             skip: Number.NaN,
             shadow: 'neon' as PlayerLook['shadow'],
             button: { shape: 'star' as 'circle', fill: 'outline', size: 1000 },
@@ -53,7 +53,7 @@ describe('resolveLook', () => {
 
         expect(look.waveHeight).toBe(12);
         expect(look.corner).toBe(0);
-        expect(look.weight).toBe(900);
+        expect(look.fontWeight).toBe(900);
         expect(look.skip).toBe(DEFAULT_LOOK.skip);
         expect(look.shadow).toBe(DEFAULT_LOOK.shadow);
         expect(look.button).toEqual({
@@ -85,24 +85,39 @@ describe('resolveLook', () => {
     });
 
     it('keeps the least width of a wave beside zoom buttons in range', () => {
-        expect(DEFAULT_LOOK.waveMin).toBe(8);
-        expect(resolveLook(DEFAULT_LOOK, { waveMin: 12 }).waveMin).toBe(12);
-        expect(resolveLook(DEFAULT_LOOK, { waveMin: 99 }).waveMin).toBe(40);
-        expect(resolveLook(DEFAULT_LOOK, { waveMin: -2 }).waveMin).toBe(0);
-        expect(resolveLook(DEFAULT_LOOK, { waveMin: Number.NaN }).waveMin).toBe(
-            8,
-        );
+        expect(DEFAULT_LOOK.waveMinWidth).toBe(8);
+        expect(
+            resolveLook(DEFAULT_LOOK, { waveMinWidth: 12 }).waveMinWidth,
+        ).toBe(12);
+        expect(
+            resolveLook(DEFAULT_LOOK, { waveMinWidth: 99 }).waveMinWidth,
+        ).toBe(40);
+        expect(
+            resolveLook(DEFAULT_LOOK, { waveMinWidth: -2 }).waveMinWidth,
+        ).toBe(0);
+        expect(
+            resolveLook(DEFAULT_LOOK, { waveMinWidth: Number.NaN })
+                .waveMinWidth,
+        ).toBe(8);
     });
 
     it('keeps the voice-note width in range, with 0 turning it off', () => {
-        expect(DEFAULT_LOOK.narrow).toBe(22);
-        expect(resolveLook(DEFAULT_LOOK, { narrow: 0 }).narrow).toBe(0);
-        expect(resolveLook(DEFAULT_LOOK, { narrow: 30 }).narrow).toBe(30);
-        expect(resolveLook(DEFAULT_LOOK, { narrow: 999 }).narrow).toBe(60);
-        expect(resolveLook(DEFAULT_LOOK, { narrow: -5 }).narrow).toBe(0);
-        expect(resolveLook(DEFAULT_LOOK, { narrow: Number.NaN }).narrow).toBe(
-            22,
+        expect(DEFAULT_LOOK.narrowWidth).toBe(22);
+        expect(resolveLook(DEFAULT_LOOK, { narrowWidth: 0 }).narrowWidth).toBe(
+            0,
         );
+        expect(resolveLook(DEFAULT_LOOK, { narrowWidth: 30 }).narrowWidth).toBe(
+            30,
+        );
+        expect(
+            resolveLook(DEFAULT_LOOK, { narrowWidth: 999 }).narrowWidth,
+        ).toBe(60);
+        expect(resolveLook(DEFAULT_LOOK, { narrowWidth: -5 }).narrowWidth).toBe(
+            0,
+        );
+        expect(
+            resolveLook(DEFAULT_LOOK, { narrowWidth: Number.NaN }).narrowWidth,
+        ).toBe(22);
     });
 
     it('keeps the space between the parts under a voice note’s wave in range', () => {
@@ -189,7 +204,7 @@ describe('resolveLook', () => {
     it('keeps a long name still unless asked to walk it, at a speed and pauses in range', () => {
         expect(DEFAULT_LOOK.marquee).toBe(false);
         expect(DEFAULT_LOOK.marqueeSpeed).toBe(2);
-        expect(DEFAULT_LOOK.marqueePause).toBe(1500);
+        expect(DEFAULT_LOOK.marqueePauseSeconds).toBe(1.5);
         expect(DEFAULT_LOOK.marqueeType).toBe('loop');
 
         for (const type of ['restart', 'bounce'] as const) {
@@ -202,14 +217,14 @@ describe('resolveLook', () => {
             resolveLook(DEFAULT_LOOK, { marqueeType: 'spin' as never })
                 .marqueeType,
         ).toBe('loop');
-        expect(DEFAULT_LOOK.marqueeHoverPause).toBe(true);
+        expect(DEFAULT_LOOK.marqueePauseOnHover).toBe(true);
         expect(
-            resolveLook(DEFAULT_LOOK, { marqueeHoverPause: false })
-                .marqueeHoverPause,
+            resolveLook(DEFAULT_LOOK, { marqueePauseOnHover: false })
+                .marqueePauseOnHover,
         ).toBe(false);
         expect(
-            resolveLook(DEFAULT_LOOK, { marqueeHoverPause: 'no' as never })
-                .marqueeHoverPause,
+            resolveLook(DEFAULT_LOOK, { marqueePauseOnHover: 'no' as never })
+                .marqueePauseOnHover,
         ).toBe(true);
         expect(DEFAULT_LOOK.marqueeGap).toBe(2.5);
         expect(resolveLook(DEFAULT_LOOK, { marqueeGap: 4 }).marqueeGap).toBe(4);
@@ -233,15 +248,17 @@ describe('resolveLook', () => {
             resolveLook(DEFAULT_LOOK, { marqueeSpeed: 99 }).marqueeSpeed,
         ).toBe(20);
         expect(
-            resolveLook(DEFAULT_LOOK, { marqueePause: 0 }).marqueePause,
+            resolveLook(DEFAULT_LOOK, { marqueePauseSeconds: 0 })
+                .marqueePauseSeconds,
         ).toBe(0);
         expect(
-            resolveLook(DEFAULT_LOOK, { marqueePause: 60000 }).marqueePause,
-        ).toBe(10000);
+            resolveLook(DEFAULT_LOOK, { marqueePauseSeconds: 60 })
+                .marqueePauseSeconds,
+        ).toBe(10);
         expect(
-            resolveLook(DEFAULT_LOOK, { marqueePause: Number.NaN })
-                .marqueePause,
-        ).toBe(1500);
+            resolveLook(DEFAULT_LOOK, { marqueePauseSeconds: Number.NaN })
+                .marqueePauseSeconds,
+        ).toBe(1.5);
     });
 
     it('reads the voice note’s part lists, keeping known parts only', () => {
@@ -283,6 +300,84 @@ describe('resolveLook', () => {
     });
 });
 
+describe('the look’s old names, kept until 2.0', () => {
+    it('reads each old name as the new one, and the new one wins when both are given', () => {
+        const old = resolveLook(DEFAULT_LOOK, {
+            waveMin: 12,
+            narrow: 30,
+            weight: 700,
+            marqueeHoverPause: false,
+            marqueePause: 2500,
+            volume: 'always',
+        });
+
+        expect(old).toMatchObject({
+            waveMinWidth: 12,
+            narrowWidth: 30,
+            fontWeight: 700,
+            marqueePauseOnHover: false,
+            marqueePauseSeconds: 2.5,
+            volumeSlider: 'always',
+        });
+
+        const both = resolveLook(DEFAULT_LOOK, {
+            narrow: 30,
+            narrowWidth: 40,
+            marqueePause: 2500,
+            marqueePauseSeconds: 1,
+        });
+
+        expect(both.narrowWidth).toBe(40);
+        expect(both.marqueePauseSeconds).toBe(1);
+    });
+
+    it('gives the old names back with the same values, for a page that reads them', () => {
+        const look = resolveLook(DEFAULT_LOOK, {
+            narrowWidth: 40,
+            waveMinWidth: 10,
+            fontWeight: 600,
+            marqueePauseOnHover: false,
+            marqueePauseSeconds: 2,
+            volumeSlider: 'always',
+        });
+
+        expect(look).toMatchObject({
+            narrow: 40,
+            waveMin: 10,
+            weight: 600,
+            marqueeHoverPause: false,
+            marqueePause: 2000,
+            volume: 'always',
+        });
+    });
+
+    it('reads the part prevChapter as previousChapter', () => {
+        const look = resolveLook(DEFAULT_LOOK, {
+            line: ['play', 'wave', 'prevChapter', 'nextChapter'],
+            meta: ['previousChapter'],
+        });
+
+        expect(look.line).toEqual([
+            'play',
+            'wave',
+            'previousChapter',
+            'nextChapter',
+        ]);
+        expect(look.meta).toEqual([]);
+    });
+
+    it('takes a play button size in rem as well as in pixels, each kept in range', () => {
+        const size = (value: number | `${number}rem`): number | string =>
+            resolveLook(DEFAULT_LOOK, { button: { size: value } as never })
+                .button.size;
+
+        expect(size('2.5rem')).toBe('2.5rem');
+        expect(size('20rem')).toBe('6rem');
+        expect(size('0.1rem')).toBe('1rem');
+        expect(size('big' as never)).toBe(36);
+        expect(size(40)).toBe(40);
+    });
+});
 describe('timeText', () => {
     it('reads the time the way the look asks', () => {
         expect(timeText('elapsed', 5, 40)).toBe('0:05');

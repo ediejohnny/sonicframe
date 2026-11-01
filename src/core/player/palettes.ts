@@ -255,6 +255,7 @@ export function paletteVariables(palette: Palette): [string, string][] {
         ['--sonicframe-on-progress', palette.onAccent],
         ['--sonicframe-marker', palette.marker],
         ['--sonicframe-timeline', palette.muted],
+        ['--sonicframe-chapter', palette.muted],
         ['--sonicframe-region', palette.region],
         ['--sonicframe-dim', palette.dim],
         ['--sonicframe-badge', palette.dim],
