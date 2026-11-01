@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-01
+
 ### Added
 
 - `a11y.tooltip.readable` for `markers()` and `chapters()` (and so the player's `chapters`; on the tag, the
@@ -111,6 +113,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   seconde" in French). An app's own `back` or `forward` without its singular still serves both.
 - A player in Portuguese says its words in Portuguese everywhere: the volume slider said "muted", and the regions
   and the markers' "and N more" spoke English, whatever the player's language.
+- A player with a timeline above the wave and zoom no longer lays itself out again on every frame at some widths:
+  its parts move to meet the bars only for a difference of a whole pixel, so they settle.
+- A player no longer sets off "ResizeObserver loop completed with undelivered notifications" when it is made with
+  a strip beside the wave (a timeline, a caption, chapter titles) or when its width crosses into a voice note. The
+  page never showed it, but error trackers logged it, development overlays showed it as an error and some test
+  runners failed on it. The player now lines its parts up with the bars before the first paint.
+- The length on a chapter's picture in the list has room around it, instead of touching its edges.
 
 ## [0.5.0] - 2026-10-31
 
