@@ -36,4 +36,17 @@ export const PT_PT: Words = {
         zoomReset: 'Mostrar o som completo',
         nextChapter: 'Capítulo seguinte',
     },
+    recorder: {
+        ...PT.recorder,
+        resume: 'Retomar a gravação',
+        review: 'A sua gravação',
+        asking: 'A aguardar o microfone',
+        recording: 'A gravar',
+        paused: 'Gravação em pausa',
+        sending: 'A enviar',
+        sendFailed: 'Não foi possível enviar a gravação. Tente novamente.',
+        denied: 'O microfone está bloqueado. Permita-o na barra de endereço.',
+        insecure: 'Gravar requer uma página segura (HTTPS).',
+        tooLarge: 'A gravação ficou demasiado grande.',
+    },
 };
