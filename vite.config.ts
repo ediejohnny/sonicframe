@@ -31,7 +31,7 @@ export default defineConfig({
                     name: 'dom',
                     environment: 'happy-dom',
                     include: [
-                        'test/{dom,controls,plugins,player,site}/**/*.test.ts',
+                        'test/{dom,controls,plugins,player,record,site}/**/*.test.ts',
                     ],
                     setupFiles: ['./test/support/setup.ts'],
                 },
@@ -39,7 +39,12 @@ export default defineConfig({
         ],
     },
     pack: {
-        entry: ['src/index.ts', 'src/analysis.ts', 'src/player.ts'],
+        entry: [
+            'src/index.ts',
+            'src/analysis.ts',
+            'src/player.ts',
+            'src/record.ts',
+        ],
         format: 'esm',
         platform: 'neutral',
         target: 'es2022',

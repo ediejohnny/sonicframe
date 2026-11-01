@@ -3,7 +3,8 @@
  * single `AudioContext` is shared; each element is routed source → analyser → destination exactly
  * once (the browser allows only one source per element) and the audio passes through unchanged. The
  * context is never closed and the destination is never disconnected — either would silence the
- * element — and media that cannot be tapped (cross-origin without CORS) is refused, not muted.
+ * element — and media that cannot be tapped (cross-origin without CORS) is refused, not muted. A
+ * stream (the microphone) is read the same way, but its analyser never reaches the speakers.
  */
 
 import { canTapMedia } from '../../core/analysis/origin';
@@ -40,6 +41,50 @@ function audioContext(): AudioContext | null {
 /** Resumes the shared context (it starts suspended until a user gesture). */
 export function resumeAudio(): void {
     void context?.resume();
+}
+
+/** A stream read through an analyser of its own. */
+export type StreamTap = {
+    analyser: AnalyserNode;
+    /** Lets go of the stream; the shared context stays. */
+    release(): void;
+};
+
+/**
+ * Reads `stream` (a microphone) through an analyser of the shared context, or null without Web
+ * Audio. The analyser goes nowhere: a microphone sent to the speakers would echo back into itself.
+ */
+export function tapStream(stream: MediaStream): StreamTap | null {
+    const ctx = audioContext();
+
+    if (ctx === null) {
+        return null;
+    }
+
+    let source: MediaStreamAudioSourceNode;
+    let analyser: AnalyserNode;
+
+    try {
+        source = ctx.createMediaStreamSource(stream);
+        analyser = ctx.createAnalyser();
+    } catch {
+        return null;
+    }
+
+    // Asked for from a person's press, so the context may start running.
+    void ctx.resume();
+    source.connect(analyser);
+    let released = false;
+
+    return {
+        analyser,
+        release(): void {
+            if (!released) {
+                released = true;
+                source.disconnect();
+            }
+        },
+    };
 }
 
 /** Routes `media` through a shared analyser, or null if it cannot be tapped without muting it. */

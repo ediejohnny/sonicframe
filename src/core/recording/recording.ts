@@ -101,6 +101,9 @@ export const DEFAULT_RECORD_TYPES: readonly string[] = Object.freeze([
     'audio/ogg;codecs=opus',
 ]);
 
+/** The largest recording kept, in bytes (100 MiB); past it, recording stops with an error. */
+export const MAX_RECORDING_BYTES = 104_857_600;
+
 /** How long a recording runs before it stops on its own, in seconds: 300 by default, from 1 to 3600. */
 export function recordSeconds(asked: unknown): number {
     return within(asked, 300, 1, 3600);

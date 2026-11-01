@@ -39,8 +39,9 @@ function imports(file: string): string[] {
 
 /**
  * The layers each layer of src/ may import, besides itself and the package's types (src/types.ts):
- * core <- dom <- controls and plugins <- player <- the entries. A layer never reaches up or sideways,
- * so the core runs anywhere and a plugin never needs the player.
+ * core <- dom <- controls and plugins <- player <- record <- the entries. A layer never reaches up or
+ * sideways, so the core runs anywhere, a plugin never needs the player, and only the recorder (which
+ * plays back what it recorded on a player) reaches the player.
  */
 const LAYERS: Readonly<Record<string, readonly string[]>> = {
     core: [],
@@ -48,6 +49,7 @@ const LAYERS: Readonly<Record<string, readonly string[]>> = {
     controls: ['core', 'dom'],
     plugins: ['core', 'dom'],
     player: ['core', 'dom', 'controls', 'plugins'],
+    record: ['core', 'dom', 'controls', 'plugins', 'player'],
 };
 
 /** The folders under `folder`, by name. */
@@ -135,7 +137,7 @@ describe('package boundaries', () => {
 
     it('keeps every test where a test project runs it', () => {
         // vite.config.ts runs test/*.test.ts and test/core/ in Node, and test/dom, controls, plugins,
-        // player and site under happy-dom: a test anywhere else would never run.
+        // player, record and site under happy-dom: a test anywhere else would never run.
         const stray = sources('test')
             .map((file) =>
                 relative(join(root, 'test'), file).split(sep).join('/'),
@@ -144,7 +146,9 @@ describe('package boundaries', () => {
                 (file) =>
                     file.endsWith('.test.ts') &&
                     file.includes('/') &&
-                    !/^(core|dom|controls|plugins|player|site)\//.test(file),
+                    !/^(core|dom|controls|plugins|player|record|site)\//.test(
+                        file,
+                    ),
             );
 
         expect(stray).toEqual([]);
@@ -168,6 +172,15 @@ describe('package boundaries', () => {
         for (const target of imports(join(root, 'src/player.ts'))) {
             expect(target, 'src/player.ts').toMatch(
                 /^\.\/(player|core)\/[\w-]+\/[\w-]+$/,
+            );
+        }
+    });
+
+    it('keeps the record entry to the recorder and the core', () => {
+        // src/record.ts is the `sonicframe/record` subpath: an app that never records never loads it.
+        for (const target of imports(join(root, 'src/record.ts'))) {
+            expect(target, 'src/record.ts').toMatch(
+                /^\.\/(record|core)\/[\w-]+\/[\w-]+$/,
             );
         }
     });
