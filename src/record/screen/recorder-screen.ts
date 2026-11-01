@@ -43,6 +43,7 @@ import {
 } from '../../player/player/player-paint';
 import { RecordError, type RecordErrorReason } from '../recorder/microphone';
 import { Recorder, type Recording } from '../recorder/recorder';
+import { type SendControl, uploadRecording } from '../upload/upload';
 import { LiveView } from './live-view';
 import { ReviewPlayer } from './review-player';
 import { RECORDER_ICONS } from './screen-buttons';
@@ -91,6 +92,8 @@ export class RecorderScreen {
     private recordingRef: Recording | null = null;
     private address: string | null = null;
     private reviewRef: ReviewPlayer | null = null;
+    /** The send under way: its signal aborts when it is canceled or the screen destroyed. */
+    private sendTurn: AbortController | null = null;
     private frame = 0;
     private limited = false;
     private stopScheme: () => void = () => undefined;
@@ -121,6 +124,7 @@ export class RecorderScreen {
             look: this.look,
             words: this.words.words,
             hold: options.hold === true,
+            cancelable: options.cancelSend === true,
             live: this.live,
             state: () => this.stateRef,
             seconds: () => this.recorder.seconds,
@@ -135,6 +139,7 @@ export class RecorderScreen {
             resume: () => this.resume(),
             discard: () => this.discard(),
             send: () => void this.send(),
+            cancelSend: () => this.cancelSend(),
         };
 
         this.element = document.createElement('div');
@@ -261,7 +266,10 @@ export class RecorderScreen {
         }
     }
 
-    /** Hands the recording in review to the app's `onSend`. */
+    /**
+     * Hands the recording in review to the app's `onSend`, or sends it to the app's `upload`
+     * address; a send canceled or outlived by the screen ends without a word.
+     */
     async send(): Promise<void> {
         const recording = this.recordingRef;
 
@@ -269,12 +277,23 @@ export class RecorderScreen {
             return;
         }
 
+        const turn = new AbortController();
+        this.sendTurn = turn;
         this.say(this.words.words.sending, true);
         this.events.emit('send', recording);
 
         try {
-            await this.options.onSend?.(recording);
+            await this.sendOut(recording, {
+                signal: turn.signal,
+                progress: (fraction) => this.showProgress(turn, fraction),
+            });
         } catch (error) {
+            if (this.sendTurn !== turn) {
+                return;
+            }
+
+            this.sendTurn = null;
+
             // Destroyed meanwhile, the screen has nothing left to say.
             if (this.move('failed')) {
                 this.say(this.words.words.sendFailed, true);
@@ -284,9 +303,11 @@ export class RecorderScreen {
             return;
         }
 
-        if (this.destroyed) {
+        if (this.sendTurn !== turn || this.destroyed) {
             return;
         }
+
+        this.sendTurn = null;
 
         if (this.options.afterSend === 'keep') {
             this.move('keep');
@@ -298,6 +319,17 @@ export class RecorderScreen {
         this.events.emit('sent', recording);
     }
 
+    /** Stops the send under way (its signal aborts); the recording stays in review, to send again. */
+    cancelSend(): void {
+        const turn = this.sendTurn;
+
+        if (turn !== null && this.move('cancel')) {
+            this.sendTurn = null;
+            turn.abort();
+            this.say(this.words.words.sendCanceled);
+        }
+    }
+
     /** Takes the screen off the page, letting the microphone and the recording go. */
     destroy(): void {
         if (this.destroyed) {
@@ -305,6 +337,7 @@ export class RecorderScreen {
         }
 
         this.destroyed = true;
+        this.sendTurn?.abort();
         cancelAnimationFrame(this.frame);
         this.recorder.destroy();
         this.forget();
@@ -418,6 +451,36 @@ export class RecorderScreen {
         announce(text);
         this.status.textContent = show ? text : '';
         this.status.hidden = !show;
+    }
+
+    /** Sends through the app's `onSend`, or else to the app's `upload` address, or else nowhere. */
+    private async sendOut(
+        recording: Recording,
+        control: Required<SendControl>,
+    ): Promise<void> {
+        const { onSend, upload } = this.options;
+
+        if (onSend !== undefined) {
+            await onSend(recording, control);
+        } else if (upload !== undefined) {
+            this.events.emit(
+                'uploaded',
+                await uploadRecording(recording, upload, control),
+            );
+        }
+    }
+
+    /** Shows how far the send under way got (from 0 to 1) in the line `send` shows, and tells the page. */
+    private showProgress(turn: AbortController, fraction: number): void {
+        if (this.sendTurn !== turn || !Number.isFinite(fraction)) {
+            return;
+        }
+
+        const done = Math.min(1, Math.max(0, fraction));
+        this.status.textContent = this.words.say('sendingPercent', {
+            percent: String(Math.round(done * 100)),
+        });
+        this.events.emit('progress', done);
     }
 
     /** While recording, a frame at a time: the time, the live wave and the time said when asked. */

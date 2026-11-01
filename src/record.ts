@@ -45,6 +45,13 @@ export {
     type RecorderScreenOptions,
 } from './record/screen/screen-options';
 export {
+    type SendControl,
+    UploadError,
+    type UploadResponse,
+    uploadRecording,
+} from './record/upload/upload';
+export type { RecorderUpload } from './core/recording/upload';
+export {
     defineSonicRecorder,
     RECORDER_ATTRIBUTES,
 } from './record/element/recorder-element';

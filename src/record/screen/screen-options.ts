@@ -7,7 +7,9 @@ import type { PaletteChoice } from '../../core/player/palettes';
 import type { ThemeInput } from '../../core/player/theme';
 import type { RecorderState } from '../../core/recording/recording';
 import type { BarStyle, WaveName, WaveStyle } from '../../types';
+import type { RecorderUpload } from '../../core/recording/upload';
 import type { Recording, RecorderOptions } from '../recorder/recorder';
+import type { SendControl, UploadResponse } from '../upload/upload';
 import type { RecorderScreen } from './recorder-screen';
 
 /**
@@ -73,14 +75,15 @@ export const DEFAULT_RECORDER_PARTS: Readonly<Required<RecorderParts>> =
         review: ['discard', 'player', 'send'],
     });
 
-/** The buttons whose icon the app may draw; `resume` is the pause button's while paused. */
+/** The buttons whose icon the app may draw; `resume` is the pause button's while paused, `cancel` the send button's while it cancels. */
 export type RecorderIcon =
     | 'record'
     | 'stop'
     | 'pause'
     | 'resume'
     | 'discard'
-    | 'send';
+    | 'send'
+    | 'cancel';
 
 /** How the parts beside the player of the recording line up. */
 export type RecorderAlign = 'bars' | 'center' | 'start' | 'end';
@@ -140,8 +143,19 @@ export type RecorderScreenOptions = RecorderOptions & {
     afterStop?: RecorderAfterStop;
     /** Called with every recording that stops, once the screen is in review or, with `afterStop: 'none'`, back at the start. */
     onRecorded?: (recording: Recording) => void;
-    /** Called with the recording when Send is pressed; a Promise keeps the screen busy until it settles, and a rejection says the send failed. */
-    onSend?: (recording: Recording) => void | Promise<void>;
+    /**
+     * Called with the recording when Send is pressed; a Promise keeps the screen busy until it
+     * settles, and a rejection says the send failed. `control.signal` aborts when the send is
+     * canceled or the screen destroyed, and `control.progress(fraction)` shows how far it got.
+     */
+    onSend?: (
+        recording: Recording,
+        control: Required<SendControl>,
+    ) => void | Promise<void>;
+    /** Sends to the app's own address when Send is pressed and there is no `onSend`. */
+    upload?: RecorderUpload;
+    /** While sending, the send button cancels the send (its signal aborts, the recording stays in review). Off by default. */
+    cancelSend?: boolean;
     /** After a send: back to the start (`'reset'`, the default) or keep the recording (`'keep'`). */
     afterSend?: 'reset' | 'keep';
     /** Recording while the record button is held, stopping on release; a click still records. Off by default. */
@@ -156,6 +170,10 @@ export type RecorderScreenEvents = {
     recorded: [recording: Recording];
     /** Send was pressed. */
     send: [recording: Recording];
+    /** How far a send got, from 0 to 1. */
+    progress: [fraction: number];
+    /** The server's answer to an `upload`. */
+    uploaded: [response: UploadResponse];
     /** The app's `onSend` settled without an error. */
     sent: [recording: Recording];
     /** Recording could not start or go on, or the app's `onSend` failed. */

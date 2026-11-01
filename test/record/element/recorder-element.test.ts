@@ -9,6 +9,7 @@ import { PALETTES } from '../../../src/player';
 import { defineSonicRecorder, type Recording } from '../../../src/record';
 import { afterTest } from '../../support/helpers';
 import { stubMicrophone } from '../../support/recording';
+import { FakeRequest, stubRequests } from '../../support/upload';
 import {
     layOut,
     liveWaveFeed,
@@ -193,6 +194,46 @@ describe('the <sonic-recorder> tag', () => {
         expect(heard).toHaveLength(1);
         expect(heard[0][0]).toBe('save');
         expect((heard[0][1] as Recording).blob).toBeInstanceOf(Blob);
+    });
+
+    it("sends to the page's address, lets a send be canceled, and tells the page how it went", async () => {
+        stubMicrophone();
+        stubRequests();
+        const element = tag({
+            'upload-url': '/voice',
+            'upload-method': 'PUT',
+            'upload-field': 'note',
+            'cancel-send': '',
+            'icon-cancel': 'M2 2h20v20H2z',
+        });
+        const heard: unknown[][] = [];
+
+        for (const name of ['progress', 'uploaded']) {
+            element.addEventListener(`sonicframe:${name}`, (event) =>
+                heard.push([name, ...(event as CustomEvent<unknown[]>).detail]),
+            );
+        }
+
+        await press(element, 'record');
+        await press(element, 'stop');
+        await press(element, 'send');
+        const asked = FakeRequest.made[0];
+        expect(asked.method).toBe('PUT');
+        expect(asked.url).toBe('/voice');
+        expect((asked.body as FormData).has('note')).toBe(true);
+        const cancel = element.querySelector('.sonicframe-send');
+        expect(cancel?.getAttribute('aria-label')).toBe('Cancel sending');
+        expect(cancel?.querySelector('path')?.getAttribute('d')).toBe(
+            'M2 2h20v20H2z',
+        );
+
+        asked.progress(1, 4);
+        asked.answer(200, 'ok');
+        await vi.advanceTimersByTimeAsync(0);
+        expect(heard).toEqual([
+            ['progress', 0.25],
+            ['uploaded', { status: 200, body: 'ok' }],
+        ]);
     });
 
     it('falls back on a time limit that is empty, not 0 seconds', async () => {

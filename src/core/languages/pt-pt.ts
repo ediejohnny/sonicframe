@@ -44,6 +44,7 @@ export const PT_PT: Words = {
         recording: 'A gravar',
         paused: 'Gravação em pausa',
         sending: 'A enviar',
+        sendingPercent: 'A enviar, {percent}%',
         sendFailed: 'Não foi possível enviar a gravação. Tente novamente.',
         denied: 'O microfone está bloqueado. Permita-o na barra de endereço.',
         insecure: 'Gravar requer uma página segura (HTTPS).',

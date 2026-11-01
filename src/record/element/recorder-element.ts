@@ -6,9 +6,10 @@
  * builds the screen again (a recording under way is dropped); taking the element out of the page lets
  * the microphone go. The screen's events are dispatched on the element as `sonicframe:<event>`
  * custom events, with their arguments in `detail`; Send hands the recording over in
- * `sonicframe:send` and counts as sent.
+ * `sonicframe:send` and counts as sent, or with `upload-url` sends it to that address first.
  */
 
+import type { RecorderUpload } from '../../core/recording/upload';
 import { attributeNumber, canDefine } from '../../dom/shared/custom-element';
 import { RecorderScreen } from '../screen/recorder-screen';
 import type {
@@ -38,6 +39,11 @@ export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
     'icon-resume',
     'icon-discard',
     'icon-send',
+    'icon-cancel',
+    'upload-url',
+    'upload-method',
+    'upload-field',
+    'cancel-send',
     'a11y-lang',
     'a11y-announce-every',
 ]);
@@ -49,9 +55,18 @@ const ICONS: readonly RecorderIcon[] = [
     'resume',
     'discard',
     'send',
+    'cancel',
 ];
 
-const EVENTS = ['state', 'recorded', 'send', 'sent', 'error'] as const;
+const EVENTS = [
+    'state',
+    'recorded',
+    'send',
+    'progress',
+    'uploaded',
+    'sent',
+    'error',
+] as const;
 
 /** The words of a parts attribute, in order (the screen shows only the names it knows); undefined without the attribute. */
 function partsOf(value: string | null): string[] | undefined {
@@ -85,6 +100,20 @@ function actionsOf(element: Element): Record<string, RecorderAction> {
     );
 }
 
+/** Where Send sends, from `upload-url`, `upload-method` and `upload-field` (checked when sending); none without an address. */
+function uploadOf(element: Element): RecorderUpload | undefined {
+    const url = element.getAttribute('upload-url');
+
+    return url === null
+        ? undefined
+        : {
+              url,
+              method: (element.getAttribute('upload-method') ??
+                  undefined) as RecorderUpload['method'],
+              field: element.getAttribute('upload-field') ?? undefined,
+          };
+}
+
 /** Everything the tag's attributes say, as the screen's options (all but the container). */
 function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
     const get = (name: string): string | null => element.getAttribute(name);
@@ -98,6 +127,8 @@ function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
             undefined) as RecorderScreenOptions['palette'],
         hold: element.hasAttribute('hold'),
         afterSend: element.hasAttribute('keep') ? 'keep' : 'reset',
+        cancelSend: element.hasAttribute('cancel-send'),
+        upload: uploadOf(element),
         // The screen checks these words and path data, and falls back on its own.
         afterStop: (get('after-stop') ??
             undefined) as RecorderScreenOptions['afterStop'],

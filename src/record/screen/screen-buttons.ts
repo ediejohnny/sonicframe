@@ -21,6 +21,7 @@ export const RECORDER_ICONS: Readonly<Record<RecorderIcon, string>> = {
     resume: 'M12 6a6 6 0 1 1 0 12a6 6 0 1 1 0-12z',
     discard: 'M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z',
     send: 'M3 20.5 21 12 3 3.5V10l12 2-12 2z',
+    cancel: 'M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z',
 };
 
 /** The icon of an app's button that brings none of its own: a dot. */

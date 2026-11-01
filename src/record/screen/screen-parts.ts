@@ -28,6 +28,8 @@ export type PartHost = {
     readonly words: Readonly<RecorderWords>;
     /** Record while the record button is held. */
     readonly hold: boolean;
+    /** While sending, the send button cancels the send. */
+    readonly cancelable: boolean;
     readonly live: LiveView;
     /** The screen's state now. */
     state(): RecorderState;
@@ -47,6 +49,7 @@ export type PartHost = {
     resume(): void;
     discard(): void;
     send(): void;
+    cancelSend(): void;
 };
 
 /** The record button: a press records; with `hold`, recording stops when a long press ends. */
@@ -117,6 +120,20 @@ export function screenPart(
         case 'discard':
         case 'send': {
             const name = part === 'send' ? 'send' : 'discard';
+
+            if (name === 'send' && sending && host.cancelable) {
+                const cancel = screenButton(
+                    look,
+                    'send',
+                    host.icon('cancel'),
+                    words.cancelSend,
+                    () => host.cancelSend(),
+                );
+                setBusy(cancel, false);
+
+                return cancel;
+            }
+
             const button = screenButton(
                 look,
                 name,

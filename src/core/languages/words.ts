@@ -159,8 +159,14 @@ export type RecorderWords = {
     limit: string;
     deleted: string;
     sending: string;
+    /** Shown while sending, when the app tells how far it got: `{percent}`, from 0 to 100. */
+    sendingPercent: string;
     sent: string;
     sendFailed: string;
+    /** The send button while sending, with `cancelSend`. */
+    cancelSend: string;
+    /** Said when a send is canceled. */
+    sendCanceled: string;
     /** Why recording cannot happen: the microphone blocked. */
     denied: string;
     /** No microphone. */

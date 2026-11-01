@@ -76,6 +76,16 @@ describe('nextRecorderState', () => {
         expect(walk(['start', 'discard']).at(-1)).toBe('idle');
     });
 
+    it('cancels a send back to review, and nothing else', () => {
+        expect(
+            walk(['start', 'granted', 'stop', 'send', 'cancel']).at(-1),
+        ).toBe('review');
+        expect(walk(['start', 'granted', 'cancel']).at(-1)).toBe('recording');
+        expect(walk(['start', 'granted', 'stop', 'cancel']).at(-1)).toBe(
+            'review',
+        );
+    });
+
     it('finishes a recording or a pause straight back to idle, with no review', () => {
         expect(walk(['start', 'granted', 'finish']).at(-1)).toBe('idle');
         expect(walk(['start', 'granted', 'pause', 'finish']).at(-1)).toBe(

@@ -30,6 +30,7 @@ export type RecorderEvent =
     | 'send'
     | 'sent'
     | 'keep'
+    | 'cancel'
     | 'discard'
     | 'reset';
 
@@ -56,6 +57,7 @@ export const RECORDER_EVENTS: readonly RecorderEvent[] = Object.freeze([
     'send',
     'sent',
     'keep',
+    'cancel',
     'discard',
     'reset',
 ]);
@@ -86,7 +88,12 @@ const MOVES: Readonly<
         discard: 'idle',
     },
     review: { send: 'sending', discard: 'idle' },
-    sending: { sent: 'idle', keep: 'review', failed: 'review' },
+    sending: {
+        sent: 'idle',
+        keep: 'review',
+        failed: 'review',
+        cancel: 'review',
+    },
     denied: { start: 'asking', reset: 'idle' },
     error: { start: 'asking', reset: 'idle' },
 };
