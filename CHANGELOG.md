@@ -7,6 +7,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+The API is tidied up before it is promised: one name for one idea everywhere. Nothing breaks. Every old name
+keeps working, marked `@deprecated` with what to use instead, until 2.0.
+
+### Added
+
+- Types an app or a plugin needs to name: `WavePoint`, `PointerClaim`, `Placement`, `KeyModifiers`,
+  `TooltipA11y`, `ClipResult`, `VolumeLook`, `Fetcher`, `FetchedResponse`, `ChaptersSource` and `LanguageTag`;
+  the options and results of the analysis functions (`LevelsOptions`, `Levels`, `FindSilencesOptions`,
+  `SilencesFromPeaksOptions`, `PeakLevel`, `SilenceKind`); `RecorderWords` on every entry; `LevelTrack`,
+  `RecorderAfterSend`, `RecorderLive`, `RECORDER_AFTER_SEND`, `RECORDER_LIVE` and `RECORDER_ICONS` on
+  `sonicframe/record`; and on `sonicframe/player`, every type its options and getters reach (`MinimapOptions`,
+  `ZoomOptions`, `WaveStyle`, `PlayerChapterListStyle` and the rest).
+- `wordsFor(tag)`: every word of the language a tag finds, frozen.
+- `normalizePeaks` and `resamplePeaks`; `resamplePeaks` is on `sonicframe/analysis` too.
+
+### Changed
+
+- `lang` offers the built-in tags and `'auto'` as you type, `theme` and `extends` the theme names, and
+  `WavePoint.pointerType` is `'mouse' | 'touch' | 'pen'` (a pointer the browser leaves unnamed is a mouse).
+- A palette of your own may leave colors out (they come from `light`), a theme takes a palette of its own and a
+  drawing by its name (`wave: 'bars'`), `outlineSound` and `resamplePeaks` read any list of numbers (a
+  `Float32Array`), and `ChaptersPlugin.set` says what it takes.
+
+### Deprecated
+
+- `normalize` and `resample` (use `normalizePeaks` and `resamplePeaks`), `Claim` (`PointerClaim`),
+  `WaveformFetcher` and `ChaptersFetcher` (`Fetcher`), `WaveformResponse` (`FetchedResponse`), and
+  `CHAPTER_WORDS`, `ZOOM_WORDS`, `MINIMAP_WORDS` and `DESCRIPTION_WORDS` (`wordsFor`).
+- Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,
+  `soundWords`, `SoundWords`, `playerWords`, `PlayerWords`, `pickPalette`, `resolveFont`, `safeFontUrl`,
+  `RecorderEvent` and `RECORDER_EVENTS`.
+
 ## [0.6.0] - 2026-11-01
 
 ### Added
