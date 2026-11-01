@@ -5,7 +5,7 @@
         <title>Upgrade guide · SonicFrame</title>
         <meta
             name="description"
-            content="Moving to SonicFrame 0.8 from 0.7 or 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
+            content="Moving to SonicFrame 1.0 from 0.8, 0.7 or 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
         />
     </head>
     <body>
@@ -14,9 +14,9 @@
                 <h1>Upgrade guide</h1>
                 <p class="lede">
                     What changes from one version to the next, the newest first:
-                    from 0.7 to 0.8, then from 0.6 to 0.7. Nothing breaks: every
-                    new feature is off until you turn it on, and every old name
-                    keeps working until 2.0.
+                    from 0.8 to 1.0, from 0.7 to 0.8, then from 0.6 to 0.7.
+                    Nothing breaks: every new feature is off until you turn it
+                    on, and every old name keeps working until 2.0.
                 </p>
             </div>
 
@@ -24,9 +24,39 @@
                 <section class="section">
                     <h2>Update the package</h2>
                     <div class="code">
-                        <pre><code>npm install sonicframe@0.8</code></pre>
+                        <pre><code>npm install sonicframe@1</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                </section>
+
+                <section class="section">
+                    <h2>In 1.0: nothing to change</h2>
+                    <p>
+                        1.0 is 0.8 with a promise: from here on SonicFrame
+                        follows Semantic Versioning, so a 1.x version never
+                        breaks code written for 1.0, and old names keep working
+                        until 2.0.
+                        <a href="./versions.html">Versions and support</a>
+                        says what the promise covers.
+                    </p>
+                    <ul>
+                        <li>
+                            Every version is published from the repository's
+                            GitHub workflow, with npm provenance.
+                        </li>
+                        <li>
+                            A vulnerability is reported privately on GitHub, as
+                            <a
+                                href="https://github.com/ediejohnny/sonicframe/blob/main/SECURITY.md"
+                                >SECURITY.md</a
+                            >
+                            explains.
+                        </li>
+                        <li>
+                            The package names where to support the project:
+                            <code>npm fund</code> shows it.
+                        </li>
+                    </ul>
                 </section>
 
                 <section class="section">
