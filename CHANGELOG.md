@@ -15,6 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `scope: 'page'` (`keys="page"`) lets them reach the player that played last while nothing on the page has
   the focus. The control with the focus keeps the keys it uses, and nothing happens while someone types.
   `a11y.keys.announce` (`a11y-keys="announce"`) says what they change. The type `PlayerKeys` names them.
+- The player remembers between visits, off by default: `remember: true` (or `remember` on `<sonic-player>`)
+  brings back where each sound was left (it resumes there, unless near its end), the volume, the mute and the
+  speed. `position`, `volume` and `speed` pick what to keep, `key` names the group (`remember-key`), `sound`
+  names the sound, `store` takes `sessionStorage` or your own storage, `sounds` and `nearEnd` set the limits.
+  `player.forget()` clears it, the `resume` event (`sonicframe:resume`) tells where a sound resumed, and
+  `a11y.remember.announce` (`a11y-remember="announce"`) says it at the first play, with the new word
+  `player.resume` in every language. The types `PlayerRemember` and `RememberStore` name them.
 - `regions()` tells `onInput` at every move of a drag that changes a region (drawing, moving or resizing it),
   for an app that shows the times as they change. The type `RegionInput` names a region as you give it.
 - M and Shift+M say "No more markers" when there is no marker that way (the word `markers.none`, in every

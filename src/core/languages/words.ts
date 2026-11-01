@@ -57,6 +57,8 @@ export type PlayerLabels = {
     nextChapter: string;
     /** The button that closes the chapters drawer. */
     closeChapters: string;
+    /** Said at the first play of a sound that resumes where it was left: `{time}`. */
+    resume: string;
 };
 
 /** The phrases of a description. `{name}` marks are filled in; a mark that is not known is dropped. */

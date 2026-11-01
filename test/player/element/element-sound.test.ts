@@ -39,6 +39,21 @@ describe('the sound of <sonic-player>', () => {
         expect(element.querySelectorAll('audio')).toHaveLength(1);
     });
 
+    it('keeps the same player for what it changes as it is: the theme, the palette, the wave, the font and the volume', () => {
+        const element = tag({ src: 'dusk.mp3' });
+        document.body.append(element);
+        const before = element.player;
+
+        element.setAttribute('theme', 'card');
+        element.setAttribute('palette', 'dark');
+        element.setAttribute('wave', 'mirror');
+        element.setAttribute('font', 'serif');
+        element.setAttribute('volume', '');
+        element.setAttribute('media-title', 'Dusk');
+
+        expect(element.player).toBe(before);
+    });
+
     it('brings a new sound for a new src', () => {
         const element = tag({ src: 'dusk.mp3' });
         document.body.append(element);

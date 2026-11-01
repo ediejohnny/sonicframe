@@ -20,16 +20,23 @@ describe('chapter-options', () => {
     });
 });
 
+/** The options of a tag with these attributes. */
+function options(
+    attributes: Record<string, string>,
+): ReturnType<typeof optionsOf> {
+    const element = document.createElement('sonic-player');
+
+    for (const [name, value] of Object.entries(attributes)) {
+        element.setAttribute(name, value);
+    }
+
+    return optionsOf(element);
+}
+
 describe('keys and a11y-keys', () => {
     /** The keys and their accessibility from a tag with these attributes. */
     function keysOf(attributes: Record<string, string>): unknown[] {
-        const element = document.createElement('sonic-player');
-
-        for (const [name, value] of Object.entries(attributes)) {
-            element.setAttribute(name, value);
-        }
-
-        const read = optionsOf(element);
+        const read = options(attributes);
 
         return [read.keys, read.a11y?.keys];
     }
@@ -51,20 +58,40 @@ describe('keys and a11y-keys', () => {
     });
 });
 
-describe('the words the tag reads', () => {
-    /** The options of a tag with these attributes. */
-    function options(
-        attributes: Record<string, string>,
-    ): ReturnType<typeof optionsOf> {
-        const element = document.createElement('sonic-player');
+describe('remember, remember-key and a11y-remember', () => {
+    /** What a tag with these attributes remembers, and whether it says where it resumes. */
+    function rememberOf(attributes: Record<string, string>): unknown[] {
+        const read = options(attributes);
 
-        for (const [name, value] of Object.entries(attributes)) {
-            element.setAttribute(name, value);
-        }
-
-        return optionsOf(element);
+        return [read.remember, read.a11y?.remember];
     }
 
+    it('keep all three without words, only those named with them, under the key given', () => {
+        const all = { position: true, volume: true, speed: true };
+
+        expect(rememberOf({})).toEqual([undefined, undefined]);
+        expect(rememberOf({ remember: '' })).toEqual([
+            { ...all, key: undefined },
+            undefined,
+        ]);
+        expect(rememberOf({ remember: 'unknown' })[0]).toMatchObject(all);
+        expect(
+            rememberOf({
+                remember: 'Volume speed',
+                'remember-key': 'podcast',
+                'a11y-remember': 'announce',
+            }),
+        ).toEqual([
+            { position: false, volume: true, speed: true, key: 'podcast' },
+            { announce: true },
+        ]);
+        expect(rememberOf({ 'a11y-remember': '' })[1]).toEqual({
+            announce: false,
+        });
+    });
+});
+
+describe('the words the tag reads', () => {
     it('names each switch after its option, in kebab-case, and still reads the older short words', () => {
         const kebab = {
             src: 'a.ogg',

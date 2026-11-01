@@ -71,6 +71,7 @@ import {
     type ChapterHost,
 } from '../chapters/chapter-parts';
 import { playerKeyboard, type PlayerKeyboard } from '../keys/player-keys';
+import { playerMemory, type PlayerMemory } from '../remember/player-remember';
 import { listenPart } from '../parts/listen-button';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
@@ -141,6 +142,7 @@ export class Player {
     private readonly stopSize: () => void;
     private stopScheme: (() => void) | null = null;
     private readonly keyboard: PlayerKeyboard | null;
+    private readonly memory: PlayerMemory | null;
     private destroyed = false;
 
     constructor(options: PlayerOptions) {
@@ -236,6 +238,14 @@ export class Player {
         });
 
         this.keyboard = playerKeyboard(options, this.host);
+        this.memory = playerMemory(options, {
+            media: this.media,
+            words: this.words,
+            frame: () => this.frameRef,
+            onDuration: (listener) =>
+                this.events.on('durationchange', listener),
+            resumed: (time) => this.events.emit('resume', time),
+        });
     }
 
     /** Fits the player to its size now: the voice note, the parts on the bars, the names, the background. */
@@ -377,6 +387,11 @@ export class Player {
         this.showVolume(show);
     }
 
+    /** Forgets everything `remember` kept under the player's name: positions, volume and speed. */
+    forget(): void {
+        this.memory?.forget();
+    }
+
     /** Removes the player; a media element it made is stopped, yours is left alone. Safe to call twice. */
     destroy(): void {
         if (this.destroyed) {
@@ -388,6 +403,7 @@ export class Player {
         this.stopScheme?.();
         this.stopSize();
         this.keyboard?.destroy();
+        this.memory?.destroy();
         this.teardown();
         this.chapterParts.destroy();
         this.backdrop.destroy();

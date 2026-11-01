@@ -135,6 +135,23 @@ link.href = safeUrl(fromDatabase) ?? '#';</code></pre>
                 </section>
 
                 <section class="section">
+                    <h2>What stays in the browser</h2>
+                    <p>
+                        Nothing, unless the app asks. With the player's
+                        <code>remember</code>, the page's
+                        <code>localStorage</code> (or the storage the app gives)
+                        holds, under <code>sonicframe:&lt;key&gt;</code>, the
+                        volume, the mute, the speed and the position of the last
+                        sounds, each by its address or the name the app gave.
+                        Nothing leaves the browser.
+                        <code>player.forget()</code> clears it. What is read
+                        back is checked like any input from outside: a value out
+                        of place is left out, and a storage that fails leaves
+                        the player playing without remembering.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>No dependencies</h2>
                     <p>
                         The published package has no runtime dependencies and no

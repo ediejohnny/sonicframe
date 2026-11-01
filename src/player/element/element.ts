@@ -73,6 +73,8 @@ export type PlayerAttribute =
     | 'media-session'
     | SessionDetail
     | 'keys'
+    | 'remember'
+    | 'remember-key'
     | 'a11y-lang'
     | 'a11y-label'
     | 'a11y-chapters'
@@ -80,6 +82,7 @@ export type PlayerAttribute =
     | 'a11y-zoom'
     | 'a11y-minimap'
     | 'a11y-keys'
+    | 'a11y-remember'
     | BackgroundAttribute;
 
 /** What the system's media controls show: changed, they show at once, the player kept. */
@@ -116,6 +119,8 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'media-session',
     ...SESSION_DETAILS,
     'keys',
+    'remember',
+    'remember-key',
     'a11y-lang',
     'a11y-label',
     'a11y-chapters',
@@ -123,35 +128,20 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'a11y-zoom',
     'a11y-minimap',
     'a11y-keys',
+    'a11y-remember',
     ...BACKGROUND_ATTRIBUTES,
 ]);
 
-/** Attributes that need a new player (a new sound, or parts built once). */
-const REBUILD = new Set([
-    'src',
-    'preload',
-    'peaks',
-    'peaks-channel',
-    'peaks-max',
-    'peaks-normalize',
-    'label',
-    'spectrogram',
-    'zoom',
-    'zoom-max',
-    'minimap',
-    'chapters',
-    'chapters-options',
-    'chapter-options',
-    'media-session',
-    'keys',
-    'a11y-lang',
-    'a11y-label',
-    'a11y-chapters',
-    'a11y-description',
-    'a11y-zoom',
-    'a11y-minimap',
-    'a11y-keys',
-    ...BACKGROUND_ATTRIBUTES,
+/** The attributes the player changes as it is: every other one needs a new player (its sound kept). */
+const LIVE: ReadonlySet<string> = new Set([
+    'theme',
+    'palette',
+    'wave',
+    'font',
+    'font-src',
+    'font-stylesheet',
+    'volume',
+    ...SESSION_DETAILS,
 ]);
 
 const EVENTS = [
@@ -167,6 +157,7 @@ const EVENTS = [
     'descriptionchange',
     'description',
     'chapterchange',
+    'resume',
 ] as const;
 
 /**
@@ -221,7 +212,7 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                     return;
                 }
 
-                if (REBUILD.has(attribute)) {
+                if (!LIVE.has(attribute)) {
                     this.unmount();
                     this.mount();
                 } else if (attribute === 'theme') {
