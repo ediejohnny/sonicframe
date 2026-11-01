@@ -37,9 +37,15 @@ export type SoundOutline = {
 };
 
 export type OutlineOptions = {
-    /** Below this share of the loudest peak counts as quiet; 0.06 by default. */
+    /**
+     * Below this share of the loudest peak counts as quiet (the peaks are scaled so the loudest is 1
+     * first; `silencesFromPeaks`' `threshold` is not): 0.06 by default, from 0.001 to 0.45.
+     */
     threshold?: number;
-    /** The shortest quiet stretch that is a pause, in seconds; 3 % of the sound by default, from 0.75 to 5. */
+    /**
+     * The shortest quiet stretch that is a pause, in seconds (the `minDuration` of `silencesFromPeaks`);
+     * 3 % of the sound by default, from 0.75 to 5.
+     */
     minPause?: number;
 };
 

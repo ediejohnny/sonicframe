@@ -4,7 +4,7 @@
  * without a browser. Everything is capped, so a long recording cannot blow up memory or time.
  */
 
-import { finiteOr } from '../shared/checked';
+import { finiteOr, within } from '../shared/checked';
 
 /** A structural stand-in for an `AudioBuffer`, so the core never names a DOM type. */
 export type ChannelSource = {
@@ -27,17 +27,24 @@ export type Levels = { rms: number[]; peak: number[]; windowSeconds: number };
 
 /** The options of `findSilences`. */
 export type FindSilencesOptions = {
-    /** Below this level, in dB of the RMS, is quiet: -45 by default. */
+    /**
+     * Below this level is quiet, in dB of each window's RMS (0 dB is a full-scale sample): -45 by
+     * default. A silence ends once the level rises 6 dB above it.
+     */
     thresholdDb?: number;
     /** The shortest silence kept, in seconds: 0.4 by default. */
     minDuration?: number;
-    /** The window the level is measured on, in seconds: 0.02 by default. */
+    /** The window the level is measured on, in seconds: 0.02 by default, from 0.001 to 1. */
     windowSeconds?: number;
 };
 
 /** The options of `silencesFromPeaks`. */
 export type SilencesFromPeaksOptions = {
-    /** Below this peak, on the peaks' own 0..1 scale, is quiet: 0.05 by default. */
+    /**
+     * Below this peak is quiet, on the peaks' own 0..1 scale, as given (not a share of the loudest
+     * peak, as `outlineSound`'s `threshold` is): 0.05 by default, from 0.001 to 0.45. A silence ends
+     * above twice it.
+     */
     threshold?: number;
     /** The shortest silence kept, in seconds: 0.4 by default. */
     minDuration?: number;
@@ -109,7 +116,7 @@ export function findSilences(
     const quiet = amplitudeFromDb(thresholdDb);
     const loud = amplitudeFromDb(thresholdDb + 6);
     const { rms, windowSeconds } = levels(samples, sampleRate, {
-        windowSeconds: finiteOr(options.windowSeconds, 0.02),
+        windowSeconds: within(options.windowSeconds, 0.02, 0.001, 1),
     });
     const silences: Silence[] = [];
     let open = false;
@@ -152,7 +159,8 @@ export function silencesFromPeaks(
     duration: number,
     options: SilencesFromPeaksOptions = {},
 ): Silence[] {
-    const threshold = finiteOr(options.threshold, 0.05);
+    // At most 0.45: a quiet stretch closes above twice the threshold, which the loudest peak (1) is.
+    const threshold = within(options.threshold, 0.05, 0.001, 0.45);
     const minDuration = finiteOr(options.minDuration, 0.4);
     const step = peaks.length > 0 ? duration / peaks.length : 0;
 

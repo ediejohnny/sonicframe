@@ -78,11 +78,15 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
 - `PART_NAMES` lists `previousChapter` where it listed `prevChapter`; `prevChapter` is still read as it.
 - The recorder screen refuses an app's button named `resume` or `cancel`, the names of two of its own icons: on
   `<sonic-recorder>`, its `icon-resume` or `icon-cancel` would draw both.
+- `findSilences` keeps its `windowSeconds` from 0.001 to 1 second (a longer window took the whole sound as one
+  stretch), and the TSDoc of each `threshold` says what it measures against.
 
 ### Fixed
 
 - `soundDescription()` with a `keys.backGrace` that is not a number kept Shift+P from going back at all; it
   now takes the usual second.
+- `silencesFromPeaks` with a `threshold` over 0.5 never ended a silence (it ends above twice the threshold,
+  past the loudest peak); the threshold is kept from 0.001 to 0.45, as `outlineSound`'s is.
 
 ### Deprecated
 
