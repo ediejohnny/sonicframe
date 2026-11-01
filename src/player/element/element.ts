@@ -15,6 +15,7 @@
  * `element-attributes.ts` (the background's in `background-attributes.ts`).
  */
 
+import { canDefine } from '../../dom/shared/custom-element';
 import { Player } from '../player/player';
 import { BACKGROUND_ATTRIBUTES } from './background-attributes';
 import {
@@ -101,19 +102,12 @@ const EVENTS = [
     'chapterchange',
 ] as const;
 
-/** A custom element name: lowercase, starting with a letter, with at least one dash. */
-const ELEMENT_NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
-
 /**
  * Registers the tag (`<sonic-player>` unless another name is given). Returns false when custom
  * elements are not available, the name is not a valid custom element name, or it is already taken.
  */
 export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
-    if (
-        typeof customElements === 'undefined' ||
-        !ELEMENT_NAME.test(name) ||
-        customElements.get(name) !== undefined
-    ) {
+    if (!canDefine(name)) {
         return false;
     }
 

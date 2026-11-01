@@ -11,13 +11,14 @@ import {
     DEFAULT_PALETTE,
     paletteVariables,
     type Palette,
+    type PaletteChoice,
 } from '../../core/player/palettes';
 import { within } from '../../core/shared/checked';
 import { rgbaString, type Rgba } from '../../core/shared/color';
 import { css } from '../../dom/shared/css';
 import { useFont } from '../../dom/shared/fonts';
 import { readColor } from '../../dom/shared/paint';
-import { prefersDark } from '../../dom/shared/scheme';
+import { onSchemeChange, prefersDark } from '../../dom/shared/scheme';
 import type { PlayerChapterList } from './player-options';
 
 /** A list's own look, as the app gave it: its palette, its font and its box. */
@@ -66,6 +67,28 @@ export function wearPalette(
     css(element, paletteVariables(palette));
 
     return palette;
+}
+
+/**
+ * Paints with the palette chosen (null: SonicFrame's own colors): `'auto'` follows the system's
+ * light or dark as it changes. Gives back the function that stops following.
+ */
+export function followPalette(
+    choice: PaletteChoice,
+    paint: (palette: Palette | null) => void,
+): () => void {
+    if (choice === 'auto') {
+        const follow = (dark: boolean): void =>
+            paint(choosePalette('auto', dark));
+        const stop = onSchemeChange(follow);
+        follow(prefersDark());
+
+        return stop;
+    }
+
+    paint(choosePalette(choice, false));
+
+    return () => undefined;
 }
 
 /**
