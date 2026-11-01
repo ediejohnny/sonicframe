@@ -127,6 +127,8 @@ export class RecorderScreen {
             review: () => this.reviewPart(),
             icon: (name) =>
                 svgPath(options.icons?.[name], RECORDER_ICONS[name]),
+            actions: options.actions,
+            act: (action) => action.press(this.recordingRef, this),
             start: () => void this.start(),
             stop: () => void this.stop(),
             pause: () => this.pause(),

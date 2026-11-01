@@ -158,6 +158,43 @@ describe('the <sonic-recorder> tag', () => {
         expect(shiftOf(centered, 'send')).toBe('');
     });
 
+    it("shows the page's own buttons and tells the page when one is pressed", async () => {
+        stubMicrophone();
+        const element = tag({
+            actions: 'save:Save: the note, share , Bad:No',
+            'icon-save': 'M5 5h14v14H5z',
+            'review-parts': 'discard player save share Bad',
+        });
+        const heard: unknown[][] = [];
+        element.addEventListener('sonicframe:action', (event) =>
+            heard.push((event as CustomEvent<unknown[]>).detail),
+        );
+        await press(element, 'record');
+        await press(element, 'stop');
+
+        expect(parts(element)).toEqual([
+            'discard',
+            'player',
+            'action',
+            'action',
+        ]);
+        const save = element.querySelector('.sonicframe-action-save');
+        expect(save?.getAttribute('aria-label')).toBe('Save: the note');
+        expect(save?.querySelector('path')?.getAttribute('d')).toBe(
+            'M5 5h14v14H5z',
+        );
+        expect(
+            element
+                .querySelector('.sonicframe-action-share')
+                ?.getAttribute('aria-label'),
+        ).toBe('share');
+
+        (save as HTMLButtonElement).click();
+        expect(heard).toHaveLength(1);
+        expect(heard[0][0]).toBe('save');
+        expect((heard[0][1] as Recording).blob).toBeInstanceOf(Blob);
+    });
+
     it('falls back on a time limit that is empty, not 0 seconds', async () => {
         stubMicrophone();
         const element = tag({ max: ' ' });

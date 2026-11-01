@@ -1,21 +1,20 @@
 /**
  * `<sonic-recorder>`: the recorder's screen as an HTML tag. Nothing is registered on import;
  * `defineSonicRecorder()` does it once. Attributes are untrusted input: a number counts only when it
- * is one, a part only when it is a known name, and any other word is ignored. Changing an attribute
+ * is one, a part only when it is a known name or one of the page's `actions`, and any other word is
+ * ignored. Changing an attribute
  * builds the screen again (a recording under way is dropped); taking the element out of the page lets
  * the microphone go. The screen's events are dispatched on the element as `sonicframe:<event>`
  * custom events, with their arguments in `detail`; Send hands the recording over in
  * `sonicframe:send` and counts as sent.
  */
 
-import { isOneOf } from '../../core/shared/checked';
 import { attributeNumber, canDefine } from '../../dom/shared/custom-element';
 import { RecorderScreen } from '../screen/recorder-screen';
-import {
-    RECORDER_PARTS,
-    type RecorderIcon,
-    type RecorderPart,
-    type RecorderScreenOptions,
+import type {
+    RecorderAction,
+    RecorderIcon,
+    RecorderScreenOptions,
 } from '../screen/screen-options';
 
 /** The attributes the tag reads. */
@@ -30,6 +29,7 @@ export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
     'idle-parts',
     'recording-parts',
     'review-parts',
+    'actions',
     'after-stop',
     'align',
     'icon-record',
@@ -53,15 +53,36 @@ const ICONS: readonly RecorderIcon[] = [
 
 const EVENTS = ['state', 'recorded', 'send', 'sent', 'error'] as const;
 
-/** The known part names of an attribute, in order; undefined without the attribute. */
-function partsOf(value: string | null): RecorderPart[] | undefined {
-    if (value === null) {
-        return undefined;
-    }
+/** The words of a parts attribute, in order (the screen shows only the names it knows); undefined without the attribute. */
+function partsOf(value: string | null): string[] | undefined {
+    return value?.split(/\s+/).filter((word) => word !== '');
+}
 
-    return value
-        .split(/\s+/)
-        .filter((word): word is RecorderPart => isOneOf(word, RECORDER_PARTS));
+/**
+ * The page's own buttons, from `actions` ("name:label, name"): each one's icon is its `icon-<name>`
+ * attribute, read when the screen is built, and a press tells the page through `sonicframe:action`,
+ * with the name and the recording in `detail`.
+ */
+function actionsOf(element: Element): Record<string, RecorderAction> {
+    return Object.fromEntries(
+        // A name the screen does not allow (an empty one, say) shows nothing.
+        (element.getAttribute('actions') ?? '').split(',').map((entry) => {
+            const colon = entry.indexOf(':');
+            const name = (colon < 0 ? entry : entry.slice(0, colon)).trim();
+            const action: RecorderAction = {
+                label: colon < 0 ? '' : entry.slice(colon + 1),
+                icon: element.getAttribute(`icon-${name}`) ?? undefined,
+                press: (recording) =>
+                    element.dispatchEvent(
+                        new CustomEvent('sonicframe:action', {
+                            detail: [name, recording],
+                        }),
+                    ),
+            };
+
+            return [name, action] as const;
+        }),
+    );
 }
 
 /** Everything the tag's attributes say, as the screen's options (all but the container). */
@@ -84,6 +105,7 @@ function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
         icons: Object.fromEntries(
             ICONS.map((icon) => [icon, get(`icon-${icon}`) ?? undefined]),
         ),
+        actions: actionsOf(element),
         parts: {
             idle: partsOf(get('idle-parts')),
             recording: partsOf(get('recording-parts')),

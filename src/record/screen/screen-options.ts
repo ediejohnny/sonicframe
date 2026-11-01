@@ -8,6 +8,7 @@ import type { ThemeInput } from '../../core/player/theme';
 import type { RecorderState } from '../../core/recording/recording';
 import type { BarStyle, WaveName, WaveStyle } from '../../types';
 import type { Recording, RecorderOptions } from '../recorder/recorder';
+import type { RecorderScreen } from './recorder-screen';
 
 /**
  * A piece of the screen: the buttons (`record`, `stop`, `pause` (it resumes while paused), `discard`,
@@ -37,14 +38,32 @@ export const RECORDER_PARTS: readonly RecorderPart[] = Object.freeze([
     'spacer',
 ]);
 
+/** A part's name in a stage's list: one of the screen's own, or the name of one of the app's `actions`. */
+export type RecorderPartName = RecorderPart | (string & {});
+
 /** The parts of each stage, in order: before recording, while recording, and in review. */
 export type RecorderParts = {
     /** Before recording, and when it cannot (blocked microphone, say). */
-    idle?: readonly RecorderPart[];
+    idle?: readonly RecorderPartName[];
     /** While recording or paused. */
-    recording?: readonly RecorderPart[];
+    recording?: readonly RecorderPartName[];
     /** While the recording is heard and sent. */
-    review?: readonly RecorderPart[];
+    review?: readonly RecorderPartName[];
+};
+
+/**
+ * One of the app's own buttons, shown where its name is listed in `parts`. Its name is lowercase
+ * letters, digits and dashes, starting with a letter, and none of the screen's own parts.
+ */
+export type RecorderAction = {
+    /** Its name for screen readers (up to 120 characters); its name in `actions` when empty. */
+    label: string;
+    /** Its icon: SVG path data on a 24 × 24 grid; a dot when missing or refused. */
+    icon?: string;
+    /** Filled like a stage's main button, and given the focus when it leads the stage. */
+    main?: boolean;
+    /** Called on a press with the recording in review (null when there is none) and the screen. */
+    press: (recording: Recording | null, screen: RecorderScreen) => void;
 };
 
 export const DEFAULT_RECORDER_PARTS: Readonly<Required<RecorderParts>> =
@@ -96,6 +115,8 @@ export type RecorderScreenOptions = RecorderOptions & {
     container: HTMLElement;
     /** The parts of each stage. */
     parts?: RecorderParts;
+    /** The app's own buttons, by name; each shows where its name is listed in `parts`. */
+    actions?: Readonly<Record<string, RecorderAction>>;
     /** The live wave scrolls through the last seconds (`'scroll'`, the default) or fits the whole recording (`'fit'`). */
     live?: 'scroll' | 'fit';
     /** Seconds the scrolling wave shows: 10 by default, from 2 to 60. */
