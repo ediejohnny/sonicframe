@@ -36,6 +36,7 @@ import {
 } from '../src/player';
 import { setupCodeBlocks } from './code-blocks';
 import { MUSIC } from './docs/sounds';
+import { regionFiles } from './marks-files';
 import {
     bundledSound,
     byId,
@@ -864,6 +865,11 @@ function setupPage(): void {
 
     on('words-player', (host) => mount(host, wordsDemo));
     on('zoom-player', (host) => mount(host, zoomDemo));
+    on('files-player', (host) =>
+        mount(host, (box, sound) =>
+            regionFiles(box, (place, options) => player(place, sound, options)),
+        ),
+    );
 
     on('plugin-cards', (cards) => {
         for (const card of pluginCards()) {

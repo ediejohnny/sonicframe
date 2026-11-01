@@ -187,6 +187,28 @@ markers({ items, keys: false }); // no keys</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                 </section>
+
+                <section class="section">
+                    <h2>Export and import</h2>
+                    <p>
+                        Markers go out and come back in the same four formats as
+                        <a href="./regions.html#export-and-import">regions</a>:
+                        JSON, WebVTT, CSV and Audacity's labels, where a marker
+                        is a point label. In WebVTT each marker lasts until the
+                        next one, and the last until <code>duration</code> (a
+                        second without it), so the file serves as chapters.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { chapters, readMarkers, writeMarkers } from 'sonicframe';
+
+const csv = writeMarkers(flags.items, { format: 'csv' });
+flags.set(readMarkers(await file.text())); // a region file gives its starts
+
+const vtt = writeMarkers(flags.items, { format: 'vtt', duration: frame.duration });
+frame.use(chapters({ text: vtt })); // the markers as chapters</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
             </div>
         </main>
         <script type="module" src="./main.ts"></script>

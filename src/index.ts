@@ -53,6 +53,20 @@ export type {
 } from './plugins/regions/regions-options';
 export type { Region } from './plugins/regions/region-store';
 export type { RegionInput } from './core/marks/regions';
+export type { CsvSeparator } from './core/marks/csv';
+export {
+    readMarkers,
+    readRegions,
+    type MarksReadOptions,
+} from './core/marks/read-marks';
+export {
+    MARKS_FORMATS,
+    writeMarkers,
+    writeRegions,
+    type MarkersWriteOptions,
+    type MarksFormat,
+    type MarksWriteOptions,
+} from './core/marks/write-marks';
 export { timeline, type TimelineOptions } from './plugins/timeline/timeline';
 export { chapters } from './plugins/chapters/chapters';
 export {

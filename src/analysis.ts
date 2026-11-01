@@ -60,6 +60,22 @@ export {
     type LanguageTag,
 } from './core/languages/language';
 export { languageProblems } from './core/languages/language-check';
+export type { CsvSeparator } from './core/marks/csv';
+export type { Mark } from './core/marks/markers';
+export {
+    readMarkers,
+    readRegions,
+    type MarksReadOptions,
+} from './core/marks/read-marks';
+export type { RegionInput } from './core/marks/regions';
+export {
+    MARKS_FORMATS,
+    writeMarkers,
+    writeRegions,
+    type MarkersWriteOptions,
+    type MarksFormat,
+    type MarksWriteOptions,
+} from './core/marks/write-marks';
 export {
     loadWaveform,
     readWaveform,
