@@ -144,9 +144,9 @@ createRecorder({
                         <code>record</code>, <code>stop</code>,
                         <code>pause</code>, <code>discard</code>,
                         <code>send</code>, <code>time</code>, <code>wave</code>,
-                        <code>player</code> and <code>spacer</code>. What went
-                        wrong, or what is under way, shows on a line under the
-                        parts.
+                        <code>player</code> and <code>spacer</code>, and the
+                        names of your own <code>actions</code>. What went wrong,
+                        or what is under way, shows on a line under the parts.
                     </p>
                     <div
                         class="stage"
@@ -170,11 +170,280 @@ createRecorder({
                 </section>
 
                 <section class="section">
+                    <h2>When a recording stops</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><code>afterStop</code></th>
+                                    <th>What comes next</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>'review'</code> (default)</td>
+                                    <td>
+                                        A player of the recording, to hear it,
+                                        then delete or send it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'send'</code></td>
+                                    <td>
+                                        It is sent right away, as a chat app
+                                        does when the button is let go. If the
+                                        send fails, it waits in review.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'none'</code></td>
+                                    <td>
+                                        No player and nothing sent: your app
+                                        gets the recording and the screen starts
+                                        over.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Every recording that stops reaches
+                        <code>onRecorded</code> and the
+                        <code>recorded</code> event, whatever comes next. With
+                        only a stop button while recording, the screen is a
+                        single record button:
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"parts":{"recording":["stop"]},"afterStop":"none","look":{"padding":0,"border":0,"surface":"none","shadow":"none"}}'
+                    ></div>
+                    <p data-sent></p>
+                    <div class="code">
+                        <pre><code>createRecorder({
+    container,
+    parts: { recording: ['stop'] },
+    afterStop: 'none',
+    // No box of its own: only the button.
+    look: { padding: 0, border: 0, surface: 'none', shadow: 'none' },
+    onRecorded(recording) {
+        attach(recording.blob);
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Your own buttons</h2>
+                    <p>
+                        <code>actions</code> adds your buttons, by name; each
+                        shows where its name is listed in <code>parts</code>.
+                        Its press gets the recording in review (null before one)
+                        and the screen. One marked <code>main</code> is filled
+                        like the record button and takes the focus when it leads
+                        the stage. Names are lowercase letters, digits and
+                        dashes.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-extra="save"
+                        data-options='{"parts":{"review":["discard","player","save"]}}'
+                    ></div>
+                    <p data-sent></p>
+                    <div class="code">
+                        <pre><code>createRecorder({
+    container,
+    parts: { review: ['discard', 'player', 'save'] },
+    actions: {
+        save: {
+            label: 'Save the recording',
+            icon: 'M5 3h11l3 3v15H5zM8 5v4h7V5zM8 13v6h8v-6z',
+            main: true,
+            press(recording, screen) {
+                keep(recording);
+            },
+        },
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Sending to your server</h2>
+                    <p>
+                        Give <code>upload</code> your address and Send posts the
+                        recording there, telling how far it got; nothing else is
+                        needed. A status outside 200–299 keeps the recording to
+                        send again, and the server's answer comes in the
+                        <code>uploaded</code> event.
+                    </p>
+                    <div class="code">
+                        <pre><code>createRecorder({
+    container,
+    upload: {
+        url: '/notes',
+        field: 'audio',
+        fields: { chat: chatId },
+        headers: { Authorization: `Bearer ${token}` },
+    },
+    cancelSend: true,
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><code>upload</code></th>
+                                    <th>Default</th>
+                                    <th>What it is</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>url</code></td>
+                                    <td></td>
+                                    <td>
+                                        Your address: a web or relative one; any
+                                        other sends nothing.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>method</code></td>
+                                    <td><code>'POST'</code></td>
+                                    <td>Or <code>'PUT'</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>body</code></td>
+                                    <td><code>'form'</code></td>
+                                    <td>
+                                        A form, or the file alone with its type
+                                        (<code>'raw'</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>field</code></td>
+                                    <td><code>'file'</code></td>
+                                    <td>The form field of the file.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>filename</code></td>
+                                    <td><code>recording.webm</code></td>
+                                    <td>
+                                        The file's name; the extension follows
+                                        the audio type.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>fields</code></td>
+                                    <td></td>
+                                    <td>More form fields, up to 50.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>headers</code></td>
+                                    <td></td>
+                                    <td>
+                                        Request headers, up to 50, each on one
+                                        line.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>withCredentials</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Send cookies to another host too.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        With your own <code>onSend</code>, its second argument
+                        holds a <code>signal</code> that aborts when the send is
+                        canceled or the screen is removed, and
+                        <code>progress(fraction)</code>, which shows "Sending,
+                        40%".
+                        <code>uploadRecording(recording, upload, control)</code>
+                        does the upload above from there. With
+                        <code>cancelSend</code>, the send button turns into
+                        Cancel sending while sending; try it here:
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-extra="slow"
+                        data-options='{"cancelSend":true}'
+                    ></div>
+                    <p data-sent></p>
+                    <div class="code">
+                        <pre><code>createRecorder({
+    container,
+    cancelSend: true,
+    async onSend(recording, { signal, progress }) {
+        await uploadRecording(recording, { url: '/notes' }, { signal, progress });
+        await notify(chatId);
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Drawing it your way</h2>
+                    <ul>
+                        <li>
+                            <code>icons</code> draws any button with your own
+                            SVG path on a 24 × 24 grid: <code>record</code>,
+                            <code>stop</code>, <code>pause</code>,
+                            <code>resume</code>, <code>discard</code>,
+                            <code>send</code> and <code>cancel</code>. Path data
+                            with anything but path commands and numbers keeps
+                            the default.
+                        </li>
+                        <li>
+                            <code>align</code> lines the buttons beside the
+                            player of the recording up on its bars
+                            (<code>'bars'</code>, the default), or on its box's
+                            middle, top or bottom (<code>'center'</code>,
+                            <code>'start'</code>, <code>'end'</code>).
+                        </li>
+                        <li>
+                            <code>reviewLook</code> is the look of that player
+                            alone. Here the time keeps to the wave's left edge,
+                            and the buttons center on the whole player:
+                        </li>
+                    </ul>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"align":"center","reviewLook":{"underStart":"wave"}}'
+                    ></div>
+                    <p data-sent></p>
+                    <div class="code">
+                        <pre><code>createRecorder({
+    container,
+    align: 'center',
+    reviewLook: { underStart: 'wave' },
+    icons: { send: 'M2 21 23 12 2 3v7l15 2-15 2z' },
+    onSend,
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
                     <h2>For screen readers</h2>
                     <ul>
                         <li>
-                            Every button has a name, and the focus moves to the
-                            main button of each stage: stop, then send.
+                            Every button has a name, yours too, and the focus
+                            moves to the main button of each stage: stop, then
+                            send, or your button marked <code>main</code>.
+                        </li>
+                        <li>
+                            While sending, the line under the parts shows how
+                            far it got; a canceled send says "Sending canceled",
+                            and the focus stays on the send button.
                         </li>
                         <li>
                             The live region says "Recording", "Recording
@@ -291,6 +560,52 @@ const recording = await recorder.stop();</code></pre>
                                     <td>Part names, separated by spaces.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>actions</code></td>
+                                    <td>
+                                        Your buttons as
+                                        <code>name:label, name:label</code>; a
+                                        press dispatches
+                                        <code>sonicframe:action</code> with the
+                                        name and the recording.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>after-stop</code></td>
+                                    <td>
+                                        <code>review</code>,
+                                        <code>send</code> or <code>none</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>align</code></td>
+                                    <td>
+                                        <code>bars</code>, <code>center</code>,
+                                        <code>start</code> or <code>end</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>icon-<em>name</em></code>
+                                    </td>
+                                    <td>
+                                        An SVG path for a button, yours too
+                                        (<code>icon-record</code>,
+                                        <code>icon-save</code>…).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>upload-url</code>,
+                                        <code>upload-method</code>,
+                                        <code>upload-field</code>
+                                    </td>
+                                    <td>Send to your address.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>cancel-send</code></td>
+                                    <td>Present: a send can be canceled.</td>
+                                </tr>
+                                <tr>
                                     <td>
                                         <code>a11y-lang</code>,
                                         <code>a11y-announce-every</code>
@@ -308,10 +623,12 @@ const recording = await recorder.stop();</code></pre>
                         <code>sonicframe:state</code>,
                         <code>sonicframe:recorded</code>,
                         <code>sonicframe:send</code>,
-                        <code>sonicframe:sent</code> and
+                        <code>sonicframe:progress</code>,
+                        <code>sonicframe:uploaded</code>,
+                        <code>sonicframe:sent</code>,
+                        <code>sonicframe:action</code> and
                         <code>sonicframe:error</code>. On the tag, Send counts
-                        as sent; for an upload that can fail, use
-                        <code>createRecorder</code> and its <code>onSend</code>.
+                        as sent, unless <code>upload-url</code> sends it first.
                         Changing an attribute starts over.
                     </p>
                 </section>
@@ -418,14 +735,76 @@ const recording = await recorder.stop();</code></pre>
                                             >underStart: 'line'</code
                                         >) unless the look says otherwise, and
                                         the buttons beside it line up with its
-                                        bars.
+                                        bars unless <code>align</code> says
+                                        otherwise.
                                     </td>
+                                </tr>
+                                <tr>
+                                    <td><code>reviewLook</code></td>
+                                    <td></td>
+                                    <td>
+                                        The look of the player of the recording
+                                        alone, over <code>look</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>align</code></td>
+                                    <td><code>'bars'</code></td>
+                                    <td>
+                                        How the buttons beside that player line
+                                        up: on its bars, or its box's
+                                        <code>'center'</code>,
+                                        <code>'start'</code> or
+                                        <code>'end'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>icons</code></td>
+                                    <td>the screen's</td>
+                                    <td>Your own SVG path for each button.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>actions</code></td>
+                                    <td></td>
+                                    <td>Your own buttons, by name.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>afterStop</code></td>
+                                    <td><code>'review'</code></td>
+                                    <td>
+                                        What follows a stop:
+                                        <code>'send'</code> right away, or
+                                        <code>'none'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>onRecorded</code></td>
+                                    <td></td>
+                                    <td>Gets every recording that stops.</td>
                                 </tr>
                                 <tr>
                                     <td><code>onSend</code></td>
                                     <td></td>
                                     <td>
-                                        Gets the recording when Send is pressed.
+                                        Gets the recording when Send is pressed,
+                                        with a <code>signal</code> and
+                                        <code>progress</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>upload</code></td>
+                                    <td></td>
+                                    <td>
+                                        Your address, used when there is no
+                                        <code>onSend</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>cancelSend</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        The send button cancels the send under
+                                        way.
                                     </td>
                                 </tr>
                                 <tr>
@@ -478,7 +857,9 @@ const recording = await recorder.stop();</code></pre>
                         </li>
                         <li>
                             Nothing leaves the page unless your
-                            <code>onSend</code> sends it.
+                            <code>onSend</code> or <code>upload</code> sends it;
+                            a strict Content-Security-Policy lists your upload
+                            address in <code>connect-src</code>.
                         </li>
                     </ul>
                 </section>

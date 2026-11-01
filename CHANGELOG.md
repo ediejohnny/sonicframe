@@ -54,6 +54,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
       parts of each stage are lists (`parts`), `hold` records while the button is held, and `afterSend` starts
       over or keeps the recording. `onSend` may return a Promise: the screen says it is sending, and a failure
       keeps the recording to send again.
+    - What follows a stop is yours: `afterStop` goes to review (the default), sends right away, or with
+      `'none'` only hands the recording over (`onRecorded`) and starts again, so a screen can be a single
+      record button. `actions` adds your own buttons to any stage, `icons` draws any button with your own
+      SVG path, `align` lines the buttons up beside the player of the recording (on its bars by default) and
+      `reviewLook` is that player's own look.
+    - Sending to your server: `upload` (address, method, form field, fields, headers) sends with no code,
+      `uploadRecording()` does the same from your own `onSend`, which now gets a `signal` and `progress`;
+      "Sending, 40%" shows under the parts, and `cancelSend` (off by default) lets a send be canceled.
     - Accessibility: every button named, the focus on each stage's main button, the live wave hidden from
       screen readers, and the live region saying each change and why the microphone cannot be used;
       `a11y.announceEvery` also says the time while recording (off by default). Words in every language, with
