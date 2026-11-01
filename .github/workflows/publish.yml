@@ -44,5 +44,7 @@ jobs:
               run: |
                   $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
                   $tag = if ($version.Contains('-')) { 'next' } else { 'latest' }
-                  npm publish --provenance --access public --tag $tag
+                  # Verbose: when npm cannot trade the workflow's identity for a publish token, only
+                  # this level says why.
+                  npm publish --provenance --access public --tag $tag --loglevel verbose
                   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
