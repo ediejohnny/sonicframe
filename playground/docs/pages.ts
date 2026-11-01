@@ -70,6 +70,13 @@ export const PAGES: readonly DocsGroup[] = [
         ],
     },
     {
+        group: 'Voice',
+        pages: [
+            { file: 'recording.html', name: 'Recording' },
+            { file: 'guide-voice-note.html', name: 'A chat voice note' },
+        ],
+    },
+    {
         group: 'Plugins',
         pages: [
             { file: 'plugins.html', name: 'Overview' },
@@ -87,7 +94,6 @@ export const PAGES: readonly DocsGroup[] = [
         group: 'Guides',
         pages: [
             { file: 'guide-podcast.html', name: 'A podcast player' },
-            { file: 'guide-voice-note.html', name: 'A chat voice note' },
             { file: 'performance.html', name: 'Many players on a page' },
         ],
     },

@@ -47,6 +47,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `blob:` addresses (at most eight), and the position is sent only for a sound of known length. On the tag:
   `media-session`, `media-title`, `media-artist`, `media-album` and `media-artwork`, changed without stopping
   the sound. A new docs page, "Lock screen and media keys".
+- `sonicframe/record`, a new entry for recording from the microphone: record, hear, send.
+    - `createRecorder({ container, onSend })`, a ready-made screen dressed like a player (theme, look, palette):
+      a record button; while recording, the time, a live wave (scrolling through the last `window` seconds, or
+      `live: 'fit'`) and the buttons to pause, stop and delete; then a player of the recording, and Send. The
+      parts of each stage are lists (`parts`), `hold` records while the button is held, and `afterSend` starts
+      over or keeps the recording. `onSend` may return a Promise: the screen says it is sending, and a failure
+      keeps the recording to send again.
+    - Accessibility: every button named, the focus on each stage's main button, the live wave hidden from
+      screen readers, and the live region saying each change and why the microphone cannot be used;
+      `a11y.announceEvery` also says the time while recording (off by default). Words in every language, with
+      `a11y.labels` for your own.
+    - `Recorder`, the same without a screen: `start()` (asks for the microphone only then), `pause()`,
+      `resume()`, `stop()` (the recording, with its length, type, size and peaks), `cancel()`, live `levels`, and
+      a `RecordError` whose `reason` says why it cannot record. The microphone is never sent to the speakers and
+      is let go on stop, cancel and destroy; a recording stops at `maxSeconds` (300 by default) and past
+      `maxBytes`.
+    - `<sonic-recorder>`, with `defineSonicRecorder()`, and its `sonicframe:` events.
+    - New docs: a "Voice" group with the page "Recording", and "A chat voice note" made with the recorder.
 
 ### Changed
 
