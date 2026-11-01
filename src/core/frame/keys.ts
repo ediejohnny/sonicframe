@@ -6,6 +6,8 @@ export type KeyModifiers = {
     ctrlKey?: boolean;
     altKey?: boolean;
     metaKey?: boolean;
+    /** The key is held down, and this press is one of its repeats. */
+    repeat?: boolean;
 };
 
 /**

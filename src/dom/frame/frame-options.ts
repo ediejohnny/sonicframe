@@ -42,7 +42,7 @@ export type SonicFrameOptions = {
     valueText?: ValueText;
     /** Seconds moved by an arrow key. */
     stepSeconds?: number;
-    /** Part of the sound moved by Page Up / Page Down. */
+    /** Part of the sound moved by Page Up / Page Down: 0.1, kept from 0.01 to 1. */
     largeStepRatio?: number;
     /** Show the start again when the media ends. */
     rewindOnEnd?: boolean;

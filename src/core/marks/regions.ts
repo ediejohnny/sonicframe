@@ -9,6 +9,15 @@ import { clamp } from '../shared/math';
 
 export type RegionPart = 'start' | 'end' | 'body';
 
+/** A region as an app or a file gives it, in seconds: its id is kept when no other region has it. */
+export type RegionInput = {
+    start: number;
+    end: number;
+    label?: string;
+    color?: string;
+    id?: string;
+};
+
 /** A region laid out in pixels, for hit-testing. */
 export type LaidRegion = { start: number; end: number };
 

@@ -25,6 +25,21 @@ describe('numbers that are not numbers', () => {
         }
     });
 
+    it('keeps the large step from a hundredth to the whole sound, so Page Up never goes back', () => {
+        const cases: [number, number][] = [
+            [-0.2, 0.4],
+            [3, 40],
+        ];
+
+        for (const [largeStepRatio, time] of cases) {
+            const media = fakeMedia({ duration: 40 });
+            const { container } = mount({ media, largeStepRatio });
+
+            pressKey(container, 'PageUp');
+            expect(media.currentTime, `ratio ${largeStepRatio}`).toBe(time);
+        }
+    });
+
     it('draws the cursor 2 pixels wide', async () => {
         for (const odd of ODD) {
             const shown = mountShown({

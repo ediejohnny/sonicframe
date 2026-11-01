@@ -72,6 +72,35 @@ describe('the volume control', () => {
         }
     });
 
+    it('keeps the step at least a hundredth, so a negative one never turns the arrows around', () => {
+        const media = setup(fakeMedia({ duration: 10 }), { step: -0.1 });
+        media.volume = 0.5;
+
+        press(parts().bar, 'ArrowRight');
+
+        expect(media.volume).toBe(0.51);
+    });
+
+    it('takes the focus when the bar is pressed, so its keys work right after a click', () => {
+        setup();
+        const { bar } = parts();
+        boxOf(bar.firstElementChild as HTMLElement, {
+            left: 0,
+            top: 0,
+            width: 80,
+            height: 16,
+        });
+
+        bar.dispatchEvent(
+            Object.assign(
+                new Event('pointerdown', { bubbles: true, cancelable: true }),
+                { clientX: 40, pointerId: 1, button: 0 },
+            ),
+        );
+
+        expect(document.activeElement).toBe(bar);
+    });
+
     it('mutes with the speaker button and brings the level back', () => {
         const media = setup();
         media.volume = 0.6;

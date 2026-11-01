@@ -10,11 +10,12 @@
  */
 
 import type { RegionWords } from '../../core/languages/words';
-import { within } from '../../core/shared/checked';
+import type { RegionInput } from '../../core/marks/regions';
+import { finiteOr, within } from '../../core/shared/checked';
 import { positive } from '../../core/shared/math';
 import { PROGRESS, REGION } from '../../core/shared/variables';
 import { placeX } from '../../core/wave/scene';
-import type { Plugin, PluginHost } from '../../types';
+import type { Plugin, PluginHost, SeekEvent } from '../../types';
 import { RegionKeys } from './region-keys';
 import { RegionLabels } from './region-labels';
 import { RegionPointer } from './region-pointer';
@@ -24,6 +25,9 @@ import {
     type Region,
     type RegionsHost,
 } from './region-store';
+
+/** How far before a region's start a seek still counts as inside it, in seconds (as the frame's range). */
+const SLACK = 0.05;
 
 /**
  * The regions' keys while the frame has focus: a letter can be your own or `false`; each other key
@@ -45,8 +49,8 @@ export type RegionsKeys = {
 };
 
 export type RegionsOptions = {
-    /** Regions to start with. */
-    items?: readonly Omit<Region, 'id'>[];
+    /** Regions to start with; an id is kept when no other region has it. */
+    items?: readonly RegionInput[];
     /**
      * Whether the pointer creates regions: on by default, by `createGesture`. The old forms
      * `'shift-drag'` and `'drag'` still work until 2.0, as `createGesture`.
@@ -62,9 +66,14 @@ export type RegionsOptions = {
     keys?: boolean | RegionsKeys;
     /** The most regions kept. */
     max?: number;
-    /** Called after a region is created, changed or removed. */
+    /**
+     * Called after a region is created, changed or removed: once when a drag is let go, and after each
+     * change by the API or the keys. Never when nothing changed.
+     */
     onChange?: (regions: readonly Region[]) => void;
-    /** Called when the selected region changes (null when none). */
+    /** Called at every move of a drag that changes a region (drawing, moving or resizing it). */
+    onInput?: (regions: readonly Region[]) => void;
+    /** Called when the selected region changes (null when none), with a copy of it. */
     onSelect?: (region: Region | null) => void;
     /** Zoomed in, a region chosen by the keys (R) is brought into view, centered. Off by default. */
     scrollIntoView?: boolean;
@@ -88,15 +97,25 @@ export type RegionsOptions = {
 };
 
 export type RegionsPlugin = Plugin & {
-    /** Adds a region and returns a copy of it, or null when `max` regions already exist. */
-    add(region: Omit<Region, 'id'> & { id?: string }): Region | null;
+    /**
+     * Adds a region and returns a copy of it, or null when `max` regions already exist or its start or
+     * end is not a finite number. Its id is kept when no other region has it.
+     */
+    add(region: RegionInput): Region | null;
+    /**
+     * Changes a region; a time that is not a finite number is left as it was. Before the sound's
+     * length is known, the times are ordered now and fitted to the sound later.
+     */
     update(id: string, patch: Partial<Omit<Region, 'id'>>): void;
     remove(id: string): void;
     clear(): void;
     /** The regions, copies in the order they were added. */
     readonly items: readonly Region[];
-    /** Replaces every region at once (the selection is let go); tells `onChange` once. */
-    set(items: readonly (Omit<Region, 'id'> & { id?: string })[]): void;
+    /**
+     * Replaces every region at once (the selection is let go); tells `onChange` once. The first region
+     * to ask for an id keeps it.
+     */
+    set(items: readonly RegionInput[]): void;
     /** @deprecated Use `items`; `list()` goes in 2.0. */
     list(): readonly Region[];
     play(id: string, options?: { loop?: boolean }): void;
@@ -125,8 +144,9 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const store = new RegionStore(minLength, max);
     const labels = new RegionLabels();
     let host: PluginHost | null = null;
-    let stopFitting: (() => void) | null = null;
-    let stopViewing: (() => void) | null = null;
+    let stops: (() => void)[] = [];
+    /** The region `play` started, while its stretch still plays. */
+    let playingId: string | null = null;
 
     function duration(): number | null {
         return positive(host?.duration ?? null);
@@ -140,10 +160,36 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         }
     }
 
-    function changed(): void {
+    function redraw(): void {
         host?.invalidate();
         placeLabels();
+    }
+
+    function changed(): void {
+        redraw();
         options.onChange?.(store.list());
+    }
+
+    /** Stops the stretch playing when its region is gone. */
+    function stopGone(): void {
+        if (playingId !== null && store.byId(playingId) === undefined) {
+            host?.stopRange();
+            playingId = null;
+        }
+    }
+
+    /** A seek out of the region playing ends its stretch, as the frame's own range does. */
+    function seeked(event: SeekEvent): void {
+        const region = playingId === null ? undefined : store.byId(playingId);
+
+        if (
+            region === undefined ||
+            event.time === null ||
+            event.time < region.start - SLACK ||
+            event.time > region.end
+        ) {
+            playingId = null;
+        }
     }
 
     /**
@@ -164,20 +210,48 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         }
     }
 
+    /** Selects a region (an id no region has selects none); the app hears only of a new choice. */
     function select(id: string | null): void {
-        store.selectedId = id;
+        const region = id === null ? undefined : store.byId(id);
+        const next = region === undefined ? null : region.id;
+
+        if (next === store.selectedId) {
+            return;
+        }
+
+        store.selectedId = next;
         host?.invalidate();
-        options.onSelect?.(id === null ? null : (store.byId(id) ?? null));
+        options.onSelect?.(region === undefined ? null : { ...region });
     }
 
     function play(id: string, playOptions?: { loop?: boolean }): void {
         const region = store.byId(id);
 
-        if (region !== undefined) {
-            host?.playRange(region.start, region.end, {
+        if (region !== undefined && host !== null) {
+            host.playRange(region.start, region.end, {
                 loop: playOptions?.loop ?? store.loop,
             });
+            playingId = id;
         }
+    }
+
+    function stop(): void {
+        host?.stopRange();
+        playingId = null;
+    }
+
+    function remove(id: string): void {
+        if (!store.remove(id)) {
+            return;
+        }
+
+        stopGone();
+
+        if (store.selectedId === id) {
+            select(null);
+        }
+
+        changed();
     }
 
     const parts: RegionsHost = {
@@ -186,8 +260,17 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         duration,
         select,
         changed,
+        moved: () => {
+            redraw();
+            options.onInput?.(store.list());
+        },
         told: () => options.onChange?.(store.list()),
         play: (id) => play(id),
+        release: () => {
+            stop();
+            select(null);
+        },
+        remove,
     };
     const pointer = new RegionPointer(parts, {
         create: gesture,
@@ -204,9 +287,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         keys === false ? null : keys === true ? {} : keys,
     );
 
-    for (const item of options.items ?? []) {
-        store.add(item, duration());
-    }
+    store.replace(options.items ?? [], null);
 
     return {
         name: 'regions',
@@ -226,16 +307,16 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
         update(id, patch): void {
             const region = store.byId(id);
-            const span = duration();
 
-            if (region === undefined || span === null) {
+            if (region === undefined) {
                 return;
             }
 
+            const before = { ...region };
             const bounds = store.normalized(
-                patch.start ?? region.start,
-                patch.end ?? region.end,
-                span,
+                finiteOr(patch.start, region.start),
+                finiteOr(patch.end, region.end),
+                duration(),
             );
             region.start = bounds.start;
             region.end = bounds.end;
@@ -248,21 +329,25 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
                 region.color = patch.color;
             }
 
-            changed();
-        },
-
-        remove(id): void {
-            store.remove(id);
-
-            if (store.selectedId === id) {
-                select(null);
+            if (
+                region.start !== before.start ||
+                region.end !== before.end ||
+                region.label !== before.label ||
+                region.color !== before.color
+            ) {
+                changed();
             }
-
-            changed();
         },
+
+        remove,
 
         clear(): void {
+            if (store.items.length === 0) {
+                return;
+            }
+
             store.items = [];
+            stopGone();
             select(null);
             changed();
         },
@@ -272,25 +357,27 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         set(items): void {
-            store.items = [];
-
-            for (const item of items) {
-                store.add(item, duration());
-            }
-
+            store.replace(items, duration());
+            stopGone();
             select(null);
             changed();
         },
 
         list: () => store.list(),
         play,
-        stop: () => host?.stopRange(),
+        stop,
         select,
 
         setup(frame): void {
             host = frame;
-            stopFitting = frame.on('durationchange', fitToSound);
-            stopViewing = frame.on('viewchange', placeLabels);
+            stops = [
+                frame.on('durationchange', fitToSound),
+                frame.on('viewchange', placeLabels),
+                frame.on('seek', seeked),
+                frame.on('rangeend', () => {
+                    playingId = null;
+                }),
+            ];
             fitToSound();
         },
 
@@ -359,11 +446,12 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         destroy(): void {
-            stopFitting?.();
-            stopFitting = null;
-            stopViewing?.();
-            stopViewing = null;
+            for (const stopListening of stops.splice(0)) {
+                stopListening();
+            }
+
             labels.destroy();
+            playingId = null;
             host = null;
         },
     };

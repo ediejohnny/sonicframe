@@ -105,9 +105,11 @@ frame.use(parts);</code></pre>
                                     <td>
                                         Regions to start with:
                                         <code
-                                            >{ start, end, label, color }</code
+                                            >{ start, end, label, color, id
+                                            }</code
                                         >
-                                        in seconds.
+                                        in seconds. An id is kept when no other
+                                        region has it.
                                     </td>
                                 </tr>
                                 <tr>
@@ -198,14 +200,31 @@ frame.use(parts);</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <code>onChange</code>,
-                                        <code>onSelect</code>
-                                    </td>
+                                    <td><code>onChange</code></td>
                                     <td></td>
                                     <td>
-                                        Called when regions change, and when one
-                                        is selected.
+                                        Called with the regions after a change:
+                                        once when a drag is let go, and after
+                                        each change by code or the keys. The
+                                        place to save them.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>onInput</code></td>
+                                    <td></td>
+                                    <td>
+                                        Called at every move of a drag that
+                                        changes a region, to show its times as
+                                        they change.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>onSelect</code></td>
+                                    <td></td>
+                                    <td>
+                                        Called with a copy of the region
+                                        selected, or <code>null</code> when the
+                                        selection goes.
                                     </td>
                                 </tr>
                             </tbody>
@@ -216,7 +235,7 @@ frame.use(parts);</code></pre>
                 <section class="section">
                     <h2>From code</h2>
                     <div class="code">
-                        <pre><code>const made = parts.add({ start: 20, end: 26, label: 'Chorus' }); // a copy, or null at max
+                        <pre><code>const made = parts.add({ start: 20, end: 26, label: 'Chorus' }); // a copy, or null
 parts.update(made.id, { end: 28 });
 parts.play(made.id, { loop: true });
 parts.stop();
@@ -232,6 +251,12 @@ parts.set([{ start: 2, end: 6, label: 'Intro' }]); // replace them all</code></p
                         lets the selection go and calls <code>onChange</code>
                         once. Regions are fitted to the sound once its length is
                         known, and follow the view while zoomed in.
+                    </p>
+                    <p>
+                        <code>add()</code> gives <code>null</code> when
+                        <code>max</code> regions exist or a start or end is not
+                        a number. Every region keeps an id no other one has, and
+                        a region taken away stops playing.
                     </p>
                 </section>
             </div>

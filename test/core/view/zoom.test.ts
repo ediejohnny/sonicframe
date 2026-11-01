@@ -94,6 +94,19 @@ describe('zoomKey', () => {
         expect(zoomKey('x', {}, keys)).toBeNull();
     });
 
+    it('matches a letter of your own whatever its case, so Caps Lock changes nothing', () => {
+        const own = { in: ['i'], out: ['O'], reset: ['0'] };
+
+        expect(zoomKey('I', {}, own)).toBe('in');
+        expect(zoomKey('o', {}, own)).toBe('out');
+        expect(
+            zoomKey('Enter', {}, { in: ['enter'], out: [], reset: [] }),
+        ).toBeNull();
+        expect(
+            zoomKey('PageUp', {}, { in: ['PageUp'], out: [], reset: [] }),
+        ).toBe('in');
+    });
+
     it('leaves Ctrl, ⌘ and Alt to the browser (its own page zoom)', () => {
         expect(zoomKey('+', { ctrlKey: true }, keys)).toBeNull();
         expect(zoomKey('-', { metaKey: true }, keys)).toBeNull();

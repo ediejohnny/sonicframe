@@ -353,7 +353,7 @@ describe('every form', () => {
 });
 
 describe('on the tag', () => {
-    it('reads the list form, its side and the swipe from chapter-options', () => {
+    it('reads the list form, its side and the swipe from chapter-options', async () => {
         defineSonicPlayer();
         const element = document.createElement('sonic-player');
         element.setAttribute('src', 'talk.ogg');
@@ -380,6 +380,7 @@ describe('on the tag', () => {
             document.querySelector('.sonicframe-chapter-backdrop'),
         ).not.toBeNull();
         element.remove();
+        await Promise.resolve();
         expect(document.querySelector('.sonicframe-chapter-list')).toBeNull();
     });
 });

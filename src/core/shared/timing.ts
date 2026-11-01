@@ -52,9 +52,13 @@ export function easeOut(t: number): number {
     return 1 - (1 - clamp01(t)) ** 3;
 }
 
-/** Seconds as `m:ss`, or `h:mm:ss` from one hour on; `decimals` adds fractional seconds. */
+/**
+ * Seconds as `m:ss`, or `h:mm:ss` from one hour on; `decimals` adds fractional seconds, rounded
+ * before the minutes and hours are counted, so 59.96 s with one decimal is `1:00.0`.
+ */
 export function formatTime(seconds: number, decimals: number = 0): string {
-    const safe = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+    const given = Math.max(0, Number.isFinite(seconds) ? seconds : 0);
+    const safe = decimals > 0 ? Number(given.toFixed(decimals)) : given;
     const whole = Math.floor(safe);
     const hours = Math.floor(whole / 3600);
     const minutes = Math.floor((whole % 3600) / 60);

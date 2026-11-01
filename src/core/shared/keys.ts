@@ -1,10 +1,45 @@
 /**
  * Shortcut keys the app chooses: one character each, matched without regard to case, and a letter
- * that steps forward, or back with Shift.
+ * that steps forward, or back with Shift; and lists of keys (a key name or several, or none), where
+ * a single character matches whatever its case and a named key (`'ArrowUp'`) matches as written.
  */
 
 import type { KeyModifiers } from '../frame/keys';
 import { within } from './checked';
+
+/** One key or several, as `KeyboardEvent.key` names them; false switches it off. */
+export type KeyChoice = string | readonly string[] | false;
+
+/** The keys of a choice: false gives none, a name or names give those, anything else `fallback`. */
+export function keyList(
+    value: KeyChoice | undefined,
+    fallback: readonly string[],
+): string[] {
+    if (value === false) {
+        return [];
+    }
+
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (Array.isArray(value)) {
+        return value.filter((key): key is string => typeof key === 'string');
+    }
+
+    return [...fallback];
+}
+
+/** Whether `key` is one of `keys`: a single character whatever its case, a named key as written. */
+export function keyIn(key: string, keys: readonly string[]): boolean {
+    const letter = key.length === 1 ? key.toLowerCase() : null;
+
+    return keys.some((chosen) =>
+        letter !== null && chosen.length === 1
+            ? chosen.toLowerCase() === letter
+            : chosen === key,
+    );
+}
 
 /** A key name as one lower-case character, or null for none (a word such as "Enter" is no letter). */
 export function keyLetter(

@@ -7,6 +7,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `regions()` tells `onInput` at every move of a drag that changes a region (drawing, moving or resizing it),
+  for an app that shows the times as they change. The type `RegionInput` names a region as you give it.
+- M and Shift+M say "No more markers" when there is no marker that way (the word `markers.none`, in every
+  language), as C says "No more chapters".
+- `KeyModifiers.repeat`: a plugin's `keyDown` hears whether the key is held down and repeating.
+
+### Changed
+
+- `regions()` tells `onChange` once when a drag is let go, no longer at every move: an app that saves there
+  saves once. Follow the times while they move with `onInput`.
+- `regions()` tells the app only of real changes: no `onChange` for a press on a region that
+  moves nothing, for `remove()` of an id no region has or for an `update()` that changes nothing, and no
+  `onSelect` when the selection stays the same.
+- `<sonic-player>` keeps its sound through what does not change it: a player built again for an attribute keeps
+  the same audio, where it was and at its volume and speed, and the tag moved to another place on the page keeps
+  its player. Only a new `src` or `preload` brings a new sound.
+
+### Fixed
+
+- Regions keep an id of their own: an id given twice, or one the plugin would make (`region-1` in a file read
+  back), no longer makes two regions share it, which removed both, stacked their labels and could drag the
+  wrong one. `items` takes ids, as `add()` and `set()` do.
+- `add()`, `set()` and `update()` of `regions()` refuse a start or end that is not a finite number, which left a
+  region at `NaN` for good.
+- `update()` of `regions()` works before the sound's length is known (it did nothing): the label and the color
+  change at once, and the times are fitted to the sound once its length is known.
+- A looping region that is removed (by `remove()`, `clear()`, `set()` or Delete) stops playing.
+- `onSelect` of `regions()` gets a copy, as every other call does, and `select()` of an id no region has
+  selects none; a drawing cut short (the pointer taken away) no longer leaves the selection on a region that
+  is gone, where L still said "loop on".
+- R with no region, and M with no marker, let the key go on to the page.
+- A held L switches a region's loop once, not at every repeat.
+- `markers()` leaves out a moment that is not a finite number, and no longer breaks on `null`.
+- The keys pressed on the minimap's slider stay its own: Delete no longer removes the selected region, nor do
+  Enter, C, M or the zoom keys reach the wave behind it.
+- The zoom's letters of your own (`keys: { in: 'i' }`) work whatever their case, so Caps Lock changes nothing,
+  as for every other letter.
+- P of `soundDescription()` brings a zoomed view to the part it lands on, as C and M do.
+- `largeStepRatio` is kept from 0.01 to 1 (a negative one turned Page Up around), and the volume control's
+  `step` from 0.01 to 1.
+- `formatTime` with decimals carries a rounded fraction to the next minute (`1:00.0`, never `0:60.0`).
+- The volume bar takes the focus when it is pressed, so its keys work right after a click.
+- `Player.destroy()` stops the download of the sound it made, too.
+- A fast seek from the system's media controls lets go of a looping stretch, which pulled the sound back while
+  the person dragged.
+
 ## [0.7.0] - 2026-11-01
 
 The API is tidied up before it is promised: one name for one idea everywhere. Nothing breaks. Every old name

@@ -121,6 +121,7 @@ export class PluginSet {
             ctrlKey: event.ctrlKey,
             altKey: event.altKey,
             metaKey: event.metaKey,
+            repeat: event.repeat,
         };
 
         for (let i = this.list.length - 1; i >= 0; i--) {

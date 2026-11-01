@@ -154,7 +154,11 @@ export function mediaSession(
         }
     }
 
-    /** Goes to `time`, through the media's fast seek when the controls ask for it and it has one. */
+    /**
+     * Goes to `time`, through the media's fast seek when the controls ask for it and it has one. A
+     * fast seek skips the frame, so it first lets go of a stretch playing (a region's loop), which
+     * would otherwise pull the sound back while the person drags.
+     */
     function seek(time: number | undefined, fast: boolean): void {
         const media = host?.media ?? null;
         const known = positive(host?.duration);
@@ -166,6 +170,7 @@ export function mediaSession(
         const ratio = clamp01((time ?? 0) / known);
 
         if (fast && typeof media.fastSeek === 'function') {
+            host.stopRange();
             media.fastSeek(ratio * known);
         } else {
             host.seekTo(ratio, 'api');

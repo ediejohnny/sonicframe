@@ -210,7 +210,7 @@ export function soundDescription(
         }
 
         const start = outline.parts[index].start;
-        current.seekTo(start / duration);
+        current.seekTo(start / duration, 'keyboard');
         current.announce(words.part(index, outline.parts.length, start));
 
         return true;

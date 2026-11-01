@@ -18,7 +18,7 @@ import {
 } from '../../core/controls/volume';
 import { wordsFor, type LanguageTag } from '../../core/languages/language';
 import type { Words } from '../../core/languages/words';
-import { finiteOr } from '../../core/shared/checked';
+import { finiteOr, within } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { BUTTON, PROGRESS, WAVE } from '../../core/shared/variables';
 import { chosenLanguage } from '../../dom/a11y/page-language';
@@ -46,7 +46,7 @@ export type VolumeControlOptions = {
     size?: number;
     /** Width of the bar in CSS pixels; 80 by default. */
     width?: number;
-    /** How far an arrow key moves the level (0..1); 0.05 by default. */
+    /** How far an arrow key moves the level: 0.05 by default, kept from 0.01 to 1. */
     step?: number;
     colors?: Partial<VolumeColors>;
     /** @deprecated Use `a11y.words`; `labels` goes in 2.0. */
@@ -163,7 +163,7 @@ export class VolumeControl {
                 setLevel: (level) => this.setLevel(level),
             },
             this.labels.volume,
-            finiteOr(options.step, 0.05),
+            within(options.step, 0.05, 0.01, 1),
         );
         this.element.append(this.button, this.bar.element);
 

@@ -6,6 +6,7 @@
 import type { KeyModifiers } from '../frame/keys';
 import { localeFor, wordsFor } from '../languages/language';
 import { oneOf, within } from '../shared/checked';
+import { keyIn, keyList, type KeyChoice } from '../shared/keys';
 import { fillTemplate } from '../shared/text';
 import { ratioText } from '../shared/timing';
 import { FULL_VIEW, fitView, viewLevel, type View } from './view';
@@ -22,7 +23,7 @@ export type ViewSource =
     | 'button';
 
 /** One zoom key or several; false switches it off. */
-export type ZoomKey = string | readonly string[] | false;
+export type ZoomKey = KeyChoice;
 
 export type ZoomOptions = {
     /** The view at the start, as ratios of the sound. The whole sound by default. */
@@ -143,25 +144,6 @@ const DEFAULT_KEYS: ZoomKeys = Object.freeze({
     reset: ['0'],
 });
 
-function keyList(
-    value: ZoomKey | undefined,
-    fallback: readonly string[],
-): string[] {
-    if (value === false) {
-        return [];
-    }
-
-    if (typeof value === 'string') {
-        return [value];
-    }
-
-    if (Array.isArray(value)) {
-        return value.filter((key): key is string => typeof key === 'string');
-    }
-
-    return [...fallback];
-}
-
 /** The zoom's settings, or null when it is off; strange values fall back to their defaults. */
 export function resolveZoom(
     input: boolean | ZoomOptions | undefined,
@@ -212,7 +194,10 @@ export function resolveZoom(
     };
 }
 
-/** The zoom action of a key, or null; with Ctrl, ⌘ or Alt held the key is the browser's. */
+/**
+ * The zoom action of a key, or null; with Ctrl, ⌘ or Alt held the key is the browser's. A letter
+ * matches whatever its case, so Caps Lock changes nothing.
+ */
 export function zoomKey(
     key: string,
     modifiers: KeyModifiers & { shiftKey?: boolean },
@@ -222,15 +207,15 @@ export function zoomKey(
         return null;
     }
 
-    if (keys.in.includes(key)) {
+    if (keyIn(key, keys.in)) {
         return 'in';
     }
 
-    if (keys.out.includes(key)) {
+    if (keyIn(key, keys.out)) {
         return 'out';
     }
 
-    return keys.reset.includes(key) ? 'reset' : null;
+    return keyIn(key, keys.reset) ? 'reset' : null;
 }
 
 /** Pixels per line and per page, for wheels that count in lines (1) or pages (2). */

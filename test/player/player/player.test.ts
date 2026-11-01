@@ -90,6 +90,21 @@ describe('the player', () => {
         expect(preloadOf('everything')).toBe('metadata');
     });
 
+    it('lets go of the sound it made when destroyed, so its download stops too', () => {
+        player = createPlayer({
+            container: container(),
+            src: 'note.ogg',
+            peaks: [0.2, 0.5],
+        });
+        const media = player.media as HTMLMediaElement;
+        const load = vi.spyOn(media, 'load');
+
+        player.destroy();
+
+        expect(media.hasAttribute('src')).toBe(false);
+        expect(load).toHaveBeenCalledTimes(1);
+    });
+
     it('adds the volume control only when asked', () => {
         player = createPlayer({
             container: container(),
