@@ -265,6 +265,21 @@ export class PlayerLayout {
 }
 
 /**
+ * Moves each of `parts`, by `translate` alone, until its middle meets the middle of the bars drawn
+ * on `canvas`; nothing moves while the bars have no height.
+ */
+export function centerOnBars(
+    canvas: HTMLCanvasElement,
+    parts: readonly HTMLElement[],
+): void {
+    const shifts = barShifts(canvas, parts);
+
+    if (shifts !== null) {
+        applyShifts(parts, shifts);
+    }
+}
+
+/**
  * How far each part must move, from where it sits now, for its middle to meet the bars' middle, in
  * whole pixels; `null` while the bars have no height.
  */

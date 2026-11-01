@@ -412,6 +412,8 @@ export class RecorderScreen {
             }
         }
 
+        this.reviewRef?.lineUp();
+
         if (focused) {
             mainButton(this.row)?.focus();
         }
