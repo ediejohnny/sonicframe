@@ -174,8 +174,18 @@ fall back to CSS pixels times the screen density where `device-pixel-content-box
   namespace, `http://www.w3.org/2000/svg`, a name the browser needs to create the icons; it is never fetched, and
   the build check fails on any other.
 
-Report a vulnerability privately to the author (see the npm page) rather than in a public issue. The details are in
+Report a vulnerability privately on GitHub, with
+[Report a vulnerability](https://github.com/ediejohnny/sonicframe/security/advisories/new), rather than in a public
+issue: [SECURITY.md](SECURITY.md) says how. The details are in
 [Security](https://ediejohnny.github.io/sonicframe/security.html).
+
+## Versions
+
+From 1.0.0, SonicFrame follows [Semantic Versioning](https://semver.org/): fixes in patches, new features (each off
+until you turn it on) in minor versions, and anything that can break your code only in a major version, listed in
+advance. Old names keep working until the next major version. Each version from 1.0.0 is published from this
+repository's GitHub workflow, with npm provenance. More in
+[Versions and support](https://ediejohnny.github.io/sonicframe/versions.html).
 
 ## Report a problem or contribute
 
