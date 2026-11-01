@@ -13,6 +13,21 @@ import { css } from '../../dom/shared/css';
 import { LiveWave } from './live-wave';
 import type { RecorderScreenOptions } from './screen-options';
 
+/** The most slices of the levels one bar of the scrolling wave holds (a tenth of a second). */
+const SLICES_PER_BAR = 2;
+
+/**
+ * The scrolling wave's levels for `bars` bars: the window's, or, when a bar would hold more than
+ * two slices, only the latest the bars can hold, so a narrow wave scrolls through fewer seconds and
+ * its bars keep moving instead of each showing the loudest of a long stretch. All of them before
+ * the wave has bars.
+ */
+function scrolled(window: readonly number[], bars: number): readonly number[] {
+    return bars === 0
+        ? window
+        : window.slice(Math.max(0, window.length - bars * SLICES_PER_BAR));
+}
+
 export class LiveView {
     private wave: LiveWave | null = null;
     private time: HTMLElement | null = null;
@@ -69,11 +84,16 @@ export class LiveView {
             this.time.textContent = text;
         }
 
-        this.wave?.show(
-            this.options.live === 'fit'
-                ? levels.levels
-                : levels.last(within(this.options.window, 10, 2, 60)),
-        );
+        if (this.wave !== null) {
+            this.wave.show(
+                this.options.live === 'fit'
+                    ? levels.levels
+                    : scrolled(
+                          levels.last(within(this.options.window, 10, 2, 60)),
+                          this.wave.bars(),
+                      ),
+            );
+        }
 
         const every = within(this.options.a11y?.announceEvery, 0, 0, 3600);
 
