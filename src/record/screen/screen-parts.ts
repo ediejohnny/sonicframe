@@ -33,6 +33,8 @@ export type PartHost = {
     readonly recordStyle: RecordStyle;
     /** The red of its red styles, read as numbers. */
     readonly recordColor: string;
+    /** The record button is painted in that red (the red style, and the microphone unless asked otherwise). */
+    readonly redButton: boolean;
     /** Where the REC mark shows while recording, with the REC style. */
     readonly recPlace: RecPlace;
     /** Blinks a REC dot while recording, when the app asks. */

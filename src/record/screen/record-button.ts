@@ -1,12 +1,12 @@
 /**
  * The record button, in the style the app asks for: the dot on a red button (`'red'`, the default),
- * the dot in the player's button colors (`'dot'`), a microphone (`'mic'`), or the retro REC mark
+ * the dot in the player's button colors (`'dot'`), a microphone (`'mic'`, on the red button unless
+ * `micColor` asks for the player's colors), or the retro REC mark
  * (`'rec'`, see `rec-badge`),
  * whose letters are only seen: screen readers hear the button's name. A press records; with `hold`,
  * recording stops when a long press ends.
  */
 
-import type { PlayerLook } from '../../core/player/look';
 import { oneOf } from '../../core/shared/checked';
 import { rgbaString } from '../../core/shared/color';
 import { svgPath } from '../../core/shared/svg-path';
@@ -15,11 +15,11 @@ import { readColor } from '../../dom/shared/paint';
 import { dressRec } from './rec-badge';
 import { RECORDER_ICONS, screenButton, setBusy } from './screen-buttons';
 import {
+    MIC_COLORS,
     MIC_STYLES,
     type MicStyle,
     REC_PLACES,
     RECORD_STYLES,
-    type RecordStyle,
     type RecorderScreenOptions,
 } from './screen-options';
 import type { PartHost } from './screen-parts';
@@ -47,13 +47,20 @@ export const RECORD_RED = '#f44336';
  */
 export function recordLook(
     options: RecorderScreenOptions,
-): Pick<PartHost, 'recordStyle' | 'recordColor' | 'recPlace' | 'icon'> {
+): Pick<
+    PartHost,
+    'recordStyle' | 'recordColor' | 'redButton' | 'recPlace' | 'icon'
+> {
     const recordStyle = oneOf(options.recordStyle, RECORD_STYLES, 'red');
     const red = readColor(options.recordColor ?? RECORD_RED);
 
     return {
         recordStyle,
         recordColor: red === null ? RECORD_RED : rgbaString(red),
+        redButton:
+            recordStyle === 'red' ||
+            (recordStyle === 'mic' &&
+                oneOf(options.micColor, MIC_COLORS, 'red') === 'red'),
         recPlace: oneOf(options.recPlace, REC_PLACES, 'badge'),
         icon: (name) =>
             svgPath(
@@ -75,7 +82,15 @@ export function recordButton(host: PartHost): HTMLButtonElement {
         host.words.record,
         () => host.start(),
     );
-    dress(button, host.look, host.recordStyle, host.recordColor, path);
+    if (host.redButton) {
+        css(button, [
+            ['background-color', host.recordColor],
+            ['color', '#ffffff'],
+        ]);
+    } else if (host.recordStyle === 'rec') {
+        dressRec(button, host.look, host.recordColor, path);
+    }
+
     setBusy(button, host.state() === 'asking');
 
     if (host.hold) {
@@ -83,24 +98,6 @@ export function recordButton(host: PartHost): HTMLButtonElement {
     }
 
     return button;
-}
-
-/** Paints `button` in `style`, with `red` already read as numbers and `path` its icon's. */
-function dress(
-    button: HTMLButtonElement,
-    look: PlayerLook,
-    style: RecordStyle,
-    red: string,
-    path: string,
-): void {
-    if (style === 'red') {
-        css(button, [
-            ['background-color', red],
-            ['color', '#ffffff'],
-        ]);
-    } else if (style === 'rec') {
-        dressRec(button, look, red, path);
-    }
 }
 
 /** Records while `button` is held: a long press ends the recording when it is let go. */

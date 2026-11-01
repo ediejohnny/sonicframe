@@ -46,6 +46,26 @@ describe('the record button', () => {
         ).toBe(outline);
     });
 
+    it("paints the microphone in the record red by default, in the player's colors when asked", () => {
+        const red = screen({ recordStyle: 'mic', recordColor: '#0000ff' });
+        expect(style(red.made, 'background-color')).toBe('rgba(0, 0, 255, 1)');
+
+        for (const micColor of ['theme', 'plain'] as 'theme'[]) {
+            const { made } = screen({
+                recordStyle: 'mic',
+                recordColor: '#0000ff',
+                micColor,
+            });
+
+            // The player's button color is the documented --sonicframe-button.
+            expect(style(made, 'background-color'), micColor).toMatch(
+                micColor === 'theme'
+                    ? /^var\(--sonicframe-button,/
+                    : /^rgba\(0, 0, 255, 1\)$/,
+            );
+        }
+    });
+
     it("paints the red style in the app's red, read as numbers", () => {
         const blue = screen({ recordStyle: 'red', recordColor: '#0000ff' });
         expect(style(blue.made, 'background-color')).toBe('rgba(0, 0, 255, 1)');

@@ -30,7 +30,9 @@ export {
 } from './record/screen/recorder-screen';
 export {
     DEFAULT_RECORDER_PARTS,
+    MIC_COLORS,
     MIC_STYLES,
+    type MicColor,
     type MicStyle,
     REC_PLACES,
     RECORD_STYLES,

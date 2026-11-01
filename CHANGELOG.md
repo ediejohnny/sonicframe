@@ -63,7 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
       `uploadRecording()` does the same from your own `onSend`, which now gets a `signal` and `progress`;
       "Sending, 40%" shows under the parts, and `cancelSend` (off by default) lets a send be canceled.
     - The record button's style (`recordStyle`): a red button (the default), the dot in the player's colors, a
-      microphone (its outline, or filled with `micStyle`), or a retro REC mark, in your own red (`recordColor`). While recording, REC shows as a badge before the time, as the stop
+      microphone (its outline, or filled with `micStyle`; on the red button, or in the player's colors with
+      `micColor`), or a retro REC mark, in your own red (`recordColor`). While recording, REC shows as a badge before the time, as the stop
       button, or holding the time (`recPlace`), and its dot can blink once a second (`recordBlink`, off by
       default, never with reduced motion, still under the pointer or the focus).
     - Accessibility: every button named, the focus on each stage's main button, the live wave hidden from

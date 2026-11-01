@@ -262,8 +262,17 @@ describe('the <sonic-recorder> tag', () => {
         ]);
         expect(started).toHaveLength(1);
 
-        // The microphone, filled.
-        const mic = tag({ 'record-style': 'mic', 'mic-style': 'filled' });
+        // The microphone, filled, in the player's colors.
+        const mic = tag({
+            'record-style': 'mic',
+            'mic-style': 'filled',
+            'mic-color': 'theme',
+        });
+        expect(
+            mic
+                .querySelector<HTMLElement>('.sonicframe-record')
+                ?.style.getPropertyValue('background-color'),
+        ).toMatch(/^var\(--sonicframe-button,/);
         expect(
             mic.querySelector('.sonicframe-record path')?.getAttribute('d'),
         ).toBe(

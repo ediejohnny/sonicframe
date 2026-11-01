@@ -411,8 +411,10 @@ createRecorder({
                     ></div>
                     <p data-sent></p>
                     <p>
-                        The microphone is drawn as its outline; with
-                        <code>micStyle: 'filled'</code>, its body is filled:
+                        The microphone is drawn as its outline on the red
+                        button; with <code>micStyle: 'filled'</code>, its body
+                        is filled, and <code>micColor: 'theme'</code> puts it in
+                        the player's colors, as in the second one:
                     </p>
                     <div
                         class="stage"
@@ -423,7 +425,7 @@ createRecorder({
                     <div
                         class="stage"
                         data-demo="recorder"
-                        data-options='{"recordStyle":"mic","micStyle":"filled"}'
+                        data-options='{"recordStyle":"mic","micStyle":"filled","micColor":"theme"}'
                     ></div>
                     <p data-sent></p>
                     <div
@@ -721,6 +723,7 @@ const recording = await recorder.stop();</code></pre>
                                         <code>record-style</code>,
                                         <code>record-color</code>,
                                         <code>mic-style</code>,
+                                        <code>mic-color</code>,
                                         <code>rec-place</code>
                                     </td>
                                     <td>The record button and its REC mark.</td>
@@ -902,6 +905,14 @@ const recording = await recorder.stop();</code></pre>
                                     <td>
                                         The microphone's body, or
                                         <code>'filled'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>micColor</code></td>
+                                    <td><code>'red'</code></td>
+                                    <td>
+                                        The microphone's button, or the player's
+                                        colors (<code>'theme'</code>).
                                     </td>
                                 </tr>
                                 <tr>
