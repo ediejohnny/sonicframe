@@ -31,6 +31,7 @@ export const PT: Words = {
     },
     markers: {
         more: 'e mais {count}',
+        none: 'Não há mais marcadores',
     },
     regions: {
         place: 'de {from} a {to}',

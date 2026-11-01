@@ -52,6 +52,7 @@ export {
     type RegionsPlugin,
 } from './plugins/regions/regions';
 export type { Region } from './plugins/regions/region-store';
+export type { RegionInput } from './core/marks/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline/timeline';
 export { chapters } from './plugins/chapters/chapters';
 export {

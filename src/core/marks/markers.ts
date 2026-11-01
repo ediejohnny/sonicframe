@@ -3,6 +3,7 @@
  * view; moments that are not finite numbers, and those outside the view, are left out.
  */
 
+import { finiteOr, isRecord } from '../shared/checked';
 import { clamp01, positive } from '../shared/math';
 import { cleanText } from '../shared/text';
 import { FULL_VIEW, viewX, type View } from '../view/view';
@@ -60,19 +61,31 @@ export function markerSpans(
         }));
 }
 
-/** Plain moments or marks as marks, each label cleaned and cut to 120 characters. */
+/**
+ * Plain moments or marks as marks, each label cleaned and cut to 120 characters. A moment that is not
+ * a finite number, and anything that is neither a moment nor a mark with a finite time, is left out.
+ */
 export function toMarks(next: readonly number[] | readonly Mark[]): Mark[] {
-    return next.map((item) =>
-        typeof item === 'number'
-            ? { time: item }
-            : {
-                  ...item,
-                  label:
-                      item.label === undefined
-                          ? undefined
-                          : cleanText(item.label, 120),
-              },
-    );
+    const marks: Mark[] = [];
+
+    for (const item of next as readonly unknown[]) {
+        if (typeof item === 'number') {
+            if (Number.isFinite(item)) {
+                marks.push({ time: item });
+            }
+        } else if (isRecord(item) && finiteOr(item.time, null) !== null) {
+            const mark = item as Mark;
+            marks.push({
+                ...mark,
+                label:
+                    typeof mark.label === 'string'
+                        ? cleanText(mark.label, 120)
+                        : undefined,
+            });
+        }
+    }
+
+    return marks;
 }
 
 /** The marks with finite times, sorted by time. */

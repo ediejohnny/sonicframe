@@ -119,6 +119,31 @@ describe('markers on the page', () => {
         }
     });
 
+    it('says there is no marker that way, past the last and before the first, in the words asked', () => {
+        const { container, media } = marked();
+        const said = (): string | null | undefined =>
+            document.querySelector('[role="status"]')?.textContent;
+
+        playTo(media, 35);
+        expect(pressKey(container, 'm').defaultPrevented).toBe(true);
+        expect(said()).toBe('No more markers');
+
+        playTo(media, 5);
+        document.querySelector('[role="status"]')?.replaceChildren();
+        pressKey(container, 'm', { shiftKey: true });
+        expect(said()).toBe('No more markers');
+        expect(media.currentTime).toBe(5);
+
+        const own = marked({ a11y: { words: { none: 'Nothing that way' } } });
+        playTo(own.media, 35);
+        pressKey(own.container, 'm');
+        expect(said()).toBe('Nothing that way');
+
+        // With no marker at all, M goes on to the page.
+        const empty = marked({ items: [] });
+        expect(pressKey(empty.container, 'm').defaultPrevented).toBe(false);
+    });
+
     it('takes a letter of its own, or no key at all', () => {
         const own = marked({ keys: { letter: 'k' } });
         pressKey(own.container, 'm');

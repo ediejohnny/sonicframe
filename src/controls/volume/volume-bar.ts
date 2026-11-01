@@ -148,7 +148,9 @@ export class VolumeBar {
             return;
         }
 
+        // Holding back the browser's default also holds back its focus, so the slider takes it here.
         event.preventDefault();
+        this.element.focus({ preventScroll: true });
         this.dragging = event.pointerId;
 
         try {

@@ -133,16 +133,21 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     let host: PluginHost | null = null;
     let openedTooltip = false;
 
+    /** The app's own words, over the frame's language. */
+    const ownWords =
+        options.words === undefined && options.a11y?.words === undefined
+            ? undefined
+            : { ...options.words, ...options.a11y?.words };
+
+    function wordsOf(frame: PluginHost): MarkerWords {
+        return mergeWords(wordsFor(frame.lang).markers, ownWords, MAX_WORD);
+    }
+
     /** The tooltip's last line, for `count` markers left out, in the frame's language. */
     function more(frame: PluginHost, count: number): string {
-        const own =
-            options.words === undefined && options.a11y?.words === undefined
-                ? undefined
-                : { ...options.words, ...options.a11y?.words };
-        const words = mergeWords(wordsFor(frame.lang).markers, own, MAX_WORD);
-        const locale = localeFor(frame.lang, own !== undefined);
+        const locale = localeFor(frame.lang, ownWords !== undefined);
 
-        return fillTemplate(words.more, {
+        return fillTemplate(wordsOf(frame).more, {
             count: new Intl.NumberFormat(locale).format(count),
         });
     }
@@ -357,6 +362,12 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
             }
 
             const order = sortedMarks(marks);
+
+            // With no marker at all, the key goes on to the page.
+            if (order.length === 0) {
+                return false;
+            }
+
             const now = frame.progress * duration;
             const next =
                 way === -1
@@ -366,7 +377,9 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
                     : order.find((mark) => mark.time > now + 0.01);
 
             if (next === undefined) {
-                return false;
+                frame.announce(wordsOf(frame).none);
+
+                return true;
             }
 
             choose([next], next.time, 'keyboard');

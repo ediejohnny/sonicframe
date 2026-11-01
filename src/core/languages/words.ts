@@ -124,6 +124,8 @@ export type ChapterWords = {
 export type MarkerWords = {
     /** The tooltip's last line when it lists only some of a group's markers: `{count}` left out. */
     more: string;
+    /** Said when M or Shift+M finds no marker that way. */
+    none: string;
 };
 
 /** What the regions plugin says. `{name}` marks are filled in. */

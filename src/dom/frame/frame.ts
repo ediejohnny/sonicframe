@@ -16,7 +16,7 @@ import {
 } from '../../core/frame/media-events';
 import { wordsFor } from '../../core/languages/language';
 import { Emitter } from '../../core/shared/emitter';
-import { finiteOr } from '../../core/shared/checked';
+import { finiteOr, within } from '../../core/shared/checked';
 import { clamp01 } from '../../core/shared/math';
 import { defaultValueText } from '../../core/shared/timing';
 import {
@@ -199,7 +199,7 @@ export class SonicFrame implements PluginHost {
             {
                 interact: this.interact,
                 stepSeconds: finiteOr(options.stepSeconds, 5),
-                largeStepRatio: finiteOr(options.largeStepRatio, 0.1),
+                largeStepRatio: within(options.largeStepRatio, 0.1, 0.01, 1),
                 rewindOnEnd: options.rewindOnEnd ?? false,
                 valueText: (time, ratio, duration) =>
                     [
@@ -614,6 +614,11 @@ export class SonicFrame implements PluginHost {
             on(this.container, 'lostpointercapture', () => pointer.cancel());
             on(this.container, 'pointerleave', (event) => pointer.leave(event));
             on(this.container, 'keydown', (event) => {
+                // A lane that takes the focus (the minimap's slider) keeps its keys to itself.
+                if (this.lanes.contains(event.target as Node | null)) {
+                    return;
+                }
+
                 if (
                     this.plugins.key(event) ||
                     this.frameView.keyDown(event) ||

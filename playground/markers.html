@@ -157,10 +157,13 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                                     <td><code>a11y.words</code></td>
                                     <td>
                                         Your own words over the frame's
-                                        language: <code>{ more }</code>, the
-                                        tooltip's last line when a group has
-                                        more than five markers ("and
-                                        <code>{count}</code> more").
+                                        language: <code>{ more, none }</code>:
+                                        <code>more</code> is the tooltip's last
+                                        line when a group has more than five
+                                        markers ("and
+                                        <code>{count}</code> more"),
+                                        <code>none</code> what the keys say with
+                                        no marker that way ("No more markers").
                                     </td>
                                 </tr>
                             </tbody>
@@ -173,9 +176,10 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                     <p>
                         With the wave focused, <kbd>M</kbd> goes to the next
                         marker and <kbd>Shift</kbd> + <kbd>M</kbd> to the
-                        previous, like a player's tracks. Zoomed in, a marker
-                        reached by a key comes into view. Caps Lock changes
-                        nothing.
+                        previous, like a player's tracks. Past the last one (or
+                        before the first) they say "No more markers". Zoomed in,
+                        a marker reached by a key comes into view. Caps Lock
+                        changes nothing.
                     </p>
                     <div class="code">
                         <pre><code>markers({ items, keys: { letter: 'k', backGrace: 2 } }); // K and Shift+K

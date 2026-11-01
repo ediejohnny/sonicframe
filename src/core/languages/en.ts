@@ -34,6 +34,7 @@ export const EN: Words = {
     },
     markers: {
         more: 'and {count} more',
+        none: 'No more markers',
     },
     regions: {
         place: '{from} to {to}',
