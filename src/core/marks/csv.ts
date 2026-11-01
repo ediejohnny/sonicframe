@@ -89,11 +89,10 @@ export function csvSeparator(firstLine: string): CsvSeparator {
         }
     }
 
-    const most = (Object.keys(counts) as CsvSeparator[]).reduce((best, next) =>
+    // A tie keeps the separator counted first, so a line with none gives the comma.
+    return (Object.keys(counts) as CsvSeparator[]).reduce((best, next) =>
         counts[next] > counts[best] ? next : best,
     );
-
-    return counts[most] > 0 ? most : ',';
 }
 
 /** A cell with a `'` before it when a spreadsheet would read it as a formula. */

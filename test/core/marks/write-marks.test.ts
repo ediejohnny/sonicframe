@@ -109,8 +109,11 @@ describe('writeRegions', () => {
     it('leaves out a region whose times are not numbers, and an id WebVTT would not read as one', () => {
         const odd: RegionInput[] = [
             { start: Number.NaN, end: 2 },
+            { start: 1, end: Number.NaN },
             { id: 'NOTE this', start: 1, end: 2 },
             { id: 'a --> b', start: 3, end: 4 },
+            { id: ' ', start: 5, end: 6 },
+            { id: 'NOTEBOOK', start: 7, end: 8 },
         ];
 
         expect(writeRegions(odd, { format: 'vtt' })).toBe(
@@ -121,12 +124,57 @@ describe('writeRegions', () => {
                 '',
                 '00:00:03.000 --> 00:00:04.000',
                 '',
+                '00:00:05.000 --> 00:00:06.000',
+                '',
+                'NOTEBOOK',
+                '00:00:07.000 --> 00:00:08.000',
+                '',
             ].join('\n'),
         );
         expect(writeRegions([], { format: 'vtt' })).toBe('WEBVTT\n');
         expect(writeRegions(odd, { format: 'audacity' })).toBe(
-            '1.000000\t2.000000\t\n3.000000\t4.000000\t\n',
+            [
+                '1.000000\t2.000000\t',
+                '3.000000\t4.000000\t',
+                '5.000000\t6.000000\t',
+                '7.000000\t8.000000\t',
+                '',
+            ].join('\n'),
         );
+    });
+
+    it('writes each label on one line, and no text field that is empty or no text', () => {
+        const regions = [
+            {
+                start: 1,
+                end: 2,
+                label: ' two\nlines\tand a tab ',
+                id: '',
+                color: 7 as unknown as string,
+            },
+        ];
+
+        expect(JSON.parse(writeRegions(regions))).toEqual([
+            { start: 1, end: 2, label: ' two\nlines\tand a tab ' },
+        ]);
+        expect(writeRegions(regions, { format: 'vtt' })).toBe(
+            'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\ntwo lines\tand a tab\n',
+        );
+        expect(writeRegions(regions, { format: 'audacity' })).toBe(
+            '1.000000\t2.000000\t two lines and a tab \n',
+        );
+        expect(writeRegions(regions, { format: 'csv' })).toBe(
+            'start,end,label,color,id\r\n1,2," two\nlines\tand a tab ",,\r\n',
+        );
+    });
+
+    it('writes CSV times to the thousandth, and guards the color and the id too', () => {
+        expect(
+            writeRegions(
+                [{ start: 1.23456, end: 2.0004, color: '+x', id: '@intro' }],
+                { format: 'csv' },
+            ),
+        ).toBe("start,end,label,color,id\r\n1.235,2,,'+x,'@intro\r\n");
     });
 
     it('gives a WebVTT cue of no length a thousandth, since a cue ends after it starts', () => {
@@ -137,8 +185,12 @@ describe('writeRegions', () => {
 });
 
 describe('writeMarkers', () => {
-    it('writes JSON by default, a plain moment as one with only its time', () => {
-        expect(JSON.parse(writeMarkers(MARKS))).toEqual([
+    it('writes JSON by default, a plain moment as one with only its time, leaving out a time that is no number', () => {
+        expect(
+            JSON.parse(
+                writeMarkers([...MARKS, Number.NaN, { time: Number.NaN }]),
+            ),
+        ).toEqual([
             { time: 2.4, label: 'Title' },
             { id: 'm2', time: 9, label: 'Second line', color: 'red' },
             { time: 21 },
@@ -163,7 +215,19 @@ describe('writeMarkers', () => {
         );
     });
 
-    it('lets the last marker last a second when the length is not given, and skips a marker at the same moment', () => {
+    it('lets the last marker last a second when the length is not given, or not after it', () => {
+        const second = 'WEBVTT\n\n00:00:05.000 --> 00:00:06.000\n';
+
+        expect(writeMarkers([5], { format: 'vtt', duration: 3 })).toBe(second);
+        expect(
+            writeMarkers([5], {
+                format: 'vtt',
+                duration: Number.POSITIVE_INFINITY,
+            }),
+        ).toBe(second);
+    });
+
+    it('lets a marker last until the next later one, skipping one at the same moment', () => {
         expect(
             writeMarkers([5, { time: 5, label: 'Again' }, 3], {
                 format: 'vtt',

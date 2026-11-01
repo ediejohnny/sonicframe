@@ -2,10 +2,11 @@
  * Regions and markers read from files, which are untrusted input: JSON (a list, or one under
  * `regions` / `markers`), WebVTT (its cues, the identifiers as ids), CSV (the separator found on the
  * first line, the columns by their names or, without known names, in the order `writeRegions` writes
- * them; a decimal comma taken, a formula's guard taken back) and Audacity labels (frequency lines
- * skipped). The format comes from the content unless given. A text over 512 KB is refused, at most
- * 2000 items are read, a time must be a finite number from zero (a region's end not before its start)
- * and labels, colors and ids are cleaned to one short safe line. Nothing here touches the page.
+ * them; a decimal comma taken, the formula guard of each text cell taken back) and Audacity labels
+ * (frequency lines skipped). The format comes from the content unless given. A text over 512 KB is
+ * refused, at most 2000 items are read, a time must be a finite number from zero (a region's end not
+ * before its start) and labels, colors and ids are cleaned to one short safe line. Nothing here
+ * touches the page.
  */
 
 import { isRecord, oneOf } from '../shared/checked';
@@ -156,27 +157,31 @@ function csvRowsOf(text: string, guard: boolean): Row[] {
         color: found('color', 3),
         id: found('id', 4),
     };
+    // A column the header does not name is at -1, which no line has.
     const cell = (line: readonly string[], at: number): string | undefined =>
-        at < 0 ? undefined : line[at];
+        line[at];
+    const words = (line: readonly string[], at: number): string | undefined => {
+        const written = cell(line, at);
 
-    return lines.slice(named ? 1 : 0, MAX_ITEMS * 2 + 1).map((line) => {
-        const label = cell(line, columns.label);
+        return written !== undefined && guard ? unguardCell(written) : written;
+    };
 
-        return {
-            start: numberOf(cell(line, columns.start)),
-            end: numberOf(cell(line, columns.end)),
-            label: label !== undefined && guard ? unguardCell(label) : label,
-            color: cell(line, columns.color),
-            id: cell(line, columns.id),
-        };
-    });
+    return lines.slice(named ? 1 : 0, MAX_ITEMS * 2 + 1).map((line) => ({
+        start: numberOf(cell(line, columns.start)),
+        end: numberOf(cell(line, columns.end)),
+        label: words(line, columns.label),
+        color: words(line, columns.color),
+        id: words(line, columns.id),
+    }));
 }
 
-/** The rows of Audacity's labels: start, end and label by tabs; frequency lines (`\`) skipped. */
+/**
+ * The rows of Audacity's labels: start, end and label by tabs. A frequency line (`\`) or an empty
+ * one has no start, so it is left out with the other rows that have none.
+ */
 function audacityRows(text: string): Row[] {
     return text
         .split('\n')
-        .filter((line) => line.trim() !== '' && !line.startsWith('\\'))
         .slice(0, MAX_ITEMS * 2)
         .map((line) => {
             const [start, end, ...label] = line.split('\t');

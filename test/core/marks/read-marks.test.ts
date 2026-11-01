@@ -14,13 +14,16 @@ import {
 } from '../../../src/core/marks/write-marks';
 
 describe('readRegions', () => {
-    it('reads JSON, as a list or under regions', () => {
+    it('reads JSON, as a list or under regions, a region without an end as one of no length', () => {
         const list = [
             { id: 'a', start: 1, end: 2, label: 'One', color: 'red' },
         ];
 
         expect(readRegions(JSON.stringify(list))).toEqual(list);
         expect(readRegions(JSON.stringify({ regions: list }))).toEqual(list);
+        expect(readRegions('\n  [{"start": 4}]')).toEqual([
+            { start: 4, end: 4 },
+        ]);
     });
 
     it('reads WebVTT, its identifiers as ids, skipping notes and styles', () => {
@@ -48,15 +51,39 @@ describe('readRegions', () => {
 
     it("reads Audacity's labels, skipping its frequency lines and taking a decimal comma", () => {
         const text = [
-            '0.000000\t2.500000\tIntro',
+            '0.000000\t2.500000\tIntro "live"',
             '\\\t200.000000\t1500.000000',
             '5,250000\t5,250000\tclap',
             '',
         ].join('\n');
 
         expect(readRegions(text)).toEqual([
-            { start: 0, end: 2.5, label: 'Intro' },
+            { start: 0, end: 2.5, label: 'Intro "live"' },
             { start: 5.25, end: 5.25, label: 'clap' },
+        ]);
+    });
+
+    it('reads a file that opens with a byte-order mark, as editors and spreadsheets save it', () => {
+        const mark = String.fromCharCode(0xfeff);
+
+        expect(readRegions(`${mark}[{"start": 1, "end": 2}]`)).toEqual([
+            { start: 1, end: 2 },
+        ]);
+        expect(
+            readRegions(
+                `${mark}WEBVTT\r\n\r\n00:00:01.000 --> 00:00:02.000\r\nOne\r\n`,
+            ),
+        ).toEqual([{ start: 1, end: 2, label: 'One' }]);
+    });
+
+    it('reads the format asked over the one the content looks like', () => {
+        const text = '1\t2\t"Verse, one"\n';
+
+        expect(readRegions(text)).toEqual([
+            { start: 1, end: 2, label: '"Verse, one"' },
+        ]);
+        expect(readRegions(text, { format: 'csv' })).toEqual([
+            { start: 1, end: 2, label: 'Verse, one' },
         ]);
     });
 
@@ -76,7 +103,7 @@ describe('readRegions', () => {
 
     it('reads CSV columns by their names, in any order, and without a header in the usual order', () => {
         expect(
-            readRegions('label,id,end,start\nVerse,v1,16,8.5\n', {
+            readRegions('Label, ID,End,Start\nVerse,v1,16,8.5\n', {
                 format: 'csv',
             }),
         ).toEqual([{ id: 'v1', start: 8.5, end: 16, label: 'Verse' }]);
@@ -85,60 +112,83 @@ describe('readRegions', () => {
         ]);
     });
 
-    it('takes back the guard of a formula, unless asked not to', () => {
-        const text = "start,end,label\n1,2,'=SUM(A1)\n";
+    it('takes back the guard of a formula in every text cell, unless asked not to', () => {
+        const text = "start,end,label,color,id\n1,2,'=SUM(A1),'+x,'@intro\n";
 
-        expect(readRegions(text)[0].label).toBe('=SUM(A1)');
-        expect(readRegions(text, { guardFormulas: false })[0].label).toBe(
-            "'=SUM(A1)",
-        );
+        expect(readRegions(text)).toEqual([
+            { start: 1, end: 2, label: '=SUM(A1)', color: '+x', id: '@intro' },
+        ]);
+        expect(readRegions(text, { guardFormulas: false })).toEqual([
+            {
+                start: 1,
+                end: 2,
+                label: "'=SUM(A1)",
+                color: "'+x",
+                id: "'@intro",
+            },
+        ]);
     });
 
-    it('leaves out a region with a time that is not a number, below zero, or with its end before its start', () => {
+    it('leaves out a region with a time that is not a number, below zero, or with its end before its start; a number may have spaces around it', () => {
         const text = [
             'start,end,label',
             'x,2,a',
             '-1,2,b',
             '5,4,c',
+            '1,-2,e',
             '1,1,d',
             '1,3,',
+            ' .5 , 1 ,f',
             '',
         ].join('\n');
 
         expect(readRegions(text)).toEqual([
             { start: 1, end: 1, label: 'd' },
             { start: 1, end: 3 },
+            { start: 0.5, end: 1, label: 'f' },
         ]);
     });
 
     it('cleans the labels, the colors and the ids to one short safe line', () => {
-        const [region] = readRegions(
+        const [region, blank] = readRegions(
             JSON.stringify([
                 {
                     start: 1,
                     end: 2,
                     label: `a\nb${'x'.repeat(200)}`,
-                    color: 7,
-                    id: '',
+                    color: 'c'.repeat(150),
+                    id: 'i'.repeat(300),
                 },
+                { start: 3, end: 4, label: '   ', color: 7, id: '' },
             ]),
         );
 
-        expect(region.label).toBe(`a b${'x'.repeat(117)}`);
-        expect(region).not.toHaveProperty('color');
-        expect(region).not.toHaveProperty('id');
+        expect(region).toEqual({
+            start: 1,
+            end: 2,
+            label: `a b${'x'.repeat(117)}`,
+            color: 'c'.repeat(100),
+            id: 'i'.repeat(200),
+        });
+        expect(Object.keys(blank)).toEqual(['start', 'end']);
     });
 
-    it('keeps at most 2000 regions', () => {
-        const many = Array.from({ length: 2500 }, (_, index) => ({
-            start: index,
-            end: index + 1,
-        }));
+    it('keeps at most 2000 regions and 2000 markers', () => {
+        const many = JSON.stringify(
+            Array.from({ length: 2500 }, (_, index) => ({
+                start: index,
+                end: index + 1,
+            })),
+        );
 
-        expect(readRegions(JSON.stringify(many))).toHaveLength(2000);
+        expect(readRegions(many)).toHaveLength(2000);
+        expect(readMarkers(many)).toHaveLength(2000);
     });
 
-    it('refuses JSON that is broken or no list, and a text over 512 KB', () => {
+    it('refuses what is no text, JSON that is broken or no list, and a text over 512 KB', () => {
+        expect(() => readRegions(3 as unknown as string)).toThrow(
+            'no regions or markers file',
+        );
         expect(() => readRegions('[{oops')).toThrow(TypeError);
         expect(() => readRegions('{"regions": 3}')).toThrow(TypeError);
         expect(() => readRegions('x'.repeat(524289))).toThrow(RangeError);
@@ -156,10 +206,9 @@ describe('readMarkers', () => {
         expect(readMarkers(written)).toEqual([
             { id: 'a', time: 1.5, label: 'One' },
         ]);
-        expect(readMarkers('[2, {"time": 3, "label": "x"}, "y", -1]')).toEqual([
-            { time: 2 },
-            { time: 3, label: 'x' },
-        ]);
+        expect(
+            readMarkers('[2, {"time": 3, "label": "x"}, "y", -1, 1e999]'),
+        ).toEqual([{ time: 2 }, { time: 3, label: 'x' }]);
         expect(readMarkers('{"markers": [4]}')).toEqual([{ time: 4 }]);
         expect(readMarkers('4.000000\t4.000000\tclap\n')).toEqual([
             { time: 4, label: 'clap' },

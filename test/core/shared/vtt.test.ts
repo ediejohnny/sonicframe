@@ -20,6 +20,7 @@ describe('isVtt', () => {
     it('knows a WebVTT file by its first word alone', () => {
         expect(isVtt('WEBVTT')).toBe(true);
         expect(isVtt('WEBVTT - chapters\n')).toBe(true);
+        expect(isVtt('WEBVTT\tchapters\n')).toBe(true);
         expect(isVtt('WEBVTTX\n')).toBe(false);
         expect(isVtt(' WEBVTT\n')).toBe(false);
     });
@@ -57,14 +58,15 @@ describe('vttText', () => {
 });
 
 describe('readVtt', () => {
-    it("gives a cue's identifier when it has one", () => {
+    it("gives a cue's identifier when it has one, without the spaces at its ends", () => {
         const cues = readVtt(
-            'WEBVTT\n\nverse 1\n00:00:01.000 --> 00:00:02.000\nOne\n\n00:00:03.000 --> 00:00:04.000\nTwo\n',
+            'WEBVTT\n\nverse 1 \n00:00:01.000 --> 00:00:02.000\nOne\n\n00:00:03.000 --> 00:00:04.000\nTwo\n\n \n00:00:05.000 --> 00:00:06.000\nThree\n',
         );
 
         expect(cues).toEqual([
             { start: 1, end: 2, title: 'One', id: 'verse 1' },
             { start: 3, end: 4, title: 'Two' },
+            { start: 5, end: 6, title: 'Three' },
         ]);
     });
 });
