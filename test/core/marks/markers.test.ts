@@ -1,5 +1,29 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { markerSpans } from '../../../src/core/marks/markers';
+import {
+    markerSpans,
+    toMarks,
+    type Mark,
+} from '../../../src/core/marks/markers';
+
+describe('toMarks', () => {
+    it('keeps only finite moments and marks with a finite time, and never breaks on anything else', () => {
+        const given = [
+            null,
+            Number.NaN,
+            5,
+            { time: Number.NaN },
+            { time: '3' },
+            'x',
+            { time: 3, label: 'Intro' },
+            Number.POSITIVE_INFINITY,
+        ] as unknown as Mark[];
+
+        expect(toMarks(given)).toEqual([
+            { time: 5 },
+            { time: 3, label: 'Intro' },
+        ]);
+    });
+});
 
 describe('markerSpans', () => {
     it('centers each line on its moment, inside the frame', () => {

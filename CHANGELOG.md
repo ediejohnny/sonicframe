@@ -7,6 +7,77 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-01
+
+### Added
+
+- The player's own keys, off by default: `keys: true` (or `keys` on `<sonic-player>`) plays and pauses with
+  Space, mutes with M, skips with ← →, turns the volume up and down with ↑ ↓ and goes up and down the look's
+  speeds with `>` and `<`. Each key can be your own or `false`, `seconds` and `volumeStep` set the steps, and
+  `scope: 'page'` (`keys="page"`) lets them reach the player that played last while nothing on the page has
+  the focus. The control with the focus keeps the keys it uses, and nothing happens while someone types.
+  `a11y.keys.announce` (`a11y-keys="announce"`) says what they change. The type `PlayerKeys` names them.
+- The player remembers between visits, off by default: `remember: true` (or `remember` on `<sonic-player>`)
+  brings back where each sound was left (it resumes there, unless near its end), the volume, the mute and the
+  speed. `position`, `volume` and `speed` pick what to keep, `key` names the group (`remember-key`), `sound`
+  names the sound, `store` takes `sessionStorage` or your own storage, `sounds` and `nearEnd` set the limits.
+  `player.forget()` clears it, the `resume` event (`sonicframe:resume`) tells where a sound resumed, and
+  `a11y.remember.announce` (`a11y-remember="announce"`) says it at the first play, with the new word
+  `player.resume` in every language. The types `PlayerRemember` and `RememberStore` name them.
+- Regions and markers go out and come back as files: `writeRegions` and `writeMarkers` write JSON (the
+  default), WebVTT, CSV or Audacity labels, and `readRegions` and `readMarkers` read any of the four, finding
+  the format by the content. CSV takes a `separator` (`,`, `;` or a tab) and a `decimal` mark, and guards a cell
+  a spreadsheet would run as a formula with a `'` (`guardFormulas`, on by default), which reading takes back.
+  Markers written as WebVTT last until the next one, so the file serves as chapters. Reading refuses a text over
+  512 KB, keeps at most 2000 items and cleans every label. On `sonicframe` and `sonicframe/analysis`, with the
+  types `MarksFormat`, `MarksWriteOptions`, `MarkersWriteOptions`, `MarksReadOptions` and `CsvSeparator`, and
+  `MARKS_FORMATS`.
+- `regions()` tells `onInput` at every move of a drag that changes a region (drawing, moving or resizing it),
+  for an app that shows the times as they change. The type `RegionInput` names a region as you give it.
+- M and Shift+M say "No more markers" when there is no marker that way (the word `markers.none`, in every
+  language), as C says "No more chapters".
+- `KeyModifiers.repeat`: a plugin's `keyDown` hears whether the key is held down and repeating.
+
+### Changed
+
+- `regions()` tells `onChange` once when a drag is let go, no longer at every move: an app that saves there
+  saves once. Follow the times while they move with `onInput`.
+- `regions()` tells the app only of real changes: no `onChange` for a press on a region that
+  moves nothing, for `remove()` of an id no region has or for an `update()` that changes nothing, and no
+  `onSelect` when the selection stays the same.
+- `<sonic-player>` keeps its sound through what does not change it: a player built again for an attribute keeps
+  the same audio, where it was and at its volume and speed, and the tag moved to another place on the page keeps
+  its player. Only a new `src` or `preload` brings a new sound.
+
+### Fixed
+
+- Regions keep an id of their own: an id given twice, or one the plugin would make (`region-1` in a file read
+  back), no longer makes two regions share it, which removed both, stacked their labels and could drag the
+  wrong one. `items` takes ids, as `add()` and `set()` do.
+- `add()`, `set()` and `update()` of `regions()` refuse a start or end that is not a finite number, which left a
+  region at `NaN` for good.
+- `update()` of `regions()` works before the sound's length is known (it did nothing): the label and the color
+  change at once, and the times are fitted to the sound once its length is known.
+- A looping region that is removed (by `remove()`, `clear()`, `set()` or Delete) stops playing.
+- `onSelect` of `regions()` gets a copy, as every other call does, and `select()` of an id no region has
+  selects none; a drawing cut short (the pointer taken away) no longer leaves the selection on a region that
+  is gone, where L still said "loop on".
+- R with no region, and M with no marker, let the key go on to the page.
+- A held L switches a region's loop once, not at every repeat.
+- `markers()` leaves out a moment that is not a finite number, and no longer breaks on `null`.
+- The keys pressed on the minimap's slider stay its own: Delete no longer removes the selected region, nor do
+  Enter, C, M or the zoom keys reach the wave behind it.
+- The zoom's letters of your own (`keys: { in: 'i' }`) work whatever their case, so Caps Lock changes nothing,
+  as for every other letter.
+- P of `soundDescription()` brings a zoomed view to the part it lands on, as C and M do.
+- `largeStepRatio` is kept from 0.01 to 1 (a negative one turned Page Up around), and the volume control's
+  `step` from 0.01 to 1.
+- `formatTime` with decimals carries a rounded fraction to the next minute (`1:00.0`, never `0:60.0`).
+- The volume bar takes the focus when it is pressed, so its keys work right after a click.
+- `Player.destroy()` stops the download of the sound it made, too.
+- A fast seek from the system's media controls lets go of a looping stretch, which pulled the sound back while
+  the person dragged.
+
 ## [0.7.0] - 2026-11-01
 
 The API is tidied up before it is promised: one name for one idea everywhere. Nothing breaks. Every old name

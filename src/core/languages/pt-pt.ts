@@ -35,6 +35,7 @@ export const PT_PT: Words = {
         zoomOut: 'Reduzir',
         zoomReset: 'Mostrar o som completo',
         nextChapter: 'Capítulo seguinte',
+        resume: 'A continuar a partir de {time}',
     },
     recorder: {
         ...PT.recorder,

@@ -17,7 +17,7 @@ import { positive } from '../shared/math';
 import { LANDING, stepIndex } from '../shared/steps';
 import { cleanText } from '../shared/text';
 import { safeUrl } from '../shared/url';
-import { readVtt } from './read-vtt';
+import { isVtt, readVtt, textLines } from '../shared/vtt';
 
 /** One chapter, in seconds. */
 export type Chapter = {
@@ -207,12 +207,9 @@ export function readChapters(input: unknown): Chapter[] {
         throw tooLarge();
     }
 
-    // A byte-order mark (U+FEFF) may open the file.
-    const text = (
-        input.charCodeAt(0) === 0xfeff ? input.slice(1) : input
-    ).replace(/\r\n?/g, '\n');
+    const text = textLines(input);
 
-    if (/^WEBVTT(?:[ \t\n]|$)/.test(text)) {
+    if (isVtt(text)) {
         return collect(readVtt(text), (cue) =>
             chapterOf({ ...cue, image: null, url: null, toc: true }),
         );

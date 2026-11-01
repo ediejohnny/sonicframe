@@ -32,6 +32,8 @@ export class RegionPointer {
         id: string;
         part?: RegionPart;
         grab: number;
+        /** Whether the drag has changed a region yet. */
+        changed: boolean;
     } | null = null;
 
     constructor(
@@ -73,6 +75,7 @@ export class RegionPointer {
                 id: hit.id,
                 part: hit.part,
                 grab: point.time ?? 0,
+                changed: false,
             };
 
             return 'take';
@@ -83,7 +86,12 @@ export class RegionPointer {
             create === 'drag' || (create === 'shift-drag' && point.shiftKey);
 
         if (mayCreate && !this.host.store.full) {
-            this.drag = { mode: 'create', id: '', grab: point.time ?? 0 };
+            this.drag = {
+                mode: 'create',
+                id: '',
+                grab: point.time ?? 0,
+                changed: false,
+            };
 
             return 'drag';
         }
@@ -100,29 +108,19 @@ export class RegionPointer {
         const store = this.host.store;
         const at = point.time ?? 0;
 
-        if (drag.mode === 'create') {
-            if (drag.id === '') {
-                const created = store.add({ start: drag.grab, end: at }, span);
+        if (drag.mode === 'create' && drag.id === '') {
+            const created = store.add({ start: drag.grab, end: at }, span);
 
-                if (created === null) {
-                    this.drag = null;
+            if (created === null) {
+                this.drag = null;
 
-                    return;
-                }
-
-                drag.id = created.id;
-                this.host.select(drag.id);
-            } else {
-                const region = store.byId(drag.id);
-
-                if (region !== undefined) {
-                    const bounds = store.normalized(drag.grab, at, span);
-                    region.start = bounds.start;
-                    region.end = bounds.end;
-                }
+                return;
             }
 
-            this.host.changed();
+            drag.id = created.id;
+            drag.changed = true;
+            this.host.select(drag.id);
+            this.host.moved();
 
             return;
         }
@@ -133,7 +131,13 @@ export class RegionPointer {
             return;
         }
 
-        if (drag.mode === 'resize') {
+        const before = { start: region.start, end: region.end };
+
+        if (drag.mode === 'create') {
+            const bounds = store.normalized(drag.grab, at, span);
+            region.start = bounds.start;
+            region.end = bounds.end;
+        } else if (drag.mode === 'resize') {
             const bounds =
                 drag.part === 'start'
                     ? store.normalized(at, region.end, span)
@@ -150,26 +154,41 @@ export class RegionPointer {
             drag.grab = at;
         }
 
-        this.host.changed();
-    }
-
-    up(): void {
-        if (this.drag !== null) {
-            this.host.told();
-            this.drag = null;
+        if (region.start !== before.start || region.end !== before.end) {
+            drag.changed = true;
+            this.host.moved();
         }
     }
 
-    /** The press ended without a release: a region being drawn goes. */
+    /** The drag is let go: the app hears of it once, when it changed a region. */
+    up(): void {
+        const drag = this.drag;
+        this.drag = null;
+
+        if (drag?.changed === true) {
+            this.host.told();
+        }
+    }
+
+    /**
+     * The press ended without a release: a region being drawn goes (it never reached `onChange`, so
+     * only `onInput` hears of it), and a region moved or resized stays where the drag left it.
+     */
     cancel(): void {
         const drag = this.drag;
+        this.drag = null;
 
-        if (drag !== null && drag.mode === 'create' && drag.id !== '') {
-            this.host.store.remove(drag.id);
-            this.host.changed();
+        if (drag === null || !drag.changed) {
+            return;
         }
 
-        this.drag = null;
+        if (drag.mode === 'create') {
+            this.host.store.remove(drag.id);
+            this.host.select(null);
+            this.host.moved();
+        } else {
+            this.host.told();
+        }
     }
 
     /** The regions across `width` CSS pixels through the view, topmost first, and their ids. */

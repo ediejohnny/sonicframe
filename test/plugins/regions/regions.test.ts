@@ -4,25 +4,10 @@
  */
 
 import { describe, expect, it } from 'vite-plus/test';
-import {
-    regions,
-    type Region,
-    type RegionsOptions,
-    type RegionsPlugin,
-} from '../../../src/index';
+import { regions, type Region, type RegionsOptions } from '../../../src/index';
 import { firePointer, pressKey } from '../../support/events';
-import { fakeMedia, mount, type Mounted } from '../../support/helpers';
-
-/** A frame of a sound `duration` seconds long with the regions plugin, its media and the plugin. */
-function shown(
-    options: RegionsOptions = {},
-    duration = 40,
-): Mounted & { media: ReturnType<typeof fakeMedia>; plugin: RegionsPlugin } {
-    const plugin = regions(options);
-    const media = fakeMedia({ duration });
-
-    return { ...mount({ media, plugins: [plugin] }), media, plugin };
-}
+import { fakeMedia, mount } from '../../support/helpers';
+import { shown } from './regions-harness';
 
 /** The mouse cursor the frame shows now. */
 function cursorOf(container: HTMLElement): string {

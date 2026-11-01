@@ -207,6 +207,21 @@ describe('the media session plugin', () => {
         expect(media.fastSeeks).toEqual([20, 100, 0]);
     });
 
+    it('lets a looping stretch go when the controls drag the sound out of it, fast or not', async () => {
+        for (const fastSeek of [true, false]) {
+            const session = stubSession();
+            const mounted = showSession();
+            await mounted.media.play();
+            mounted.frame.playRange(10, 20, { loop: true });
+
+            session.press('seekto', { seekTime: 50, fastSeek });
+            playTo(mounted.media, 50.3);
+
+            expect(mounted.media.currentTime, `fast ${fastSeek}`).toBe(50.3);
+            takeOff(mounted);
+        }
+    });
+
     it('stops: pauses and goes back to the start', async () => {
         const session = stubSession();
         const { media } = showSession();

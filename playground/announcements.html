@@ -201,6 +201,13 @@
                                         and the two buttons.
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>resume</code></td>
+                                    <td>
+                                        Where a remembered sound resumes
+                                        (<code>{time}</code>).
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -222,6 +229,22 @@
                         <li>
                             The wave in words: the description again on
                             <kbd>D</kbd>, and the part reached on <kbd>P</kbd>.
+                        </li>
+                        <li>
+                            The player's <code>a11y.keys.announce</code>: what
+                            its own keys change ("Volume 55%", "Volume muted",
+                            "Playback speed 1.5×", the place after a skip); see
+                            <a href="./keyboard.html#the-player">Keyboard</a>.
+                        </li>
+                        <li>
+                            The player's <code>a11y.remember.announce</code>:
+                            where a sound resumes, at its first play ("Resuming
+                            at 12:30").
+                        </li>
+                        <li>
+                            The markers' <kbd>M</kbd> with no marker that way:
+                            "No more markers", as <kbd>C</kbd> says "No more
+                            chapters".
                         </li>
                         <li>
                             The chapters' <code>a11y.announce</code>: the new

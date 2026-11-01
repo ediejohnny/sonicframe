@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vite-plus/test';
-import { minimap, type MinimapOptions } from '../../../src/index';
+import { minimap, regions, type MinimapOptions } from '../../../src/index';
 import { pointerEvent, pressKey, wheel } from '../../support/events';
 import {
     recordingOf,
@@ -337,6 +337,28 @@ describe('the minimap as a keyboard slider', () => {
         slider.strip.dispatchEvent(pointer('pointerdown', 100));
 
         expect(document.activeElement).toBe(slider.strip);
+    });
+
+    it("keeps the keys pressed on it from the wave's own keys and plugins", () => {
+        const parts = regions({ items: [{ start: 10, end: 20 }] });
+        const media = fakeMedia({ duration: 100 });
+        const { container } = mount({
+            zoom: { keys: true },
+            media,
+            plugins: [parts, minimap({ a11y: { keys: true } })],
+        });
+        const strip = container.querySelector<HTMLElement>(
+            '.sonicframe-minimap',
+        ) as HTMLElement;
+
+        parts.select(parts.items[0].id);
+
+        for (const key of ['Delete', 'Enter', '+', 'c']) {
+            expect(pressKey(strip, key).defaultPrevented, key).toBe(false);
+        }
+
+        expect(parts.items).toHaveLength(1);
+        expect(media.currentTime).toBe(0);
     });
 
     it("is named and says the part in view in the frame's language", () => {

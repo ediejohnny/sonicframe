@@ -57,6 +57,8 @@ export type PlayerLabels = {
     nextChapter: string;
     /** The button that closes the chapters drawer. */
     closeChapters: string;
+    /** Said at the first play of a sound that resumes where it was left: `{time}`. */
+    resume: string;
 };
 
 /** The phrases of a description. `{name}` marks are filled in; a mark that is not known is dropped. */
@@ -124,6 +126,8 @@ export type ChapterWords = {
 export type MarkerWords = {
     /** The tooltip's last line when it lists only some of a group's markers: `{count}` left out. */
     more: string;
+    /** Said when M or Shift+M finds no marker that way. */
+    none: string;
 };
 
 /** What the regions plugin says. `{name}` marks are filled in. */

@@ -105,7 +105,14 @@ describe('timing', () => {
         expect(formatTime(65.9)).toBe('1:05');
         expect(formatTime(3725)).toBe('1:02:05');
         expect(formatTime(NaN)).toBe('0:00');
+        expect(formatTime(61.25, 2)).toBe('1:01.25');
         expect(defaultValueText(12, 0.4, 30)).toBe('0:12 / 0:30');
+    });
+
+    it('carries a fraction rounded up to the next minute or hour, never writing 60 seconds', () => {
+        expect(formatTime(59.96, 1)).toBe('1:00.0');
+        expect(formatTime(59.9996, 3)).toBe('1:00.000');
+        expect(formatTime(3599.9999, 2)).toBe('1:00:00.00');
         expect(defaultValueText(null, 0.25, null)).toBe('25%');
     });
 });

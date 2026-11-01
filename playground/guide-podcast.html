@@ -103,14 +103,27 @@ const player = createPlayer({
 
                 <section class="section">
                     <h2>3. Remember where they stopped</h2>
+                    <p>
+                        <code>remember</code> brings the listener back where the
+                        episode was left, at the volume and speed they chose. An
+                        episode left near its end starts over.
+                    </p>
                     <div class="code">
-                        <pre><code>const key = 'episode-12-position';
-const audio = player.media;
-
-audio.currentTime = Number(localStorage.getItem(key) ?? 0);
-player.on('timeupdate', (time) =&gt; localStorage.setItem(key, String(time)));</code></pre>
+                        <pre><code>const player = createPlayer({
+    // …the options above, and:
+    remember: { key: 'podcast', sound: 'episode-12' },
+    keys: true, // Space, M, the arrows, &gt; and &lt;
+    a11y: { remember: { announce: true } }, // "Resuming at 12:30"
+});</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                    <p>
+                        The position, the volume and the speed stay in the
+                        page's <code>localStorage</code> (see
+                        <a href="./player-options.html#remembering-remember"
+                            >Remembering</a
+                        >); <code>player.forget()</code> clears them.
+                    </p>
                 </section>
 
                 <section class="section">

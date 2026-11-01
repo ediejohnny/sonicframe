@@ -72,9 +72,15 @@ describe('registering a language', () => {
         const missing = language('Missing', {
             markers: {} as Words['markers'],
         });
-        const marks = language('Marks', { markers: { more: 'and more' } });
+        const marks = language('Marks', {
+            markers: { more: 'and more', none: 'None' },
+        });
         const extra = language('Extra', {
-            markers: { more: '+{count}', other: 'x' } as Words['markers'],
+            markers: {
+                more: '+{count}',
+                none: 'None',
+                other: 'x',
+            } as unknown as Words['markers'],
         });
 
         expect(registerLanguage('ko', missing)).toBe(false);

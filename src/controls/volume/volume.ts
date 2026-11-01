@@ -9,16 +9,17 @@
 
 import { iconButtonBox } from '../../core/controls/button';
 import {
-    clampLevel,
+    setMediaLevel,
+    shownLevel,
     SPEAKER_PATH,
-    unmutedLevel,
+    toggleMute,
     VOLUME_MARKS,
     volumeIcon,
     volumeText,
 } from '../../core/controls/volume';
 import { wordsFor, type LanguageTag } from '../../core/languages/language';
 import type { Words } from '../../core/languages/words';
-import { finiteOr } from '../../core/shared/checked';
+import { finiteOr, within } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { BUTTON, PROGRESS, WAVE } from '../../core/shared/variables';
 import { chosenLanguage } from '../../dom/a11y/page-language';
@@ -46,7 +47,7 @@ export type VolumeControlOptions = {
     size?: number;
     /** Width of the bar in CSS pixels; 80 by default. */
     width?: number;
-    /** How far an arrow key moves the level (0..1); 0.05 by default. */
+    /** How far an arrow key moves the level: 0.05 by default, kept from 0.01 to 1. */
     step?: number;
     colors?: Partial<VolumeColors>;
     /** @deprecated Use `a11y.words`; `labels` goes in 2.0. */
@@ -163,7 +164,7 @@ export class VolumeControl {
                 setLevel: (level) => this.setLevel(level),
             },
             this.labels.volume,
-            finiteOr(options.step, 0.05),
+            within(options.step, 0.05, 0.01, 1),
         );
         this.element.append(this.button, this.bar.element);
 
@@ -264,26 +265,14 @@ export class VolumeControl {
 
     /** The level shown: 0 while muted. */
     private shown(): number {
-        const media = this.media;
-
-        return media === null || media.muted ? 0 : clampLevel(media.volume);
+        return this.media === null ? 0 : shownLevel(this.media);
     }
 
     private setLevel(level: number): void {
-        const media = this.media;
-
-        if (media === null) {
-            return;
+        if (this.media !== null) {
+            setMediaLevel(this.media, level);
+            this.update();
         }
-
-        const value = clampLevel(level);
-        media.volume = value;
-
-        if (value > 0 && media.muted) {
-            media.muted = false;
-        }
-
-        this.update();
     }
 
     private readonly update = (): void => {
@@ -307,20 +296,10 @@ export class VolumeControl {
     };
 
     private readonly onToggle = (): void => {
-        const media = this.media;
-
-        if (media === null) {
-            return;
+        if (this.media !== null) {
+            toggleMute(this.media);
+            this.update();
         }
-
-        if (media.muted || !(media.volume > 0)) {
-            media.volume = unmutedLevel(media.volume);
-            media.muted = false;
-        } else {
-            media.muted = true;
-        }
-
-        this.update();
     };
 
     private readonly onOpen = (): void => {

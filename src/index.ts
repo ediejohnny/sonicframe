@@ -45,13 +45,28 @@ export {
     type TooltipContent,
     type TooltipSection,
 } from './plugins/caption/caption';
-export {
-    regions,
-    type RegionsKeys,
-    type RegionsOptions,
-    type RegionsPlugin,
-} from './plugins/regions/regions';
+export { regions } from './plugins/regions/regions';
+export type {
+    RegionsKeys,
+    RegionsOptions,
+    RegionsPlugin,
+} from './plugins/regions/regions-options';
 export type { Region } from './plugins/regions/region-store';
+export type { RegionInput } from './core/marks/regions';
+export type { CsvSeparator } from './core/marks/csv';
+export {
+    readMarkers,
+    readRegions,
+    type MarksReadOptions,
+} from './core/marks/read-marks';
+export {
+    MARKS_FORMATS,
+    writeMarkers,
+    writeRegions,
+    type MarkersWriteOptions,
+    type MarksFormat,
+    type MarksWriteOptions,
+} from './core/marks/write-marks';
 export { timeline, type TimelineOptions } from './plugins/timeline/timeline';
 export { chapters } from './plugins/chapters/chapters';
 export {
@@ -227,7 +242,7 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '0.7.0';
+export const VERSION: string = '0.8.0';
 
 // Names kept until 2.0: each works as before, and its note says what to use instead.
 

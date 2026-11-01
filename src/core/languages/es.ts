@@ -31,6 +31,7 @@ export const ES: Words = {
     },
     markers: {
         more: 'y {count} más',
+        none: 'No hay más marcadores',
     },
     regions: {
         place: 'de {from} a {to}',
@@ -81,6 +82,7 @@ export const ES: Words = {
         previousChapter: 'Capítulo anterior',
         nextChapter: 'Capítulo siguiente',
         closeChapters: 'Cerrar los capítulos',
+        resume: 'Continuando desde {time}',
     },
     recorder: {
         recorder: 'Grabadora de voz',

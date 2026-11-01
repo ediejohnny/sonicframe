@@ -323,12 +323,13 @@ describe('the <sonic-player> tag', () => {
         ]);
     });
 
-    it('is destroyed when taken out of the page and built again when put back', () => {
+    it('is destroyed when taken out of the page and built again when put back', async () => {
         const element = tag({ src: 'note.ogg', peaks: '/p.json' });
         document.body.append(element);
         expect(player(element)).not.toBeNull();
 
         element.remove();
+        await Promise.resolve();
         expect(player(element)).toBeNull();
 
         document.body.append(element);
@@ -351,7 +352,7 @@ describe('the <sonic-player> tag', () => {
         expect(String(errors[0])).toContain('unknown theme');
     });
 
-    it('gives the player it built through its player property, and null off the page', () => {
+    it('gives the player it built through its player property, and null off the page', async () => {
         defineSonicPlayer();
         const element = tag({ src: 'note.ogg' });
         document.body.append(element);
@@ -360,6 +361,7 @@ describe('the <sonic-player> tag', () => {
         expect(element.player?.element).toBe(player(element));
 
         element.remove();
+        await Promise.resolve();
         expect(element.player).toBeNull();
     });
 });

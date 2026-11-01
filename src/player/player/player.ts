@@ -70,10 +70,13 @@ import {
     ChapterParts,
     type ChapterHost,
 } from '../chapters/chapter-parts';
+import { playerKeyboard, type PlayerKeyboard } from '../keys/player-keys';
+import { playerMemory, type PlayerMemory } from '../remember/player-remember';
 import { listenPart } from '../parts/listen-button';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
 import { farGroup, placeOf, PlayerLayout, type Piece } from './player-layout';
+import { makeAudio, releaseMedia } from './player-media';
 import type { PlayerEvents, PlayerOptions } from './player-options';
 import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, followPalette, wearPalette } from './player-paint';
@@ -138,6 +141,8 @@ export class Player {
     private width: number | null = null;
     private readonly stopSize: () => void;
     private stopScheme: (() => void) | null = null;
+    private readonly keyboard: PlayerKeyboard | null;
+    private readonly memory: PlayerMemory | null;
     private destroyed = false;
 
     constructor(options: PlayerOptions) {
@@ -181,7 +186,11 @@ export class Player {
         }
 
         this.ownMedia = !options.media && typeof options.src === 'string';
-        this.media = options.media ?? (this.ownMedia ? this.makeMedia() : null);
+        this.media =
+            options.media ??
+            (this.ownMedia
+                ? makeAudio(options.src ?? '', options.preload)
+                : null);
         this.host = {
             look: () => this.look,
             words: this.words,
@@ -226,6 +235,16 @@ export class Player {
         this.stopSize = observeSize(this.element, (size) => {
             this.width = size.width / size.pixelRatio;
             outsideSizeReport(this.settle);
+        });
+
+        this.keyboard = playerKeyboard(options, this.host);
+        this.memory = playerMemory(options, {
+            media: this.media,
+            words: this.words,
+            frame: () => this.frameRef,
+            onDuration: (listener) =>
+                this.events.on('durationchange', listener),
+            resumed: (time) => this.events.emit('resume', time),
         });
     }
 
@@ -368,6 +387,11 @@ export class Player {
         this.showVolume(show);
     }
 
+    /** Forgets everything `remember` kept under the player's name: positions, volume and speed. */
+    forget(): void {
+        this.memory?.forget();
+    }
+
     /** Removes the player; a media element it made is stopped, yours is left alone. Safe to call twice. */
     destroy(): void {
         if (this.destroyed) {
@@ -378,13 +402,14 @@ export class Player {
         this.abort.abort();
         this.stopScheme?.();
         this.stopSize();
+        this.keyboard?.destroy();
+        this.memory?.destroy();
         this.teardown();
         this.chapterParts.destroy();
         this.backdrop.destroy();
 
         if (this.ownMedia && this.media !== null) {
-            this.media.pause();
-            this.media.removeAttribute('src');
+            releaseMedia(this.media);
         }
 
         this.element.remove();
@@ -434,16 +459,6 @@ export class Player {
     private readonly reportError = (error: unknown): void => {
         this.frameRef?.reportError(error);
     };
-
-    private makeMedia(): HTMLMediaElement {
-        const audio = document.createElement('audio');
-        const preload = this.options.preload;
-        audio.preload =
-            preload === 'none' || preload === 'auto' ? preload : 'metadata';
-        audio.setAttribute('src', this.options.src ?? '');
-
-        return audio;
-    }
 
     /** Whether the zoom buttons are on (zoom on, with `buttons`). */
     private zoomButtons(): boolean {

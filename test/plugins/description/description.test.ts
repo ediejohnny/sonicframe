@@ -306,6 +306,21 @@ describe('keys and the value, when turned on', () => {
         expect(spoken()).toBe('Parte 1 de 2, no início.');
     });
 
+    it('brings a zoomed view to the part P lands on, as a key seek does', () => {
+        const media = fakeMedia({ duration: 33 });
+        mounted = mount({
+            media,
+            peaks: NOTE,
+            zoom: { view: { start: 0, end: 0.25 } },
+            plugins: [soundDescription({ keys: true })],
+        });
+
+        press(mounted.container, 'p');
+
+        const { start, end } = mounted.frame.view;
+        expect(start <= 24 / 33 && 24 / 33 <= end).toBe(true);
+    });
+
     it('goes back by its own grace, and by the usual second when the grace is not a number', () => {
         // Part 2 starts at 24 s: within the grace, Shift+P goes to part 1; past it, to 24.
         const cases: [unknown, number, number][] = [

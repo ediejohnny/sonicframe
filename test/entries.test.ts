@@ -76,6 +76,7 @@ describe('the names an app or a plugin needs', () => {
             ctrlKey?: boolean;
             altKey?: boolean;
             metaKey?: boolean;
+            repeat?: boolean;
         }>();
         expectTypeOf<TooltipA11y>().toEqualTypeOf<{
             tooltip?: { readable?: boolean };

@@ -5,7 +5,7 @@
         <title>Upgrade guide · SonicFrame</title>
         <meta
             name="description"
-            content="Moving from SonicFrame 0.6 to 0.7: the new names, what can look different, and what changes in 2.0."
+            content="Moving to SonicFrame 0.8 from 0.7 or 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
         />
     </head>
     <body>
@@ -13,11 +13,10 @@
             <div class="page-head">
                 <h1>Upgrade guide</h1>
                 <p class="lede">
-                    From 0.6 to 0.7. This version gives one idea one name across
-                    the library. Nothing breaks: every old name keeps working
-                    until 2.0, marked as deprecated so your editor strikes it
-                    through and says what to use. When a page gives both, the
-                    new name wins.
+                    What changes from one version to the next, the newest first:
+                    from 0.7 to 0.8, then from 0.6 to 0.7. Nothing breaks: every
+                    new feature is off until you turn it on, and every old name
+                    keeps working until 2.0.
                 </p>
             </div>
 
@@ -25,13 +24,192 @@
                 <section class="section">
                     <h2>Update the package</h2>
                     <div class="code">
-                        <pre><code>npm install sonicframe@0.7</code></pre>
+                        <pre><code>npm install sonicframe@0.8</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                 </section>
 
                 <section class="section">
-                    <h2>What can look or work differently</h2>
+                    <h2>In 0.8: what works differently</h2>
+                    <h3>Regions tell onChange when a drag ends</h3>
+                    <p>
+                        <code>onChange</code> of <code>regions()</code> is
+                        called once when a drag is let go, and after each change
+                        by the API or the keys; it was also called at every move
+                        of a drag. An app that saves the regions there now saves
+                        once. To follow the times while they move, use the new
+                        <code>onInput</code>, called at every move of a drag
+                        that changes a region.
+                    </p>
+                    <div class="code">
+                        <pre><code>regions({
+    onInput: (list) => showTimes(list), // at every move of a drag
+    onChange: (list) => save(list), // once it is let go
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+
+                    <h3>Regions tell only real changes</h3>
+                    <p>
+                        No <code>onChange</code> comes for a press on a region
+                        that moves nothing, for <code>remove()</code> of an id
+                        no region has or for an <code>update()</code> that
+                        changes nothing, and no <code>onSelect</code> when the
+                        selection stays the same. A region still being drawn
+                        when the drag is cut short goes away with only an
+                        <code>onInput</code>, since <code>onChange</code> never
+                        heard of it.
+                    </p>
+
+                    <h3>The tag keeps its sound</h3>
+                    <p>
+                        <code>&lt;sonic-player&gt;</code> builds its player
+                        again for an attribute it cannot change live, and keeps
+                        the same audio: the sound goes on where it was, at its
+                        volume and speed. A tag moved to another place on the
+                        page keeps its player. Only a new <code>src</code> or
+                        <code>preload</code> brings a new sound, so a page that
+                        counted on a rebuild to stop the sound now pauses it
+                        itself.
+                    </p>
+
+                    <h3>Some keys go on to the page</h3>
+                    <p>
+                        R with no region, and M with no marker, let the key go
+                        on to the page, where the player's own keys or yours can
+                        answer it. The keys pressed on the minimap's slider stay
+                        its own: Delete, Enter, C, M and the zoom keys no longer
+                        reach the wave behind it.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>In 0.8: what you can turn on</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>New</th>
+                                    <th>Where to read about it</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        The player's own keys
+                                        (<code>keys</code>): Space, M, the
+                                        arrows, <code>&gt;</code> and
+                                        <code>&lt;</code>, in the player or on
+                                        the whole page, said aloud with
+                                        <code>a11y.keys.announce</code>
+                                    </td>
+                                    <td>
+                                        <a href="./keyboard.html">Keyboard</a>,
+                                        <a href="./player-options.html"
+                                            >Player options</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Where each sound was left, the volume
+                                        and the speed, kept between visits
+                                        (<code>remember</code>), with
+                                        <code>forget()</code> and the
+                                        <code>resume</code> event
+                                    </td>
+                                    <td>
+                                        <a href="./player-options.html"
+                                            >Player options</a
+                                        >,
+                                        <a href="./guide-podcast.html"
+                                            >A podcast player</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Regions and markers as files:
+                                        <code>writeRegions</code>,
+                                        <code>readRegions</code>,
+                                        <code>writeMarkers</code> and
+                                        <code>readMarkers</code>, in JSON,
+                                        WebVTT, CSV and Audacity's labels
+                                    </td>
+                                    <td>
+                                        <a href="./regions.html">Regions</a>,
+                                        <a href="./markers.html">Markers</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        On the tag: <code>keys</code>,
+                                        <code>remember</code>,
+                                        <code>remember-key</code>,
+                                        <code>a11y-keys</code>,
+                                        <code>a11y-remember</code> and the
+                                        <code>sonicframe:resume</code> event
+                                    </td>
+                                    <td>
+                                        <a href="./tag-attributes.html"
+                                            >Tag attributes</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        For plugin authors:
+                                        <code>KeyModifiers.repeat</code>, true
+                                        while a key is held down
+                                    </td>
+                                    <td>
+                                        <a href="./plugin-api.html"
+                                            >Plugin API</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>In 0.8: fixed</h2>
+                    <ul>
+                        <li>
+                            Regions keep an id of their own: a file read back
+                            with <code>region-1</code> no longer makes two
+                            regions share it, which removed both.
+                        </li>
+                        <li>
+                            A region whose start or end is not a number is
+                            refused, and a looping region that is removed stops
+                            playing.
+                        </li>
+                        <li>
+                            The volume bar takes the focus when it is pressed,
+                            so its keys work right after a click.
+                        </li>
+                        <li>
+                            <code>formatTime</code> with decimals shows
+                            <code>1:00.0</code>, never <code>0:60.0</code>.
+                        </li>
+                        <li>
+                            <code>Player.destroy()</code> stops the download of
+                            the sound it made.
+                        </li>
+                    </ul>
+                    <p>
+                        The other fixes of 0.8 are in the
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/blob/main/CHANGELOG.md"
+                            >changelog</a
+                        >.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>In 0.7: what can look or work differently</h2>
                     <h3>Chapter lines follow the palette</h3>
                     <p>
                         Every palette now sets
@@ -63,10 +241,14 @@
                 </section>
 
                 <section class="section">
-                    <h2>The new names</h2>
+                    <h2>In 0.7: the new names</h2>
                     <p>
-                        Each old name works the same until 2.0. Rename at your
-                        own pace; the tables say where each one is documented.
+                        0.7 gave one idea one name across the library. Each old
+                        name works the same until 2.0, marked as deprecated so
+                        your editor strikes it through and says what to use;
+                        when a page gives both, the new name wins. Rename at
+                        your own pace; the tables say where each one is
+                        documented.
                     </p>
 
                     <h3>The player and its tag</h3>
@@ -618,7 +800,7 @@
                 </section>
 
                 <section class="section">
-                    <h2>What you can turn on</h2>
+                    <h2>In 0.7: what you can turn on</h2>
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -714,7 +896,7 @@
                 </section>
 
                 <section class="section">
-                    <h2>For plugin authors</h2>
+                    <h2>In 0.7: for plugin authors</h2>
                     <p>
                         Nothing changes for a plugin written for 0.6. The types
                         a plugin works with now have names you can import:
@@ -746,7 +928,10 @@
                             <code>[time, ratio]</code>. In 2.0 both give the
                             time first.
                         </li>
-                        <li>Every name in the tables above goes away.</li>
+                        <li>
+                            Every old name in the tables of 0.7's new names goes
+                            away.
+                        </li>
                     </ul>
                     <p>
                         The <code>detail</code> of the tags' events stays a list
@@ -756,7 +941,7 @@
                 </section>
 
                 <section class="section">
-                    <h2>Fixed</h2>
+                    <h2>In 0.7: fixed</h2>
                     <ul>
                         <li>
                             <code>soundDescription()</code> with a

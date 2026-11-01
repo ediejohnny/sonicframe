@@ -37,7 +37,7 @@ describe('languageProblems', () => {
             languageProblems({
                 ...EN,
                 frame: { position: 'a'.repeat(201) },
-                markers: { more: 'and more', extra: 'x' },
+                markers: { ...EN.markers, more: 'and more', extra: 'x' },
                 regions: { ...EN.regions, place: '{from} {until}' },
                 invented: {},
             }),

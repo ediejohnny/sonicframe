@@ -15,7 +15,7 @@ import { clamp01 } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
 import type { Region, RegionsHost } from './region-store';
-import type { RegionsKeys } from './regions';
+import type { RegionsKeys } from './regions-options';
 
 /** How far a nudge moves an edge, in seconds. */
 const NUDGE = 0.5;
@@ -74,9 +74,7 @@ export class RegionKeys {
 
         // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
         if (this.select !== null && key.toLowerCase() === this.select) {
-            this.step(modifiers.shiftKey === true);
-
-            return true;
+            return this.step(modifiers.shiftKey === true);
         }
 
         if (on.play !== false && key === 'Enter' && selectedId !== null) {
@@ -85,10 +83,12 @@ export class RegionKeys {
             return true;
         }
 
+        // A held L switches the loop once, not at every repeat.
         if (
             this.loop !== null &&
             key.toLowerCase() === this.loop &&
-            selectedId !== null
+            selectedId !== null &&
+            modifiers.repeat !== true
         ) {
             store.loop = !store.loop;
             const words = this.words();
@@ -116,16 +116,13 @@ export class RegionKeys {
             (key === 'Delete' || key === 'Backspace') &&
             selectedId !== null
         ) {
-            store.remove(selectedId);
-            this.host.select(null);
-            this.host.changed();
+            this.host.remove(selectedId);
 
             return true;
         }
 
         if (on.release !== false && key === 'Escape' && selectedId !== null) {
-            this.host.frame()?.stopRange();
-            this.host.select(null);
+            this.host.release();
 
             return true;
         }
@@ -133,12 +130,15 @@ export class RegionKeys {
         return false;
     }
 
-    /** Selects the next region in order (the one before, `back`), says where it is and shows it. */
-    private step(back: boolean): void {
+    /**
+     * Selects the next region in order (the one before, `back`), says where it is and shows it;
+     * false when there is no region to select.
+     */
+    private step(back: boolean): boolean {
         const { items, selectedId } = this.host.store;
 
         if (items.length === 0) {
-            return;
+            return false;
         }
 
         const order = [...items].sort((a, b) => a.start - b.start);
@@ -152,6 +152,8 @@ export class RegionKeys {
         if (this.scrollIntoView) {
             this.reveal(region);
         }
+
+        return true;
     }
 
     /** Says the region's label, then where it is. */
@@ -208,8 +210,11 @@ export class RegionKeys {
             part === 'start'
                 ? store.normalized(region.start + by, region.end, span)
                 : store.normalized(region.start, region.end + by, span);
-        region.start = bounds.start;
-        region.end = bounds.end;
-        this.host.changed();
+
+        if (bounds.start !== region.start || bounds.end !== region.end) {
+            region.start = bounds.start;
+            region.end = bounds.end;
+            this.host.changed();
+        }
     }
 }
