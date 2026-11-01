@@ -33,6 +33,7 @@ import { MUTED } from '../../core/shared/variables';
 import { announce } from '../../dom/a11y/announce';
 import { pageLanguage } from '../../dom/a11y/page-language';
 import { css } from '../../dom/shared/css';
+import { observeSize } from '../../dom/shared/observe';
 import { useFont } from '../../dom/shared/fonts';
 import type { Player } from '../../player/player/player';
 import {
@@ -44,7 +45,7 @@ import { RecordError, type RecordErrorReason } from '../recorder/microphone';
 import { Recorder, type Recording } from '../recorder/recorder';
 import { type SendControl, uploadRecording } from '../upload/upload';
 import { LiveView } from './live-view';
-import { Blinker } from './rec-badge';
+import { Blinker, fitRec } from './rec-badge';
 import { recordLook } from './record-button';
 import { ReviewPlayer } from './review-player';
 import {
@@ -99,6 +100,7 @@ export class RecorderScreen {
     private frame = 0;
     private limited = false;
     private stopScheme: () => void = () => undefined;
+    private readonly stopFit: () => void;
     private destroyed = false;
 
     constructor(options: RecorderScreenOptions) {
@@ -188,6 +190,7 @@ export class RecorderScreen {
             ['font-size', '0.85em'],
         ]);
         this.element.append(this.row, this.status);
+        this.stopFit = observeSize(this.row, () => fitRec(this.row));
         this.dress();
         options.container.append(this.element);
 
@@ -351,6 +354,7 @@ export class RecorderScreen {
         this.forget();
         this.live.release();
         this.stopScheme();
+        this.stopFit();
         this.element.remove();
         this.events.clear();
     }
@@ -539,6 +543,7 @@ export class RecorderScreen {
         }
 
         this.reviewRef?.lineUp();
+        fitRec(this.row);
 
         if (focused) {
             mainButton(this.row)?.focus();

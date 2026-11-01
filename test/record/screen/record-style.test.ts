@@ -1,6 +1,6 @@
 /**
- * The record button's style (`recordStyle`): the screen's dot by default, a red button, a
- * microphone, or a retro REC badge; its red read as numbers, and the app's own icon over any style.
+ * The record button's style (`recordStyle`): a red button by default, the dot in the player's
+ * colors, a microphone, or a retro REC badge; its red read as numbers, and the app's own icon over any style.
  */
 
 import { describe, expect, it } from 'vite-plus/test';
@@ -22,15 +22,28 @@ function style(made: RecorderScreen, name: string): string {
 }
 
 describe('the record button', () => {
-    it('draws a microphone with the mic style', () => {
-        const { made } = screen({ recordStyle: 'mic' });
+    it('draws a microphone with the mic style: its outline by default, filled when asked', () => {
+        const outline =
+            'M12 2a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1 -7 0V5.5a3.5 3.5 0 0 1 3.5 -3.5zM12 3.75a1.75 1.75 0 0 0 -1.75 1.75v6a1.75 1.75 0 0 0 3.5 0V5.5a1.75 1.75 0 0 0 -1.75 -1.75zM5 11.5a7 7 0 0 0 14 0h-1.75a5.25 5.25 0 0 1 -10.5 0zM11.125 18.3h1.75V22h-1.75z';
+        const filled =
+            'M12 2a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1 -7 0V5.5a3.5 3.5 0 0 1 3.5 -3.5zM5 11.5a7 7 0 0 0 14 0h-1.75a5.25 5.25 0 0 1 -10.5 0zM11.125 18.3h1.75V22h-1.75z';
 
-        expect(drawn(made)).toBe(
-            'M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3zM6 10h2a4 4 0 0 0 8 0h2a6 6 0 0 1-5 5.9V19h3v2H8v-2h3v-3.1A6 6 0 0 1 6 10z',
-        );
-        expect(button(made, 'record')?.getAttribute('aria-label')).toBe(
+        const plain = screen({ recordStyle: 'mic' });
+        expect(drawn(plain.made)).toBe(outline);
+        expect(button(plain.made, 'record')?.getAttribute('aria-label')).toBe(
             'Record',
         );
+        expect(
+            drawn(screen({ recordStyle: 'mic', micStyle: 'filled' }).made),
+        ).toBe(filled);
+        expect(
+            drawn(
+                screen({
+                    recordStyle: 'mic',
+                    micStyle: 'striped' as unknown as 'filled',
+                }).made,
+            ),
+        ).toBe(outline);
     });
 
     it("paints the red style in the app's red, read as numbers", () => {
@@ -69,12 +82,22 @@ describe('the record button', () => {
         }
     });
 
-    it('keeps the dot for an unknown style', () => {
-        const { made } = screen({ recordStyle: 'neon' as unknown as 'mic' });
+    it('is a red button by default and for an unknown style; the dot style wears the player colors', () => {
+        // #f44336, the default red.
+        const red = 'rgba(244, 67, 54, 1)';
 
-        expect(drawn(made)).toBe(DOT);
-        expect(
-            made.element.querySelector('.sonicframe-rec-letters'),
-        ).toBeNull();
+        for (const recordStyle of [undefined, 'neon' as unknown as 'mic']) {
+            const { made } = screen({ recordStyle });
+
+            expect(drawn(made), String(recordStyle)).toBe(DOT);
+            expect(style(made, 'background-color')).toBe(red);
+            expect(
+                made.element.querySelector('.sonicframe-rec-letters'),
+            ).toBeNull();
+        }
+
+        const dot = screen({ recordStyle: 'dot' });
+        expect(drawn(dot.made)).toBe(DOT);
+        expect(style(dot.made, 'background-color')).not.toBe(red);
     });
 });

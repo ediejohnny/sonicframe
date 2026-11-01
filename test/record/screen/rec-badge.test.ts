@@ -8,6 +8,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import type { RecorderScreen } from '../../../src/record';
 import { recordAnimations } from '../../support/animations';
+import { triggerResize } from '../../support/fakes';
 import { stubMedia } from '../../support/helpers';
 import {
     button,
@@ -130,6 +131,71 @@ describe('the REC badge while recording', () => {
             'pause',
             'stop',
         ]);
+    });
+});
+
+describe('a REC mark in a narrow screen', () => {
+    /** Lays the live wave out `width` wide; every other box is empty. */
+    function waveOf(width: number): void {
+        vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+            function (this: Element): DOMRect {
+                const box = {
+                    left: 0,
+                    top: 0,
+                    width: this.matches('.sonicframe-recorder-wave')
+                        ? width
+                        : 0,
+                    height: 0,
+                };
+
+                return {
+                    ...box,
+                    right: box.width,
+                    bottom: 0,
+                    x: 0,
+                    y: 0,
+                    toJSON: () => box,
+                };
+            },
+        );
+    }
+
+    /** Whether the REC letters in the screen are shown. */
+    function lettersShown(made: RecorderScreen): boolean[] {
+        return [
+            ...made.element.querySelectorAll<HTMLElement>(
+                '.sonicframe-rec-letters',
+            ),
+        ].map(
+            (letters) => letters.style.getPropertyValue('display') !== 'none',
+        );
+    }
+
+    it('keeps only its dot while the live wave would be narrower than 3 rem, and shows REC again with room', async () => {
+        const { made } = screen({ recordStyle: 'rec' });
+        const framed = (): string =>
+            badge(made)?.style.getPropertyValue('border-style') ?? '';
+        waveOf(47);
+        await press(made, 'record');
+        expect(lettersShown(made)).toEqual([false]);
+        // A lone dot keeps no frame: a framed dot would look like the stop button.
+        expect(framed()).toBe('none');
+
+        vi.restoreAllMocks();
+        waveOf(48);
+        triggerResize(
+            made.element.querySelector('.sonicframe-recorder-row') as Element,
+            { width: 300, height: 40 },
+        );
+        expect(lettersShown(made)).toEqual([true]);
+        expect(framed()).toBe('solid');
+    });
+
+    it('keeps its letters with no live wave in the row', () => {
+        waveOf(0);
+        const { made } = screen({ recordStyle: 'rec' });
+
+        expect(lettersShown(made)).toEqual([true]);
     });
 });
 

@@ -48,6 +48,7 @@ export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
     'record-color',
     'rec-place',
     'record-blink',
+    'mic-style',
     'a11y-lang',
     'a11y-announce-every',
 ]);
@@ -143,6 +144,8 @@ function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
         recPlace: (get('rec-place') ??
             undefined) as RecorderScreenOptions['recPlace'],
         recordBlink: element.hasAttribute('record-blink'),
+        micStyle: (get('mic-style') ??
+            undefined) as RecorderScreenOptions['micStyle'],
         icons: Object.fromEntries(
             ICONS.map((icon) => [icon, get(`icon-${icon}`) ?? undefined]),
         ),

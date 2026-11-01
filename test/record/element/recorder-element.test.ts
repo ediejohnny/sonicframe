@@ -261,6 +261,14 @@ describe('the <sonic-recorder> tag', () => {
             'stop',
         ]);
         expect(started).toHaveLength(1);
+
+        // The microphone, filled.
+        const mic = tag({ 'record-style': 'mic', 'mic-style': 'filled' });
+        expect(
+            mic.querySelector('.sonicframe-record path')?.getAttribute('d'),
+        ).toBe(
+            'M12 2a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1 -7 0V5.5a3.5 3.5 0 0 1 3.5 -3.5zM5 11.5a7 7 0 0 0 14 0h-1.75a5.25 5.25 0 0 1 -10.5 0zM11.125 18.3h1.75V22h-1.75z',
+        );
     });
 
     it('falls back on a time limit that is empty, not 0 seconds', async () => {

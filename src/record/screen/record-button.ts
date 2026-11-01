@@ -1,6 +1,7 @@
 /**
- * The record button, in the style the app asks for: the screen's filled dot (`'dot'`), the dot on a
- * red button (`'red'`), a microphone (`'mic'`), or the retro REC mark (`'rec'`, see `rec-badge`),
+ * The record button, in the style the app asks for: the dot on a red button (`'red'`, the default),
+ * the dot in the player's button colors (`'dot'`), a microphone (`'mic'`), or the retro REC mark
+ * (`'rec'`, see `rec-badge`),
  * whose letters are only seen: screen readers hear the button's name. A press records; with `hold`,
  * recording stops when a long press ends.
  */
@@ -14,6 +15,8 @@ import { readColor } from '../../dom/shared/paint';
 import { dressRec } from './rec-badge';
 import { RECORDER_ICONS, screenButton, setBusy } from './screen-buttons';
 import {
+    MIC_STYLES,
+    type MicStyle,
     REC_PLACES,
     RECORD_STYLES,
     type RecordStyle,
@@ -24,9 +27,15 @@ import type { PartHost } from './screen-parts';
 /** A press shorter than this, in milliseconds, is a click even with `hold`: recording goes on. */
 const HOLD = 300;
 
-/** The microphone of the `'mic'` style, on the 24 × 24 grid of the screen's icons. */
-export const MIC_ICON =
-    'M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3zM6 10h2a4 4 0 0 0 8 0h2a6 6 0 0 1-5 5.9V19h3v2H8v-2h3v-3.1A6 6 0 0 1 6 10z';
+/**
+ * The microphones of the `'mic'` style, on the 24 × 24 grid of the screen's icons: a body, its
+ * holder and its stem, the body drawn as its outline or filled.
+ */
+const MIC_ICONS: Readonly<Record<MicStyle, string>> = {
+    outline:
+        'M12 2a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1 -7 0V5.5a3.5 3.5 0 0 1 3.5 -3.5zM12 3.75a1.75 1.75 0 0 0 -1.75 1.75v6a1.75 1.75 0 0 0 3.5 0V5.5a1.75 1.75 0 0 0 -1.75 -1.75zM5 11.5a7 7 0 0 0 14 0h-1.75a5.25 5.25 0 0 1 -10.5 0zM11.125 18.3h1.75V22h-1.75z',
+    filled: 'M12 2a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1 -7 0V5.5a3.5 3.5 0 0 1 3.5 -3.5zM5 11.5a7 7 0 0 0 14 0h-1.75a5.25 5.25 0 0 1 -10.5 0zM11.125 18.3h1.75V22h-1.75z',
+};
 
 /** The red of the `'red'` and `'rec'` styles: it reads on the REC mark's ground and under white. */
 export const RECORD_RED = '#f44336';
@@ -39,7 +48,7 @@ export const RECORD_RED = '#f44336';
 export function recordLook(
     options: RecorderScreenOptions,
 ): Pick<PartHost, 'recordStyle' | 'recordColor' | 'recPlace' | 'icon'> {
-    const recordStyle = oneOf(options.recordStyle, RECORD_STYLES, 'dot');
+    const recordStyle = oneOf(options.recordStyle, RECORD_STYLES, 'red');
     const red = readColor(options.recordColor ?? RECORD_RED);
 
     return {
@@ -50,7 +59,7 @@ export function recordLook(
             svgPath(
                 options.icons?.[name],
                 name === 'record' && recordStyle === 'mic'
-                    ? MIC_ICON
+                    ? MIC_ICONS[oneOf(options.micStyle, MIC_STYLES, 'outline')]
                     : RECORDER_ICONS[name],
             ),
     };

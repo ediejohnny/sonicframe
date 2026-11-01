@@ -115,6 +115,14 @@ export const RECORD_STYLES: readonly RecordStyle[] = Object.freeze([
     'rec',
 ]);
 
+/** How the microphone of the `'mic'` style is drawn: its body as an outline, or filled. */
+export type MicStyle = 'outline' | 'filled';
+
+export const MIC_STYLES: readonly MicStyle[] = Object.freeze([
+    'outline',
+    'filled',
+]);
+
 /** Where the REC mark shows while recording: a badge before the time, the stop button, or a badge holding the time. */
 export type RecPlace = 'badge' | 'stop' | 'time';
 
@@ -169,10 +177,12 @@ export type RecorderScreenOptions = RecorderOptions & {
     look?: Partial<PlayerLook>;
     /** The look of the player of the recording alone, laid over `look`; its rows under the wave start under its play button unless this says otherwise. */
     reviewLook?: Partial<PlayerLook>;
-    /** How the record button looks: the screen's dot (`'dot'`, the default), a red button (`'red'`), a microphone (`'mic'`), or a retro REC badge (`'rec'`); your own `icons.record` is drawn in any of them. */
+    /** How the record button looks: a red button (`'red'`, the default), the screen's dot in the player's button colors (`'dot'`), a microphone (`'mic'`), or a retro REC badge (`'rec'`); your own `icons.record` is drawn in any of them. */
     recordStyle?: RecordStyle;
     /** The red of the `'red'` and `'rec'` styles, read as a color: `'#f44336'` by default. */
     recordColor?: string;
+    /** With the mic style, the microphone's body as an outline (`'outline'`, the default) or filled (`'filled'`). */
+    micStyle?: MicStyle;
     /** With the REC style, where the REC mark shows while recording: a badge before the time (`'badge'`, the default), the stop button itself (`'stop'`), or a badge holding the time (`'time'`). */
     recPlace?: RecPlace;
     /** The REC dot blinks once a second while recording. Off by default; never with reduced motion; it holds still while the pointer is over or the focus is in the screen. */

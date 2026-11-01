@@ -10,9 +10,13 @@ import type { PlayerLook } from '../../core/player/look';
 import { css } from '../../dom/shared/css';
 import { iconElement, iconPath } from '../../dom/shared/icon';
 import { prefersReducedMotion } from '../../dom/shared/motion';
+import { remPixels } from '../../dom/shared/units';
 
 /** The ground of the REC mark. */
 export const REC_GROUND = '#141414';
+
+/** The narrowest the live wave may be, in rem, before the REC letters give it their room. */
+const WAVE_ROOM = 3;
 
 /** One blink a second: lit for the first half, dark for the second. */
 const BLINK: Keyframe[] = [
@@ -114,11 +118,52 @@ export function recBadge(
     paint(badge, red);
     css(badge, [
         ['flex-shrink', '0'],
-        ['padding', '0.25rem 0.375rem'],
         ['font-size', '0.75rem'],
     ]);
+    frame(badge, true);
 
     return { badge, dot };
+}
+
+/** The badge's frame (its border and its dark ground), or none, leaving its dot alone. */
+function frame(badge: HTMLElement, framed: boolean): void {
+    css(badge, [
+        ['border-style', framed ? 'solid' : 'none'],
+        ['background-color', framed ? REC_GROUND : 'transparent'],
+        ['padding', framed ? '0.25rem 0.375rem' : '0'],
+    ]);
+}
+
+/**
+ * Gives the live wave in `row` its room: the REC letters show while the wave keeps 3 rem, and
+ * narrower, only the REC dots stay, a badge without its frame too, so a framed dot is never taken
+ * for the stop button (the letters are only seen, so nothing is lost to a screen reader).
+ */
+export function fitRec(row: HTMLElement): void {
+    const wave = row.querySelector('.sonicframe-recorder-wave');
+
+    if (wave === null) {
+        return;
+    }
+
+    const letters = [
+        ...row.querySelectorAll<HTMLElement>('.sonicframe-rec-letters'),
+    ];
+    const badges = [...row.querySelectorAll<HTMLElement>('.sonicframe-rec')];
+
+    for (const each of letters) {
+        each.style.removeProperty('display');
+    }
+
+    badges.forEach((badge) => frame(badge, true));
+
+    if (wave.getBoundingClientRect().width < remPixels(WAVE_ROOM)) {
+        for (const each of letters) {
+            css(each, [['display', 'none']]);
+        }
+
+        badges.forEach((badge) => frame(badge, false));
+    }
 }
 
 /**
