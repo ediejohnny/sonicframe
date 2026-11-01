@@ -72,12 +72,14 @@ export type PlayerAttribute =
     | 'chapter-options'
     | 'media-session'
     | SessionDetail
+    | 'keys'
     | 'a11y-lang'
     | 'a11y-label'
     | 'a11y-chapters'
     | 'a11y-description'
     | 'a11y-zoom'
     | 'a11y-minimap'
+    | 'a11y-keys'
     | BackgroundAttribute;
 
 /** What the system's media controls show: changed, they show at once, the player kept. */
@@ -113,12 +115,14 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'chapter-options',
     'media-session',
     ...SESSION_DETAILS,
+    'keys',
     'a11y-lang',
     'a11y-label',
     'a11y-chapters',
     'a11y-description',
     'a11y-zoom',
     'a11y-minimap',
+    'a11y-keys',
     ...BACKGROUND_ATTRIBUTES,
 ]);
 
@@ -139,12 +143,14 @@ const REBUILD = new Set([
     'chapters-options',
     'chapter-options',
     'media-session',
+    'keys',
     'a11y-lang',
     'a11y-label',
     'a11y-chapters',
     'a11y-description',
     'a11y-zoom',
     'a11y-minimap',
+    'a11y-keys',
     ...BACKGROUND_ATTRIBUTES,
 ]);
 

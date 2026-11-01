@@ -15,7 +15,7 @@ import { clamp01 } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
 import type { Region, RegionsHost } from './region-store';
-import type { RegionsKeys } from './regions';
+import type { RegionsKeys } from './regions-options';
 
 /** How far a nudge moves an edge, in seconds. */
 const NUDGE = 0.5;

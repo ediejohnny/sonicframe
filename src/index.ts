@@ -45,12 +45,12 @@ export {
     type TooltipContent,
     type TooltipSection,
 } from './plugins/caption/caption';
-export {
-    regions,
-    type RegionsKeys,
-    type RegionsOptions,
-    type RegionsPlugin,
-} from './plugins/regions/regions';
+export { regions } from './plugins/regions/regions';
+export type {
+    RegionsKeys,
+    RegionsOptions,
+    RegionsPlugin,
+} from './plugins/regions/regions-options';
 export type { Region } from './plugins/regions/region-store';
 export type { RegionInput } from './core/marks/regions';
 export { timeline, type TimelineOptions } from './plugins/timeline/timeline';

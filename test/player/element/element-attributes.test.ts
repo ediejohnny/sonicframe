@@ -20,6 +20,37 @@ describe('chapter-options', () => {
     });
 });
 
+describe('keys and a11y-keys', () => {
+    /** The keys and their accessibility from a tag with these attributes. */
+    function keysOf(attributes: Record<string, string>): unknown[] {
+        const element = document.createElement('sonic-player');
+
+        for (const [name, value] of Object.entries(attributes)) {
+            element.setAttribute(name, value);
+        }
+
+        const read = optionsOf(element);
+
+        return [read.keys, read.a11y?.keys];
+    }
+
+    it("turn the player's keys on, reach the page with the word page, and say what changed with announce", () => {
+        expect(keysOf({})).toEqual([undefined, undefined]);
+        expect(keysOf({ keys: '' })).toEqual([true, undefined]);
+        expect(keysOf({ keys: 'PAGE' })).toEqual([
+            { scope: 'page' },
+            undefined,
+        ]);
+        expect(keysOf({ keys: 'everywhere', 'a11y-keys': 'announce' })).toEqual(
+            [true, { announce: true }],
+        );
+        expect(keysOf({ 'a11y-keys': '' })).toEqual([
+            undefined,
+            { announce: false },
+        ]);
+    });
+});
+
 describe('the words the tag reads', () => {
     /** The options of a tag with these attributes. */
     function options(
