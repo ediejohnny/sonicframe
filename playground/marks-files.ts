@@ -99,7 +99,7 @@ export function regionFiles(host: HTMLElement, make: MakePlayer): () => void {
             status.textContent = `${file.name} has no regions to read.`;
         } else {
             parts.set(found);
-            status.textContent = `Read ${found.length} regions from ${file.name}.`;
+            status.textContent = `Read ${found.length} ${found.length === 1 ? 'region' : 'regions'} from ${file.name}.`;
         }
 
         picker.value = '';
