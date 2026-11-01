@@ -30,6 +30,10 @@ export {
 } from './record/screen/recorder-screen';
 export {
     DEFAULT_RECORDER_PARTS,
+    REC_PLACES,
+    RECORD_STYLES,
+    type RecPlace,
+    type RecordStyle,
     RECORDER_AFTER_STOP,
     RECORDER_ALIGNS,
     RECORDER_PARTS,

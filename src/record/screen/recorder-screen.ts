@@ -28,7 +28,6 @@ import {
 } from '../../core/recording/recording';
 import { oneOf } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
-import { svgPath } from '../../core/shared/svg-path';
 import { formatTime } from '../../core/shared/timing';
 import { MUTED } from '../../core/shared/variables';
 import { announce } from '../../dom/a11y/announce';
@@ -45,10 +44,12 @@ import { RecordError, type RecordErrorReason } from '../recorder/microphone';
 import { Recorder, type Recording } from '../recorder/recorder';
 import { type SendControl, uploadRecording } from '../upload/upload';
 import { LiveView } from './live-view';
+import { Blinker } from './rec-badge';
+import { recordLook } from './record-button';
 import { ReviewPlayer } from './review-player';
-import { RECORDER_ICONS } from './screen-buttons';
 import {
     DEFAULT_RECORDER_PARTS,
+    defaultParts,
     RECORDER_AFTER_STOP,
     RECORDER_ALIGNS,
     type RecorderAlign,
@@ -88,6 +89,7 @@ export class RecorderScreen {
     private readonly status: HTMLDivElement;
     private readonly live: LiveView;
     private readonly host: PartHost;
+    private readonly blinker: Blinker;
     private stateRef: RecorderState = 'idle';
     private recordingRef: Recording | null = null;
     private address: string | null = null;
@@ -129,8 +131,12 @@ export class RecorderScreen {
             state: () => this.stateRef,
             seconds: () => this.recorder.seconds,
             review: () => this.reviewPart(),
-            icon: (name) =>
-                svgPath(options.icons?.[name], RECORDER_ICONS[name]),
+            ...recordLook(options),
+            blink: (dot) => {
+                if (this.stateRef === 'recording' && !this.destroyed) {
+                    this.blinker.add(dot);
+                }
+            },
             actions: options.actions,
             act: (action) => action.press(this.recordingRef, this),
             start: () => void this.start(),
@@ -146,6 +152,7 @@ export class RecorderScreen {
         this.element.className = 'sonicframe-recorder';
         this.element.setAttribute('role', 'group');
         this.element.setAttribute('aria-label', this.words.words.recorder);
+        this.blinker = new Blinker(this.element, options.recordBlink === true);
 
         if (a11y.lang !== undefined) {
             this.element.setAttribute('lang', this.words.locale);
@@ -340,6 +347,7 @@ export class RecorderScreen {
         this.sendTurn?.abort();
         cancelAnimationFrame(this.frame);
         this.recorder.destroy();
+        // Drawn once more, the screen lets every blink go.
         this.forget();
         this.live.release();
         this.stopScheme();
@@ -515,8 +523,10 @@ export class RecorderScreen {
         const focused = this.element.contains(document.activeElement);
         const stage = this.stage();
         const list =
-            this.options.parts?.[stage] ?? DEFAULT_RECORDER_PARTS[stage];
+            this.options.parts?.[stage] ??
+            defaultParts(stage, this.host.recordStyle, this.host.recPlace);
 
+        this.blinker.clear();
         this.row.replaceChildren();
         this.live.clear(stage === 'recording');
 

@@ -1,23 +1,24 @@
 /**
  * The parts of the recorder's screen, each built for the state the screen is in: its buttons (the
- * record button records while held, with `hold`), the time and the live wave, the player of the
- * recording, a spacer, and the app's own buttons by name; any other name shows nothing. Busy buttons
- * (sending, asking) stay in the tab order.
+ * record button in `record-button`), the time and the live wave, the player of the recording, the
+ * REC badge (`rec-badge`), a spacer, and the app's own buttons by name; any other name shows
+ * nothing. Busy buttons (sending, asking) stay in the tab order.
  */
 
 import type { RecorderWords } from '../../core/languages/words';
 import type { PlayerLook } from '../../core/player/look';
 import type { RecorderState } from '../../core/recording/recording';
 import type { LiveView } from './live-view';
+import { dressRec, recBadge } from './rec-badge';
+import { recordButton } from './record-button';
 import { actionButton, screenButton, setBusy } from './screen-buttons';
 import type {
+    RecPlace,
+    RecordStyle,
     RecorderAction,
     RecorderIcon,
     RecorderPartName,
 } from './screen-options';
-
-/** A press shorter than this, in milliseconds, is a click even with `hold`: recording goes on. */
-const HOLD = 300;
 
 /** The names the app's buttons may take. */
 const ACTION_NAME = /^[a-z][a-z0-9-]{0,31}$/;
@@ -28,6 +29,14 @@ export type PartHost = {
     readonly words: Readonly<RecorderWords>;
     /** Record while the record button is held. */
     readonly hold: boolean;
+    /** How the record button looks. */
+    readonly recordStyle: RecordStyle;
+    /** The red of its red styles, read as numbers. */
+    readonly recordColor: string;
+    /** Where the REC mark shows while recording, with the REC style. */
+    readonly recPlace: RecPlace;
+    /** Blinks a REC dot while recording, when the app asks. */
+    blink(dot: HTMLElement): void;
     /** While sending, the send button cancels the send. */
     readonly cancelable: boolean;
     readonly live: LiveView;
@@ -52,41 +61,6 @@ export type PartHost = {
     cancelSend(): void;
 };
 
-/** The record button: a press records; with `hold`, recording stops when a long press ends. */
-function recordButton(host: PartHost): HTMLButtonElement {
-    const button = screenButton(
-        host.look,
-        'record',
-        host.icon('record'),
-        host.words.record,
-        () => host.start(),
-    );
-    setBusy(button, host.state() === 'asking');
-
-    if (host.hold) {
-        button.addEventListener('pointerdown', () => {
-            const pressed = performance.now();
-            const release = (): void => {
-                document.removeEventListener('pointerup', release);
-                document.removeEventListener('pointercancel', release);
-
-                if (
-                    performance.now() - pressed >= HOLD &&
-                    host.state() === 'recording'
-                ) {
-                    host.stop();
-                }
-            };
-
-            document.addEventListener('pointerup', release);
-            document.addEventListener('pointercancel', release);
-            host.start();
-        });
-    }
-
-    return button;
-}
-
 /** A part for the screen's state now, or null when it has nothing to show. */
 export function screenPart(
     part: RecorderPartName,
@@ -98,14 +72,32 @@ export function screenPart(
     switch (part) {
         case 'record':
             return recordButton(host);
-        case 'stop':
-            return screenButton(
-                look,
-                'stop',
-                host.icon('stop'),
-                words.stop,
-                () => host.stop(),
+        case 'stop': {
+            const recMark =
+                host.recordStyle === 'rec' && host.recPlace === 'stop';
+            const path = host.icon(recMark ? 'record' : 'stop');
+            const button = screenButton(look, 'stop', path, words.stop, () =>
+                host.stop(),
             );
+
+            if (recMark) {
+                host.blink(dressRec(button, look, host.recordColor, path));
+            }
+
+            return button;
+        }
+        case 'rec': {
+            const { badge, dot } = recBadge(
+                host.recordColor,
+                host.icon('record'),
+                host.recPlace === 'time'
+                    ? host.live.timePart(host.seconds())
+                    : null,
+            );
+            host.blink(dot);
+
+            return badge;
+        }
         case 'pause': {
             const paused = host.state() === 'paused';
 

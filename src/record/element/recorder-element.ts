@@ -44,6 +44,10 @@ export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
     'upload-method',
     'upload-field',
     'cancel-send',
+    'record-style',
+    'record-color',
+    'rec-place',
+    'record-blink',
     'a11y-lang',
     'a11y-announce-every',
 ]);
@@ -133,6 +137,12 @@ function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
         afterStop: (get('after-stop') ??
             undefined) as RecorderScreenOptions['afterStop'],
         align: (get('align') ?? undefined) as RecorderScreenOptions['align'],
+        recordStyle: (get('record-style') ??
+            undefined) as RecorderScreenOptions['recordStyle'],
+        recordColor: get('record-color') ?? undefined,
+        recPlace: (get('rec-place') ??
+            undefined) as RecorderScreenOptions['recPlace'],
+        recordBlink: element.hasAttribute('record-blink'),
         icons: Object.fromEntries(
             ICONS.map((icon) => [icon, get(`icon-${icon}`) ?? undefined]),
         ),

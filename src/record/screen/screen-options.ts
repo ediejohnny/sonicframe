@@ -14,8 +14,8 @@ import type { RecorderScreen } from './recorder-screen';
 
 /**
  * A piece of the screen: the buttons (`record`, `stop`, `pause` (it resumes while paused), `discard`,
- * `send`), the time recorded, the live `wave`, the `player` of the recording, and a `spacer` that
- * pushes what follows to the end.
+ * `send`), the time recorded, the live `wave`, the `player` of the recording, the retro REC badge
+ * (`rec`), and a `spacer` that pushes what follows to the end.
  */
 export type RecorderPart =
     | 'record'
@@ -26,6 +26,7 @@ export type RecorderPart =
     | 'time'
     | 'wave'
     | 'player'
+    | 'rec'
     | 'spacer';
 
 export const RECORDER_PARTS: readonly RecorderPart[] = Object.freeze([
@@ -37,6 +38,7 @@ export const RECORDER_PARTS: readonly RecorderPart[] = Object.freeze([
     'time',
     'wave',
     'player',
+    'rec',
     'spacer',
 ]);
 
@@ -75,6 +77,24 @@ export const DEFAULT_RECORDER_PARTS: Readonly<Required<RecorderParts>> =
         review: ['discard', 'player', 'send'],
     });
 
+/**
+ * The parts of `stage` when the app gives none: the defaults, but while recording with the REC
+ * style, the REC badge before the time (`'badge'`) or in its place, holding it (`'time'`).
+ */
+export function defaultParts(
+    stage: keyof RecorderParts,
+    style: RecordStyle,
+    place: RecPlace,
+): readonly RecorderPartName[] {
+    if (stage !== 'recording' || style !== 'rec' || place === 'stop') {
+        return DEFAULT_RECORDER_PARTS[stage];
+    }
+
+    return place === 'time'
+        ? ['discard', 'rec', 'wave', 'pause', 'stop']
+        : ['discard', 'rec', 'time', 'wave', 'pause', 'stop'];
+}
+
 /** The buttons whose icon the app may draw; `resume` is the pause button's while paused, `cancel` the send button's while it cancels. */
 export type RecorderIcon =
     | 'record'
@@ -84,6 +104,25 @@ export type RecorderIcon =
     | 'discard'
     | 'send'
     | 'cancel';
+
+/** How the record button looks: the screen's dot, a red button, a microphone, or a retro REC badge. */
+export type RecordStyle = 'dot' | 'red' | 'mic' | 'rec';
+
+export const RECORD_STYLES: readonly RecordStyle[] = Object.freeze([
+    'dot',
+    'red',
+    'mic',
+    'rec',
+]);
+
+/** Where the REC mark shows while recording: a badge before the time, the stop button, or a badge holding the time. */
+export type RecPlace = 'badge' | 'stop' | 'time';
+
+export const REC_PLACES: readonly RecPlace[] = Object.freeze([
+    'badge',
+    'stop',
+    'time',
+]);
 
 /** How the parts beside the player of the recording line up. */
 export type RecorderAlign = 'bars' | 'center' | 'start' | 'end';
@@ -130,6 +169,14 @@ export type RecorderScreenOptions = RecorderOptions & {
     look?: Partial<PlayerLook>;
     /** The look of the player of the recording alone, laid over `look`; its rows under the wave start under its play button unless this says otherwise. */
     reviewLook?: Partial<PlayerLook>;
+    /** How the record button looks: the screen's dot (`'dot'`, the default), a red button (`'red'`), a microphone (`'mic'`), or a retro REC badge (`'rec'`); your own `icons.record` is drawn in any of them. */
+    recordStyle?: RecordStyle;
+    /** The red of the `'red'` and `'rec'` styles, read as a color: `'#f44336'` by default. */
+    recordColor?: string;
+    /** With the REC style, where the REC mark shows while recording: a badge before the time (`'badge'`, the default), the stop button itself (`'stop'`), or a badge holding the time (`'time'`). */
+    recPlace?: RecPlace;
+    /** The REC dot blinks once a second while recording. Off by default; never with reduced motion; it holds still while the pointer is over or the focus is in the screen. */
+    recordBlink?: boolean;
     /** Your own drawing of a button's icon: SVG path data on a 24 × 24 grid; data with anything but path commands and numbers is refused. */
     icons?: Partial<Record<RecorderIcon, string>>;
     /** How the parts beside the player of the recording line up: on its bars (`'bars'`, the default), or on its box's middle, top or bottom (`'center'`, `'start'`, `'end'`). */
