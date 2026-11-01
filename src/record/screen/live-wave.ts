@@ -5,19 +5,23 @@
 
 import type { PlayerLook } from '../../core/player/look';
 import { PROGRESS } from '../../core/shared/variables';
+import { barMetrics } from '../../core/wave/layout';
 import { SonicFrame } from '../../dom/frame/frame';
+import { DEFAULT_BAR } from '../../dom/frame/frame-options';
 import { css } from '../../dom/shared/css';
 import type { BarStyle, WaveStyle } from '../../types';
 
 export class LiveWave {
     readonly element: HTMLDivElement;
     private readonly frame: SonicFrame;
+    private readonly bar: BarStyle;
 
     constructor(
         look: PlayerLook,
         wave: Partial<WaveStyle>,
         bar: Partial<BarStyle>,
     ) {
+        this.bar = { ...DEFAULT_BAR, ...bar };
         this.element = document.createElement('div');
         this.element.className = 'sonicframe-recorder-wave';
         this.element.setAttribute('aria-hidden', 'true');
@@ -45,6 +49,15 @@ export class LiveWave {
     /** Draws `levels` (0 to 1) across the wave. */
     show(levels: readonly number[]): void {
         this.frame.setValues(levels);
+    }
+
+    /** How many bars the wave draws now; 0 before it has pixels. */
+    bars(): number {
+        const geometry = this.frame.geometry;
+
+        return geometry === null
+            ? 0
+            : barMetrics(geometry.width, this.bar, geometry.pixelRatio).count;
     }
 
     destroy(): void {

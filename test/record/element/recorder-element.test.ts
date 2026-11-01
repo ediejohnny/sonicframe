@@ -7,6 +7,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { PALETTES } from '../../../src/player';
 import { defineSonicRecorder, type Recording } from '../../../src/record';
+import { recordAnimations } from '../../support/animations';
 import { afterTest } from '../../support/helpers';
 import { stubMicrophone } from '../../support/recording';
 import { FakeRequest, stubRequests } from '../../support/upload';
@@ -234,6 +235,49 @@ describe('the <sonic-recorder> tag', () => {
             ['progress', 0.25],
             ['uploaded', { status: 200, body: 'ok' }],
         ]);
+    });
+
+    it('reads the record button’s style, its red, where REC shows and whether it blinks', async () => {
+        stubMicrophone();
+        const started = recordAnimations();
+        const element = tag({
+            'record-style': 'rec',
+            'record-color': '#00ff00',
+            'rec-place': 'time',
+            'record-blink': '',
+        });
+        const record = element.querySelector<HTMLElement>('.sonicframe-record');
+        expect(record?.querySelector('.sonicframe-rec-letters')).not.toBeNull();
+        expect(record?.style.getPropertyValue('color')).toBe(
+            'rgba(0, 255, 0, 1)',
+        );
+
+        await press(element, 'record');
+        expect(parts(element)).toEqual([
+            'discard',
+            'rec',
+            'wave',
+            'pause',
+            'stop',
+        ]);
+        expect(started).toHaveLength(1);
+
+        // The microphone, filled, in the player's colors.
+        const mic = tag({
+            'record-style': 'mic',
+            'mic-style': 'filled',
+            'mic-color': 'theme',
+        });
+        expect(
+            mic
+                .querySelector<HTMLElement>('.sonicframe-record')
+                ?.style.getPropertyValue('background-color'),
+        ).toMatch(/^var\(--sonicframe-button,/);
+        expect(
+            mic.querySelector('.sonicframe-record path')?.getAttribute('d'),
+        ).toBe(
+            'M12 2a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1 -7 0V5.5a3.5 3.5 0 0 1 3.5 -3.5zM5 11.5a7 7 0 0 0 14 0h-1.75a5.25 5.25 0 0 1 -10.5 0zM11.125 18.3h1.75V22h-1.75z',
+        );
     });
 
     it('falls back on a time limit that is empty, not 0 seconds', async () => {
