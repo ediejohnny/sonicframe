@@ -1,7 +1,8 @@
 /**
  * A recorder's life, without the page: the states it goes through (idle, asking for the microphone,
  * recording, paused, review, sending, and the two ends where it cannot record: denied and error),
- * the event that takes it from one to the next, the audio formats it tries and how long it records.
+ * the event that takes it from one to the next (a recording stops into review, or finishes straight
+ * back to idle when it is only handed over), the audio formats it tries and how long it records.
  * An event that does not apply leaves the state as it is, so a late or doubled event changes nothing.
  */
 
@@ -25,6 +26,7 @@ export type RecorderEvent =
     | 'pause'
     | 'resume'
     | 'stop'
+    | 'finish'
     | 'send'
     | 'sent'
     | 'keep'
@@ -50,6 +52,7 @@ export const RECORDER_EVENTS: readonly RecorderEvent[] = Object.freeze([
     'pause',
     'resume',
     'stop',
+    'finish',
     'send',
     'sent',
     'keep',
@@ -71,12 +74,14 @@ const MOVES: Readonly<
     recording: {
         pause: 'paused',
         stop: 'review',
+        finish: 'idle',
         failed: 'error',
         discard: 'idle',
     },
     paused: {
         resume: 'recording',
         stop: 'review',
+        finish: 'idle',
         failed: 'error',
         discard: 'idle',
     },

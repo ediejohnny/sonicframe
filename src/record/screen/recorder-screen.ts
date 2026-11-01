@@ -26,7 +26,9 @@ import {
     type RecorderEvent,
     type RecorderState,
 } from '../../core/recording/recording';
+import { oneOf } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
+import { svgPath } from '../../core/shared/svg-path';
 import { formatTime } from '../../core/shared/timing';
 import { MUTED } from '../../core/shared/variables';
 import { announce } from '../../dom/a11y/announce';
@@ -43,8 +45,12 @@ import { RecordError, type RecordErrorReason } from '../recorder/microphone';
 import { Recorder, type Recording } from '../recorder/recorder';
 import { LiveView } from './live-view';
 import { ReviewPlayer } from './review-player';
+import { RECORDER_ICONS } from './screen-buttons';
 import {
     DEFAULT_RECORDER_PARTS,
+    RECORDER_AFTER_STOP,
+    RECORDER_ALIGNS,
+    type RecorderAlign,
     type RecorderScreenEvents,
     type RecorderScreenOptions,
 } from './screen-options';
@@ -60,11 +66,20 @@ const REASONS = {
     'too-large': 'tooLarge',
 } as const satisfies Record<RecordErrorReason, string>;
 
+/** How the row lines its parts up for each alignment; `'bars'` then moves them onto the bars. */
+const ALIGN_ITEMS = {
+    bars: 'center',
+    center: 'center',
+    start: 'flex-start',
+    end: 'flex-end',
+} as const satisfies Record<RecorderAlign, string>;
+
 export class RecorderScreen {
     readonly element: HTMLDivElement;
     /** The recording engine under the screen. */
     readonly recorder: Recorder;
     private readonly options: RecorderScreenOptions;
+    private readonly align: RecorderAlign;
     private readonly events = new Emitter<RecorderScreenEvents>();
     private readonly words: RecorderSay;
     private readonly parts: ThemeParts;
@@ -87,6 +102,7 @@ export class RecorderScreen {
         }
 
         this.options = options;
+        this.align = oneOf(options.align, RECORDER_ALIGNS, 'bars');
         const a11y = options.a11y ?? {};
         this.words = recorderWords(
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
@@ -109,6 +125,8 @@ export class RecorderScreen {
             state: () => this.stateRef,
             seconds: () => this.recorder.seconds,
             review: () => this.reviewPart(),
+            icon: (name) =>
+                svgPath(options.icons?.[name], RECORDER_ICONS[name]),
             start: () => void this.start(),
             stop: () => void this.stop(),
             pause: () => this.pause(),
@@ -133,10 +151,24 @@ export class RecorderScreen {
         this.status.hidden = true;
         css(this.row, [
             ['display', 'flex'],
-            ['align-items', 'center'],
+            ['align-items', ALIGN_ITEMS[this.align]],
             ['gap', `${this.look.gap}rem`],
             ['min-width', '0'],
         ]);
+
+        if (
+            (
+                options.parts?.recording ?? DEFAULT_RECORDER_PARTS.recording
+            ).includes('wave')
+        ) {
+            // As tall before recording as while recording: the box keeps its height when the wave comes.
+            css(this.row, [
+                [
+                    'min-height',
+                    `max(${this.look.waveHeight}rem, ${this.look.button.size}px)`,
+                ],
+            ]);
+        }
         css(this.status, [
             ['color', MUTED],
             ['font-size', '0.85em'],
@@ -310,7 +342,10 @@ export class RecorderScreen {
         return true;
     }
 
-    /** A recording came back (stopped, or at its limit): it goes to review. */
+    /**
+     * A recording came back (stopped, or at its limit): it goes to review, or with `afterStop:
+     * 'none'` the screen starts again; then the app hears of it, and with `'send'` it is sent.
+     */
     private review(recording: Recording): void {
         cancelAnimationFrame(this.frame);
 
@@ -321,18 +356,33 @@ export class RecorderScreen {
             return;
         }
 
-        // Ready before the move: the review's player plays it.
-        this.recordingRef = recording;
-        this.address = URL.createObjectURL(recording.blob);
-        this.move('stop');
-
+        const after = oneOf(
+            this.options.afterStop,
+            RECORDER_AFTER_STOP,
+            'review',
+        );
         const stopped = this.words.say('stopped', {
             time: formatTime(recording.duration),
         });
+
+        if (after === 'none') {
+            this.move('finish');
+        } else {
+            // Ready before the move: the review's player plays it.
+            this.recordingRef = recording;
+            this.address = URL.createObjectURL(recording.blob);
+            this.move('stop');
+        }
+
         this.say(
             this.limited ? `${this.words.words.limit}. ${stopped}` : stopped,
         );
+        this.options.onRecorded?.(recording);
         this.events.emit('recorded', recording);
+
+        if (after === 'send') {
+            void this.send();
+        }
     }
 
     /** Recording could not start or go on: the screen says why. */
@@ -389,6 +439,7 @@ export class RecorderScreen {
             this.words.words.review,
             this.recordingRef,
             this.address,
+            this.align === 'bars',
         );
 
         return this.reviewRef.element;

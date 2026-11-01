@@ -13,6 +13,7 @@ import { attributeNumber, canDefine } from '../../dom/shared/custom-element';
 import { RecorderScreen } from '../screen/recorder-screen';
 import {
     RECORDER_PARTS,
+    type RecorderIcon,
     type RecorderPart,
     type RecorderScreenOptions,
 } from '../screen/screen-options';
@@ -29,9 +30,26 @@ export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
     'idle-parts',
     'recording-parts',
     'review-parts',
+    'after-stop',
+    'align',
+    'icon-record',
+    'icon-stop',
+    'icon-pause',
+    'icon-resume',
+    'icon-discard',
+    'icon-send',
     'a11y-lang',
     'a11y-announce-every',
 ]);
+
+const ICONS: readonly RecorderIcon[] = [
+    'record',
+    'stop',
+    'pause',
+    'resume',
+    'discard',
+    'send',
+];
 
 const EVENTS = ['state', 'recorded', 'send', 'sent', 'error'] as const;
 
@@ -59,6 +77,13 @@ function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
             undefined) as RecorderScreenOptions['palette'],
         hold: element.hasAttribute('hold'),
         afterSend: element.hasAttribute('keep') ? 'keep' : 'reset',
+        // The screen checks these words and path data, and falls back on its own.
+        afterStop: (get('after-stop') ??
+            undefined) as RecorderScreenOptions['afterStop'],
+        align: (get('align') ?? undefined) as RecorderScreenOptions['align'],
+        icons: Object.fromEntries(
+            ICONS.map((icon) => [icon, get(`icon-${icon}`) ?? undefined]),
+        ),
         parts: {
             idle: partsOf(get('idle-parts')),
             recording: partsOf(get('recording-parts')),

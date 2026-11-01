@@ -30,7 +30,12 @@ export {
 } from './record/screen/recorder-screen';
 export {
     DEFAULT_RECORDER_PARTS,
+    RECORDER_AFTER_STOP,
+    RECORDER_ALIGNS,
     RECORDER_PARTS,
+    type RecorderAfterStop,
+    type RecorderAlign,
+    type RecorderIcon,
     type RecorderPart,
     type RecorderParts,
     type RecorderScreenA11y,

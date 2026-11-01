@@ -9,7 +9,7 @@ import type { PlayerLook } from '../../core/player/look';
 import type { RecorderState } from '../../core/recording/recording';
 import type { LiveView } from './live-view';
 import { screenButton, setBusy } from './screen-buttons';
-import type { RecorderPart } from './screen-options';
+import type { RecorderIcon, RecorderPart } from './screen-options';
 
 /** A press shorter than this, in milliseconds, is a click even with `hold`: recording goes on. */
 const HOLD = 300;
@@ -27,6 +27,8 @@ export type PartHost = {
     seconds(): number;
     /** The player of the recording in review, or null. */
     review(): HTMLElement | null;
+    /** The icon a button draws: the app's own, or the screen's. */
+    icon(name: RecorderIcon): string;
     start(): void;
     stop(): void;
     pause(): void;
@@ -40,7 +42,7 @@ function recordButton(host: PartHost): HTMLButtonElement {
     const button = screenButton(
         host.look,
         'record',
-        'record',
+        host.icon('record'),
         host.words.record,
         () => host.start(),
     );
@@ -82,8 +84,12 @@ export function screenPart(
         case 'record':
             return recordButton(host);
         case 'stop':
-            return screenButton(look, 'stop', 'stop', words.stop, () =>
-                host.stop(),
+            return screenButton(
+                look,
+                'stop',
+                host.icon('stop'),
+                words.stop,
+                () => host.stop(),
             );
         case 'pause': {
             const paused = host.state() === 'paused';
@@ -91,7 +97,7 @@ export function screenPart(
             return screenButton(
                 look,
                 'pause',
-                paused ? 'record' : 'pause',
+                host.icon(paused ? 'resume' : 'pause'),
                 paused ? words.resume : words.pause,
                 () => (paused ? host.resume() : host.pause()),
             );
@@ -101,7 +107,7 @@ export function screenPart(
             const button = screenButton(
                 look,
                 part,
-                part,
+                host.icon(part),
                 words[part],
                 part === 'send' ? () => host.send() : () => host.discard(),
             );

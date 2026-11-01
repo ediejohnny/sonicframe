@@ -109,6 +109,47 @@ export function liveWaveFeed(): (readonly number[] | null)[] {
     return fed;
 }
 
+/** A box from `top`, `height` tall, as `getBoundingClientRect` gives it. */
+function rect(top: number, height: number): DOMRect {
+    const box = { left: 0, top, width: 36, height };
+
+    return {
+        ...box,
+        right: 36,
+        bottom: top + height,
+        x: 0,
+        y: top,
+        toJSON: () => box,
+    };
+}
+
+/**
+ * Lays the page out by hand, as a flex row centered on the whole player of the recording would: its
+ * bars run from 0 to 40 (middle 20), and the delete and send buttons, 36 tall, from 12 (middle 30).
+ */
+export function layOut(): void {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+        function (this: Element): DOMRect {
+            if (this instanceof HTMLCanvasElement) {
+                return rect(0, 40);
+            }
+
+            return this.matches('.sonicframe-discard, .sonicframe-send')
+                ? rect(12, 36)
+                : rect(0, 0);
+        },
+    );
+}
+
+/** How far the button of `name` inside `root` is moved up or down. */
+export function shiftOf(root: Element, name: string): string {
+    return (
+        root
+            .querySelector<HTMLElement>(`.sonicframe-${name}`)
+            ?.style.getPropertyValue('translate') ?? ''
+    );
+}
+
 /** What the page's live region says now. */
 export function said(): string {
     return document.querySelector('[role="status"]')?.textContent ?? '';

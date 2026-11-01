@@ -9,33 +9,30 @@ import type { PlayerLook } from '../../core/player/look';
 import { BUTTON, BUTTON_ICON } from '../../core/shared/variables';
 import { css } from '../../dom/shared/css';
 import { iconButton } from '../../player/parts/part-buttons';
+import type { RecorderIcon } from './screen-options';
 
 /** The buttons' icons, on the 24 × 24 grid of the play icon. */
-export const RECORDER_ICONS = {
+export const RECORDER_ICONS: Readonly<Record<RecorderIcon, string>> = {
     record: 'M12 6a6 6 0 1 1 0 12a6 6 0 1 1 0-12z',
     stop: 'M7 7h10v10H7z',
     pause: 'M7 6h3.5v12H7zM13.5 6H17v12h-3.5z',
+    resume: 'M12 6a6 6 0 1 1 0 12a6 6 0 1 1 0-12z',
     discard: 'M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z',
     send: 'M3 20.5 21 12 3 3.5V10l12 2-12 2z',
-} as const;
+};
 
 /** The buttons that lead a stage. */
 const MAIN = new Set(['record', 'stop', 'send']);
 
-/** A screen button: `name` gives its class (`sonicframe-<name>`), `icon` its picture. */
+/** A screen button: `name` gives its class (`sonicframe-<name>`), `path` its picture. */
 export function screenButton(
     look: PlayerLook,
     name: 'record' | 'stop' | 'pause' | 'discard' | 'send',
-    icon: keyof typeof RECORDER_ICONS,
+    path: string,
     label: string,
     press: () => void,
 ): HTMLButtonElement {
-    const button = iconButton(
-        look,
-        `sonicframe-${name}`,
-        RECORDER_ICONS[icon],
-        label,
-    );
+    const button = iconButton(look, `sonicframe-${name}`, path, label);
 
     if (MAIN.has(name)) {
         const size = `${look.button.size}px`;

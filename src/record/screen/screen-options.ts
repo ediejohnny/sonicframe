@@ -54,6 +54,34 @@ export const DEFAULT_RECORDER_PARTS: Readonly<Required<RecorderParts>> =
         review: ['discard', 'player', 'send'],
     });
 
+/** The buttons whose icon the app may draw; `resume` is the pause button's while paused. */
+export type RecorderIcon =
+    | 'record'
+    | 'stop'
+    | 'pause'
+    | 'resume'
+    | 'discard'
+    | 'send';
+
+/** How the parts beside the player of the recording line up. */
+export type RecorderAlign = 'bars' | 'center' | 'start' | 'end';
+
+export const RECORDER_ALIGNS: readonly RecorderAlign[] = Object.freeze([
+    'bars',
+    'center',
+    'start',
+    'end',
+]);
+
+/** What the screen does when a recording stops. */
+export type RecorderAfterStop = 'review' | 'send' | 'none';
+
+export const RECORDER_AFTER_STOP: readonly RecorderAfterStop[] = Object.freeze([
+    'review',
+    'send',
+    'none',
+]);
+
 export type RecorderScreenA11y = {
     /** The language of the screen's words and its player's: `'en'` by default, `'auto'` the page's. */
     lang?: string;
@@ -76,11 +104,21 @@ export type RecorderScreenOptions = RecorderOptions & {
     theme?: string | ThemeInput;
     /** The screen's look, as the player's; laid over the theme's. */
     look?: Partial<PlayerLook>;
+    /** The look of the player of the recording alone, laid over `look`; its rows under the wave start under its play button unless this says otherwise. */
+    reviewLook?: Partial<PlayerLook>;
+    /** Your own drawing of a button's icon: SVG path data on a 24 × 24 grid; data with anything but path commands and numbers is refused. */
+    icons?: Partial<Record<RecorderIcon, string>>;
+    /** How the parts beside the player of the recording line up: on its bars (`'bars'`, the default), or on its box's middle, top or bottom (`'center'`, `'start'`, `'end'`). */
+    align?: RecorderAlign;
     palette?: PaletteChoice;
     /** How the live wave and the player draw the sound. */
     wave?: WaveName | Partial<WaveStyle>;
     bar?: Partial<BarStyle>;
     font?: FontChoice;
+    /** When a recording stops: it goes to review (`'review'`, the default), is sent right away (`'send'`), or is only handed over, the screen starting again (`'none'`). */
+    afterStop?: RecorderAfterStop;
+    /** Called with every recording that stops, once the screen is in review or, with `afterStop: 'none'`, back at the start. */
+    onRecorded?: (recording: Recording) => void;
     /** Called with the recording when Send is pressed; a Promise keeps the screen busy until it settles, and a rejection says the send failed. */
     onSend?: (recording: Recording) => void | Promise<void>;
     /** After a send: back to the start (`'reset'`, the default) or keep the recording (`'keep'`). */
@@ -93,7 +131,7 @@ export type RecorderScreenOptions = RecorderOptions & {
 export type RecorderScreenEvents = {
     /** The screen moved to another state. */
     state: [state: RecorderState];
-    /** A recording finished and is in review. */
+    /** A recording stopped; `afterStop` says what comes next. */
     recorded: [recording: Recording];
     /** Send was pressed. */
     send: [recording: Recording];

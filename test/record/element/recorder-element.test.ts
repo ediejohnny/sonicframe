@@ -9,7 +9,12 @@ import { PALETTES } from '../../../src/player';
 import { defineSonicRecorder, type Recording } from '../../../src/record';
 import { afterTest } from '../../support/helpers';
 import { stubMicrophone } from '../../support/recording';
-import { liveWaveFeed, useRecordingPage } from '../screen/screen-harness';
+import {
+    layOut,
+    liveWaveFeed,
+    shiftOf,
+    useRecordingPage,
+} from '../screen/screen-harness';
 
 useRecordingPage();
 
@@ -121,6 +126,36 @@ describe('the <sonic-recorder> tag', () => {
         );
         await vi.advanceTimersByTimeAsync(0);
         expect(parts(element)).toEqual(['discard', 'player', 'send']);
+    });
+
+    it('reads what comes after a stop, its own icons, and how the parts line up', async () => {
+        stubMicrophone();
+        const recorded: unknown[] = [];
+        const element = tag({
+            'after-stop': 'none',
+            'icon-record': 'M1 1h22v22H1z',
+            'icon-stop': 'M0 0"/><script>',
+        });
+        element.addEventListener('sonicframe:recorded', (event) =>
+            recorded.push(event),
+        );
+        expect(
+            element.querySelector('.sonicframe-record path')?.getAttribute('d'),
+        ).toBe('M1 1h22v22H1z');
+
+        await press(element, 'record');
+        expect(
+            element.querySelector('.sonicframe-stop path')?.getAttribute('d'),
+        ).toBe('M7 7h10v10H7z');
+        await press(element, 'stop');
+        expect(parts(element)).toEqual(['record']);
+        expect(recorded).toHaveLength(1);
+
+        const centered = tag({ align: 'center' });
+        await press(centered, 'record');
+        layOut();
+        await press(centered, 'stop');
+        expect(shiftOf(centered, 'send')).toBe('');
     });
 
     it('falls back on a time limit that is empty, not 0 seconds', async () => {

@@ -76,6 +76,17 @@ describe('nextRecorderState', () => {
         expect(walk(['start', 'discard']).at(-1)).toBe('idle');
     });
 
+    it('finishes a recording or a pause straight back to idle, with no review', () => {
+        expect(walk(['start', 'granted', 'finish']).at(-1)).toBe('idle');
+        expect(walk(['start', 'granted', 'pause', 'finish']).at(-1)).toBe(
+            'idle',
+        );
+        expect(walk(['start', 'finish']).at(-1)).toBe('asking');
+        expect(walk(['start', 'granted', 'stop', 'finish']).at(-1)).toBe(
+            'review',
+        );
+    });
+
     it('stays put on an event that does not apply', () => {
         expect(walk(['pause', 'stop', 'send', 'granted'])).toEqual([
             'idle',
