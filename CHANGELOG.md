@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-01
+
+SonicFrame leaves the beta. 1.0 is 0.8 with a promise: from here on it follows Semantic Versioning, so a 1.x
+version never breaks code written for 1.0, and old names keep working until 2.0. Moving from 0.8 changes nothing
+in your code.
+
+### Added
+
+- The "Versions and support" page says what the promise covers, which defaults stay and which versions get fixes,
+  and `SECURITY.md` says how to report a vulnerability privately on GitHub.
+- Every version is published to npm from the repository's GitHub workflow, with provenance (`npm audit
+  signatures` checks it).
+- The package names its donation campaign (`funding`), so `npm fund` and the npm page show where to support
+  SonicFrame.
+
 ## [0.8.0] - 2026-11-01
 
 ### Added

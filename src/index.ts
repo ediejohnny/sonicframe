@@ -242,7 +242,7 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '0.8.0';
+export const VERSION: string = '1.0.0';
 
 // Names kept until 2.0: each works as before, and its note says what to use instead.
 

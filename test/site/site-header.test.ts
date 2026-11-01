@@ -33,6 +33,7 @@ describe('the docs header', () => {
                 '#search-open',
                 '.nav a[href*="github.com"]',
                 '.nav a[href*="npmjs.com"]',
+                '.nav a[href*="doativa.com"]',
                 '#font-open',
                 '#scheme',
             ].map((selector) => nameOf(top.querySelector(selector))),
@@ -42,6 +43,7 @@ describe('the docs header', () => {
             'Search the docs',
             'GitHub',
             'npm',
+            'Support SonicFrame',
             'Font: Industrial',
             'Dark',
         ]);

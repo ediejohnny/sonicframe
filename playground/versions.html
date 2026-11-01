@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Versions and support · SonicFrame</title>
+        <meta
+            name="description"
+            content="What each SonicFrame version may change from 1.0 on, what the promise covers, how old names keep working until 2.0, which versions get fixes, and how a version is published."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Versions and support</h1>
+                <p class="lede">
+                    From 1.0.0, SonicFrame follows Semantic Versioning: the
+                    number of a version says what it may change, so you can
+                    update without reading the code again.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>What each number means</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>A new version like</th>
+                                    <th>May bring</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1.0.<strong>1</strong> (patch)</td>
+                                    <td>
+                                        Fixes only. Nothing you use changes,
+                                        except a behavior that was wrong.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>1.<strong>1</strong>.0 (minor)</td>
+                                    <td>
+                                        New features, each off until you turn it
+                                        on, and new names for old ones, which
+                                        keep working. Your code goes on working
+                                        as it is.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>2</strong>.0.0 (major)</td>
+                                    <td>
+                                        The only kind of version where something
+                                        you use can stop working. Every such
+                                        change is listed in advance in the
+                                        <a href="./upgrade.html"
+                                            >Upgrade guide</a
+                                        >.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>What the promise covers</h2>
+                    <p>Everything the docs describe:</p>
+                    <ul>
+                        <li>
+                            the four entries and what they export:
+                            <code>sonicframe</code>,
+                            <code>sonicframe/player</code>,
+                            <code>sonicframe/analysis</code> and
+                            <code>sonicframe/record</code>;
+                        </li>
+                        <li>
+                            the options, methods, events and types in the
+                            <a href="./frame-options.html">Reference</a>;
+                        </li>
+                        <li>
+                            the <code>&lt;sonic-player&gt;</code> and
+                            <code>&lt;sonic-recorder&gt;</code> tags, their
+                            attributes and their <code>sonicframe:</code>
+                            events;
+                        </li>
+                        <li>
+                            the
+                            <a href="./css-variables.html">CSS variables</a> and
+                            the <a href="./plugin-api.html">plugin API</a>.
+                        </li>
+                    </ul>
+                    <p>
+                        It does not cover what the docs leave out: the elements
+                        and class names inside a player, the exact pixels of a
+                        drawing, files imported from inside
+                        <code>dist/</code> instead of through an entry, and the
+                        words a screen reader hears, which may get clearer in
+                        any version.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Defaults stay</h2>
+                    <p>
+                        A new version does not change how your page looks or
+                        behaves by default: every new feature starts off, and a
+                        default changes only in a major version, or to fix a
+                        bug.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Old names keep working</h2>
+                    <p>
+                        When a name changes, the old one keeps working, the same
+                        way, until the next major version:
+                    </p>
+                    <ul>
+                        <li>
+                            it is marked as deprecated, so your editor strikes
+                            it through and says what to use;
+                        </li>
+                        <li>when a page gives both, the new name wins;</li>
+                        <li>the changelog lists it under Deprecated.</li>
+                    </ul>
+                    <p>
+                        The <a href="./upgrade.html">Upgrade guide</a> lists
+                        every old name and what 2.0 will remove.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Which versions get fixes</h2>
+                    <p>
+                        Fixes, security fixes included, go into the latest 1.x
+                        release. The 0.x versions get none; moving from 0.8 to
+                        1.0 changes nothing in your code.
+                    </p>
+                    <p>
+                        Found a vulnerability? Report it privately, as
+                        <a
+                            href="https://github.com/ediejohnny/sonicframe/blob/main/SECURITY.md"
+                            >SECURITY.md</a
+                        >
+                        explains, rather than in a public issue.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>How a version is published</h2>
+                    <p>
+                        Every version from 1.0.0 is published to npm by the
+                        repository's own GitHub workflow, never from a personal
+                        computer. npm adds a provenance statement saying from
+                        which repository and commit the package was built, and
+                        shows it on the package's page. To check the packages
+                        installed in your project:
+                    </p>
+                    <div class="code">
+                        <pre><code>npm audit signatures</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./docs/page.ts"></script>
+    </body>
+</html>
