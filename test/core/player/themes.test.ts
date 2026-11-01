@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { DEFAULT_LOOK, resolveLook } from '../../../src/core/player/look';
+import { DEFAULT_LOOK } from '../../../src/core/player/look';
+import { resolveLook } from '../../../src/core/player/resolve-look';
 import { isPaletteName } from '../../../src/core/player/palettes';
 import {
     cleanBar,
@@ -104,6 +105,18 @@ describe('defineTheme and registerTheme', () => {
         expect(defineTheme({ extends: 'lava' }).wave).toEqual(
             THEMES.default.wave,
         );
+    });
+
+    it('takes a drawing by its name, as the player does, keeping the rest of the parent’s', () => {
+        const theme = defineTheme({ extends: 'bubble', wave: 'scope' });
+
+        expect(theme.wave).toEqual({ ...THEMES.bubble.wave, style: 'scope' });
+    });
+
+    it('keeps a palette of its own, colors left out included', () => {
+        const theme = defineTheme({ palette: { progress: '#ff0000' } });
+
+        expect(theme.palette).toEqual({ progress: '#ff0000' });
     });
 
     it('merges the button instead of replacing it', () => {

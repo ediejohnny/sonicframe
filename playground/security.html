@@ -106,6 +106,22 @@
                             and a number with a range is kept inside it.
                         </li>
                     </ul>
+                    <p>
+                        Addresses from outside go through
+                        <code>safeUrl(url, schemes?)</code>, which your page can
+                        use too. It gives the address back when it is relative
+                        or has one of the <code>schemes</code> (http and https
+                        by default), and <code>null</code> when it has another
+                        scheme, starts with <code>//</code>, holds a backslash,
+                        a space or a control character, or is empty or longer
+                        than 2048 characters.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { safeUrl } from 'sonicframe';
+
+link.href = safeUrl(fromDatabase) ?? '#';</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
 
                 <section class="section">

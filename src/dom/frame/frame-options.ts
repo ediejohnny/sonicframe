@@ -1,5 +1,6 @@
 /** What a frame takes: its options, grouped by place, and the bars and colors it draws by default. */
 
+import type { LanguageTag } from '../../core/languages/language';
 import type { ValueText } from '../../core/frame/controller';
 import { PROGRESS, WAVE } from '../../core/shared/variables';
 import type { ZoomOptions, ZoomWords } from '../../core/view/zoom';
@@ -35,9 +36,9 @@ export type SonicFrameOptions = {
     cursorWidth?: number;
     /** Click, drag and keys seek (a slider); false makes a picture only. */
     interact?: boolean;
-    /** The accessible name, e.g. "Playback position". */
+    /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
-    /** The position as words for screen readers; `0:12 / 0:45` by default. */
+    /** @deprecated Use `a11y.valueText`; `valueText` goes in 2.0. */
     valueText?: ValueText;
     /** Seconds moved by an arrow key. */
     stepSeconds?: number;
@@ -65,7 +66,11 @@ export type SonicFrameA11y = {
      * Portuguese of Brazil), `'pt-PT'`, `'es'`, `'fr'`, a registered one (`registerLanguage`), or
      * `'auto'` (the page's). A tag with a region finds its language (`'es-MX'` speaks Spanish).
      */
-    lang?: string;
+    lang?: LanguageTag;
+    /** The wave's accessible name: `'Audio position'` in the frame's language. */
+    label?: string;
+    /** The position as words for screen readers; `0:12 / 0:45` by default. */
+    valueText?: ValueText;
     zoom?: {
         /** Says the new view through the live region after a zoom by the keys, a button or two fingers. Off by default. */
         announce?: boolean;

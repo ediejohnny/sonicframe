@@ -8,8 +8,8 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     loadWaveform,
     readWaveform,
-    type WaveformFetcher,
 } from '../../../src/core/peaks/read-waveform';
+import type { Fetcher } from '../../../src/core/shared/fetch';
 import { serve } from '../../support/responses';
 import { dat, loudest, text } from './waveform-files';
 
@@ -29,7 +29,7 @@ function fold(values: readonly number[], count: number): number[] {
 function respond(
     bytes: Uint8Array,
     options: { status?: number; length?: number; stream?: boolean } = {},
-): WaveformFetcher {
+): Fetcher {
     return serve(bytes, { split: 7, ...options });
 }
 
@@ -201,7 +201,7 @@ describe('loadWaveform', () => {
 
     it('fetches an address once for the same options, and again for other options', async () => {
         let calls = 0;
-        const fetcher: WaveformFetcher = (url) => {
+        const fetcher: Fetcher = (url) => {
             calls++;
 
             return respond(file)(url);
@@ -221,7 +221,7 @@ describe('loadWaveform', () => {
 
     it('fetches every time when not shared', async () => {
         let calls = 0;
-        const fetcher: WaveformFetcher = (url) => {
+        const fetcher: Fetcher = (url) => {
             calls++;
 
             return respond(file)(url);
@@ -251,7 +251,7 @@ describe('loadWaveform', () => {
                 controller.enqueue(new Uint8Array(1024));
             },
         });
-        const fetcher: WaveformFetcher = () =>
+        const fetcher: Fetcher = () =>
             Promise.resolve({
                 ok: true,
                 status: 200,
@@ -268,7 +268,7 @@ describe('loadWaveform', () => {
 
     it('refuses a file announced as too large before reading it', async () => {
         let read = false;
-        const fetcher: WaveformFetcher = () =>
+        const fetcher: Fetcher = () =>
             Promise.resolve({
                 ok: true,
                 status: 200,

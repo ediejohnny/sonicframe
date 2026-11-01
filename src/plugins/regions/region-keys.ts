@@ -2,17 +2,20 @@
  * The regions' keys while the frame has focus: R and Shift+R step through the regions in order (the
  * place said, and zoomed in, brought into view when asked), Enter plays the one selected, L switches
  * its loop, `[` `]` and `{` `}` nudge its edges, Delete or Backspace removes it and Escape stops it
- * and lets it go. A key with Ctrl, Alt or Meta is never the regions'.
+ * and lets it go. Each can be turned off, and R and L can be other letters. A key with Ctrl, Alt or
+ * Meta is never the regions'.
  */
 
 import type { KeyModifiers } from '../../core/frame/keys';
 import { wordsFor } from '../../core/languages/language';
 import { mergeWords } from '../../core/languages/merge-words';
 import type { RegionWords } from '../../core/languages/words';
+import { keyLetter } from '../../core/shared/keys';
 import { clamp01 } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
 import type { Region, RegionsHost } from './region-store';
+import type { RegionsKeys } from './regions';
 
 /** How far a nudge moves an edge, in seconds. */
 const NUDGE = 0.5;
@@ -21,13 +24,30 @@ const NUDGE = 0.5;
 const MAX_WORD = 120;
 
 export class RegionKeys {
+    private readonly select: string | null;
+    private readonly loop: string | null;
+    private readonly keys: RegionsKeys;
+
     constructor(
         private readonly host: RegionsHost,
         /** Zoomed in, a region chosen by R is brought into view, centered. */
         private readonly scrollIntoView: boolean,
         /** The app's own words, over those of the frame's language. */
         private readonly own: Partial<RegionWords> | undefined,
-    ) {}
+        /** The keys on (each one unless false), or null for none. */
+        keys: RegionsKeys | null,
+    ) {
+        this.keys = keys ?? {
+            select: false,
+            loop: false,
+            play: false,
+            nudge: false,
+            remove: false,
+            release: false,
+        };
+        this.select = keyLetter(this.keys.select, 'r');
+        this.loop = keyLetter(this.keys.loop, 'l');
+    }
 
     /** The words said, in the frame's language. */
     private words(): RegionWords {
@@ -50,20 +70,26 @@ export class RegionKeys {
         const { store } = this.host;
         const selectedId = store.selectedId;
 
+        const on = this.keys;
+
         // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
-        if (key.toLowerCase() === 'r') {
+        if (this.select !== null && key.toLowerCase() === this.select) {
             this.step(modifiers.shiftKey === true);
 
             return true;
         }
 
-        if (key === 'Enter' && selectedId !== null) {
+        if (on.play !== false && key === 'Enter' && selectedId !== null) {
             this.host.play(selectedId);
 
             return true;
         }
 
-        if ((key === 'l' || key === 'L') && selectedId !== null) {
+        if (
+            this.loop !== null &&
+            key.toLowerCase() === this.loop &&
+            selectedId !== null
+        ) {
             store.loop = !store.loop;
             const words = this.words();
             this.host
@@ -73,19 +99,23 @@ export class RegionKeys {
             return true;
         }
 
-        if (key === '[' || key === '{') {
+        if (on.nudge !== false && (key === '[' || key === '{')) {
             this.nudge('start', key === '[' ? -NUDGE : NUDGE);
 
             return selectedId !== null;
         }
 
-        if (key === ']' || key === '}') {
+        if (on.nudge !== false && (key === ']' || key === '}')) {
             this.nudge('end', key === ']' ? NUDGE : -NUDGE);
 
             return selectedId !== null;
         }
 
-        if ((key === 'Delete' || key === 'Backspace') && selectedId !== null) {
+        if (
+            on.remove !== false &&
+            (key === 'Delete' || key === 'Backspace') &&
+            selectedId !== null
+        ) {
             store.remove(selectedId);
             this.host.select(null);
             this.host.changed();
@@ -93,7 +123,7 @@ export class RegionKeys {
             return true;
         }
 
-        if (key === 'Escape' && selectedId !== null) {
+        if (on.release !== false && key === 'Escape' && selectedId !== null) {
             this.host.frame()?.stopRange();
             this.host.select(null);
 

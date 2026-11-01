@@ -22,7 +22,7 @@ import {
 import {
     nextRecorderState,
     type RecorderEvent,
-    type RecorderState,
+    type RecorderScreenState,
 } from '../../core/recording/recording';
 import { oneOf } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
@@ -56,6 +56,7 @@ import {
     type RecorderScreenOptions,
 } from './screen-options';
 import { mainButton, screenPart, type PartHost } from './screen-parts';
+import { sizePixels } from '../../dom/shared/units';
 
 /** The words that say why recording cannot happen, by reason. */
 const REASONS = {
@@ -89,7 +90,7 @@ export class RecorderScreen {
     private readonly live: LiveView;
     private readonly host: PartHost;
     private readonly blinker: Blinker;
-    private stateRef: RecorderState = 'idle';
+    private stateRef: RecorderScreenState = 'idle';
     private recordingRef: Recording | null = null;
     private address: string | null = null;
     private reviewRef: ReviewPlayer | null = null;
@@ -111,7 +112,9 @@ export class RecorderScreen {
         const a11y = options.a11y ?? {};
         this.words = recorderWords(
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
-            a11y.labels,
+            a11y.labels === undefined && a11y.words === undefined
+                ? undefined
+                : { ...a11y.labels, ...a11y.words },
         );
         const theme =
             options.theme === undefined
@@ -152,7 +155,10 @@ export class RecorderScreen {
         this.element.className = 'sonicframe-recorder';
         this.element.setAttribute('role', 'group');
         this.element.setAttribute('aria-label', this.words.words.recorder);
-        this.blinker = new Blinker(this.element, options.recordBlink === true);
+        this.blinker = new Blinker(
+            this.element,
+            (options.recBlink ?? options.recordBlink) === true,
+        );
 
         if (a11y.lang !== undefined) {
             this.element.setAttribute('lang', this.words.locale);
@@ -179,7 +185,7 @@ export class RecorderScreen {
             css(this.row, [
                 [
                     'min-height',
-                    `max(${this.look.waveHeight}rem, ${this.look.button.size}px)`,
+                    `max(${this.look.waveHeight}rem, ${sizePixels(this.look.button.size)}px)`,
                 ],
             ]);
         }
@@ -200,7 +206,7 @@ export class RecorderScreen {
         this.render();
     }
 
-    get state(): RecorderState {
+    get state(): RecorderScreenState {
         return this.stateRef;
     }
 
@@ -382,6 +388,7 @@ export class RecorderScreen {
 
         this.stateRef = next;
         this.render();
+        this.events.emit('statechange', next);
         this.events.emit('state', next);
 
         return true;

@@ -57,7 +57,7 @@ describe('writeWaveform', () => {
         });
     });
 
-    it('mixes the channels into the loudest one, or writes each when asked', () => {
+    it("mixes the channels into the loudest one, or writes each with channel: 'each', over the old channels", () => {
         const left = Float32Array.from([0.5, -0.25]);
         const right = Float32Array.from([-0.75, 0.125]);
         const options = {
@@ -65,17 +65,31 @@ describe('writeWaveform', () => {
             samplesPerPeak: 2,
             format: 'json',
         } as const;
+        const each = { channels: 2, data: [-8192, 16384, -24576, 4096] };
 
         expect(writeWaveform([left, right], options)).toMatchObject({
             channels: 1,
             data: [-24576, 16384],
         });
         expect(
+            writeWaveform([left, right], { ...options, channel: 'each' }),
+        ).toMatchObject(each);
+        expect(
             writeWaveform([left, right], { ...options, channels: 'each' }),
-        ).toMatchObject({
-            channels: 2,
-            data: [-8192, 16384, -24576, 4096],
-        });
+        ).toMatchObject(each);
+        expect(
+            writeWaveform([left, right], {
+                ...options,
+                channel: 'all',
+                channels: 'each',
+            }),
+        ).toMatchObject({ channels: 1 });
+        expect(
+            writeWaveform([left, right], {
+                ...options,
+                channel: 'some' as 'all',
+            }),
+        ).toMatchObject({ channels: 1 });
     });
 
     it('takes strange options as the defaults: 256 samples per peak, 16 bits, .dat, mixed', () => {

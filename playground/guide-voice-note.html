@@ -32,7 +32,7 @@ createPlayer({
     preload: 'none',
     peaks: note.peaks, // saved with the message when it was recorded
     theme: 'bubble',
-    label: `Voice note from ${note.author}, ${note.length}`,
+    a11y: { label: `Voice note from ${note.author}, ${note.length}` },
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
@@ -61,14 +61,14 @@ createPlayer({
                         at once and the audio loads only on play.
                     </p>
                     <div class="code">
-                        <pre><code>import { resample, silencesFromPeaks } from 'sonicframe';
+                        <pre><code>import { resamplePeaks, silencesFromPeaks } from 'sonicframe';
 import { createRecorder } from 'sonicframe/record';
 
 createRecorder({
     container: composer,
     theme: 'bubble',
     async onSend(recording) {
-        const peaks = resample(recording.peaks, 60);
+        const peaks = resamplePeaks(recording.peaks, 60);
         const silences = silencesFromPeaks(peaks, recording.duration, { minDuration: 1.5 });
         await chat.sendVoiceNote({ audio: recording.blob, duration: recording.duration, peaks, silences });
     },

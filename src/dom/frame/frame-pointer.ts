@@ -10,7 +10,7 @@ import type { Controller } from '../../core/frame/controller';
 import { isDrag } from '../../core/frame/gesture';
 import { applyStyles } from '../../core/shared/styles';
 import { viewRatio } from '../../core/view/view';
-import type { Claim, Plugin, WavePoint } from '../../types';
+import type { Plugin, PointerClaim, WavePoint } from '../../types';
 import { FramePinch, type PinchHost } from './frame-pinch';
 import type { LaneManager } from './lanes';
 import type { PluginSet } from './plugin-set';
@@ -19,7 +19,7 @@ import type { PluginSet } from './plugin-set';
 type Press = {
     box: DOMRect;
     plugin: Plugin | null;
-    claim: Claim | null;
+    claim: PointerClaim | null;
     active: boolean;
     fromX: number;
     /** The pointer's last place, moved again when the view scrolls under it at an edge. */
@@ -257,7 +257,10 @@ export class FramePointer {
             y: event.clientY - box.top,
             width: box.width,
             height: box.height,
-            pointerType: event.pointerType,
+            pointerType:
+                event.pointerType === 'touch' || event.pointerType === 'pen'
+                    ? event.pointerType
+                    : 'mouse',
             shiftKey: event.shiftKey,
         };
     }

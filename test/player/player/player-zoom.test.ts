@@ -226,6 +226,21 @@ describe('the minimap on the player', () => {
         );
     });
 
+    it("adds the app's own strip height and space, written with their unit, to the wave's room", () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 60 }),
+            peaks: PEAKS,
+            zoom: true,
+            minimap: { height: '1rem', gap: '4px' },
+        });
+
+        // 16 px of strip and 4 px of space.
+        expect(player.frame.container.style.getPropertyValue('height')).toBe(
+            'calc(2.5rem + 20px)',
+        );
+    });
+
     it('is a slider named in the player language with a11y.minimap.keys', () => {
         player = createPlayer({
             container: container(),
@@ -319,7 +334,20 @@ describe('decoding on the player', () => {
         player?.destroy();
         host?.remove();
         decodable(30);
-        expect(await peaksOf({ decode: { peaks: 300 } })).toBe(300);
+        expect(await peaksOf({ decode: { peakCount: 300 } })).toBe(300);
+
+        player?.destroy();
+        host?.remove();
+        decodable(30);
+        // The old name, alone, still counts; given both, the new one wins.
+        expect(await peaksOf({ decode: { peaks: 400 } })).toBe(400);
+
+        player?.destroy();
+        host?.remove();
+        decodable(30);
+        expect(await peaksOf({ decode: { peaks: 400, peakCount: 200 } })).toBe(
+            200,
+        );
     });
 
     it('decodes peaks per second of sound with zoom on, never fewer than the count', async () => {

@@ -95,6 +95,28 @@ describe('the minimap strip', () => {
         expect(none.strip.style.getPropertyValue('height')).toBe('24px');
     });
 
+    it('takes its height and space written with their unit, and its side by placement over the old side', () => {
+        // The strip's room and the wave's top (the room when the strip is over it); a rem is 16 px.
+        const cases: [MinimapOptions, string, string][] = [
+            [{ height: '1rem', gap: '0.5rem' }, '24px', '0px'],
+            [{ height: '20px', gap: '2px' }, '22px', '0px'],
+            [{ height: 'tall' as '1rem', gap: 'far' as '1rem' }, '28px', '0px'],
+            [{ placement: 'above' }, '28px', '28px'],
+            [{ placement: 'above', side: 'below' }, '28px', '28px'],
+            [{ placement: 'below', side: 'above' }, '28px', '0px'],
+        ];
+
+        for (const [options, room, top] of cases) {
+            const { mounted, strip } = shown(options);
+
+            expect([
+                strip.style.getPropertyValue('height'),
+                mounted.canvas.style.getPropertyValue('top'),
+            ]).toEqual([room, top]);
+            takeOff(mounted);
+        }
+    });
+
     it('draws a box over the part in view, in the colors given', async () => {
         const { mounted: frame, map } = shown({
             colors: { view: 'red', edge: 'blue' },
@@ -339,5 +361,24 @@ describe('the minimap as a keyboard slider', () => {
 
         expect(strip.getAttribute('aria-label')).toBe('Parte visível');
         expect(strip.getAttribute('aria-valuetext')).toBe('0:00-0:50/1:40');
+    });
+
+    it('takes its name and its value as phrases in a11y.words, over the old label', () => {
+        const { mounted: frame, strip } = shown({
+            a11y: {
+                keys: true,
+                label: 'Old name',
+                words: {
+                    label: 'Parte visível',
+                    value: '{from} até {to} de {total}',
+                },
+            },
+        });
+        frame.frame.setView(0, 0.5);
+
+        expect(strip.getAttribute('aria-label')).toBe('Parte visível');
+        expect(strip.getAttribute('aria-valuetext')).toBe(
+            '0:00 até 0:50 de 1:40',
+        );
     });
 });

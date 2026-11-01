@@ -17,12 +17,16 @@ export type SkipSilencesOptions = {
     lead?: number;
     /** Dim the silences on the bars. */
     dim?: boolean;
-    /** The dim color. */
+    /** The dim color (any CSS color or `var(--name)`): the page's `--sonicframe-dim`. */
+    color?: string;
+    /** @deprecated Use `color`; `dimColor` goes in 2.0. */
     dimColor?: string;
     /**
      * Draws the shade's edges on whole device pixels (crisper, moved by less than half a pixel). Off
      * by default: at fractions of a pixel, as always.
      */
+    pixelSnap?: boolean;
+    /** @deprecated Use `pixelSnap`; `snap` goes in 2.0. */
     snap?: boolean;
 };
 
@@ -35,9 +39,11 @@ export function skipSilences(
     options: SkipSilencesOptions = {},
 ): SkipSilencesPlugin {
     const lead = within(options.lead, 0.1, 0, Number.POSITIVE_INFINITY);
-    const snap = options.snap === true;
+    const snap = (options.pixelSnap ?? options.snap) === true;
     const dimColor =
-        options.dimColor ?? 'var(--sonicframe-dim, rgba(0, 0, 0, 0.12))';
+        options.color ??
+        options.dimColor ??
+        'var(--sonicframe-dim, rgba(0, 0, 0, 0.12))';
 
     let host: PluginHost | null = null;
     let silences: Silence[] = [...(options.silences ?? [])];

@@ -124,4 +124,12 @@ describe('palettes', () => {
             expect(name.startsWith('--sonicframe-')).toBe(true);
         }
     });
+
+    it('colors the chapters’ lines too, in the palette’s quiet color', () => {
+        for (const palette of [PALETTES.light, PALETTES.dark]) {
+            expect(
+                new Map(paletteVariables(palette)).get('--sonicframe-chapter'),
+            ).toBe(palette.muted);
+        }
+    });
 });

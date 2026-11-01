@@ -6,10 +6,7 @@
 
 import { loadWaveform } from '../../core/peaks/read-waveform';
 import type { ReadWaveformOptions } from '../../core/peaks/waveform';
-import type { FontChoice } from '../../core/player/fonts';
-import type { PaletteChoice } from '../../core/player/palettes';
 import type { MinimapOptions } from '../../plugins/minimap/minimap';
-import type { WaveName } from '../../types';
 import type {
     PlayerA11y,
     PlayerChapters,
@@ -20,16 +17,30 @@ import type {
 } from '../player/player-options';
 import type { MediaSessionDetails } from '../../core/session/media-session';
 import { attributeNumber } from '../../dom/shared/custom-element';
+import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { backgroundLookOf } from './background-attributes';
 
 /** The words of an attribute, lowercase. */
+/** The tag's older short words, each read as the option's name in kebab-case until 2.0. */
+const OLD_WORDS: Readonly<Record<string, string>> = {
+    edges: 'edge-scroll',
+    autohide: 'auto-hide',
+    pauses: 'pause-in-value',
+    stay: 'stay-open',
+};
+
 function wordsOf(value: string): Set<string> {
-    return new Set(value.toLowerCase().split(/\s+/));
+    return new Set(
+        value
+            .toLowerCase()
+            .split(/\s+/)
+            .map((word) => OLD_WORDS[word] ?? word),
+    );
 }
 
 /**
  * The zoom from the `zoom` attribute: present turns it on, and its words turn on its ways (`wheel`,
- * `scroll`, `pinch`, `keys`, `follow`, `center`, `edges`) and the `buttons`; `max` is `zoom-max`.
+ * `scroll`, `pinch`, `keys`, `follow`, `center`, `edge-scroll`) and the `buttons`; `max` is `zoom-max`.
  */
 function zoomOf(
     value: string | null,
@@ -48,13 +59,13 @@ function zoomOf(
         keys: words.has('keys'),
         follow: words.has('follow'),
         followType: words.has('center') ? 'center' : 'page',
-        edgeScroll: words.has('edges'),
+        edgeScroll: words.has('edge-scroll'),
         buttons: words.has('buttons'),
         max: attributeNumber(max),
     };
 }
 
-/** The minimap from the `minimap` attribute: present adds it; `above`, `autohide` and `wheel` change it. */
+/** The minimap from the `minimap` attribute: present adds it; `above`, `auto-hide` and `wheel` change it. */
 function minimapOf(value: string | null): MinimapOptions | undefined {
     if (value === null) {
         return undefined;
@@ -64,14 +75,14 @@ function minimapOf(value: string | null): MinimapOptions | undefined {
 
     return {
         side: words.has('above') ? 'above' : 'below',
-        autoHide: words.has('autohide'),
+        autoHide: words.has('auto-hide'),
         controls: { wheel: words.has('wheel') },
     };
 }
 
 /**
  * The description from the `a11y-description` attribute: present turns it on, and its words turn on
- * the extras (`keys`, `pauses`, `speech`, `button`, `announce`) and the button's `animation`, of the
+ * the extras (`keys`, `pause-in-value`, `speech`, `button`, `announce`) and the button's `animation`, of the
  * type `pulse` (the default) or `fade`; any other word is ignored.
  */
 function descriptionOf(value: string | null): PlayerDescription | undefined {
@@ -83,7 +94,7 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
 
     return {
         keys: words.has('keys'),
-        pauseInValue: words.has('pauses'),
+        pauseInValue: words.has('pause-in-value'),
         speech: words.has('speech'),
         button: words.has('button')
             ? {
@@ -91,26 +102,30 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
                   animationType: words.has('fade') ? 'fade' : 'pulse',
               }
             : false,
-        announceWhenReady: words.has('announce'),
+        announce: words.has('announce'),
     };
 }
 
 /**
  * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
- * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
- * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
- * `above`, `announce`, `images`, `links`, `no-keys`, `no-lines` and `readable` (the tooltip's text
- * in black or white, whichever reads); any other word is ignored.
+ * `chapters-options` (or its old name, `chapter-options`): `list` (in the player, or `popover` or
+ * `drawer` with `left`, `backdrop`), with
+ * `open`, `stay-open`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
+ * `above`, `images`, `links`, `no-keys` and `no-lines`; and the words of `a11y-chapters`: `announce`,
+ * `readable` (the tooltip's text in black or white, whichever reads) and `no-value-note`. Any other word
+ * is ignored; `announce` and `readable` are still read from the options attribute too.
  */
 function chaptersOf(
     src: string | null,
     value: string | null,
+    access: string | null,
 ): PlayerChapters | undefined {
     if (src === null) {
         return undefined;
     }
 
     const words = wordsOf(value ?? '');
+    const heard = wordsOf(access ?? '');
 
     return {
         src,
@@ -123,24 +138,26 @@ function chaptersOf(
                         : 'inline',
                   open: words.has('open'),
                   side: words.has('left') ? 'left' : 'right',
-                  stayOpen: words.has('stay'),
+                  stayOpen: words.has('stay-open'),
                   backdrop: words.has('backdrop'),
                   animation: words.has('animation'),
                   animationType: words.has('slide') ? 'slide' : 'fade',
                   swipe: words.has('swipe'),
               }
             : false,
-        lane: words.has('above')
-            ? 'above'
-            : words.has('lane')
-              ? 'below'
-              : false,
-        announceChange: words.has('announce'),
+        lane: words.has('lane') || words.has('above'),
+        lanePlacement: words.has('above') ? 'above' : 'below',
         images: words.has('images'),
         links: words.has('links'),
         keys: !words.has('no-keys'),
         lines: !words.has('no-lines'),
-        a11y: { tooltip: { readable: words.has('readable') } },
+        a11y: {
+            announce: heard.has('announce') || words.has('announce'),
+            tooltip: {
+                readable: heard.has('readable') || words.has('readable'),
+            },
+            ...(heard.has('no-value-note') ? { valueNote: false } : {}),
+        },
     };
 }
 
@@ -154,6 +171,7 @@ export function sessionDetailsOf(
     return {
         title:
             element.getAttribute('media-title') ??
+            element.getAttribute('a11y-label') ??
             element.getAttribute('label') ??
             '',
         artist: element.getAttribute('media-artist') ?? '',
@@ -167,30 +185,6 @@ function sessionOf(element: Element): PlayerMediaSession | undefined {
     return element.hasAttribute('media-session')
         ? sessionDetailsOf(element)
         : undefined;
-}
-
-export function paletteOf(element: Element): PaletteChoice | undefined {
-    return (element.getAttribute('palette') ?? undefined) as
-        | PaletteChoice
-        | undefined;
-}
-
-export function waveOf(element: Element): WaveName | undefined {
-    return (element.getAttribute('wave') ?? undefined) as WaveName | undefined;
-}
-
-export function fontOf(element: Element): FontChoice | undefined {
-    const family = element.getAttribute('font');
-    const src = element.getAttribute('font-src') ?? undefined;
-    const stylesheet = element.getAttribute('font-stylesheet') ?? undefined;
-
-    if (family === null) {
-        return undefined;
-    }
-
-    return src !== undefined || stylesheet !== undefined
-        ? { family, src, stylesheet }
-        : family;
 }
 
 /** How the peaks file is read: `peaks-channel` (`all` or a number), `peaks-max`, `peaks-normalize`. */
@@ -214,6 +208,7 @@ function a11yOf(element: Element): PlayerA11y {
 
     return {
         lang: element.getAttribute('a11y-lang') ?? undefined,
+        label: element.getAttribute('a11y-label') ?? undefined,
         description: descriptionOf(element.getAttribute('a11y-description')),
         zoom:
             zoom === null
@@ -249,7 +244,9 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         minimap: minimapOf(element.getAttribute('minimap')),
         chapters: chaptersOf(
             element.getAttribute('chapters'),
-            element.getAttribute('chapter-options'),
+            element.getAttribute('chapters-options') ??
+                element.getAttribute('chapter-options'),
+            element.getAttribute('a11y-chapters'),
         ),
         mediaSession: sessionOf(element),
         a11y: a11yOf(element),

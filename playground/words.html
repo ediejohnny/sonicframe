@@ -204,10 +204,11 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>times</code></td>
+                                    <td><code>timeFormat</code></td>
                                     <td><code>'words'</code></td>
                                     <td>
-                                        <code>'clock'</code> says positions as
+                                        Positions as words ("12 seconds"), or
+                                        <code>'clock'</code> says them as
                                         <code>0:12</code>.
                                     </td>
                                 </tr>
@@ -252,7 +253,7 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>announceWhenReady</code></td>
+                                    <td><code>announce</code></td>
                                     <td><code>false</code></td>
                                     <td>
                                         Say it once if it arrives while the wave
@@ -294,6 +295,71 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
                             </tbody>
                         </table>
                     </div>
+                    <p>The plugin it gives can be read and driven:</p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td>
+                                        The description, or <code>null</code>
+                                        while the peaks or the length are
+                                        unknown.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>outline</code></td>
+                                    <td>
+                                        The shape it was written from, or
+                                        <code>null</code> (also while your own
+                                        text is used).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>locale</code></td>
+                                    <td>The language tag the text is in.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>set(text)</code></td>
+                                    <td>
+                                        Uses your own text; <code>null</code>
+                                        goes back to the one from the peaks.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>refresh()</code></td>
+                                    <td>
+                                        Writes it again, after the page's
+                                        language changed, say.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>say()</code></td>
+                                    <td>Says it through the live region.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>speak()</code>,
+                                        <code>stopSpeaking()</code>,
+                                        <code>speaking</code>
+                                    </td>
+                                    <td>
+                                        Reads it with the browser's voice (it
+                                        needs <code>speech</code>; call it from
+                                        a person's action), stops it (Escape on
+                                        the wave does too), and tells whether it
+                                        is reading.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
 
                 <section class="section">
@@ -311,6 +377,11 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
 const text = describeSound(outlineSound(peaks, duration), { lang: 'en' });</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                    <p>
+                        <code>describeSound</code> takes the same
+                        <code>timeFormat</code>: <code>'words'</code> by
+                        default, or <code>'clock'</code>.
+                    </p>
                 </section>
             </div>
         </main>

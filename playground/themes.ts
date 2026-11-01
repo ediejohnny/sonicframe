@@ -173,7 +173,7 @@ function themeRow(theme: ThemeName, current: Sound): void {
             wave: chosenWave(),
             font: chosenFont(),
             volume: volumeBox.checked,
-            label: `${theme} in ${palette}`,
+            a11y: { label: `${theme} in ${palette}` },
         });
         player.on('error', (error) => console.error(error));
         players.push(player);
@@ -359,7 +359,7 @@ function setupToolbar(): void {
         showPick();
     });
     volumeBox.addEventListener('change', () => {
-        players.forEach((player) => player.setVolume(volumeBox.checked));
+        players.forEach((player) => player.showVolume(volumeBox.checked));
         showPick();
     });
     gallery.addEventListener('pointerdown', (event) => pickFrom(event.target));

@@ -36,7 +36,7 @@ describe("the list's own look", () => {
     });
 
     it('dresses the list in the player too', () => {
-        make({ palette: 'berry', style: { corner: 1 } });
+        make({ palette: 'berry', box: { corner: 1 } });
 
         expect(list().style.getPropertyValue('--sonicframe-surface')).toBe(
             PALETTES.berry.surface,
@@ -44,11 +44,21 @@ describe("the list's own look", () => {
         expect(list().style.getPropertyValue('border-radius')).toBe('1rem');
     });
 
+    it('takes its box under the old name style too, the new name box winning', () => {
+        make({ style: { corner: 2 } });
+        expect(list().style.getPropertyValue('border-radius')).toBe('2rem');
+    });
+
+    it('lets box win over style when both are given', () => {
+        make({ style: { corner: 2 }, box: { corner: 0.5 } });
+        expect(list().style.getPropertyValue('border-radius')).toBe('0.5rem');
+    });
+
     it('takes its own font, and its own corners, border, shadow, padding and text size', () => {
         make({
             type: 'popover',
             font: 'mono',
-            style: {
+            box: {
                 corner: 1,
                 border: 0,
                 shadow: 'none',

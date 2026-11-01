@@ -62,6 +62,15 @@ describe('uploadPlan', () => {
         });
     });
 
+    it('sends the bare file with bodyType raw, over the old body', () => {
+        expect(uploadPlan({ url: '/v', bodyType: 'raw' }, WEBM)?.raw).toBe(
+            true,
+        );
+        expect(
+            uploadPlan({ url: '/v', bodyType: 'form', body: 'raw' }, WEBM)?.raw,
+        ).toBe(false);
+    });
+
     it('makes no request for an address it refuses', () => {
         for (const url of ['javascript:alert(1)', '//evil.example/x', '', 42]) {
             expect(

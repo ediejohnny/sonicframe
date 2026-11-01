@@ -142,7 +142,8 @@ export class SonicFrame implements PluginHost {
         this.lazy = options.lazy ?? true;
         this.animate = options.animate ?? true;
         this.cursorWidth = finiteOr(options.cursorWidth, 2);
-        this.valueText = options.valueText ?? defaultValueText;
+        this.valueText =
+            options.a11y?.valueText ?? options.valueText ?? defaultValueText;
         this.bar = { ...DEFAULT_BAR, ...options.bar };
         this.wave = resolveWave(DEFAULT_WAVE, options.wave);
         this.colors = new FrameColors(this.container, {
@@ -154,7 +155,9 @@ export class SonicFrame implements PluginHost {
         this.restoreContainer = prepareContainer(
             this.container,
             this.interact,
-            options.label ?? wordsFor(this.lang).frame.position,
+            options.a11y?.label ??
+                options.label ??
+                wordsFor(this.lang).frame.position,
         );
 
         this.canvas = document.createElement('canvas');
@@ -189,7 +192,7 @@ export class SonicFrame implements PluginHost {
                 },
             },
             options.a11y?.zoom?.announce === true,
-            { ...zoomWords(this.lang), ...options.a11y?.zoom?.words },
+            zoomWords(this.lang, options.a11y?.zoom?.words),
         );
 
         this.controller = new Controller(

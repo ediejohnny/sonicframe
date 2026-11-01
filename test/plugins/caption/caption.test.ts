@@ -6,8 +6,12 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
-import { caption, type CaptionPlugin } from '../../../src/index';
-import { mount, type Mounted } from '../../support/helpers';
+import {
+    caption,
+    type CaptionOptions,
+    type CaptionPlugin,
+} from '../../../src/index';
+import { mount, tooltipTextOnPale, type Mounted } from '../../support/helpers';
 
 let mounted: Mounted | null = null;
 
@@ -94,6 +98,67 @@ describe('the caption plugin', () => {
             fire(line() as HTMLElement, 'pointerenter');
             expect(sharedTooltip().element.textContent).toBe('hello there');
         }
+    });
+
+    it('takes its height in pixels or written with its unit, over the old size', () => {
+        // A rem is 16 px.
+        const cases: [CaptionOptions, string][] = [
+            [{ height: 24 }, 'calc(100% - 24px)'],
+            [{ height: '1.5rem' }, 'calc(100% - 24px)'],
+            [{ height: '18px', size: 30 }, 'calc(100% - 18px)'],
+            [{ size: 30 }, 'calc(100% - 30px)'],
+        ];
+
+        for (const [options, height] of cases) {
+            mounted = mount(
+                { plugins: [caption({ text: 'hello', ...options })] },
+                { left: 0, top: 0, width: 200, height: 60 },
+            );
+
+            expect(mounted.canvas.style.getPropertyValue('height')).toBe(
+                height,
+            );
+        }
+    });
+
+    it('cuts the tooltip at tooltipMax and a section at its max, over the old names', () => {
+        // Cut at the last whole word that fits: 7 keeps "one two", 14 "one two three", 3 "one";
+        // the mark after a cut is a thin space and "(...)".
+        const more = `${String.fromCharCode(0x2009)}(...)`;
+        const plugin = caption({
+            text: 'one two three four',
+            tooltipMax: 7,
+            tooltipLimit: 14,
+        });
+        mounted = mount({ plugins: [plugin] });
+        fire(line() as HTMLElement, 'pointerenter');
+        expect(sharedTooltip().element.textContent).toBe(`one two${more}`);
+
+        plugin.setTooltip([
+            { text: 'one two three four', max: 3, limit: 14 },
+            { text: 'one two three four', limit: 14 },
+        ]);
+        fire(line() as HTMLElement, 'pointerenter');
+        expect(sharedTooltip().element.textContent).toBe(
+            `one${more}one two three${more}`,
+        );
+    });
+
+    it("writes the tooltip in black or white that reads by default, and in the page's color with readable off", () => {
+        const hovered = (readable?: boolean): string => {
+            mounted = mount({
+                plugins: [
+                    caption({ text: 'hello', a11y: { tooltip: { readable } } }),
+                ],
+            });
+
+            return tooltipTextOnPale(mounted.container, () =>
+                fire(line() as HTMLElement, 'pointerenter'),
+            );
+        };
+
+        expect(hovered()).toBe('rgba(0, 0, 0, 1)');
+        expect(hovered(false)).toBe('#ffffff');
     });
 
     it('gives the room back when the caption is cleared', () => {

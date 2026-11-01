@@ -16,7 +16,7 @@ import {
     volumeIcon,
     volumeText,
 } from '../../core/controls/volume';
-import { wordsFor } from '../../core/languages/language';
+import { wordsFor, type LanguageTag } from '../../core/languages/language';
 import type { Words } from '../../core/languages/words';
 import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
@@ -49,7 +49,7 @@ export type VolumeControlOptions = {
     /** How far an arrow key moves the level (0..1); 0.05 by default. */
     step?: number;
     colors?: Partial<VolumeColors>;
-    /** Accessible names, and the slider's value while muted; they win over the language's. */
+    /** @deprecated Use `a11y.words`; `labels` goes in 2.0. */
     labels?: { mute: string; unmute: string; volume: string; muted?: string };
     /** Accessibility options. */
     a11y?: {
@@ -57,9 +57,19 @@ export type VolumeControlOptions = {
          * The language of the control's names: `'en'` (the default), `'pt'`, `'pt-PT'`, `'es'`, `'fr'`,
          * a registered one, or `'auto'` (the page's).
          */
-        lang?: string;
+        lang?: LanguageTag;
+        /** The control's names, and the slider's value while muted; any given wins over the language's. */
+        words?: Partial<Words['volume']>;
     };
 };
+
+/** What `setLook` changes on a volume control: each part given replaces the one in place. */
+export type VolumeLook = Partial<{
+    slider: 'always' | 'hover';
+    size: number;
+    width: number;
+    colors: Partial<VolumeColors>;
+}>;
 
 export type VolumeControlEvents = {
     destroy: [];
@@ -120,6 +130,7 @@ export class VolumeControl {
             ...wordsFor(chosenLanguage(options.a11y?.lang, options.container))
                 .volume,
             ...options.labels,
+            ...options.a11y?.words,
         };
         this.slider = options.slider ?? 'always';
         this.size = finiteOr(options.size, 32);
@@ -193,14 +204,7 @@ export class VolumeControl {
     }
 
     /** Changes how the bar shows, the sizes or the colors. */
-    setLook(
-        look: Partial<{
-            slider: 'always' | 'hover';
-            size: number;
-            width: number;
-            colors: Partial<VolumeColors>;
-        }>,
-    ): void {
+    setLook(look: VolumeLook): void {
         this.slider = look.slider ?? this.slider;
         this.size = finiteOr(look.size, this.size);
         this.width = finiteOr(look.width, this.width);

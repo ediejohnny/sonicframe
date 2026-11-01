@@ -6,7 +6,11 @@
  */
 
 import { describe, expect, it, vi } from 'vite-plus/test';
-import type { Recording } from '../../../src/record';
+import {
+    RECORDER_SCREEN_STATES,
+    RECORDER_STATES,
+    type Recording,
+} from '../../../src/record';
 import { SonicFrame } from '../../../src/index';
 import { PALETTES } from '../../../src/player';
 import { FakeAnalyser } from '../../support/recording';
@@ -379,6 +383,14 @@ describe('the recorder screen', () => {
         expect(said()).toBe('0:05 recorded');
     });
 
+    it('takes the app’s words from a11y.words, over the old a11y.labels', async () => {
+        const { made } = screen({
+            a11y: { labels: { record: 'Old' }, words: { record: 'Talk' } },
+        });
+
+        expect(button(made, 'record')?.getAttribute('aria-label')).toBe('Talk');
+    });
+
     it('speaks the language asked for, with the app’s own words over it', async () => {
         const { made } = screen({
             a11y: { lang: 'pt', labels: { send: 'Mandar' } },
@@ -453,5 +465,47 @@ describe('the recorder screen', () => {
         expect(button(made, 'record')?.getAttribute('aria-label')).toBe(
             'Enregistrer',
         );
+    });
+});
+
+describe('the names of 0.7, with the old ones kept until 2.0', () => {
+    it('shows liveSeconds of the scrolling wave, over the old window', async () => {
+        const fed = liveWaveFeed();
+        const { made } = screen({
+            levelsPerSecond: 10,
+            liveSeconds: 2,
+            window: 5,
+        });
+        await press(made, 'record');
+        vi.advanceTimersByTime(500);
+
+        // 2 seconds of 10 slices.
+        expect(fed.at(-1)?.length).toBe(20);
+    });
+
+    it('tells statechange each move, and the old state too', async () => {
+        const fresh: string[] = [];
+        const old: string[] = [];
+        const { made } = screen();
+        made.on('statechange', (state) => fresh.push(state));
+        made.on('state', (state) => old.push(state));
+        await press(made, 'record');
+
+        expect(fresh).toEqual(['asking', 'recording']);
+        expect(old).toEqual(fresh);
+    });
+
+    it('lists the screen states as RECORDER_SCREEN_STATES, and the same list as RECORDER_STATES', () => {
+        expect(RECORDER_SCREEN_STATES).toEqual([
+            'idle',
+            'asking',
+            'recording',
+            'paused',
+            'review',
+            'sending',
+            'denied',
+            'error',
+        ]);
+        expect(RECORDER_STATES).toBe(RECORDER_SCREEN_STATES);
     });
 });

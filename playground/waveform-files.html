@@ -113,7 +113,11 @@ new SonicFrame({
                                     <td><code>fetch</code></td>
                                     <td>
                                         <code>loadWaveform</code>: your own
-                                        <code>fetch</code>.
+                                        <code>Fetcher</code>, whose response
+                                        gives <code>arrayBuffer()</code>
+                                        (<code>FetchedResponse</code>), as for
+                                        <code>loadPeaks</code> and
+                                        <code>loadChapters</code>.
                                     </td>
                                 </tr>
                             </tbody>
@@ -181,12 +185,12 @@ const bytes = writeWaveform(channels, {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>channels</code></td>
-                                    <td><code>'mix'</code></td>
+                                    <td><code>channel</code></td>
+                                    <td><code>'all'</code></td>
                                     <td>
-                                        <code>'mix'</code> writes the loudest of
-                                        all; <code>'each'</code> writes every
-                                        channel.
+                                        <code>'all'</code> writes one channel,
+                                        the loudest of all; <code>'each'</code>
+                                        writes every channel.
                                     </td>
                                 </tr>
                             </tbody>

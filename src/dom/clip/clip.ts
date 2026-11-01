@@ -29,6 +29,9 @@ const MAX_FPS = 60;
 const MAX_BITRATE = 8_000_000;
 const MAX_CAPTION = 200;
 
+/** A clip made by `exportClip`: the file, its media type and its length in seconds. */
+export type ClipResult = { blob: Blob; mimeType: string; duration: number };
+
 export type ClipOptions = {
     /** The sound: a decoded buffer, a blob, or a URL. */
     audio: AudioBuffer | Blob | string;
@@ -69,9 +72,7 @@ export type ClipOptions = {
  * a user gesture (a click): browsers keep audio suspended until one, and a clip whose audio never
  * starts is rejected once its length has passed.
  */
-export async function exportClip(
-    options: ClipOptions,
-): Promise<{ blob: Blob; mimeType: string; duration: number }> {
+export async function exportClip(options: ClipOptions): Promise<ClipResult> {
     options.signal?.throwIfAborted();
 
     if (

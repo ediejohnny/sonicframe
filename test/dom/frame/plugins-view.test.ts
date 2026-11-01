@@ -13,6 +13,8 @@ import {
     spectrogram,
     timeline,
     type Plugin,
+    type RegionsOptions,
+    type SkipSilencesOptions,
 } from '../../../src/index';
 import { firePointer, pressKey } from '../../support/events';
 import { recordingOf } from '../../support/fakes';
@@ -61,7 +63,7 @@ describe('regions in a view', () => {
                     { start: 10, end: 20 },
                 ],
                 color: 'red',
-                snap: true,
+                pixelSnap: true,
             }),
         );
 
@@ -70,19 +72,25 @@ describe('regions in a view', () => {
 
     it('draws at fractions of a pixel, as it always did, unless told to snap to whole pixels', async () => {
         // 55.3 s to 60 s of 100 s across 200 px: from 110.6 px, 9.4 px wide; snapped, 111 and 9.
-        const band = (snap?: boolean) =>
+        const band = (options: RegionsOptions) =>
             onlyBox(
                 regions({
                     items: [{ start: 55.3, end: 60 }],
                     color: 'red',
-                    snap,
+                    ...options,
                 }),
             );
 
-        const fractional = await band(undefined);
+        const fractional = await band({});
         expect(fractional.x).toBeCloseTo(110.6, 9);
         expect(fractional.width).toBeCloseTo(9.4, 9);
-        expect(await band(true)).toEqual({ x: 111, width: 9 });
+        expect(await band({ pixelSnap: true })).toEqual({ x: 111, width: 9 });
+        // The old name still snaps; given both, the new one wins.
+        expect(await band({ snap: true })).toEqual({ x: 111, width: 9 });
+        expect((await band({ snap: true, pixelSnap: false })).x).toBeCloseTo(
+            110.6,
+            9,
+        );
     });
 
     it('grabs a region under the pointer through the view', () => {
@@ -176,8 +184,8 @@ describe('the silences in a view', () => {
             skipSilences({
                 silences: [{ start: 55, end: 60 }],
                 dim: true,
-                dimColor: 'red',
-                snap: true,
+                color: 'red',
+                pixelSnap: true,
             }),
         );
 
@@ -185,20 +193,39 @@ describe('the silences in a view', () => {
     });
 
     it('shades at fractions of a pixel, as it always did, unless told to snap to whole pixels', async () => {
-        const shade = (snap?: boolean) =>
+        const shade = (options: SkipSilencesOptions) =>
             onlyBox(
                 skipSilences({
                     silences: [{ start: 55.3, end: 60 }],
                     dim: true,
-                    dimColor: 'red',
-                    snap,
+                    color: 'red',
+                    ...options,
                 }),
             );
 
-        const fractional = await shade(undefined);
+        const fractional = await shade({});
         expect(fractional.x).toBeCloseTo(110.6, 9);
         expect(fractional.width).toBeCloseTo(9.4, 9);
-        expect(await shade(true)).toEqual({ x: 111, width: 9 });
+        expect(await shade({ pixelSnap: true })).toEqual({ x: 111, width: 9 });
+        expect(await shade({ snap: true })).toEqual({ x: 111, width: 9 });
+    });
+
+    it('shades in its old color option too, the new one winning', async () => {
+        const shade = (options: SkipSilencesOptions) =>
+            onlyBox(
+                skipSilences({
+                    silences: [{ start: 55, end: 60 }],
+                    dim: true,
+                    pixelSnap: true,
+                    ...options,
+                }),
+            );
+
+        expect(await shade({ dimColor: 'red' })).toEqual({ x: 110, width: 10 });
+        expect(await shade({ dimColor: 'blue', color: 'red' })).toEqual({
+            x: 110,
+            width: 10,
+        });
     });
 });
 

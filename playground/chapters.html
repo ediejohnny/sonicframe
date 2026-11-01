@@ -42,11 +42,11 @@ new SonicFrame({
                         <pre><code>createPlayer({
     container,
     src: '/episodes/12.mp3',
-    chapters: { src: '/episodes/12-chapters.vtt', list: true, lane: 'below' },
+    chapters: { src: '/episodes/12-chapters.vtt', list: true, lane: true },
     look: {
         underStart: 'line',
         line: ['play', 'wave'],
-        meta: ['time', 'chapter', 'spacer', 'prevChapter', 'nextChapter', 'chapters'],
+        meta: ['time', 'chapter', 'spacer', 'previousChapter', 'nextChapter', 'chapters'],
     },
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
@@ -54,7 +54,7 @@ new SonicFrame({
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":"below"},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt","list":true,"lane":true},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","previousChapter","nextChapter","chapters"]}}'
                     ></div>
                     <p>
                         Hover a line to see its chapter, click it to go there,
@@ -168,6 +168,10 @@ The meeting</code></pre>
                                     </td>
                                     <td>
                                         The lines' color and width (CSS px).
+                                        Every palette sets
+                                        <code>--sonicframe-chapter</code> to its
+                                        quiet color, so the lines follow a dark
+                                        palette too.
                                     </td>
                                 </tr>
                                 <tr>
@@ -199,16 +203,30 @@ The meeting</code></pre>
                                     <td><code>lane</code></td>
                                     <td><code>false</code></td>
                                     <td>
-                                        A strip of titles,
-                                        <code>'above'</code> or
-                                        <code>'below'</code> the wave; a click
-                                        on a title goes there.
+                                        <code>true</code> adds a strip of titles
+                                        beside the wave; a click on a title goes
+                                        there.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>lanePlacement</code></td>
+                                    <td><code>'below'</code></td>
+                                    <td>
+                                        Where the strip sits:
+                                        <code>'below'</code> the wave or
+                                        <code>'above'</code> it.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>laneHeight</code></td>
                                     <td><code>1.25</code></td>
-                                    <td>The strip's height, in rem.</td>
+                                    <td>
+                                        The strip's height: a number in rem, or
+                                        written with its unit
+                                        (<code>'1.25rem'</code>,
+                                        <code>'20px'</code>). Kept from 0.5 to 4
+                                        rem.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>keys</code></td>
@@ -221,7 +239,7 @@ The meeting</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>valueNote</code></td>
+                                    <td><code>a11y.valueNote</code></td>
                                     <td><code>true</code></td>
                                     <td>
                                         The chapter in the slider's value in
@@ -229,7 +247,7 @@ The meeting</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>announceChange</code></td>
+                                    <td><code>a11y.announce</code></td>
                                     <td><code>false</code></td>
                                     <td>Says the chapter playback enters.</td>
                                 </tr>
@@ -252,7 +270,7 @@ The meeting</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>words</code></td>
+                                    <td><code>a11y.words</code></td>
                                     <td>the frame's language</td>
                                     <td>
                                         <code
@@ -264,7 +282,7 @@ The meeting</code></pre>
                                 </tr>
                                 <tr>
                                     <td>
-                                        <code>onChange</code>,
+                                        <code>onChapterChange</code>,
                                         <code>onChapters</code>
                                     </td>
                                     <td>none</td>
@@ -283,8 +301,9 @@ The meeting</code></pre>
                     <p>
                         <code>chapters</code> takes the address, a list or the
                         options above, without <code>list</code> and
-                        <code>words</code>: the player's words come from its
-                        language (<code>a11y.lang</code>) and labels. It adds:
+                        <code>a11y.words</code>: the player's words come from
+                        its language (<code>a11y.lang</code>) and its own
+                        <code>a11y.words</code>. It adds:
                     </p>
                     <ul>
                         <li>
@@ -299,8 +318,10 @@ The meeting</code></pre>
                         <li>
                             Four parts for the look, shown only with chapters:
                             <code>chapter</code> (the one playing),
-                            <code>prevChapter</code>,
+                            <code>previousChapter</code>,
                             <code>nextChapter</code> and <code>chapters</code>.
+                            The previous chapter's button is
+                            <code>.sonicframe-previous-chapter</code>.
                         </li>
                         <li>
                             The <code>chapterchange</code> event, with the
@@ -315,10 +336,20 @@ The meeting</code></pre>
                         <pre><code>&lt;sonic-player
     src="/episodes/12.mp3"
     chapters="/episodes/12-chapters.vtt"
-    chapter-options="list lane"
+    chapters-options="list lane"
+    a11y-chapters="announce"
 &gt;&lt;/sonic-player&gt;</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                    <p>
+                        On the tag, <code>chapters-options</code> takes
+                        <code>lane</code>, or <code>above</code> for the strip
+                        over the wave, and
+                        <code>images links no-keys no-lines</code>. What a
+                        screen reader hears goes in <code>a11y-chapters</code>:
+                        <code>announce</code>, <code>readable</code> and
+                        <code>no-value-note</code>.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -341,7 +372,7 @@ The meeting</code></pre>
     look: {
         underStart: 'line',
         line: ['play', 'wave'],
-        meta: ['time', 'chapter', 'spacer', 'prevChapter', 'nextChapter'],
+        meta: ['time', 'chapter', 'spacer', 'previousChapter', 'nextChapter'],
         nameOverflow: 'fade',
         nameTooltip: true,
         marquee: true,
@@ -352,15 +383,15 @@ The meeting</code></pre>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":[{"start":0,"title":"An opening that takes its time before the music starts"},{"start":9,"title":"A long conversation about the little elf and the forest"},{"start":21,"title":"The answer, and what came after it"}],"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter"],"nameOverflow":"fade","nameTooltip":true,"marquee":true}}'
+                        data-options='{"chapters":[{"start":0,"title":"An opening that takes its time before the music starts"},{"start":9,"title":"A long conversation about the little elf and the forest"},{"start":21,"title":"The answer, and what came after it"}],"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","previousChapter","nextChapter"],"nameOverflow":"fade","nameTooltip":true,"marquee":true}}'
                     ></div>
                     <p>
                         <code>nameOverflow</code>, <code>nameFade</code>,
                         <code>nameFadeStart</code>, <code>nameTooltip</code>,
                         <code>marquee</code>, <code>marqueeType</code>,
                         <code>marqueeGap</code>, <code>marqueeSpeed</code>,
-                        <code>marqueePause</code> and
-                        <code>marqueeHoverPause</code> are in
+                        <code>marqueePauseSeconds</code> and
+                        <code>marqueePauseOnHover</code> are in
                         <a href="./layouts.html#every-look-option"
                             >every look option</a
                         >; <code>metaWrap: true</code> lets the row break in two
@@ -392,12 +423,12 @@ The meeting</code></pre>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.json","images":true,"list":{"type":"popover","animation":true,"swipe":true}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.json","images":true,"list":{"type":"popover","animation":true,"swipe":true}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","previousChapter","nextChapter","chapters"]}}'
                     ></div>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.json","images":true,"list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","style":{"shadow":"glow"}}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.json","images":true,"list":{"type":"drawer","side":"right","backdrop":true,"animation":true,"animationType":"slide","palette":"dark","box":{"shadow":"glow"}}},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","chapters"]}}'
                     ></div>
                     <p>
                         The first opens a popover; the second, a drawer on the
@@ -524,7 +555,7 @@ The meeting</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>style</code></td>
+                                    <td><code>box</code></td>
                                     <td>the list's</td>
                                     <td>
                                         <code
@@ -542,9 +573,9 @@ The meeting</code></pre>
                         </table>
                     </div>
                     <p>
-                        On the tag, <code>chapter-options</code> takes
+                        On the tag, <code>chapters-options</code> takes
                         <code
-                            >list popover drawer left backdrop open stay
+                            >list popover drawer left backdrop open stay-open
                             animation slide swipe</code
                         >.
                     </p>
@@ -562,6 +593,21 @@ The meeting</code></pre>
                         tooltip and the strip are hidden from screen readers,
                         since the value and the list say the same.
                     </p>
+                    <p>
+                        All of it lives in the plugin's <code>a11y</code> group.
+                        <code>a11y.valueNote: false</code> keeps the chapter out
+                        of the value, <code>a11y.announce</code>
+                        says each new chapter as playback enters it, and
+                        <code>a11y.words</code> gives your own words.
+                    </p>
+                    <div class="code">
+                        <pre><code>chapters({
+    src: '/episodes/12-chapters.vtt',
+    onChapterChange: (chapter, index) =&gt; console.log(index, chapter?.title),
+    a11y: { announce: true, words: { list: 'Episode parts' } },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
 
                 <section class="section">
@@ -577,8 +623,7 @@ The meeting</code></pre>
                             <tbody>
                                 <tr>
                                     <td>
-                                        <code>chapters</code>,
-                                        <code>index</code>,
+                                        <code>items</code>, <code>index</code>,
                                         <code>current</code>
                                     </td>
                                     <td>

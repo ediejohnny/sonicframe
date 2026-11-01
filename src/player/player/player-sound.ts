@@ -85,10 +85,16 @@ export class PlayerSound {
         return this.decoding;
     }
 
-    /** How many peaks to decode: `decode.peaks`, or per second of sound with zoom on (never fewer). */
+    /** How many peaks to decode: `decode.peakCount`, or per second of sound with zoom on (never fewer). */
     private peakCount(duration: number | undefined): number {
         const decode = this.options.decode ?? {};
-        const base = within(decode.peaks, PEAKS, 100, 100_000, Math.round);
+        const base = within(
+            decode.peakCount ?? decode.peaks,
+            PEAKS,
+            100,
+            100_000,
+            Math.round,
+        );
 
         if (!this.options.zoom || duration === undefined || !(duration > 0)) {
             return base;

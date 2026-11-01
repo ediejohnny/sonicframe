@@ -11,7 +11,7 @@ import {
     fetchOk,
     oncePerPage,
     readCapped,
-    type FetchedResponse,
+    type Fetcher,
 } from '../shared/fetch';
 import { positive } from '../shared/math';
 import { LANDING, stepIndex } from '../shared/steps';
@@ -44,17 +44,24 @@ export type ChapterInput = {
     toc?: boolean;
 };
 
-/** The part of `fetch` that `loadChapters` uses, so tests and apps can bring their own. */
-export type ChaptersFetcher = (url: string) => Promise<FetchedResponse>;
-
 export type LoadChaptersOptions = {
     /** The same address is fetched once per page. On by default. */
     shared?: boolean;
     /** The app's own `fetch`. */
-    fetcher?: ChaptersFetcher;
+    fetcher?: Fetcher;
     /** A larger file is refused. Only lowers 524 288 bytes. */
     maxBytes?: number;
 };
+
+/**
+ * Chapters as an app hands them over: WebVTT or Podcasting 2.0 JSON text, the JSON already parsed,
+ * a list of chapters, or null for none.
+ */
+export type ChaptersSource =
+    | string
+    | { readonly chapters: readonly unknown[] }
+    | readonly ChapterInput[]
+    | null;
 
 /** The most chapters kept. */
 export const MAX_CHAPTERS = 1000;

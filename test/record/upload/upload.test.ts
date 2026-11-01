@@ -14,6 +14,7 @@ import { FakeRequest, stubRequests } from '../../support/upload';
 
 const recording: Recording = {
     blob: new Blob(['voice'], { type: 'audio/webm' }),
+    mimeType: 'audio/webm;codecs=opus',
     type: 'audio/webm;codecs=opus',
     duration: 2,
     peaks: [0.5],
@@ -61,6 +62,29 @@ describe('uploadRecording', () => {
         expect(asked.aborted).toBe(false);
     });
 
+    it('sends the type named by mimeType, over the old type', () => {
+        stubRequests();
+        void uploadRecording(
+            { ...recording, mimeType: 'audio/ogg', type: 'audio/webm' },
+            { url: '/v', bodyType: 'raw' },
+        );
+
+        expect(request().headers).toEqual([['Content-Type', 'audio/ogg']]);
+    });
+
+    it('reads the type of a recording made in the shape of 0.6, which has no mimeType', async () => {
+        stubRequests();
+        const { mimeType: _left, ...old } = recording;
+        void uploadRecording(old as Recording, {
+            url: '/v',
+            bodyType: 'raw',
+        });
+
+        expect(request().headers).toEqual([
+            ['Content-Type', 'audio/webm;codecs=opus'],
+        ]);
+    });
+
     it('sends the file alone as the body, with its type, when asked', async () => {
         stubRequests();
         const sent = uploadRecording(recording, {
@@ -81,7 +105,7 @@ describe('uploadRecording', () => {
         // A recording of no known type is sent with no type of its own.
         FakeRequest.made = [];
         const untyped = uploadRecording(
-            { ...recording, type: '' },
+            { ...recording, mimeType: '', type: '' },
             { url: '/v', body: 'raw' },
         );
         expect(request().headers).toEqual([]);

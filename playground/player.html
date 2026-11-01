@@ -139,7 +139,7 @@ const player = createPlayer({
                                 </tr>
                                 <tr>
                                     <td>
-                                        <code>prevChapter</code>,
+                                        <code>previousChapter</code>,
                                         <code>nextChapter</code>
                                     </td>
                                     <td>
@@ -216,27 +216,46 @@ const player = createPlayer({
                                 <tr>
                                     <td><code>setPalette(palette)</code></td>
                                     <td>
-                                        Other colors; nothing brings the theme's
-                                        back.
+                                        Other colors; with no palette, the
+                                        theme's come back.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>setWave(wave)</code></td>
-                                    <td>Another drawing.</td>
+                                    <td>
+                                        Another drawing; with none, the theme's
+                                        comes back.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>setFont(font)</code></td>
                                     <td>Another font.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>setVolume(show)</code></td>
+                                    <td><code>setBar(bar)</code></td>
+                                    <td>
+                                        The bars' density and shape; with no
+                                        bars, the theme's come back.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>setLabel(label)</code></td>
+                                    <td>
+                                        The player's accessible name; with no
+                                        name, <code>'Audio player'</code> in its
+                                        language comes back.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>showVolume(show)</code></td>
                                     <td>Shows or hides the volume control.</td>
                                 </tr>
                                 <tr>
                                     <td><code>on(event, listener)</code></td>
                                     <td>
                                         The wave's events, plus
-                                        <code>description</code>.
+                                        <code>descriptionchange</code> and
+                                        <code>chapterchange</code>.
                                     </td>
                                 </tr>
                                 <tr>

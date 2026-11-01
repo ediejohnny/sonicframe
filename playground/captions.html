@@ -85,20 +85,32 @@ frame.use(
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>tooltipLimit</code></td>
+                                    <td><code>tooltipMax</code></td>
                                     <td>
                                         The most characters the tooltip shows,
                                         cut at a word: 280, up to 2000 (a
-                                        section's own <code>limit</code> too).
+                                        section's own <code>max</code> too).
                                         Anything that is not a number is the
                                         default.
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>size</code></td>
+                                    <td><code>height</code></td>
                                     <td>
-                                        The line's height, in CSS pixels: 20, at
-                                        least 1.
+                                        The line's height: 20, at least 1. A
+                                        number counts in CSS pixels; a length is
+                                        written with its unit
+                                        (<code>'1.25rem'</code>,
+                                        <code>'20px'</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.tooltip.readable</code></td>
+                                    <td>
+                                        Writes the tooltip's text in black or
+                                        white, whichever reads on its color
+                                        (4.5:1). On by default; off, the page's
+                                        color for text on the played color.
                                     </td>
                                 </tr>
                             </tbody>
@@ -112,6 +124,22 @@ frame.use(
                         and <code>setTooltip(content)</code>
                         the tooltip.
                     </p>
+                    <p>
+                        The tooltip can also be a list of sections, one line
+                        each, every one cut at its own <code>max</code>:
+                    </p>
+                    <div class="code">
+                        <pre><code>caption({
+    text: 'I met a little elf-man, once, down where the lilies blow.',
+    height: '1.25rem',
+    tooltipMax: 400,
+    tooltip: [
+        { label: 'Transcript', text: fullTranscript, max: 200 },
+        { label: 'Language', text: 'English' },
+    ],
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
             </div>
         </main>

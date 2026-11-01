@@ -79,6 +79,34 @@ describe('finding silences', () => {
         }
     });
 
+    it('keeps its window from 1 ms to 1 second', () => {
+        // A window of 100 s would take the whole sound as one loud stretch; one of 1 s finds the quiet one.
+        expect(
+            findSilences(quietMiddle(), 1000, { windowSeconds: 100 }),
+        ).toEqual([{ start: 1, end: 2 }]);
+        // A negative window is the shortest: quiet from 1.01 s starts at once, on its first sample.
+        const [early] = findSilences(quietMiddle(1010), 1000, {
+            windowSeconds: -1,
+        });
+        expect(early.start).toBeCloseTo(1.01, 3);
+    });
+
+    it('keeps the quiet of peaks from 0.001 to 0.45, so a silence can always end and digital silence is quiet', () => {
+        // Over 0.5, a silence would close only above twice the threshold, past the loudest peak (1).
+        expect(
+            silencesFromPeaks([1, 1, 0, 0, 1, 1], 6, {
+                threshold: 0.6,
+                minDuration: 1,
+            }),
+        ).toEqual([{ start: 2, end: 4 }]);
+        expect(
+            silencesFromPeaks([1, 1, 0, 0, 1, 1], 6, {
+                threshold: -1,
+                minDuration: 1,
+            }),
+        ).toEqual([{ start: 2, end: 4 }]);
+    });
+
     it('finds silences from server peaks', () => {
         const silences = silencesFromPeaks([1, 1, 0, 0, 1, 1], 6, {
             minDuration: 1,

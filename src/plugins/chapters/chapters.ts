@@ -21,12 +21,13 @@ import {
 import { wordsFor } from '../../core/languages/language';
 import { mergeWords } from '../../core/languages/merge-words';
 import { finiteOr, within } from '../../core/shared/checked';
-import { keyLetter } from '../../core/shared/keys';
+import { letterKeys, letterStep } from '../../core/shared/keys';
 import { clamp01, positive } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
+import { lengthPixels, remPixels } from '../../dom/shared/units';
 import type { PluginHost, SeekSource } from '../../types';
-import { ChapterLane, type LaneHost } from './chapter-lane';
+import { ChapterLane, laneSide, type LaneHost } from './chapter-lane';
 import { ChapterLines } from './chapter-lines';
 import { ChapterListView } from './chapter-list';
 import {
@@ -39,20 +40,15 @@ import {
 const MAX_WORD = 120;
 
 export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
-    let words = mergeWords(CHAPTER_WORDS, options.words, MAX_WORD);
-    const keys = options.keys ?? true;
-    const letter =
-        keys === false
-            ? null
-            : keyLetter(keys === true ? undefined : keys.letter, 'c');
-    const backGrace = within(
-        typeof keys === 'object' ? keys.backGrace : undefined,
-        1,
-        0,
-        Number.POSITIVE_INFINITY,
-    );
+    const own = { ...options.words, ...options.a11y?.words };
+    const announce =
+        (options.a11y?.announce ?? options.announceChange) === true;
+    const valueNote = (options.a11y?.valueNote ?? options.valueNote) !== false;
+    let words = mergeWords(CHAPTER_WORDS, own, MAX_WORD);
+    const { letter, backGrace } = letterKeys(options.keys, 'c');
     const color = options.color ?? 'var(--sonicframe-chapter, #6b7280)';
-    const laneHeight = within(options.laneHeight, 1.25, 0.5, 4);
+    const onChapterChange = options.onChapterChange ?? options.onChange;
+    const laneAt = laneSide(options.lane, options.lanePlacement);
 
     let all: Chapter[] = [];
     let shown: Chapter[] = [];
@@ -106,7 +102,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         if (
             playing &&
-            options.announceChange === true &&
+            announce &&
             next >= 0 &&
             current !== null &&
             current.media !== null &&
@@ -115,7 +111,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             current.announce(label(next));
         }
 
-        options.onChange?.(shown[next] ?? null, next);
+        onChapterChange?.(shown[next] ?? null, next);
     }
 
     /** The share of the chapter playing already played, from 0 to 1, or null when unknown. */
@@ -254,6 +250,10 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         name: 'chapters',
         layer: 'over',
 
+        get items(): readonly Chapter[] {
+            return shown;
+        },
+
         get chapters(): readonly Chapter[] {
             return shown;
         },
@@ -288,17 +288,18 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         setup(frame): void {
             host = frame;
-            words = mergeWords(
-                wordsFor(frame.lang).chapters,
-                options.words,
-                MAX_WORD,
-            );
+            words = mergeWords(wordsFor(frame.lang).chapters, own, MAX_WORD);
 
-            if (options.lane === 'above' || options.lane === 'below') {
+            if (laneAt !== null) {
                 lane = new ChapterLane(
                     frame,
-                    options.lane,
-                    laneHeight,
+                    laneAt,
+                    within(
+                        lengthPixels(options.laneHeight, 'rem'),
+                        remPixels(1.25),
+                        remPixels(0.5),
+                        remPixels(4),
+                    ),
                     color,
                     parts,
                 );
@@ -347,23 +348,18 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         keyDown(key, modifiers): boolean {
             const current = host;
+            const way = letterStep(key, modifiers, letter);
 
             if (
-                letter === null ||
+                way === null ||
                 current === null ||
-                modifiers.ctrlKey ||
-                modifiers.altKey ||
-                modifiers.metaKey ||
-                key.length !== 1 ||
-                // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
-                key.toLowerCase() !== letter ||
                 shown.length === 0 ||
                 duration() === null
             ) {
                 return false;
             }
 
-            const at = step(modifiers.shiftKey === true ? -1 : 1, 'keyboard');
+            const at = step(way, 'keyboard');
 
             current.announce(
                 at === null
@@ -375,7 +371,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         },
 
         valueNote(time): string | void {
-            if (options.valueNote === false || time === null) {
+            if (!valueNote || time === null) {
                 return;
             }
 

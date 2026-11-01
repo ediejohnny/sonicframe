@@ -9,19 +9,21 @@ import {
     DEFAULT_RECORD_TYPES,
     nextRecorderState,
     RECORDER_EVENTS,
-    RECORDER_STATES,
+    RECORDER_SCREEN_STATES,
     recordSeconds,
     type RecorderEvent,
-    type RecorderState,
+    type RecorderScreenState,
 } from '../../../src/core/recording/recording';
 import { pickMimeType } from '../../../src/core/wave/clip';
 
 /** Runs `events` from idle, giving every state passed through. */
-function walk(events: readonly RecorderEvent[]): RecorderState[] {
-    const states: RecorderState[] = ['idle'];
+function walk(events: readonly RecorderEvent[]): RecorderScreenState[] {
+    const states: RecorderScreenState[] = ['idle'];
 
     for (const event of events) {
-        states.push(nextRecorderState(states.at(-1) as RecorderState, event));
+        states.push(
+            nextRecorderState(states.at(-1) as RecorderScreenState, event),
+        );
     }
 
     return states;
@@ -125,7 +127,7 @@ describe('nextRecorderState', () => {
                     for (let at = 1; at < states.length; at++) {
                         const [before, after] = [states[at - 1], states[at]];
 
-                        expect(RECORDER_STATES).toContain(after);
+                        expect(RECORDER_SCREEN_STATES).toContain(after);
 
                         if (after === 'recording' && before !== 'recording') {
                             expect(['asking', 'paused']).toContain(before);

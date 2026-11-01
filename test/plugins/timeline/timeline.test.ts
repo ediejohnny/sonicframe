@@ -60,4 +60,34 @@ describe('the timeline plugin', () => {
             expect(container.textContent).toContain('0:10');
         }
     });
+
+    it('takes its height in pixels or written with its unit over the old size, and its side by placement over the old side', () => {
+        // The canvas's top and height beside the ruler; a rem is 16 px.
+        const cases: [TimelineOptions, string, string][] = [
+            [{ height: 20 }, '0px', 'calc(100% - 20px)'],
+            [{ height: '1.5rem' }, '0px', 'calc(100% - 24px)'],
+            [{ height: '18px', size: 30 }, '0px', 'calc(100% - 18px)'],
+            [{ size: 30 }, '0px', 'calc(100% - 30px)'],
+            [{ placement: 'above' }, '14px', 'calc(100% - 14px)'],
+            [
+                { placement: 'above', side: 'below' },
+                '14px',
+                'calc(100% - 14px)',
+            ],
+            [{ side: 'above' }, '14px', 'calc(100% - 14px)'],
+            [{ placement: 'left' as 'above' }, '0px', 'calc(100% - 14px)'],
+        ];
+
+        for (const [ruler, top, height] of cases) {
+            const { canvas } = ruled(
+                { media: fakeMedia({ duration: 60 }), lazy: false },
+                ruler,
+            );
+
+            expect([
+                canvas.style.getPropertyValue('top'),
+                canvas.style.getPropertyValue('height'),
+            ]).toEqual([top, height]);
+        }
+    });
 });

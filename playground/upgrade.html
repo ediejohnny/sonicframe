@@ -5,7 +5,7 @@
         <title>Upgrade guide · SonicFrame</title>
         <meta
             name="description"
-            content="Moving from SonicFrame 0.5 to 0.6: what changes, and what stays the same."
+            content="Moving from SonicFrame 0.6 to 0.7: the new names, what can look different, and what changes in 2.0."
         />
     </head>
     <body>
@@ -13,10 +13,11 @@
             <div class="page-head">
                 <h1>Upgrade guide</h1>
                 <p class="lede">
-                    From 0.5 to 0.6. The public API only grew, and every new
-                    feature is off until you turn it on, so an upgrade changes
-                    almost nothing on its own; the things that do are listed
-                    first.
+                    From 0.6 to 0.7. This version gives one idea one name across
+                    the library. Nothing breaks: every old name keeps working
+                    until 2.0, marked as deprecated so your editor strikes it
+                    through and says what to use. When a page gives both, the
+                    new name wins.
                 </p>
             </div>
 
@@ -24,48 +25,595 @@
                 <section class="section">
                     <h2>Update the package</h2>
                     <div class="code">
-                        <pre><code>npm install sonicframe@0.6</code></pre>
+                        <pre><code>npm install sonicframe@0.7</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                 </section>
 
                 <section class="section">
-                    <h2>What can sound or look different</h2>
-                    <h3>One second is said in the singular</h3>
+                    <h2>What can look or work differently</h2>
+                    <h3>Chapter lines follow the palette</h3>
                     <p>
-                        A skip of one second now says "Back 1 second", not "Back
-                        1 seconds", by each language's own plural rules. If you
-                        gave the player your own <code>back</code> and
-                        <code>forward</code> labels, they still serve both; add
-                        <code>backOne</code> and <code>forwardOne</code> for the
-                        singular.
+                        Every palette now sets
+                        <code>--sonicframe-chapter</code>, so the chapters'
+                        lines no longer stay gray on the <code>dark</code> and
+                        <code>contrast</code> palettes.
                     </p>
 
-                    <h3>A player in Portuguese speaks Portuguese everywhere</h3>
+                    <h3>Two names are kept for the recorder's own icons</h3>
                     <p>
-                        The volume slider's "muted", what the regions say and
-                        the markers' "and 3 more" spoke English whatever the
-                        player's language. They now speak it too. English stays
-                        the default.
+                        The recorder screen no longer shows an app button named
+                        <code>resume</code> or <code>cancel</code>. On
+                        <code>&lt;sonic-recorder&gt;</code>, its
+                        <code>icon-resume</code> or <code>icon-cancel</code>
+                        would draw both that button and the screen's own. Give
+                        such a button another name.
                     </p>
 
-                    <h3>
-                        Options that are not numbers fall back to the default
-                    </h3>
+                    <h3>Silences keep their numbers in range</h3>
                     <p>
-                        A number option given as <code>NaN</code> or as text now
-                        takes its default instead of breaking the part (no
-                        markers at all, a muted volume on an arrow key, a black
-                        spectrogram). If a page relied on one of those by
-                        accident, it now gets the default.
+                        <code>findSilences</code> keeps its
+                        <code>windowSeconds</code> from 0.001 to 1 second, and
+                        <code>silencesFromPeaks</code> its
+                        <code>threshold</code> from 0.001 to 0.45, as
+                        <code>outlineSound</code> already did. A threshold over
+                        0.5 used to leave a silence open to the end of the
+                        sound.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>The new names</h2>
+                    <p>
+                        Each old name works the same until 2.0. Rename at your
+                        own pace; the tables say where each one is documented.
                     </p>
 
-                    <h3>The package is larger, the recorder is apart</h3>
+                    <h3>The player and its tag</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>0.6</th>
+                                    <th>0.7</th>
+                                    <th>Where</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>setVolume(show)</code></td>
+                                    <td><code>showVolume(show)</code></td>
+                                    <td>
+                                        <a href="./player.html">Player</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>The <code>description</code> event</td>
+                                    <td><code>descriptionchange</code></td>
+                                    <td>
+                                        <a href="./player.html">Player</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The look's <code>narrow</code>,
+                                        <code>waveMin</code>,
+                                        <code>weight</code>,
+                                        <code>volume</code>
+                                    </td>
+                                    <td>
+                                        <code>narrowWidth</code>,
+                                        <code>waveMinWidth</code>,
+                                        <code>fontWeight</code>,
+                                        <code>volumeSlider</code>
+                                    </td>
+                                    <td>
+                                        <a href="./layouts.html">Layouts</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>marqueeHoverPause</code>,
+                                        <code>marqueePause</code> (in
+                                        milliseconds)
+                                    </td>
+                                    <td>
+                                        <code>marqueePauseOnHover</code>,
+                                        <code>marqueePauseSeconds</code> (in
+                                        seconds)
+                                    </td>
+                                    <td>
+                                        <a href="./layouts.html">Layouts</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The part <code>prevChapter</code>, the
+                                        class
+                                        <code>.sonicframe-prev-chapter</code>
+                                    </td>
+                                    <td>
+                                        <code>previousChapter</code>,
+                                        <code
+                                            >.sonicframe-previous-chapter</code
+                                        >
+                                    </td>
+                                    <td>
+                                        <a href="./chapters.html">Chapters</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>decode.peaks</code>, the chapter
+                                        list's <code>style</code>, the type
+                                        <code>ButtonAnimation</code>
+                                    </td>
+                                    <td>
+                                        <code>decode.peakCount</code>,
+                                        <code>box</code>,
+                                        <code>ListenButtonAnimation</code>
+                                    </td>
+                                    <td>
+                                        <a href="./player-options.html"
+                                            >Player options</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The tag's
+                                        <code>chapter-options</code> and its
+                                        words <code>stay</code>,
+                                        <code>edges</code>,
+                                        <code>autohide</code>,
+                                        <code>pauses</code>,
+                                        <code>hover-pause</code>
+                                    </td>
+                                    <td>
+                                        <code>chapters-options</code>,
+                                        <code>stay-open</code>,
+                                        <code>edge-scroll</code>,
+                                        <code>auto-hide</code>,
+                                        <code>pause-in-value</code>,
+                                        <code>pause-on-hover</code>
+                                    </td>
+                                    <td>
+                                        <a href="./tag-attributes.html"
+                                            >Tag attributes</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <p>
-                        The new features make <code>sonicframe/player</code>
-                        larger. Recording lives in its own entry,
-                        <code>sonicframe/record</code>, so a page that does not
-                        record never loads it.
+                        A resolved look gives each old key back with the same
+                        value, so code that reads it keeps working.
+                    </p>
+
+                    <h3>Accessibility, in the <code>a11y</code> group</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>0.6</th>
+                                    <th>0.7</th>
+                                    <th>Where</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        The frame's <code>label</code> and
+                                        <code>valueText</code>; the player's
+                                        <code>label</code>
+                                    </td>
+                                    <td>
+                                        <code>a11y.label</code> and
+                                        <code>a11y.valueText</code>;
+                                        <code>a11y.label</code> (the tag's
+                                        <code>a11y-label</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./accessibility.html"
+                                            >Accessibility</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>labels</code> of
+                                        <code>PlayButton</code> and
+                                        <code>VolumeControl</code>,
+                                        <code>words</code> of
+                                        <code>markers()</code> and
+                                        <code>chapters()</code>,
+                                        <code>a11y.labels</code> of the player
+                                        and the recorder screen
+                                    </td>
+                                    <td><code>a11y.words</code></td>
+                                    <td>
+                                        <a href="./words.html">Words</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The chapters' <code>valueNote</code> and
+                                        <code>announceChange</code>; the words
+                                        <code>announce</code> and
+                                        <code>readable</code> of the tag's
+                                        <code>chapter-options</code>
+                                    </td>
+                                    <td>
+                                        <code>a11y.valueNote</code> and
+                                        <code>a11y.announce</code>; the tag's
+                                        <code>a11y-chapters</code>
+                                    </td>
+                                    <td>
+                                        <a href="./chapters.html">Chapters</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The minimap's <code>a11y.label</code>;
+                                        <code>soundDescription</code>'s
+                                        <code>announceWhenReady</code>
+                                    </td>
+                                    <td>
+                                        <code>a11y.words.label</code>;
+                                        <code>announce</code>
+                                    </td>
+                                    <td>
+                                        <a href="./minimap.html">Minimap</a>,
+                                        <a href="./words.html">Words</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Plugins</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>0.6</th>
+                                    <th>0.7</th>
+                                    <th>Where</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>markers()</code>:
+                                        <code>marks</code> and
+                                        <code>times</code>, the getter
+                                        <code>marks</code>, <code>group</code>,
+                                        <code>backGrace</code>
+                                    </td>
+                                    <td>
+                                        <code>items</code>, the getter
+                                        <code>items</code>,
+                                        <code>groupDistance</code>,
+                                        <code>keys.backGrace</code>
+                                    </td>
+                                    <td>
+                                        <a href="./markers.html">Markers</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>regions()</code>:
+                                        <code>list()</code>,
+                                        <code>create: 'shift-drag'</code> or
+                                        <code>'drag'</code>,
+                                        <code>snap</code>
+                                    </td>
+                                    <td>
+                                        The getter <code>items</code>,
+                                        <code>create: true</code> with
+                                        <code>createGesture</code>,
+                                        <code>pixelSnap</code>
+                                    </td>
+                                    <td>
+                                        <a href="./regions.html">Regions</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>skipSilences()</code>:
+                                        <code>dimColor</code>,
+                                        <code>snap</code>
+                                    </td>
+                                    <td>
+                                        <code>color</code>,
+                                        <code>pixelSnap</code>
+                                    </td>
+                                    <td>
+                                        <a href="./skip-silences.html"
+                                            >Skip silences</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>chapters()</code>:
+                                        <code>onChange</code>, the getter
+                                        <code>chapters</code>,
+                                        <code>lane: 'above'</code> or
+                                        <code>'below'</code>
+                                    </td>
+                                    <td>
+                                        <code>onChapterChange</code>, the getter
+                                        <code>items</code>,
+                                        <code>lane: true</code> with
+                                        <code>lanePlacement</code>
+                                    </td>
+                                    <td>
+                                        <a href="./chapters.html">Chapters</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>timeline()</code>:
+                                        <code>side</code>,
+                                        <code>size</code>
+                                    </td>
+                                    <td>
+                                        <code>placement</code>,
+                                        <code>height</code>
+                                    </td>
+                                    <td>
+                                        <a href="./timeline.html">Timeline</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>minimap()</code>:
+                                        <code>side</code>
+                                    </td>
+                                    <td><code>placement</code></td>
+                                    <td>
+                                        <a href="./minimap.html">Minimap</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>caption()</code>:
+                                        <code>size</code>,
+                                        <code>tooltipLimit</code>, a section's
+                                        <code>limit</code>
+                                    </td>
+                                    <td>
+                                        <code>height</code>,
+                                        <code>tooltipMax</code>,
+                                        <code>max</code>
+                                    </td>
+                                    <td>
+                                        <a href="./captions.html">Captions</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>soundDescription()</code> and
+                                        <code>describeSound()</code>:
+                                        <code>times</code>
+                                    </td>
+                                    <td><code>timeFormat</code></td>
+                                    <td>
+                                        <a href="./words.html">Words</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>liveFrequency()</code>:
+                                        <code>bars</code>
+                                    </td>
+                                    <td><code>bands</code></td>
+                                    <td>
+                                        <a href="./live-frequency.html"
+                                            >Live frequency</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        <code>side</code> keeps meaning left or right (a
+                        drawer's side); above and below are always
+                        <code>placement</code>. The <code>snap</code> of markers
+                        and chapters, a click going to the exact moment, keeps
+                        its name.
+                    </p>
+
+                    <h3>Recording</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>0.6</th>
+                                    <th>0.7</th>
+                                    <th>Where</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>RecorderState</code>,
+                                        <code>RECORDER_STATES</code>
+                                    </td>
+                                    <td>
+                                        <code>RecorderScreenState</code>,
+                                        <code>RECORDER_SCREEN_STATES</code>
+                                    </td>
+                                    <td rowspan="5">
+                                        <a href="./recording.html">Recording</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>Recorder</code>:
+                                        <code>peaks</code>, <code>rate</code>,
+                                        <code>mimeType</code>
+                                    </td>
+                                    <td>
+                                        <code>decode: { peakCount }</code>,
+                                        <code>levelsPerSecond</code>,
+                                        <code>mimeTypes</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A <code>Recording</code>'s
+                                        <code>type</code>
+                                    </td>
+                                    <td>
+                                        <code>mimeType</code> (both are given
+                                        until 2.0)
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The screen's <code>window</code>,
+                                        <code>recordBlink</code> and
+                                        <code>state</code> event; an upload's
+                                        <code>body</code>
+                                    </td>
+                                    <td>
+                                        <code>liveSeconds</code>,
+                                        <code>recBlink</code>,
+                                        <code>statechange</code> (both events
+                                        are told until 2.0);
+                                        <code>bodyType</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>&lt;sonic-recorder&gt;</code>:
+                                        <code>max</code>, <code>window</code>,
+                                        <code>keep</code>,
+                                        <code>record-blink</code>,
+                                        <code>sonicframe:state</code>
+                                    </td>
+                                    <td>
+                                        <code>max-seconds</code>,
+                                        <code>live-seconds</code>,
+                                        <code>after-send="keep"</code>,
+                                        <code>rec-blink</code>,
+                                        <code>sonicframe:statechange</code>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Peaks, files and analysis</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>0.6</th>
+                                    <th>0.7</th>
+                                    <th>Where</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>normalize</code>,
+                                        <code>resample</code>
+                                    </td>
+                                    <td>
+                                        <code>normalizePeaks</code>,
+                                        <code>resamplePeaks</code>
+                                    </td>
+                                    <td>
+                                        <a href="./analysis.html">Analysis</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>loadPeaks(url, fetcher)</code>,
+                                        <code>PeaksFetcher</code>
+                                    </td>
+                                    <td>
+                                        <code>loadPeaks(url, { fetcher })</code
+                                        >,
+                                        <code>Fetcher</code>
+                                    </td>
+                                    <td>
+                                        <a href="./peaks.html">Peaks</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>WaveformFetcher</code>,
+                                        <code>ChaptersFetcher</code>,
+                                        <code>WaveformResponse</code>
+                                    </td>
+                                    <td>
+                                        <code>Fetcher</code>,
+                                        <code>FetchedResponse</code>
+                                    </td>
+                                    <td>
+                                        <a href="./waveform-files.html"
+                                            >Waveform files</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>writeWaveform</code>:
+                                        <code>channels: 'mix'</code> or
+                                        <code>'each'</code>
+                                    </td>
+                                    <td>
+                                        <code>channel: 'all'</code> or
+                                        <code>'each'</code>
+                                    </td>
+                                    <td>
+                                        <a href="./waveform-files.html"
+                                            >Waveform files</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>CHAPTER_WORDS</code>,
+                                        <code>ZOOM_WORDS</code>,
+                                        <code>MINIMAP_WORDS</code>,
+                                        <code>DESCRIPTION_WORDS</code>
+                                    </td>
+                                    <td><code>wordsFor(tag)</code></td>
+                                    <td>
+                                        <a href="./languages.html">Languages</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>Claim</code></td>
+                                    <td><code>PointerClaim</code></td>
+                                    <td>
+                                        <a href="./plugin-api.html"
+                                            >Plugin API</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Names that go without a new one</h3>
+                    <p>
+                        These were the library's own pieces, which it now uses
+                        by itself: <code>markerSpans</code>,
+                        <code>pickMimeType</code>, <code>clipPlan</code>,
+                        <code>MediaLike</code>, <code>soundWords</code>,
+                        <code>SoundWords</code>, <code>playerWords</code>,
+                        <code>PlayerWords</code>, <code>pickPalette</code>,
+                        <code>resolveFont</code>, <code>safeFontUrl</code>,
+                        <code>RecorderEvent</code> and
+                        <code>RECORDER_EVENTS</code>. They work until 2.0.
                     </p>
                 </section>
 
@@ -82,87 +630,128 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        Portuguese of Portugal
-                                        (<code>pt-PT</code>), Spanish
-                                        (<code>es</code>) and French
-                                        (<code>fr</code>);
-                                        <code>a11y.lang</code> on the frame and
-                                        the controls;
-                                        <code>registerLanguage</code> for a
-                                        language of your own
+                                        Heights with their unit:
+                                        <code>'1.5rem'</code> or
+                                        <code>'20px'</code> for the timeline's,
+                                        the caption's and the minimap's
+                                        <code>height</code>, the minimap's
+                                        <code>gap</code> and the chapters'
+                                        <code>laneHeight</code>; the play
+                                        button's <code>size</code> in rem
                                     </td>
                                     <td>
-                                        <a href="./languages.html">Languages</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        A player's own background
-                                        (<code>look.background</code>), its
-                                        motion
-                                        (<code>look.backgroundAnimation</code>)
-                                        and the tag's
-                                        <code>background-</code> attributes
-                                    </td>
-                                    <td>
-                                        <a href="./backgrounds.html"
-                                            >Backgrounds</a
-                                        >
+                                        <a href="./timeline.html">Timeline</a>,
+                                        <a href="./minimap.html">Minimap</a>,
+                                        <a href="./captions.html">Captions</a>,
+                                        <a href="./chapters.html">Chapters</a>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>
-                                        The lock screen and the media keys
-                                        (<code>mediaSession()</code>, the
-                                        player's <code>mediaSession</code>
-                                        option and the tag's
-                                        <code>media-</code> attributes)
+                                        The timeline and the minimap over the
+                                        wave (<code>placement: 'above'</code>)
                                     </td>
                                     <td>
-                                        <a href="./media-session.html"
-                                            >Lock screen and media keys</a
-                                        >
+                                        <a href="./timeline.html">Timeline</a>,
+                                        <a href="./minimap.html">Minimap</a>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>
-                                        Recording from the microphone:
-                                        <code>createRecorder</code>,
-                                        <code>Recorder</code>,
-                                        <code>uploadRecording</code> and the
-                                        <code>&lt;sonic-recorder&gt;</code> tag
+                                        The player's
+                                        <code>setBar(bar)</code> and
+                                        <code>setLabel(label)</code>; the tag's
+                                        <code>player</code> property and the
+                                        <code>SonicPlayerElement</code>
+                                        type
+                                    </td>
+                                    <td>
+                                        <a href="./player.html">Player</a>,
+                                        <a href="./element.html">The tag</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Your own keys for markers and regions (a
+                                        letter, or <code>false</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./keyboard.html">Keyboard</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>a11y.tooltip.readable</code> on
+                                        the caption (on by default, as before)
+                                    </td>
+                                    <td>
+                                        <a href="./captions.html">Captions</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>loadPeaks</code> with
+                                        <code>shared: false</code>, fetching
+                                        every time
+                                    </td>
+                                    <td>
+                                        <a href="./peaks.html">Peaks</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>&lt;sonic-recorder&gt;</code>
+                                        with <code>wave</code> and
+                                        <code>font</code>, as the player's tag
                                     </td>
                                     <td>
                                         <a href="./recording.html">Recording</a>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <code>a11y.tooltip.readable</code>: the
-                                        tooltip's text in black or white,
-                                        whichever reads on its color
-                                    </td>
-                                    <td>
-                                        <a href="./markers.html">Markers</a>,
-                                        <a href="./chapters.html">Chapters</a>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p>
-                        The record button of the recorder is red unless you pick
-                        another <code>recordStyle</code>. The recorder is new,
-                        so no page changes because of it.
-                    </p>
                 </section>
 
                 <section class="section">
                     <h2>For plugin authors</h2>
                     <p>
-                        Nothing changes for a plugin written for 0.5.
-                        <code>host.lang</code> says the language the frame
-                        speaks, so a plugin can speak it too.
+                        Nothing changes for a plugin written for 0.6. The types
+                        a plugin works with now have names you can import:
+                        <code>WavePoint</code>, <code>PointerClaim</code>,
+                        <code>Placement</code>, <code>KeyModifiers</code> and
+                        <code>TooltipA11y</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>What changes in 2.0</h2>
+                    <p>
+                        A few things cannot keep an old name, because they are
+                        values a page compares, not names it calls. They stay as
+                        they are until 2.0:
+                    </p>
+                    <ul>
+                        <li>
+                            A view moved by the keys says
+                            <code>'keys'</code> (<code>ViewSource</code>), while
+                            a seek by the keys says <code>'keyboard'</code>
+                            (<code>SeekSource</code>). In 2.0 both say
+                            <code>'keyboard'</code>.
+                        </li>
+                        <li>
+                            The <code>hover</code> event gives
+                            <code>[ratio, time]</code>, while
+                            <code>timeupdate</code> gives
+                            <code>[time, ratio]</code>. In 2.0 both give the
+                            time first.
+                        </li>
+                        <li>Every name in the tables above goes away.</li>
+                    </ul>
+                    <p>
+                        The <code>detail</code> of the tags' events stays a list
+                        of the event's arguments, in the order
+                        <code>on()</code> gives them.
                     </p>
                 </section>
 
@@ -170,26 +759,19 @@
                     <h2>Fixed</h2>
                     <ul>
                         <li>
-                            A player no longer sets off "ResizeObserver loop
-                            completed with undelivered notifications", which
-                            error trackers and some test runners count as an
-                            error.
+                            <code>soundDescription()</code> with a
+                            <code>keys.backGrace</code> that is not a number
+                            kept Shift+P from going back at all; it now takes
+                            the usual second.
                         </li>
                         <li>
-                            A player with a timeline above the wave and zoom no
-                            longer lays itself out again on every frame.
-                        </li>
-                        <li>
-                            The regions' labels come back after the player
-                            builds its wave anew.
-                        </li>
-                        <li>
-                            The shared tooltip keeps clear of the page's
-                            scrollbars.
+                            <code>silencesFromPeaks</code> with a
+                            <code>threshold</code> over 0.5 left a silence open
+                            to the end of the sound.
                         </li>
                     </ul>
                     <p>
-                        Every change is in the
+                        Every change, and those of earlier versions, is in the
                         <a
                             href="https://github.com/ediejohnny/sonicframe/blob/main/CHANGELOG.md"
                             >changelog</a

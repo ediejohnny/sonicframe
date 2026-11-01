@@ -9,7 +9,7 @@ import {
     fetchOk,
     oncePerPage,
     readCapped,
-    type FetchedResponse,
+    type Fetcher,
 } from '../shared/fetch';
 import { clamp01 } from '../shared/math';
 import { isDat, readAudiowaveformJson, readDat } from './audiowaveform';
@@ -24,17 +24,11 @@ import {
     type WaveformData,
 } from './waveform';
 
-/** The part of a `fetch` response that `loadWaveform` reads. */
-export type WaveformResponse = FetchedResponse;
-
-/** The part of `fetch` that `loadWaveform` uses, so tests and apps can bring their own. */
-export type WaveformFetcher = (url: string) => Promise<WaveformResponse>;
-
 export type LoadWaveformOptions = ReadWaveformOptions & {
     /** The same address with the same options is fetched once per page. On by default. */
     shared?: boolean;
     /** The app's own `fetch`. */
-    fetcher?: WaveformFetcher;
+    fetcher?: Fetcher;
 };
 
 /** A list of numbers, or `{ peaks, duration? }`; negative values count as their size, above 1 is 1. */

@@ -34,7 +34,7 @@ describe('chapters on the player', () => {
 
         expect(media.currentTime).toBe(10);
         expect(part('chapter-now')).toBeNull();
-        expect(part('prev-chapter')).toBeNull();
+        expect(part('previous-chapter')).toBeNull();
         expect(part('next-chapter')).toBeNull();
         expect(part('chapters-toggle')).toBeNull();
         expect(player?.chapters).toBeNull();
@@ -128,8 +128,13 @@ describe('chapters on the player', () => {
 
     it('moves to the previous and next chapter with its buttons, named in the language', () => {
         const { media } = make({ chapters: ITEMS, look: CHAPTER_LINE });
-        const previous = part('prev-chapter') as HTMLButtonElement;
+        const previous = part('previous-chapter') as HTMLButtonElement;
         const next = part('next-chapter') as HTMLButtonElement;
+
+        // The button keeps its old class beside the new one until 2.0.
+        expect(previous.classList.contains('sonicframe-prev-chapter')).toBe(
+            true,
+        );
 
         expect(previous.getAttribute('aria-label')).toBe('Previous chapter');
         expect(next.getAttribute('aria-label')).toBe('Next chapter');

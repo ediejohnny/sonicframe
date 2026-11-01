@@ -38,7 +38,7 @@ export class PlayerSession {
         this.plugin = asked
             ? mediaSession({
                   ...own,
-                  title: own.title ?? options.label,
+                  title: own.title ?? options.a11y?.label ?? options.label,
                   seekOffset: own.seekOffset ?? (() => host.look().skip),
                   onPrevious:
                       own.onPrevious ??

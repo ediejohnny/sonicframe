@@ -15,7 +15,9 @@ export type WriteWaveformOptions = {
     bits?: 8 | 16;
     /** `'dat'` (bytes, the default) or `'json'` (an object for `JSON.stringify`). */
     format?: 'dat' | 'json';
-    /** `'mix'` (the default) writes one channel, the loudest of all; `'each'` writes every channel. */
+    /** `'all'` (the default) writes one channel, the loudest of all; `'each'` writes every channel. */
+    channel?: 'all' | 'each';
+    /** @deprecated Use `channel` (`'mix'` is `'all'`); `channels` goes in 2.0. */
     channels?: 'mix' | 'each';
 };
 
@@ -98,7 +100,7 @@ export function writeWaveform(
     );
     const bits = options.bits === 8 ? 8 : 16;
     const scale = bits === 8 ? 128 : 32768;
-    const each = options.channels === 'each';
+    const each = (options.channel ?? options.channels) === 'each';
     const groups: (readonly ArrayLike<number>[])[] = each
         ? channels.map((channel) => [channel])
         : [channels];

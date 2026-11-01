@@ -15,7 +15,8 @@ import {
     type Background,
 } from '../../../src/core/player/background';
 import { resolveBackgroundAnimation } from '../../../src/core/player/background-animation';
-import { DEFAULT_LOOK, resolveLook } from '../../../src/core/player/look';
+import { DEFAULT_LOOK } from '../../../src/core/player/look';
+import { resolveLook } from '../../../src/core/player/resolve-look';
 
 const PLAIN_FILTERS = {
     blur: 0,

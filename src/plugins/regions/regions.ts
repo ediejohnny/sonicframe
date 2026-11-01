@@ -25,17 +25,41 @@ import {
     type RegionsHost,
 } from './region-store';
 
+/**
+ * The regions' keys while the frame has focus: a letter can be your own or `false`; each other key
+ * is on unless `false`.
+ */
+export type RegionsKeys = {
+    /** R steps through the regions (with Shift, back); `'r'` by default. */
+    select?: string | false;
+    /** L switches the selected region's loop; `'l'` by default. */
+    loop?: string | false;
+    /** Enter plays the selected region. */
+    play?: boolean;
+    /** `[` `]` and `{` `}` nudge its edges. */
+    nudge?: boolean;
+    /** Delete and Backspace remove it. */
+    remove?: boolean;
+    /** Escape stops it and lets it go. */
+    release?: boolean;
+};
+
 export type RegionsOptions = {
     /** Regions to start with. */
     items?: readonly Omit<Region, 'id'>[];
-    /** How the pointer creates a region: Shift-drag (the default), plain drag, or not at all. */
-    create?: 'shift-drag' | 'drag' | false;
+    /**
+     * Whether the pointer creates regions: on by default, by `createGesture`. The old forms
+     * `'shift-drag'` and `'drag'` still work until 2.0, as `createGesture`.
+     */
+    create?: boolean | 'shift-drag' | 'drag';
+    /** How the pointer creates a region: Shift-drag (the default, so a plain drag still scrubs) or a plain drag. */
+    createGesture?: 'shift-drag' | 'drag';
     /** Shortest region, in seconds. */
     minLength?: number;
     /** The band color (translucent). */
     color?: string;
-    /** Single-key shortcuts while the frame has focus. */
-    keys?: boolean;
+    /** Single-key shortcuts while the frame has focus: all on by default, or each one your own. */
+    keys?: boolean | RegionsKeys;
     /** The most regions kept. */
     max?: number;
     /** Called after a region is created, changed or removed. */
@@ -48,6 +72,8 @@ export type RegionsOptions = {
      * Draws the bands' edges on whole device pixels (crisper, moved by less than half a pixel). Off by
      * default: at fractions of a pixel, as always.
      */
+    pixelSnap?: boolean;
+    /** @deprecated Use `pixelSnap`; `snap` goes in 2.0. */
     snap?: boolean;
     /**
      * The mouse cursor (any CSS cursor): `'grab'` over a region's body, `'grabbing'` while moving
@@ -67,6 +93,11 @@ export type RegionsPlugin = Plugin & {
     update(id: string, patch: Partial<Omit<Region, 'id'>>): void;
     remove(id: string): void;
     clear(): void;
+    /** The regions, copies in the order they were added. */
+    readonly items: readonly Region[];
+    /** Replaces every region at once (the selection is let go); tells `onChange` once. */
+    set(items: readonly (Omit<Region, 'id'> & { id?: string })[]): void;
+    /** @deprecated Use `items`; `list()` goes in 2.0. */
     list(): readonly Region[];
     play(id: string, options?: { loop?: boolean }): void;
     stop(): void;
@@ -83,7 +114,13 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
     const bandColor = options.color ?? REGION;
     const keys = options.keys ?? true;
     const max = within(options.max, 200, 0, 200);
-    const snap = options.snap === true;
+    const snap = (options.pixelSnap ?? options.snap) === true;
+    const create = options.create ?? true;
+    const gesture =
+        create === false
+            ? false
+            : (options.createGesture ??
+              (typeof create === 'string' ? create : 'shift-drag'));
 
     const store = new RegionStore(minLength, max);
     const labels = new RegionLabels();
@@ -153,7 +190,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         play: (id) => play(id),
     };
     const pointer = new RegionPointer(parts, {
-        create: options.create ?? 'shift-drag',
+        create: gesture,
         cursors: {
             body: options.cursors?.body ?? 'grab',
             moving: options.cursors?.moving ?? 'grabbing',
@@ -164,6 +201,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         parts,
         options.scrollIntoView === true,
         options.a11y?.words,
+        keys === false ? null : keys === true ? {} : keys,
     );
 
     for (const item of options.items ?? []) {
@@ -225,6 +263,21 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
 
         clear(): void {
             store.items = [];
+            select(null);
+            changed();
+        },
+
+        get items(): readonly Region[] {
+            return store.list();
+        },
+
+        set(items): void {
+            store.items = [];
+
+            for (const item of items) {
+                store.add(item, duration());
+            }
+
             select(null);
             changed();
         },
@@ -302,7 +355,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
         },
 
         keyDown(key, modifiers): boolean {
-            return keys && keyboard.down(key, modifiers);
+            return keyboard.down(key, modifiers);
         },
 
         destroy(): void {

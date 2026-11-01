@@ -74,7 +74,7 @@ createRecorder({
                                     <td>The sound.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>type</code></td>
+                                    <td><code>mimeType</code></td>
                                     <td>
                                         Its audio type: Opus in WebM in Chrome,
                                         Edge and Firefox, MP4 in Safari.
@@ -91,8 +91,10 @@ createRecorder({
                                 <tr>
                                     <td><code>peaks</code></td>
                                     <td>
-                                        1000 peaks from 0 to 1, decoded from the
-                                        sound, ready for a player.
+                                        Peaks from 0 to 1 (1000 unless
+                                        <code>decode.peakCount</code> says
+                                        otherwise), decoded from the sound,
+                                        ready for a player.
                                     </td>
                                 </tr>
                                 <tr>
@@ -148,6 +150,16 @@ createRecorder({
                         <code>spacer</code>, and the names of your own
                         <code>actions</code>. What went wrong, or what is under
                         way, shows on a line under the parts.
+                    </p>
+                    <p>
+                        The screen tells each move with the
+                        <code>statechange</code> event, giving its state: one of
+                        <code>RECORDER_SCREEN_STATES</code> (<code>idle</code>,
+                        <code>asking</code>, <code>recording</code>,
+                        <code>paused</code>, <code>review</code>,
+                        <code>sending</code>, <code>denied</code>,
+                        <code>error</code>), typed
+                        <code>RecorderScreenState</code>.
                     </p>
                     <div
                         class="stage"
@@ -244,7 +256,8 @@ createRecorder({
                         and the screen. One marked <code>main</code> is filled
                         like the record button and takes the focus when it leads
                         the stage. Names are lowercase letters, digits and
-                        dashes.
+                        dashes, and none of the screen's own parts or icons:
+                        <code>resume</code> and <code>cancel</code> are refused.
                     </p>
                     <div
                         class="stage"
@@ -318,7 +331,7 @@ createRecorder({
                                     <td>Or <code>'PUT'</code>.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>body</code></td>
+                                    <td><code>bodyType</code></td>
                                     <td><code>'form'</code></td>
                                     <td>
                                         A form, or the file alone with its type
@@ -431,7 +444,7 @@ createRecorder({
                     <div
                         class="stage"
                         data-demo="recorder"
-                        data-options='{"recordStyle":"rec","recordBlink":true}'
+                        data-options='{"recordStyle":"rec","recBlink":true}'
                     ></div>
                     <p data-sent></p>
                     <div class="table-wrap">
@@ -471,13 +484,13 @@ createRecorder({
                     <div
                         class="stage"
                         data-demo="recorder"
-                        data-options='{"recordStyle":"rec","recPlace":"stop","recordBlink":true}'
+                        data-options='{"recordStyle":"rec","recPlace":"stop","recBlink":true}'
                     ></div>
                     <p data-sent></p>
                     <div
                         class="stage"
                         data-demo="recorder"
-                        data-options='{"recordStyle":"rec","recPlace":"time","recordBlink":true}'
+                        data-options='{"recordStyle":"rec","recPlace":"time","recBlink":true}'
                     ></div>
                     <p data-sent></p>
                     <div class="code">
@@ -485,15 +498,15 @@ createRecorder({
     container,
     recordStyle: 'rec',
     recPlace: 'time',
-    recordBlink: true,
+    recBlink: true,
     onSend,
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <p>
-                        <code>recordBlink</code> blinks the REC dot once a
-                        second while recording. It is off by default, never runs
-                        with reduced motion, and holds still, lit, while paused,
+                        <code>recBlink</code> blinks the REC dot once a second
+                        while recording. It is off by default, never runs with
+                        reduced motion, and holds still, lit, while paused,
                         while the pointer is over the screen or while the focus
                         is in it. The <code>rec</code> part goes in any stage's
                         list, in any style. When the live wave would be narrower
@@ -574,10 +587,115 @@ createRecorder({
                         </li>
                         <li>
                             <code>a11y.lang</code> and
-                            <code>a11y.labels</code> pick the language and your
+                            <code>a11y.words</code> pick the language and your
                             own words, as for the player.
                         </li>
                     </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Driving the screen from your code</h2>
+                    <p>
+                        <code>createRecorder</code> gives the screen, which a
+                        page can drive and read as a person would use it:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>start()</code></td>
+                                    <td>
+                                        Asks for the microphone and records; a
+                                        refusal is shown and said. Call it from
+                                        a person's press.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>pause()</code>,
+                                        <code>resume()</code>
+                                    </td>
+                                    <td>Pauses and goes on recording.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>stop()</code></td>
+                                    <td>
+                                        Stops recording; what follows is
+                                        <code>afterStop</code>'s.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>discard()</code></td>
+                                    <td>
+                                        Drops the recording under way or in
+                                        review.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>send()</code></td>
+                                    <td>Sends the recording in review.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>cancelSend()</code></td>
+                                    <td>
+                                        Stops the send under way (its signal
+                                        aborts); the recording stays in review,
+                                        to send again.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>destroy()</code></td>
+                                    <td>
+                                        Takes the screen off the page, letting
+                                        the microphone and the recording go.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>on(event, listener)</code></td>
+                                    <td>
+                                        Listens to <code>statechange</code>,
+                                        <code>recorded</code>,
+                                        <code>send</code>,
+                                        <code>progress</code>,
+                                        <code>uploaded</code>,
+                                        <code>sent</code> and
+                                        <code>error</code>; gives back a
+                                        function that stops listening.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>state</code>,
+                                        <code>recording</code>,
+                                        <code>player</code>,
+                                        <code>recorder</code>
+                                    </td>
+                                    <td>
+                                        Where the screen is, the recording in
+                                        review and its player (or
+                                        <code>null</code>), and the
+                                        <code>Recorder</code> under it.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        A send through <code>upload</code> or
+                        <code>uploadRecording</code> that fails rejects with an
+                        <code>UploadError</code>: its <code>status</code> is the
+                        server's (0 when it was never reached, or the address
+                        was refused) and its <code>body</code> the start of the
+                        server's answer. The <code>uploaded</code> event gives
+                        the answer of a send that worked, as
+                        <code>{ status, body }</code>.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -602,16 +720,25 @@ const recording = await recorder.stop();</code></pre>
                     <p>
                         <code>pause()</code>, <code>resume()</code> and
                         <code>cancel()</code> do what they say;
-                        <code>levels</code> holds the live levels, 20 a second.
-                        The recording stops on its own at its limit (a
-                        <code>limit</code> event, then <code>stop</code>).
+                        <code>levels</code> holds the live levels, 20 a second
+                        unless <code>levelsPerSecond</code> says otherwise, and
+                        <code>state</code> says where it is, its
+                        <code>RecorderPhase</code>: <code>idle</code>,
+                        <code>asking</code>, <code>recording</code> or
+                        <code>paused</code>. The recording stops on its own at
+                        its limit (a <code>limit</code> event, then
+                        <code>stop</code>). Midway, an <code>error</code> event
+                        gives a <code>RecordError</code> whose reason is
+                        <code>'too-large'</code> (past <code>maxBytes</code>) or
+                        <code>'failed'</code> (the browser's recorder broke);
+                        the microphone is let go.
                     </p>
                 </section>
 
                 <section class="section">
                     <h2>On the tag</h2>
                     <div class="code">
-                        <pre><code>&lt;sonic-recorder max="120" theme="bubble"&gt;&lt;/sonic-recorder&gt;
+                        <pre><code>&lt;sonic-recorder max-seconds="120" theme="bubble"&gt;&lt;/sonic-recorder&gt;
 
 &lt;script type="module"&gt;
     import { defineSonicRecorder } from 'sonicframe/record';
@@ -624,7 +751,10 @@ const recording = await recorder.stop();</code></pre>
 &lt;/script&gt;</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
-                    <sonic-recorder max="120" theme="bubble"></sonic-recorder>
+                    <sonic-recorder
+                        max-seconds="120"
+                        theme="bubble"
+                    ></sonic-recorder>
                     <p data-sent></p>
                     <div class="table-wrap">
                         <table>
@@ -636,32 +766,53 @@ const recording = await recorder.stop();</code></pre>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>max</code></td>
-                                    <td>Seconds before it stops on its own.</td>
+                                    <td><code>max-seconds</code></td>
+                                    <td>
+                                        Seconds before it stops on its own, from
+                                        1 to 3600 (300 by default).
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>live</code></td>
                                     <td><code>fit</code>, or it scrolls.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>window</code></td>
-                                    <td>Seconds the scrolling wave shows.</td>
+                                    <td><code>live-seconds</code></td>
+                                    <td>
+                                        Seconds the scrolling wave shows, from 2
+                                        to 60 (10 by default).
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>
                                         <code>theme</code>,
-                                        <code>palette</code>
+                                        <code>palette</code>,
+                                        <code>wave</code>
                                     </td>
                                     <td>As on the player.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>font</code>,
+                                        <code>font-src</code>,
+                                        <code>font-stylesheet</code>
+                                    </td>
+                                    <td>
+                                        A font family, with the address of its
+                                        file or of its stylesheet, as on the
+                                        player.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>hold</code></td>
                                     <td>Present: record while held.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>keep</code></td>
+                                    <td><code>after-send</code></td>
                                     <td>
-                                        Present: keep the recording after Send.
+                                        <code>reset</code> (the default) or
+                                        <code>keep</code>: keep the recording
+                                        after Send.
                                     </td>
                                 </tr>
                                 <tr>
@@ -729,7 +880,7 @@ const recording = await recorder.stop();</code></pre>
                                     <td>The record button and its REC mark.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>record-blink</code></td>
+                                    <td><code>rec-blink</code></td>
                                     <td>Present: the REC dot blinks.</td>
                                 </tr>
                                 <tr>
@@ -747,7 +898,7 @@ const recording = await recorder.stop();</code></pre>
                     </div>
                     <p>
                         The events reach the element as
-                        <code>sonicframe:state</code>,
+                        <code>sonicframe:statechange</code>,
                         <code>sonicframe:recorded</code>,
                         <code>sonicframe:send</code>,
                         <code>sonicframe:progress</code>,
@@ -756,7 +907,9 @@ const recording = await recorder.stop();</code></pre>
                         <code>sonicframe:action</code> and
                         <code>sonicframe:error</code>. On the tag, Send counts
                         as sent, unless <code>upload-url</code> sends it first.
-                        Changing an attribute starts over.
+                        Changing an attribute, or the
+                        <code>icon-<em>name</em></code> of one of your buttons,
+                        starts over.
                     </p>
                 </section>
 
@@ -786,7 +939,7 @@ const recording = await recorder.stop();</code></pre>
                                     <td>The microphone's settings.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>mimeType</code></td>
+                                    <td><code>mimeTypes</code></td>
                                     <td>WebM Opus, MP4, Ogg Opus</td>
                                     <td>
                                         The audio types to try, in order; the
@@ -802,17 +955,22 @@ const recording = await recorder.stop();</code></pre>
                                     <td><code>decode</code></td>
                                     <td><code>true</code></td>
                                     <td>
-                                        Decode the sound for its peaks; off, or
-                                        when decoding fails, the live levels.
+                                        Decode the sound for its peaks, with its
+                                        options (<code>RecorderDecode</code>);
+                                        off, or when decoding fails, the live
+                                        levels.
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>peaks</code></td>
+                                    <td><code>decode.peakCount</code></td>
                                     <td><code>1000</code></td>
-                                    <td>How many decoded peaks.</td>
+                                    <td>
+                                        How many decoded peaks, from 1 to
+                                        100&nbsp;000.
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td><code>rate</code></td>
+                                    <td><code>levelsPerSecond</code></td>
                                     <td><code>20</code></td>
                                     <td>
                                         Live levels a second, from 1 to 100.
@@ -840,7 +998,7 @@ const recording = await recorder.stop();</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>window</code></td>
+                                    <td><code>liveSeconds</code></td>
                                     <td><code>10</code></td>
                                     <td>
                                         Seconds the scrolling wave shows, from 2
@@ -930,7 +1088,7 @@ const recording = await recorder.stop();</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>recordBlink</code></td>
+                                    <td><code>recBlink</code></td>
                                     <td><code>false</code></td>
                                     <td>The REC dot blinks while recording.</td>
                                 </tr>
@@ -999,7 +1157,7 @@ const recording = await recorder.stop();</code></pre>
                                     <td></td>
                                     <td>
                                         <code>lang</code>,
-                                        <code>labels</code> and
+                                        <code>words</code> and
                                         <code>announceEvery</code>.
                                     </td>
                                 </tr>
