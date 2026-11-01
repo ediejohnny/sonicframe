@@ -306,6 +306,33 @@ describe('keys and the value, when turned on', () => {
         expect(spoken()).toBe('Parte 1 de 2, no início.');
     });
 
+    it('goes back by its own grace, and by the usual second when the grace is not a number', () => {
+        // Part 2 starts at 24 s: within the grace, Shift+P goes to part 1; past it, to 24.
+        const cases: [unknown, number, number][] = [
+            [0, 24.5, 24],
+            [Number.NaN, 24.5, 0],
+            ['3', 26, 24],
+        ];
+
+        for (const [backGrace, from, to] of cases) {
+            const media = fakeMedia({ duration: 33 });
+            mounted = mount({
+                media,
+                peaks: NOTE,
+                plugins: [
+                    soundDescription({
+                        keys: { backGrace: backGrace as number },
+                    }),
+                ],
+            });
+            media.currentTime = from;
+            media.fire('timeupdate');
+            press(mounted.container, 'p', true);
+
+            expect(media.currentTime).toBeCloseTo(to, 5);
+        }
+    });
+
     it('takes other letters, or none', () => {
         const media = fakeMedia({ duration: 33 });
         mounted = mount({

@@ -69,6 +69,11 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   on a dark palette.
 - `PART_NAMES` lists `previousChapter` where it listed `prevChapter`; `prevChapter` is still read as it.
 
+### Fixed
+
+- `soundDescription()` with a `keys.backGrace` that is not a number kept Shift+P from going back at all; it
+  now takes the usual second.
+
 ### Deprecated
 
 - `normalize` and `resample` (use `normalizePeaks` and `resamplePeaks`), `Claim` (`PointerClaim`),

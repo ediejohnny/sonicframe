@@ -18,6 +18,7 @@ import {
     type SoundOutline,
 } from '../../core/description/outline';
 import type { DescriptionWords } from '../../core/languages/words';
+import { within } from '../../core/shared/checked';
 import { keyLetter } from '../../core/shared/keys';
 import { cleanText } from '../../core/shared/text';
 import { pageLanguage } from '../../dom/a11y/page-language';
@@ -109,11 +110,11 @@ export function soundDescription(
                     parts: keyLetter(options.keys.parts, 'p'),
                 }
               : { again: null, parts: null };
-    const backGrace = Math.max(
+    const backGrace = within(
+        typeof options.keys === 'object' ? options.keys.backGrace : undefined,
+        1,
         0,
-        (typeof options.keys === 'object'
-            ? options.keys.backGrace
-            : undefined) ?? 1,
+        Number.POSITIVE_INFINITY,
     );
     const display = new DescriptionDisplay(
         options.describedBy !== false,
