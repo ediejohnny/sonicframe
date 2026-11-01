@@ -259,6 +259,183 @@ parts.set([{ start: 2, end: 6, label: 'Intro' }]); // replace them all</code></p
                         a region taken away stops playing.
                     </p>
                 </section>
+
+                <section class="section">
+                    <h2>Export and import</h2>
+                    <p>
+                        Regions go out and come back as the files other programs
+                        read: JSON, WebVTT, CSV for a spreadsheet, and
+                        Audacity's labels. Reading finds the format by itself.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { readRegions, writeRegions } from 'sonicframe';
+
+const vtt = writeRegions(parts.items, { format: 'vtt' }); // 'json' by default
+parts.set(readRegions(await file.text())); // any of the four formats</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div class="words">
+                        <div
+                            class="buttons"
+                            role="group"
+                            aria-label="File format"
+                        >
+                            <button
+                                class="button small"
+                                type="button"
+                                data-files-format="json"
+                                aria-pressed="true"
+                            >
+                                JSON
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-files-format="vtt"
+                                aria-pressed="false"
+                            >
+                                WebVTT
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-files-format="csv"
+                                aria-pressed="false"
+                            >
+                                CSV
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-files-format="audacity"
+                                aria-pressed="false"
+                            >
+                                Audacity
+                            </button>
+                        </div>
+                        <div id="files-player"></div>
+                        <pre
+                            class="files-text"
+                            id="files-text"
+                            tabindex="0"
+                            aria-label="The regions as a file"
+                        ></pre>
+                        <div class="buttons">
+                            <button
+                                class="button small"
+                                type="button"
+                                id="files-save"
+                            >
+                                Save the file
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                id="files-open"
+                            >
+                                Read a file
+                            </button>
+                            <input
+                                class="visually-hidden"
+                                type="file"
+                                id="files-pick"
+                                accept=".json,.vtt,.csv,.txt"
+                                tabindex="-1"
+                                aria-hidden="true"
+                            />
+                        </div>
+                        <p class="note" id="files-status" role="status"></p>
+                    </div>
+                    <p>
+                        Draw, move or resize a region above and the file
+                        follows. Saving makes the file on this page; nothing is
+                        sent.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>format</code></td>
+                                    <td>
+                                        <code>'json'</code>; reading:
+                                        <code>'auto'</code>
+                                    </td>
+                                    <td>
+                                        <code>'json'</code>, <code>'vtt'</code>,
+                                        <code>'csv'</code> or
+                                        <code>'audacity'</code>. Reading finds
+                                        it by the content when it is not given.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>separator</code></td>
+                                    <td><code>','</code></td>
+                                    <td>
+                                        CSV: <code>','</code>, <code>';'</code>
+                                        or a tab. Reading takes the one the
+                                        first line uses.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>decimal</code></td>
+                                    <td><code>'.'</code></td>
+                                    <td>
+                                        CSV: the times' decimal mark,
+                                        <code>'.'</code> or <code>','</code>.
+                                        Reading takes either.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>guardFormulas</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        CSV: a <code>'</code> before a label a
+                                        spreadsheet would run as a formula
+                                        (<code>=</code>, <code>+</code>,
+                                        <code>-</code>, <code>@</code>), taken
+                                        back when it is read.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>JSON</strong> keeps every field:
+                            <code>id</code>, <code>start</code>,
+                            <code>end</code>, <code>label</code> and
+                            <code>color</code>.
+                        </li>
+                        <li>
+                            <strong>WebVTT</strong> writes a cue each, in order
+                            of their starts, with the id as its identifier.
+                        </li>
+                        <li>
+                            <strong>CSV</strong> starts with a header; reading
+                            takes the columns by their names, or in that order
+                            when it knows none.
+                        </li>
+                        <li>
+                            <strong>Audacity</strong> labels are the start, the
+                            end and the label by tabs; reading skips the
+                            frequency lines.
+                        </li>
+                    </ul>
+                    <p>
+                        Reading refuses a text over 512 KB, keeps at most 2000
+                        regions, leaves out one whose time is not a number from
+                        zero or whose end comes before its start, and cleans
+                        each label to one line. The same functions are on
+                        <code>sonicframe/analysis</code>, for a server.
+                    </p>
+                </section>
             </div>
         </main>
         <script type="module" src="./main.ts"></script>

@@ -1,12 +1,48 @@
 /**
- * The cues of a WebVTT file, read as the specification's parser reads them: the timestamps, an
- * identifier and cue settings allowed, the text without its tags and with its character references
- * decoded, and the blocks that are no cue (comments, style sheets, regions) skipped. Nothing here
- * touches the page.
+ * WebVTT, read and written. The cues of a file are read as the specification's parser reads them:
+ * the timestamps, an identifier and cue settings allowed, the text without its tags and with its
+ * character references decoded, and the blocks that are no cue (comments, style sheets, regions)
+ * skipped. A time is written as `hh:mm:ss.ttt` and a cue's text with its `&`, `<` and `>` escaped.
+ * Nothing here touches the page.
  */
 
-/** A cue, in seconds, with its text on one line. */
-export type VttCue = { start: number; end: number; title: string };
+/** A cue, in seconds, with its text on one line and its identifier when it has one. */
+export type VttCue = { start: number; end: number; title: string; id?: string };
+
+/** A text file's content with its byte-order mark (U+FEFF) left out and every line ending in `\n`. */
+export function textLines(input: string): string {
+    return (input.charCodeAt(0) === 0xfeff ? input.slice(1) : input).replace(
+        /\r\n?/g,
+        '\n',
+    );
+}
+
+/** Whether a text (as `textLines` gives it) opens as a WebVTT file. */
+export function isVtt(text: string): boolean {
+    return /^WEBVTT(?:[ \t\n]|$)/.test(text);
+}
+
+/** Seconds as a WebVTT timestamp, `hh:mm:ss.ttt`, to the nearest thousandth (never below zero). */
+export function vttTime(seconds: number): string {
+    const thousandths = Math.max(0, Math.round(seconds * 1000));
+    const pad = (value: number, size: number): string =>
+        String(value).padStart(size, '0');
+
+    return (
+        `${pad(Math.floor(thousandths / 3600000), 2)}:` +
+        `${pad(Math.floor(thousandths / 60000) % 60, 2)}:` +
+        `${pad(Math.floor(thousandths / 1000) % 60, 2)}.` +
+        pad(thousandths % 1000, 3)
+    );
+}
+
+/** A cue's text as WebVTT writes it: `&`, `<` and `>` as character references, so no tag or arrow is read. */
+export function vttText(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
 
 /**
  * A WebVTT timestamp in seconds, read as the specification's parser reads it, or null: `h:mm:ss.ttt`
@@ -62,11 +98,15 @@ function character(code: number): string {
         : '\ufffd';
 }
 
-/** A cue's text without its tags, with its character references decoded (after, so `&lt;b&gt;` stays text). */
+/**
+ * A cue's text on one line, without its tags and the spaces left at its ends, with its character
+ * references decoded (after, so `&lt;b&gt;` stays text).
+ */
 function cueText(lines: readonly string[]): string {
     return lines
         .join(' ')
         .replace(/<[^>]*>/g, '')
+        .trim()
         .replace(
             /&(?:#x([0-9a-f]{1,6})|#(\d{1,7})|([a-z]+));/gi,
             (whole, hex?: string, decimal?: string, name?: string) => {
@@ -130,7 +170,13 @@ export function readVtt(text: string): VttCue[] {
             payload.push(line);
         }
 
-        cues.push({ start, end, title: cueText(payload) });
+        const cue: VttCue = { start, end, title: cueText(payload) };
+
+        if (at === 1 && lines[0].trim() !== '') {
+            cue.id = lines[0].trim();
+        }
+
+        cues.push(cue);
     }
 
     return cues;

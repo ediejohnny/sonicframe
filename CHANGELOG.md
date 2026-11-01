@@ -22,6 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `player.forget()` clears it, the `resume` event (`sonicframe:resume`) tells where a sound resumed, and
   `a11y.remember.announce` (`a11y-remember="announce"`) says it at the first play, with the new word
   `player.resume` in every language. The types `PlayerRemember` and `RememberStore` name them.
+- Regions and markers go out and come back as files: `writeRegions` and `writeMarkers` write JSON (the
+  default), WebVTT, CSV or Audacity labels, and `readRegions` and `readMarkers` read any of the four, finding
+  the format by the content. CSV takes a `separator` (`,`, `;` or a tab) and a `decimal` mark, and guards a cell
+  a spreadsheet would run as a formula with a `'` (`guardFormulas`, on by default), which reading takes back.
+  Markers written as WebVTT last until the next one, so the file serves as chapters. Reading refuses a text over
+  512 KB, keeps at most 2000 items and cleans every label. On `sonicframe` and `sonicframe/analysis`, with the
+  types `MarksFormat`, `MarksWriteOptions`, `MarkersWriteOptions`, `MarksReadOptions` and `CsvSeparator`, and
+  `MARKS_FORMATS`.
 - `regions()` tells `onInput` at every move of a drag that changes a region (drawing, moving or resizing it),
   for an app that shows the times as they change. The type `RegionInput` names a region as you give it.
 - M and Shift+M say "No more markers" when there is no marker that way (the word `markers.none`, in every

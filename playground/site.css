@@ -1519,6 +1519,15 @@ html {
     display: none;
 }
 
+/* The regions as a file: the text a format writes, scrolled when long. */
+
+.files-text {
+    max-height: 14rem;
+    margin: 1rem 0;
+    overflow: auto;
+    white-space: pre;
+}
+
 /* Zoom: the switches in two named rows, a roomy player, what is in view, then the gestures. */
 
 .zoom {
