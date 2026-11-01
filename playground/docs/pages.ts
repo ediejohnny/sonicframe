@@ -21,6 +21,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'installation.html', name: 'Installation' },
             { file: 'quickstart.html', name: 'Quickstart' },
             { file: 'upgrade.html', name: 'Upgrade guide' },
+            { file: 'versions.html', name: 'Versions and support' },
             { file: 'browsers.html', name: 'Browser support' },
         ],
     },
