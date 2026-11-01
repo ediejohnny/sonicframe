@@ -2,15 +2,16 @@
  * `<sonic-recorder>`: the recorder's screen as an HTML tag. Nothing is registered on import;
  * `defineSonicRecorder()` does it once. Attributes are untrusted input: a number counts only when it
  * is one, a part only when it is a known name or one of the page's `actions`, and any other word is
- * ignored. Changing an attribute
- * builds the screen again (a recording under way is dropped); taking the element out of the page lets
- * the microphone go. The screen's events are dispatched on the element as `sonicframe:<event>`
+ * ignored. Changing an attribute, or the `icon-<name>` of one of the page's buttons, builds the
+ * screen again (a recording under way is dropped); taking the element out of the page lets the
+ * microphone go. The screen's events are dispatched on the element as `sonicframe:<event>`
  * custom events, with their arguments in `detail`; Send hands the recording over in
  * `sonicframe:send` and counts as sent, or with `upload-url` sends it to that address first.
  */
 
 import type { RecorderUpload } from '../../core/recording/upload';
 import { attributeNumber, canDefine } from '../../dom/shared/custom-element';
+import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { RecorderScreen } from '../screen/recorder-screen';
 import type {
     RecorderAction,
@@ -18,14 +19,21 @@ import type {
     RecorderScreenOptions,
 } from '../screen/screen-options';
 
-/** The attributes the tag reads. */
+/** The attributes the tag reads (the old names `max`, `window`, `keep` and `record-blink` too, until 2.0). */
 export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
+    'max-seconds',
     'max',
     'live',
+    'live-seconds',
     'window',
     'theme',
     'palette',
+    'wave',
+    'font',
+    'font-src',
+    'font-stylesheet',
     'hold',
+    'after-send',
     'keep',
     'idle-parts',
     'recording-parts',
@@ -47,6 +55,7 @@ export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
     'record-style',
     'record-color',
     'rec-place',
+    'rec-blink',
     'record-blink',
     'mic-style',
     'mic-color',
@@ -65,6 +74,7 @@ const ICONS: readonly RecorderIcon[] = [
 ];
 
 const EVENTS = [
+    'statechange',
     'state',
     'recorded',
     'send',
@@ -120,19 +130,33 @@ function uploadOf(element: Element): RecorderUpload | undefined {
           };
 }
 
-/** Everything the tag's attributes say, as the screen's options (all but the container). */
-function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
+/**
+ * Everything the tag's attributes say, as the screen's options (all but the container); a new name
+ * wins over its old one (`max-seconds` over `max`, `live-seconds` over `window`, `after-send` over
+ * `keep`).
+ */
+export function recorderOptionsOf(
+    element: Element,
+): Omit<RecorderScreenOptions, 'container'> {
     const get = (name: string): string | null => element.getAttribute(name);
+    const afterSend = get('after-send');
 
     return {
-        maxSeconds: attributeNumber(get('max')),
+        maxSeconds: attributeNumber(get('max-seconds') ?? get('max')),
         live: get('live') === 'fit' ? 'fit' : 'scroll',
-        window: attributeNumber(get('window')),
+        liveSeconds: attributeNumber(get('live-seconds') ?? get('window')),
         theme: get('theme') ?? undefined,
-        palette: (get('palette') ??
-            undefined) as RecorderScreenOptions['palette'],
+        palette: paletteOf(element),
+        wave: waveOf(element),
+        font: fontOf(element),
         hold: element.hasAttribute('hold'),
-        afterSend: element.hasAttribute('keep') ? 'keep' : 'reset',
+        // The screen takes an unknown word as 'reset'.
+        afterSend:
+            afterSend !== null
+                ? (afterSend as RecorderScreenOptions['afterSend'])
+                : element.hasAttribute('keep')
+                  ? 'keep'
+                  : 'reset',
         cancelSend: element.hasAttribute('cancel-send'),
         upload: uploadOf(element),
         // The screen checks these words and path data, and falls back on its own.
@@ -144,7 +168,9 @@ function optionsOf(element: Element): Omit<RecorderScreenOptions, 'container'> {
         recordColor: get('record-color') ?? undefined,
         recPlace: (get('rec-place') ??
             undefined) as RecorderScreenOptions['recPlace'],
-        recordBlink: element.hasAttribute('record-blink'),
+        recBlink:
+            element.hasAttribute('rec-blink') ||
+            element.hasAttribute('record-blink'),
         micStyle: (get('mic-style') ??
             undefined) as RecorderScreenOptions['micStyle'],
         micColor: (get('mic-color') ??
@@ -182,13 +208,46 @@ export function defineSonicRecorder(name: string = 'sonic-recorder'): boolean {
             }
 
             private screen: RecorderScreen | null = null;
+            private icons: MutationObserver | null = null;
 
             connectedCallback(): void {
                 this.mount();
+                this.watchIcons();
             }
 
             disconnectedCallback(): void {
+                this.icons?.disconnect();
+                this.icons = null;
                 this.unmount();
+            }
+
+            /** Builds again when the `icon-<name>` of one of the page's buttons changes. */
+            private watchIcons(): void {
+                if (
+                    this.icons !== null ||
+                    typeof MutationObserver !== 'function'
+                ) {
+                    return;
+                }
+
+                this.icons = new MutationObserver((changes) => {
+                    const names = Object.keys(actionsOf(this)).map(
+                        (name) => `icon-${name}`,
+                    );
+
+                    if (
+                        changes.some(
+                            ({ attributeName }) =>
+                                attributeName !== null &&
+                                names.includes(attributeName) &&
+                                !RECORDER_ATTRIBUTES.includes(attributeName),
+                        )
+                    ) {
+                        this.unmount();
+                        this.mount();
+                    }
+                });
+                this.icons.observe(this, { attributes: true });
             }
 
             attributeChangedCallback(
@@ -213,7 +272,7 @@ export function defineSonicRecorder(name: string = 'sonic-recorder'): boolean {
 
                 const screen = new RecorderScreen({
                     container: this,
-                    ...optionsOf(this),
+                    ...recorderOptionsOf(this),
                 });
                 this.screen = screen;
 

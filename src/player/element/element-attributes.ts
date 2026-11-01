@@ -6,10 +6,7 @@
 
 import { loadWaveform } from '../../core/peaks/read-waveform';
 import type { ReadWaveformOptions } from '../../core/peaks/waveform';
-import type { FontChoice } from '../../core/player/fonts';
-import type { PaletteChoice } from '../../core/player/palettes';
 import type { MinimapOptions } from '../../plugins/minimap/minimap';
-import type { WaveName } from '../../types';
 import type {
     PlayerA11y,
     PlayerChapters,
@@ -20,6 +17,7 @@ import type {
 } from '../player/player-options';
 import type { MediaSessionDetails } from '../../core/session/media-session';
 import { attributeNumber } from '../../dom/shared/custom-element';
+import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { backgroundLookOf } from './background-attributes';
 
 /** The words of an attribute, lowercase. */
@@ -187,30 +185,6 @@ function sessionOf(element: Element): PlayerMediaSession | undefined {
     return element.hasAttribute('media-session')
         ? sessionDetailsOf(element)
         : undefined;
-}
-
-export function paletteOf(element: Element): PaletteChoice | undefined {
-    return (element.getAttribute('palette') ?? undefined) as
-        | PaletteChoice
-        | undefined;
-}
-
-export function waveOf(element: Element): WaveName | undefined {
-    return (element.getAttribute('wave') ?? undefined) as WaveName | undefined;
-}
-
-export function fontOf(element: Element): FontChoice | undefined {
-    const family = element.getAttribute('font');
-    const src = element.getAttribute('font-src') ?? undefined;
-    const stylesheet = element.getAttribute('font-stylesheet') ?? undefined;
-
-    if (family === null) {
-        return undefined;
-    }
-
-    return src !== undefined || stylesheet !== undefined
-        ? { family, src, stylesheet }
-        : family;
 }
 
 /** How the peaks file is read: `peaks-channel` (`all` or a number), `peaks-max`, `peaks-normalize`. */

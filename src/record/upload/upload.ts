@@ -42,7 +42,9 @@ export function uploadRecording(
     upload: RecorderUpload,
     control: SendControl = {},
 ): Promise<UploadResponse> {
-    const plan = uploadPlan(upload, recording.type);
+    // A recording an app made in the shape of 0.6 names its type only as `type`.
+    const type = recording.mimeType ?? recording.type;
+    const plan = uploadPlan(upload, type);
     const { signal, progress } = control;
 
     if (plan === null) {
@@ -106,8 +108,8 @@ export function uploadRecording(
         signal?.addEventListener('abort', stop);
 
         if (plan.raw) {
-            if (recording.type !== '') {
-                request.setRequestHeader('Content-Type', recording.type);
+            if (type !== '') {
+                request.setRequestHeader('Content-Type', type);
             }
 
             request.send(recording.blob);

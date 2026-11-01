@@ -57,6 +57,14 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   'all' | 'each'` on `writeWaveform()`.
 - `loadPeaks(url, { fetcher, shared })` takes the same `Fetcher` as the other loaders, and `shared: false`
   fetches every time. The type `LoadPeaksOptions` names them.
+- Recording: the screen's states are `RecorderScreenState` and `RECORDER_SCREEN_STATES` (the `Recorder` alone
+  has its `RecorderPhase`); `Recorder` takes `decode: { peakCount }` (the type `RecorderDecode`, as the
+  player's `decode.peakCount`), `levelsPerSecond` and `mimeTypes`, and a `Recording` names its type as
+  `mimeType`; the screen takes `liveSeconds` and `recBlink`, and tells `statechange`; an upload takes
+  `bodyType`.
+- `<sonic-recorder>`: `max-seconds`, `live-seconds`, `after-send="reset|keep"` and `rec-blink`, and `wave` and
+  `font` (with `font-src` or `font-stylesheet`), as `<sonic-player>` reads them; it dispatches
+  `sonicframe:statechange`, and it builds again when the `icon-<name>` of one of the page's buttons changes.
 
 ### Changed
 
@@ -68,6 +76,8 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
 - A palette colors the chapters' lines too (`--sonicframe-chapter`, its quiet color), so they no longer stay gray
   on a dark palette.
 - `PART_NAMES` lists `previousChapter` where it listed `prevChapter`; `prevChapter` is still read as it.
+- The recorder screen refuses an app's button named `resume` or `cancel`, the names of two of its own icons: on
+  `<sonic-recorder>`, its `icon-resume` or `icon-cancel` would draw both.
 
 ### Fixed
 
@@ -105,6 +115,13 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   (`{ fetcher }`, a `Fetcher`).
 - The tag's older words: `chapter-options` (`chapters-options`), `stay`, `edges`, `autohide`, `pauses` and
   `hover-pause` (`stay-open`, `edge-scroll`, `auto-hide`, `pause-in-value`, `pause-on-hover`).
+- Recording: `RecorderState` and `RECORDER_STATES` (`RecorderScreenState`, `RECORDER_SCREEN_STATES`);
+  `Recorder`'s `peaks`, `rate` and `mimeType` (`decode.peakCount`, `levelsPerSecond`, `mimeTypes`); a
+  `Recording`'s `type` (`mimeType`; both are given until 2.0); the screen's `window` and `recordBlink`
+  (`liveSeconds`, `recBlink`) and its `state` event (`statechange`; both are told until 2.0); an upload's
+  `body` (`bodyType`); and on `<sonic-recorder>`, `max`, `window`, `keep`, `record-blink` and
+  `sonicframe:state` (`max-seconds`, `live-seconds`, `after-send="keep"`, `rec-blink`,
+  `sonicframe:statechange`).
 - Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,
   `soundWords`, `SoundWords`, `playerWords`, `PlayerWords`, `pickPalette`, `resolveFont`, `safeFontUrl`,
   `RecorderEvent` and `RECORDER_EVENTS`.

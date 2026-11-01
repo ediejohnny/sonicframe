@@ -200,6 +200,21 @@ describe('a REC mark in a narrow screen', () => {
 });
 
 describe('the blinking dot', () => {
+    it('blinks with recBlink, over the old recordBlink', async () => {
+        const started = recordAnimations();
+        const fresh = screen({ recordStyle: 'rec', recBlink: true });
+        await press(fresh.made, 'record');
+        expect(started).toHaveLength(1);
+
+        const quiet = screen({
+            recordStyle: 'rec',
+            recBlink: false,
+            recordBlink: true,
+        });
+        await press(quiet.made, 'record');
+        expect(started).toHaveLength(1);
+    });
+
     it('blinks once a second while recording, only when asked', async () => {
         const quiet = recordAnimations();
         const still = screen({ recordStyle: 'rec' });

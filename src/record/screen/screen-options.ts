@@ -7,7 +7,7 @@ import type { PlayerLook } from '../../core/player/look';
 import type { PaletteChoice } from '../../core/player/palettes';
 import type { ThemeInput } from '../../core/player/theme';
 import type { ThemeName } from '../../core/player/themes';
-import type { RecorderState } from '../../core/recording/recording';
+import type { RecorderScreenState } from '../../core/recording/recording';
 import type { BarStyle, WaveName, WaveStyle } from '../../types';
 import type { RecorderUpload } from '../../core/recording/upload';
 import type { Recording, RecorderOptions } from '../recorder/recorder';
@@ -59,7 +59,8 @@ export type RecorderParts = {
 
 /**
  * One of the app's own buttons, shown where its name is listed in `parts`. Its name is lowercase
- * letters, digits and dashes, starting with a letter, and none of the screen's own parts.
+ * letters, digits and dashes, starting with a letter, and none of the screen's own parts or icons
+ * (`resume` and `cancel` are refused: a tag's `icon-<name>` would draw both).
  */
 export type RecorderAction = {
     /** Its name for screen readers (up to 120 characters); its name in `actions` when empty. */
@@ -205,6 +206,8 @@ export type RecorderScreenOptions = RecorderOptions & {
     /** The live wave scrolls through the last seconds (`'scroll'`, the default) or fits the whole recording (`'fit'`). */
     live?: RecorderLive;
     /** Seconds the scrolling wave shows: 10 by default, from 2 to 60. */
+    liveSeconds?: number;
+    /** @deprecated Use `liveSeconds`; `window` goes in 2.0. */
     window?: number;
     /** A theme, as the player takes it; it dresses the screen and the player of the recording. */
     theme?: ThemeName | (string & {}) | ThemeInput;
@@ -223,6 +226,8 @@ export type RecorderScreenOptions = RecorderOptions & {
     /** With the REC style, where the REC mark shows while recording: a badge before the time (`'badge'`, the default), the stop button itself (`'stop'`), or a badge holding the time (`'time'`). */
     recPlace?: RecPlace;
     /** The REC dot blinks once a second while recording. Off by default; never with reduced motion; it holds still while the pointer is over or the focus is in the screen. */
+    recBlink?: boolean;
+    /** @deprecated Use `recBlink`; `recordBlink` goes in 2.0. */
     recordBlink?: boolean;
     /** Your own drawing of a button's icon: SVG path data on a 24 × 24 grid; data with anything but path commands and numbers is refused. */
     icons?: Partial<Record<RecorderIcon, string>>;
@@ -259,7 +264,9 @@ export type RecorderScreenOptions = RecorderOptions & {
 
 export type RecorderScreenEvents = {
     /** The screen moved to another state. */
-    state: [state: RecorderState];
+    statechange: [state: RecorderScreenState];
+    /** @deprecated Use `statechange`; `state` goes in 2.0 (both are told until then). */
+    state: [state: RecorderScreenState];
     /** A recording stopped; `afterStop` says what comes next. */
     recorded: [recording: Recording];
     /** Send was pressed. */

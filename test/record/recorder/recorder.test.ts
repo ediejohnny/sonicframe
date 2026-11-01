@@ -360,3 +360,41 @@ describe('Recorder', () => {
         expect(heard).toEqual([]);
     });
 });
+
+describe('the names of 0.7, with the old ones kept until 2.0', () => {
+    it('decodes as many peaks as decode.peakCount asks, over the old peaks', async () => {
+        stubDecoder([0, 0.5, -1, 0.25]);
+        const fresh = await recording({ decode: { peakCount: 2 }, peaks: 4 });
+        vi.advanceTimersByTime(500);
+        expect((await fresh.made.stop()).peaks).toEqual([0.5, 1]);
+
+        const old = await recording({ decode: true, peaks: 4 });
+        vi.advanceTimersByTime(500);
+        expect((await old.made.stop()).peaks).toEqual([0, 0.5, 1, 0.25]);
+    });
+
+    it('keeps levelsPerSecond live levels a second, over the old rate', async () => {
+        const fresh = await recording({ levelsPerSecond: 10, rate: 30 });
+        vi.advanceTimersByTime(1000);
+        expect(fresh.made.levels.levels.length).toBe(10);
+
+        expect(recorder({ rate: 30 }).levels.rate).toBe(30);
+        expect(recorder().levels.rate).toBe(20);
+    });
+
+    it('tries the formats of mimeTypes, over the old mimeType, and names the one recorded as mimeType', async () => {
+        FakeRecorder.supported = (type) =>
+            type === 'audio/wav' || type === 'audio/flac';
+        const fresh = await recording({
+            mimeTypes: 'audio/wav',
+            mimeType: 'audio/flac',
+        });
+        expect(FakeRecorder.made[0].options.mimeType).toBe('audio/wav');
+        Object.defineProperty(FakeRecorder.made[0], 'mimeType', {
+            value: 'audio/wav',
+        });
+        const made = await fresh.made.stop();
+
+        expect([made.mimeType, made.type]).toEqual(['audio/wav', 'audio/wav']);
+    });
+});

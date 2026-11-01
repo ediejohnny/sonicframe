@@ -16,18 +16,13 @@
  */
 
 import { canDefine } from '../../dom/shared/custom-element';
+import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { Player } from '../player/player';
 import {
     BACKGROUND_ATTRIBUTES,
     type BackgroundAttribute,
 } from './background-attributes';
-import {
-    fontOf,
-    optionsOf,
-    paletteOf,
-    sessionDetailsOf,
-    waveOf,
-} from './element-attributes';
+import { optionsOf, sessionDetailsOf } from './element-attributes';
 
 /** A `<sonic-player>` element: the tag, with the player it built while it is on the page. */
 export interface SonicPlayerElement extends HTMLElement {
