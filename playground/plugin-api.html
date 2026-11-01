@@ -34,7 +34,7 @@
     pointerUp?(point: WavePoint): void;
     pointerCancel?(): void;
     pointerHover?(point: WavePoint | null): string | void; // a CSS cursor
-    keyDown?(key: string, modifiers: { ctrlKey?; altKey?; metaKey?; shiftKey? }): boolean;
+    keyDown?(key: string, modifiers: KeyModifiers): boolean;
     valueNote?(time: number | null, ratio: number): string | void;
     destroy?(): void;
 };</code></pre>
@@ -74,6 +74,21 @@
                         <code>pointerType</code> (<code>'mouse'</code>,
                         <code>'touch'</code> or <code>'pen'</code>) and
                         <code>shiftKey</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>KeyModifiers</h2>
+                    <p>
+                        What <code>keyDown</code> hears with a key: the keys
+                        held with it (<code>ctrlKey</code>, <code>altKey</code>,
+                        <code>metaKey</code>, <code>shiftKey</code>) and
+                        <code>repeat</code>, true while the key is held down and
+                        repeating. Decide by <code>shiftKey</code>, never by the
+                        key's case, which Caps Lock turns around. A key that
+                        switches something (a loop, a mode) should act once and
+                        let a repeat go: hold L on a region and its loop turns
+                        on once.
                     </p>
                 </section>
 
