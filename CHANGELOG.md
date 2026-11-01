@@ -120,6 +120,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   page never showed it, but error trackers logged it, development overlays showed it as an error and some test
   runners failed on it. The player now lines its parts up with the bars before the first paint.
 - The length on a chapter's picture in the list has room around it, instead of touching its edges.
+- The docs: a code block's Copy button has a column of its own, so the code no longer runs under it on a phone
+  or when a long line is scrolled.
 
 ## [0.5.0] - 2026-10-31
 

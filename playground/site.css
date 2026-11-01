@@ -1456,32 +1456,32 @@ html {
     font-size: 1rem;
 }
 
+/*
+ * Code sits on a dark deck in both schemes, like a console. The copy button has a column of its
+ * own beside the code, so the code never runs under it, scrolled or not.
+ */
 .code {
-    position: relative;
-}
-
-/* Code sits on a dark deck in both schemes, like a console. */
-.code pre {
-    margin: 0;
-    padding: 1rem 5.5rem 1rem 1.125rem;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     border: 0.0625rem solid var(--deck);
     border-radius: 0.125rem;
     background: var(--deck);
+}
+
+.code pre {
+    margin: 0;
+    padding: 1rem 1.125rem;
+    overflow-x: auto;
     color: var(--deck-ink);
     line-height: 1.65;
 }
 
 .code .button {
+    margin: 0.625rem 0.625rem 0 0;
     border-color: #2a3442;
     background: #1c2531;
     color: var(--deck-ink);
-}
-
-.code .button {
-    position: absolute;
-    top: 0.625rem;
-    right: 0.625rem;
 }
 
 .install {
