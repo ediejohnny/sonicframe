@@ -19,7 +19,7 @@ import {
     type Mark,
 } from '../../core/marks/markers';
 import { finiteOr, within } from '../../core/shared/checked';
-import { keyLetter } from '../../core/shared/keys';
+import { letterKeys, letterStep } from '../../core/shared/keys';
 import { positive } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
@@ -115,18 +115,14 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
     const max = within(options.max, MAX_MARKS, 0, MAX_MARKS);
-    const keys = options.keys ?? true;
-    const letter =
-        keys === false
-            ? null
-            : keyLetter(keys === true ? undefined : keys.letter, 'm');
-    // Never under a hundredth of a second, so a marker just landed on is never chosen again.
-    const backGrace = within(
-        (typeof keys === 'object' ? keys.backGrace : undefined) ??
-            options.backGrace,
-        1,
+    const own = typeof options.keys === 'object' ? options.keys : {};
+    const { letter, backGrace } = letterKeys(
+        options.keys === false
+            ? false
+            : { ...own, backGrace: own.backGrace ?? options.backGrace },
+        'm',
+        // Never under a hundredth of a second, so a marker just landed on is never chosen again.
         0.01,
-        Number.POSITIVE_INFINITY,
     );
     const defaultColor = options.color ?? 'var(--sonicframe-marker, #e5484d)';
     const width = finiteOr(options.width, 2);
@@ -347,29 +343,27 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
         },
 
         keyDown(key, modifiers): boolean {
-            if (modifiers.ctrlKey || modifiers.altKey || modifiers.metaKey) {
-                return false;
-            }
-
-            // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
-            if (letter === null || key.toLowerCase() !== letter) {
-                return false;
-            }
-
+            const way = letterStep(key, modifiers, letter);
             const frame = host;
             const duration = frame?.duration ?? null;
 
-            if (frame === null || duration === null || duration <= 0) {
+            if (
+                way === null ||
+                frame === null ||
+                duration === null ||
+                duration <= 0
+            ) {
                 return false;
             }
 
             const order = sortedMarks(marks);
             const now = frame.progress * duration;
-            const next = modifiers.shiftKey
-                ? [...order]
-                      .reverse()
-                      .find((mark) => mark.time < now - backGrace)
-                : order.find((mark) => mark.time > now + 0.01);
+            const next =
+                way === -1
+                    ? [...order]
+                          .reverse()
+                          .find((mark) => mark.time < now - backGrace)
+                    : order.find((mark) => mark.time > now + 0.01);
 
             if (next === undefined) {
                 return false;

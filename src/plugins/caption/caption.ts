@@ -7,9 +7,15 @@
  * away from the wave.
  */
 
+import {
+    MAX_CAPTION_TEXT,
+    tooltipLines,
+    tooltipMax,
+    type TooltipContent,
+} from '../../core/caption/tooltip-lines';
 import { within } from '../../core/shared/checked';
 import type { CssLength } from '../../core/shared/length';
-import { cleanText, truncateWords } from '../../core/shared/text';
+import { cleanText } from '../../core/shared/text';
 import { addDescribedBy, removeDescribedBy } from '../../dom/a11y/describedby';
 import { css, VISUALLY_HIDDEN } from '../../dom/shared/css';
 import {
@@ -20,18 +26,10 @@ import {
 import { lengthPixels } from '../../dom/shared/units';
 import type { Lane, Plugin, PluginHost } from '../../types';
 
-/** One block of tooltip text: a `label` (e.g. "Auto-transcript") and the text, with its own cap. */
-export type TooltipSection = {
-    label?: string;
-    text: string;
-    /** The most characters this section shows; the caption's `tooltipMax` by default. */
-    max?: number;
-    /** @deprecated Use `max`; `limit` goes in 2.0. */
-    limit?: number;
-};
-
-/** The tooltip's text: a single string, or several labelled sections. */
-export type TooltipContent = string | readonly TooltipSection[];
+export type {
+    TooltipContent,
+    TooltipSection,
+} from '../../core/caption/tooltip-lines';
 
 export type CaptionOptions = {
     /** The caption text. */
@@ -62,8 +60,6 @@ export type CaptionPlugin = Plugin & {
     setTooltip(content: TooltipContent): void;
 };
 
-const MAX_TEXT = 2000;
-const MAX_TOOLTIP = 2000;
 const MAX_BADGES = 3;
 const MAX_BADGE = 16;
 const CLOSE_DELAY = 150;
@@ -74,12 +70,7 @@ const FADE = 'linear-gradient(to right, #000 calc(100% - 24px), transparent)';
 let counter = 0;
 
 export function caption(options: CaptionOptions = {}): CaptionPlugin {
-    const tooltipMax = within(
-        options.tooltipMax ?? options.tooltipLimit,
-        280,
-        0,
-        MAX_TOOLTIP,
-    );
+    const max = tooltipMax(options.tooltipMax ?? options.tooltipLimit);
     const readable: TooltipA11y = {
         tooltip: { readable: options.a11y?.tooltip?.readable !== false },
     };
@@ -88,7 +79,9 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
     let host: PluginHost | null = null;
     let lane: Lane | null = null;
     let text =
-        options.text === undefined ? null : cleanText(options.text, MAX_TEXT);
+        options.text === undefined
+            ? null
+            : cleanText(options.text, MAX_CAPTION_TEXT);
     // null means "repeat the caption text"; a value overrides it.
     let tooltipContent: TooltipContent | null = options.tooltip ?? null;
     const cleanups: (() => void)[] = [];
@@ -115,36 +108,6 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
         into.push(() => target.removeEventListener(type, listener));
     }
 
-    function tooltipLines(): string[] {
-        if (tooltipContent === null) {
-            return text === null || text === ''
-                ? []
-                : [truncateWords(text, tooltipMax)];
-        }
-
-        if (typeof tooltipContent === 'string') {
-            return [
-                truncateWords(cleanText(tooltipContent, MAX_TEXT), tooltipMax),
-            ];
-        }
-
-        return tooltipContent.map((section) => {
-            const body = truncateWords(
-                cleanText(section.text, MAX_TEXT),
-                within(
-                    section.max ?? section.limit,
-                    tooltipMax,
-                    0,
-                    MAX_TOOLTIP,
-                ),
-            );
-
-            return section.label === undefined
-                ? body
-                : `${cleanText(section.label, 120)}: ${body}`;
-        });
-    }
-
     function open(): void {
         const current = host;
         const anchor = textSpan;
@@ -153,7 +116,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
             return;
         }
 
-        const lines = tooltipLines();
+        const lines = tooltipLines(tooltipContent, text, max);
 
         if (lines.length === 0) {
             return;
@@ -359,7 +322,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
 
         set(next): void {
             const current = host;
-            text = next === null ? null : cleanText(next, MAX_TEXT);
+            text = next === null ? null : cleanText(next, MAX_CAPTION_TEXT);
 
             if (current === null) {
                 return;

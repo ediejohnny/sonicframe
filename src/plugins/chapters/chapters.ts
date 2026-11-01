@@ -20,14 +20,14 @@ import {
 } from '../../core/chapters/chapters';
 import { wordsFor } from '../../core/languages/language';
 import { mergeWords } from '../../core/languages/merge-words';
-import { finiteOr, oneOf, within } from '../../core/shared/checked';
-import { keyLetter } from '../../core/shared/keys';
+import { finiteOr, within } from '../../core/shared/checked';
+import { letterKeys, letterStep } from '../../core/shared/keys';
 import { clamp01, positive } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
 import { lengthPixels, remPixels } from '../../dom/shared/units';
 import type { PluginHost, SeekSource } from '../../types';
-import { ChapterLane, type LaneHost } from './chapter-lane';
+import { ChapterLane, laneSide, type LaneHost } from './chapter-lane';
 import { ChapterLines } from './chapter-lines';
 import { ChapterListView } from './chapter-list';
 import {
@@ -45,28 +45,10 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         (options.a11y?.announce ?? options.announceChange) === true;
     const valueNote = (options.a11y?.valueNote ?? options.valueNote) !== false;
     let words = mergeWords(CHAPTER_WORDS, own, MAX_WORD);
-    const keys = options.keys ?? true;
-    const letter =
-        keys === false
-            ? null
-            : keyLetter(keys === true ? undefined : keys.letter, 'c');
-    const backGrace = within(
-        typeof keys === 'object' ? keys.backGrace : undefined,
-        1,
-        0,
-        Number.POSITIVE_INFINITY,
-    );
+    const { letter, backGrace } = letterKeys(options.keys, 'c');
     const color = options.color ?? 'var(--sonicframe-chapter, #6b7280)';
     const onChapterChange = options.onChapterChange ?? options.onChange;
-    const laneOn =
-        options.lane === true ||
-        options.lane === 'above' ||
-        options.lane === 'below';
-    const lanePlacement = oneOf(
-        options.lanePlacement,
-        ['above', 'below'],
-        options.lane === 'above' ? 'above' : 'below',
-    );
+    const laneAt = laneSide(options.lane, options.lanePlacement);
 
     let all: Chapter[] = [];
     let shown: Chapter[] = [];
@@ -308,10 +290,10 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             host = frame;
             words = mergeWords(wordsFor(frame.lang).chapters, own, MAX_WORD);
 
-            if (laneOn) {
+            if (laneAt !== null) {
                 lane = new ChapterLane(
                     frame,
-                    lanePlacement,
+                    laneAt,
                     within(
                         lengthPixels(options.laneHeight, 'rem'),
                         remPixels(1.25),
@@ -366,23 +348,18 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         keyDown(key, modifiers): boolean {
             const current = host;
+            const way = letterStep(key, modifiers, letter);
 
             if (
-                letter === null ||
+                way === null ||
                 current === null ||
-                modifiers.ctrlKey ||
-                modifiers.altKey ||
-                modifiers.metaKey ||
-                key.length !== 1 ||
-                // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
-                key.toLowerCase() !== letter ||
                 shown.length === 0 ||
                 duration() === null
             ) {
                 return false;
             }
 
-            const at = step(modifiers.shiftKey === true ? -1 : 1, 'keyboard');
+            const at = step(way, 'keyboard');
 
             current.announce(
                 at === null

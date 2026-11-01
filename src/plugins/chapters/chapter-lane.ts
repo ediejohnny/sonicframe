@@ -5,6 +5,7 @@
  */
 
 import { chapterEnds, type Chapter } from '../../core/chapters/chapters';
+import { oneOf } from '../../core/shared/checked';
 import { clamp01 } from '../../core/shared/math';
 import { viewX } from '../../core/view/view';
 import { css } from '../../dom/shared/css';
@@ -22,6 +23,25 @@ export type LaneHost = {
     label(at: number): string;
     go(at: number, source: SeekSource): boolean;
 };
+
+/**
+ * Where the strip goes for the `lane` and `lanePlacement` options, or null while it is off: below
+ * the wave unless placed above (or `lane: 'above'` without a placement).
+ */
+export function laneSide(
+    lane: boolean | Placement | undefined,
+    placement: unknown,
+): Placement | null {
+    if (lane !== true && lane !== 'above' && lane !== 'below') {
+        return null;
+    }
+
+    return oneOf<Placement>(
+        placement,
+        ['above', 'below'],
+        lane === 'above' ? 'above' : 'below',
+    );
+}
 
 export class ChapterLane {
     private readonly lane: Lane;
