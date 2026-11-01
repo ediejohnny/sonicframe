@@ -82,6 +82,7 @@ export const FR: Words = {
         previousChapter: 'Chapitre précédent',
         nextChapter: 'Chapitre suivant',
         closeChapters: 'Fermer les chapitres',
+        resume: 'Reprise à {time}',
     },
     recorder: {
         recorder: 'Enregistreur vocal',

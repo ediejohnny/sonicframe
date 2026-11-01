@@ -201,11 +201,15 @@ function peaksReading(element: Element): ReadWaveformOptions {
     };
 }
 
-/** The accessibility attributes: the language, the description, the zoom's, the minimap's and the keys'. */
+/**
+ * The accessibility attributes: the language, the description, and what the zoom, the minimap, the
+ * keys and the memory say.
+ */
 function a11yOf(element: Element): PlayerA11y {
     const zoom = element.getAttribute('a11y-zoom');
     const strip = element.getAttribute('a11y-minimap');
     const keys = element.getAttribute('a11y-keys');
+    const remember = element.getAttribute('a11y-remember');
 
     return {
         lang: element.getAttribute('a11y-lang') ?? undefined,
@@ -221,6 +225,34 @@ function a11yOf(element: Element): PlayerA11y {
             keys === null
                 ? undefined
                 : { announce: wordsOf(keys).has('announce') },
+        remember:
+            remember === null
+                ? undefined
+                : { announce: wordsOf(remember).has('announce') },
+    };
+}
+
+/**
+ * What the player remembers, from `remember`: present turns it on, and its words (`position`, `volume`,
+ * `speed`) pick some, all three without any; `remember-key` names the group it is kept under.
+ */
+function rememberOf(element: Element): PlayerOptions['remember'] {
+    const value = element.getAttribute('remember');
+
+    if (value === null) {
+        return undefined;
+    }
+
+    const words = wordsOf(value);
+    const some = ['position', 'volume', 'speed'].some((word) =>
+        words.has(word),
+    );
+
+    return {
+        position: !some || words.has('position'),
+        volume: !some || words.has('volume'),
+        speed: !some || words.has('speed'),
+        key: element.getAttribute('remember-key') ?? undefined,
     };
 }
 
@@ -264,6 +296,7 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         ),
         mediaSession: sessionOf(element),
         keys: keysOf(element.getAttribute('keys')),
+        remember: rememberOf(element),
         a11y: a11yOf(element),
         look: backgroundLookOf(element),
     };

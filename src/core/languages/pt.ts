@@ -82,6 +82,7 @@ export const PT: Words = {
         previousChapter: 'Capítulo anterior',
         nextChapter: 'Próximo capítulo',
         closeChapters: 'Fechar os capítulos',
+        resume: 'Continuando de {time}',
     },
     recorder: {
         recorder: 'Gravador de voz',

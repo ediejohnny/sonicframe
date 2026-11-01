@@ -52,6 +52,7 @@ function playerLabels(words: Readonly<Words>): PlayerLabels {
         previousChapter: player.previousChapter,
         nextChapter: player.nextChapter,
         closeChapters: player.closeChapters,
+        resume: player.resume,
     };
 }
 

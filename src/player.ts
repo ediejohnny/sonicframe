@@ -17,6 +17,8 @@ export type {
     PlayerDescription,
     PlayerEvents,
     PlayerKeys,
+    PlayerRemember,
+    RememberStore,
     MediaSessionOptions,
     MediaSessionPlugin,
     ListenButtonAnimation,
