@@ -64,14 +64,17 @@ export function chapterThumb(
         cover.append(length);
         css(length, [
             ['position', 'absolute'],
-            ['right', '0.1875rem'],
-            ['bottom', '0.1875rem'],
-            ['padding', '0 0.25rem'],
-            ['border-radius', '0.125rem'],
+            ['right', '0.25rem'],
+            ['bottom', '0.25rem'],
+            ['padding', '0.0625rem 0.3125rem'],
+            ['border-radius', '0.1875rem'],
             ['background-color', 'rgba(0, 0, 0, 0.72)'],
             ['color', '#ffffff'],
             ['font-size', '0.6875rem'],
-            ['line-height', '1.4'],
+            ['font-weight', '600'],
+            ['letter-spacing', '0.02em'],
+            ['line-height', '1.3'],
+            ['white-space', 'nowrap'],
             ['font-variant-numeric', 'tabular-nums'],
         ]);
         box.append(cover);

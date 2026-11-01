@@ -1,7 +1,7 @@
 /**
  * One ResizeObserver and one IntersectionObserver for every frame on the page (hundreds of players
  * cost two observers, not hundreds), plus a watch on the screen density for browsers that cannot
- * report sizes in device pixels.
+ * report sizes in device pixels, and a way to keep page changes out of a size report.
  */
 
 /** A size in device pixels, with the density it was measured at. */
@@ -16,6 +16,39 @@ let resizeObserver: ResizeObserver | null = null;
 let intersectionObserver: IntersectionObserver | null = null;
 let densityQuery: MediaQueryList | null = null;
 let devicePixelBoxes = false;
+/** Whether the ResizeObserver is handing out sizes right now. */
+let reporting = false;
+/** The page changes held until the next frame, each once. */
+const held = new Set<() => void>();
+
+function runHeld(): void {
+    const tasks = [...held];
+    held.clear();
+
+    for (const task of tasks) {
+        task();
+    }
+}
+
+/**
+ * Runs `task` now, or, while sizes are being handed out, once at the next animation frame. A page
+ * that changes the size of what was just measured, inside the report, is flagged by browsers as a
+ * "ResizeObserver loop" error (on window.onerror, error trackers and some dev overlays); at the next
+ * frame the same change is measured in its turn, with no error.
+ */
+export function outsideSizeReport(task: () => void): void {
+    if (!reporting) {
+        task();
+
+        return;
+    }
+
+    if (held.size === 0) {
+        requestAnimationFrame(runHeld);
+    }
+
+    held.add(task);
+}
 
 function pixelRatio(): number {
     return window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
@@ -81,8 +114,14 @@ export function observeSize(
     listener: (size: Size) => void,
 ): () => void {
     resizeObserver ??= new ResizeObserver((entries) => {
-        for (const entry of entries) {
-            sizeListeners.get(entry.target)?.(measure(entry));
+        reporting = true;
+
+        try {
+            for (const entry of entries) {
+                sizeListeners.get(entry.target)?.(measure(entry));
+            }
+        } finally {
+            reporting = false;
         }
     });
     sizeListeners.set(element, listener);

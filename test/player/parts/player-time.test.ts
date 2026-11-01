@@ -9,7 +9,12 @@ import { describe, expect, it } from 'vite-plus/test';
 import type { Part } from '../../../src/core/player/look';
 import { createPlayer } from '../../../src/player';
 import { triggerResize } from '../../support/fakes';
-import { afterTest, fakeMedia, pageHost } from '../../support/helpers';
+import {
+    afterTest,
+    fakeMedia,
+    nextFrame,
+    pageHost,
+} from '../../support/helpers';
 import { STEPS } from '../../support/sounds';
 
 let host: HTMLElement | null = null;
@@ -114,17 +119,20 @@ describe('where the time sits in its room', () => {
         ]);
     });
 
-    it('keeps to the start under a voice note’s wave, and back to the end on one line', () => {
+    it('keeps to the start under a voice note’s wave, and back to the end on one line', async () => {
         make({ line: ['play', 'wave', 'time', 'speed'] });
         const root = (host as HTMLElement).querySelector(
             '.sonicframe-player',
         ) as HTMLElement;
         const [time] = times();
 
+        // The player changes the page at the next frame, out of the browser's size report.
         triggerResize(root, { width: 320, height: 48 });
+        await nextFrame();
         expect(read(time).side).toBe('start');
 
         triggerResize(root, { width: 640, height: 48 });
+        await nextFrame();
         expect(read(time).side).toBe('end');
     });
 

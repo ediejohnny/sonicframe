@@ -5,10 +5,15 @@
  * keeps it on one line at any width.
  */
 
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { createPlayer, type Player } from '../../../src/player';
 import { triggerResize } from '../../support/fakes';
-import { afterTest, fakeMedia, pageHost } from '../../support/helpers';
+import {
+    afterTest,
+    fakeMedia,
+    nextFrame,
+    pageHost,
+} from '../../support/helpers';
 import { STEPS } from '../../support/sounds';
 
 let player: Player | null = null;
@@ -64,9 +69,13 @@ function rows(): { line: string[]; under: string[] } {
     };
 }
 
-/** Sets the player's width in CSS pixels (the page's rem is 16 px). */
-function resize(width: number): void {
+/**
+ * Sets the player's width in CSS pixels (the page's rem is 16 px). The player changes the page at the
+ * next frame, out of the browser's size report.
+ */
+async function resize(width: number): Promise<void> {
     triggerResize(root(), { width, height: 48 });
+    await nextFrame();
 }
 
 const WIDE = {
@@ -83,9 +92,9 @@ const WIDE = {
 };
 
 describe('a narrow player', () => {
-    it('turns into a voice note below 22rem: time under the wave on the left, controls on the right', () => {
+    it('turns into a voice note below 22rem: time under the wave on the left, controls on the right', async () => {
         player = make();
-        resize(320);
+        await resize(320);
 
         expect(rows()).toEqual({
             line: ['sonicframe-play', 'wave'],
@@ -101,9 +110,35 @@ describe('a narrow player', () => {
         expect(root().hasAttribute('data-narrow')).toBe(true);
     });
 
-    it('centers the play button on the wave, with the rows under the wave in the wave’s column', () => {
+    it('starts as a voice note when it is made in a narrow place, before any size report', () => {
+        const measure = vi
+            .spyOn(Element.prototype, 'getBoundingClientRect')
+            .mockImplementation(function (this: Element): DOMRect {
+                const width = this.classList.contains('sonicframe-player')
+                    ? 320
+                    : 0;
+
+                return {
+                    left: 0,
+                    top: 0,
+                    width,
+                    height: 48,
+                    right: width,
+                    bottom: 48,
+                    x: 0,
+                    y: 0,
+                    toJSON: () => ({}),
+                } as DOMRect;
+            });
+        player = make();
+        measure.mockRestore();
+
+        expect(rows().line).toEqual(['sonicframe-play', 'wave']);
+    });
+
+    it('centers the play button on the wave, with the rows under the wave in the wave’s column', async () => {
         player = make({ meta: ['duration'] });
-        resize(320);
+        await resize(320);
         const line = root().firstElementChild as HTMLElement;
         const wave = player.frame.container;
         const under = root().querySelector('.sonicframe-under') as HTMLElement;
@@ -121,9 +156,9 @@ describe('a narrow player', () => {
         expect(place(under.nextElementSibling)).toEqual(['3', '2']);
     });
 
-    it('lets the controls share the time’s row, the look’s narrowGap apart, before any of them wraps', () => {
+    it('lets the controls share the time’s row, the look’s narrowGap apart, before any of them wraps', async () => {
         player = make({ narrowGap: 0.25 });
-        resize(320);
+        await resize(320);
         const under = root().querySelector('.sonicframe-under') as HTMLElement;
         const controls = root().querySelector(
             '.sonicframe-under-controls',
@@ -137,10 +172,10 @@ describe('a narrow player', () => {
         );
     });
 
-    it('turns back into one flexible line that wraps for the zoom buttons', () => {
+    it('turns back into one flexible line that wraps for the zoom buttons', async () => {
         player = make();
-        resize(320);
-        resize(800);
+        await resize(320);
+        await resize(800);
         const line = root().firstElementChild as HTMLElement;
         const wave = player.frame.container;
 
@@ -152,9 +187,9 @@ describe('a narrow player', () => {
         expect(wave.style.getPropertyValue('grid-row')).toBe('');
     });
 
-    it('puts the row under the wave right below it, before the look’s own small line', () => {
+    it('puts the row under the wave right below it, before the look’s own small line', async () => {
         player = make({ meta: ['duration'] });
-        resize(320);
+        await resize(320);
         const under = root().querySelector('.sonicframe-under');
 
         expect(under?.previousElementSibling).toBe(player.frame.container);
@@ -164,16 +199,16 @@ describe('a narrow player', () => {
         ).toBe('1:00');
     });
 
-    it('grows back into one line, in the look’s order', () => {
+    it('grows back into one line, in the look’s order', async () => {
         player = make();
-        resize(320);
-        resize(800);
+        await resize(320);
+        await resize(800);
 
         expect(rows()).toEqual(WIDE);
         expect(root().hasAttribute('data-narrow')).toBe(false);
     });
 
-    it('puts each piece back in its own place, the look’s spacers included', () => {
+    it('puts each piece back in its own place, the look’s spacers included', async () => {
         player = make({
             line: ['elapsed', 'play', 'speed', 'wave', 'spacer', 'duration'],
         });
@@ -191,7 +226,7 @@ describe('a narrow player', () => {
 
         expect(rows().line).toEqual(wide);
 
-        resize(320);
+        await resize(320);
         expect(rows()).toEqual({
             line: ['sonicframe-play', 'wave'],
             under: [
@@ -205,57 +240,68 @@ describe('a narrow player', () => {
             ],
         });
 
-        resize(800);
+        await resize(800);
         expect(rows().line).toEqual(wide);
     });
 
-    it('gives the focus back to a control it moves', () => {
+    it('gives the focus back to a control it moves', async () => {
         player = make();
         const speed = root().querySelector<HTMLElement>(
             '.sonicframe-speed',
         ) as HTMLElement;
         speed.focus();
-        resize(320);
+        await resize(320);
 
         expect(document.activeElement).toBe(speed);
     });
 
-    it('stays one line from 22rem up', () => {
+    it('stays one line from 22rem up', async () => {
         player = make();
-        resize(352);
+        await resize(352);
 
         expect(rows()).toEqual(WIDE);
     });
 
-    it('keeps the same wave through every switch', () => {
+    it('lets a size report that came just before destroy pass without a trace', async () => {
+        player = make();
+        triggerResize(root(), { width: 320, height: 48 });
+        const element = root();
+        player.destroy();
+
+        await expect(nextFrame()).resolves.toBeUndefined();
+        expect(element.isConnected).toBe(false);
+        expect(element.hasAttribute('data-narrow')).toBe(false);
+    });
+
+    it('keeps the same wave through every switch', async () => {
         player = make();
         const wave = player.frame;
-        resize(320);
-        resize(800);
-        resize(320);
+        await resize(320);
+        await resize(800);
+        await resize(320);
 
         expect(player.frame).toBe(wave);
         expect(wave.container.isConnected).toBe(true);
     });
 
-    it('stays a voice note when the look is changed and the player rebuilt', () => {
+    it('stays a voice note when the look is changed and the player rebuilt', async () => {
         player = make();
-        resize(320);
+        await resize(320);
         player.setLook({ gap: 1 });
 
         expect(rows().line).toEqual(['sonicframe-play', 'wave']);
     });
 
-    it('never moves anything with narrow: 0', () => {
+    it('never moves anything with narrow: 0', async () => {
         player = make({ narrow: 0 });
-        resize(200);
+        await resize(200);
 
         expect(rows()).toEqual(WIDE);
     });
 
-    it('keeps on the line the parts narrowLine names', () => {
+    it('keeps on the line the parts narrowLine names', async () => {
         player = make({ narrowLine: ['play', 'wave', 'speed'] });
-        resize(320);
+        await resize(320);
 
         expect(rows()).toEqual({
             line: ['sonicframe-play', 'wave', 'sonicframe-speed'],
@@ -269,9 +315,9 @@ describe('a narrow player', () => {
         });
     });
 
-    it('puts on the left, under the wave, the parts narrowStart names', () => {
+    it('puts on the left, under the wave, the parts narrowStart names', async () => {
         player = make({ narrowStart: ['speed', 'zoomReset'] });
-        resize(320);
+        await resize(320);
 
         expect(rows().under).toEqual([
             'sonicframe-speed',
@@ -283,9 +329,9 @@ describe('a narrow player', () => {
         ]);
     });
 
-    it('follows a narrow width of its own', () => {
+    it('follows a narrow width of its own', async () => {
         player = make({ narrow: 40 });
-        resize(600);
+        await resize(600);
 
         expect(rows().line).toEqual(['sonicframe-play', 'wave']);
     });

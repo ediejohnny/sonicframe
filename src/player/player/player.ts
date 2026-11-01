@@ -50,7 +50,7 @@ import { SonicFrame } from '../../dom/frame/frame';
 import type { SonicFrameOptions } from '../../dom/frame/frame-options';
 import { css } from '../../dom/shared/css';
 import { useFont } from '../../dom/shared/fonts';
-import { observeSize } from '../../dom/shared/observe';
+import { observeSize, outsideSizeReport } from '../../dom/shared/observe';
 import { remPixels } from '../../dom/shared/units';
 import type { ChaptersPlugin } from '../../plugins/chapters/chapters-options';
 import type { SoundDescriptionPlugin } from '../../plugins/description/description';
@@ -207,17 +207,27 @@ export class Player {
         }
 
         options.container.append(this.element);
+        // Laid out now, in its width and its font, the player starts as the browser will first measure
+        // it: a size report that changes the player itself is what browsers flag as a ResizeObserver loop.
+        this.width = this.element.getBoundingClientRect().width || null;
         this.build();
         this.applyPalette();
         this.applyFont();
+        // The palette put the wave's strips in place; the parts meet the bars before the first paint.
+        this.alignToBars();
         this.stopSize = observeSize(this.element, (size) => {
             this.width = size.width / size.pixelRatio;
-            this.arrange();
-            this.alignToBars();
-            this.chapterParts.fitNames();
-            this.backdrop.resize();
+            outsideSizeReport(this.settle);
         });
     }
+
+    /** Fits the player to its size now: the voice note, the parts on the bars, the names, the background. */
+    private readonly settle = (): void => {
+        this.arrange();
+        this.alignToBars();
+        this.chapterParts.fitNames();
+        this.backdrop.resize();
+    };
 
     /** The wave (a `SonicFrame`). */
     get frame(): SonicFrame {
@@ -652,10 +662,7 @@ export class Player {
 
         // The bars move when the wave resizes or a strip comes or goes; a name's room changes too.
         this.partCleanups.push(
-            frame.on('resize', () => {
-                this.alignToBars();
-                this.chapterParts.fitNames();
-            }),
+            frame.on('resize', () => outsideSizeReport(this.settle)),
         );
         this.alignToBars();
     }

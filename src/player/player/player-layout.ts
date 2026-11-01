@@ -316,7 +316,9 @@ function applyShifts(
 /**
  * Gives the wave's box the margins that keep every shifted part inside the line, and says whether
  * they changed. The margins already given count: the overshoot measured now is added to them, and a
- * part with room to spare takes them back, never below 0.
+ * part with room to spare takes them back, never below 0. Less than a pixel either way keeps the
+ * margin: the line snaps to device pixels, so a pixel of margin can move a centered part by half a
+ * pixel and back, and following that would change the margins on every resize, forever.
  */
 function fitBars(
     box: HTMLElement,
@@ -340,7 +342,9 @@ function fitBars(
         const next =
             over === Number.NEGATIVE_INFINITY
                 ? 0
-                : Math.max(0, Math.round(given + over));
+                : Math.abs(over) < 1
+                  ? given
+                  : Math.max(0, Math.round(given + over));
         box.style.setProperty(name, `${next}px`);
 
         return next !== given;
