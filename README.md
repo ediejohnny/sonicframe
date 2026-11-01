@@ -13,6 +13,7 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 
 **[Docs](https://ediejohnny.github.io/sonicframe/)** ·
 [Quickstart](https://ediejohnny.github.io/sonicframe/quickstart.html) ·
+[Theme gallery](https://ediejohnny.github.io/sonicframe/themes.html) ·
 [Examples](https://ediejohnny.github.io/sonicframe/guide-podcast.html) ·
 [Changelog](CHANGELOG.md)
 
@@ -20,58 +21,33 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 
 </div>
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/why.svg" alt="" width="24" height="24"> Why SonicFrame
+## Why SonicFrame
 
-<table>
-<tr>
-<td width="50%" valign="top">
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/deps.svg" alt="" width="20" height="20">
-<strong>Nothing else to install</strong><br>
-One MIT package with no dependencies. Plain pages or any framework: it only asks for an element to draw in.
-</td>
-<td width="50%" valign="top">
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/accessibility.svg" alt="" width="20" height="20">
-<strong>Accessible from the start</strong><br>
-Every wave is a keyboard slider that says where it is, and every control is a real button.
-</td>
-</tr>
-<tr>
-<td valign="top">
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/light.svg" alt="" width="20" height="20">
-<strong>Light with hundreds of players</strong><br>
-Shared observers and one animation loop; only a wave near the screen keeps pixels, and only a playing one moves.
-</td>
-<td valign="top">
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/csp.svg" alt="" width="20" height="20">
-<strong>Strict CSP friendly</strong><br>
-No inline styles, no <code>eval</code>, no blob workers, no HTML parsed. Colors come from your CSS.
-</td>
-</tr>
-<tr>
-<td valign="top">
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/zoom.svg" alt="" width="20" height="20">
-<strong>Long sounds</strong><br>
-Zoom, scroll and a minimap, with ready-made peaks files, so an hour of audio opens at once.
-</td>
-<td valign="top">
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/themes.svg" alt="" width="20" height="20">
-<strong>A whole player in one line</strong><br>
-24 themes, 8 palettes and 10 drawings, from JavaScript or as an HTML tag.
-</td>
-</tr>
-</table>
+- **Nothing else to install.** One MIT package with no dependencies. Plain pages or any framework: it only asks for
+  an element to draw in.
+- **Accessible from the start.** Every wave is a keyboard slider that says where it is, and every control is a real
+  button.
+- **Light with hundreds of players.** Shared observers and one animation loop; only a wave near the screen keeps
+  pixels, and only a playing one moves.
+- **Strict CSP friendly.** No inline styles, no `eval`, no blob workers, no HTML parsed. Colors come from your CSS.
+- **Long sounds.** Zoom, scroll and a minimap, with ready-made peaks files, so an hour of audio opens at once.
+- **A whole player in one line.** 24 themes, 8 palettes and 10 drawings, from JavaScript or as an HTML tag. The
+  [theme gallery](https://ediejohnny.github.io/sonicframe/themes.html) shows them all, live, with the code for each.
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/install.svg" alt="" width="24" height="24"> Install
+## Install
 
 ```sh
 npm install sonicframe
 ```
 
+One package, four entries: `sonicframe` (the wave), `sonicframe/player` (a whole player), `sonicframe/analysis`
+(levels, silences, waveform files) and `sonicframe/record` (recording from the microphone).
+
 No package manager? Load it from a CDN, or
 [build it from the source code](https://ediejohnny.github.io/sonicframe/installation.html#from-the-source-code) and
 copy the files into your site.
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/quickstart.svg" alt="" width="24" height="24"> Quick start
+## Quick start
 
 In JavaScript:
 
@@ -113,13 +89,14 @@ The [Quickstart](https://ediejohnny.github.io/sonicframe/quickstart.html) goes t
 [Peaks](https://ediejohnny.github.io/sonicframe/peaks.html) shows how to serve the waveform so the page never decodes
 the audio.
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/accessibility.svg" alt="" width="24" height="24"> Accessibility
+## Accessibility
 
 Sound is for everyone, so accessibility is where SonicFrame starts, not an add-on.
 
 - **The wave is a slider.** It takes the focus, has `role="slider"`, and says where it is as a time ("1:05 / 3:20").
   The keys are the WAI-ARIA ones: the arrows step, Page Up and Page Down jump further, Home and End go to the ends.
-- **Every control is a real button** with a name, and the player's words come in English and Portuguese, or yours.
+- **Every control is a real button** with a name, and every word comes in English, Portuguese (Brazil or
+  Portugal), Spanish or French, or yours: [Languages](https://ediejohnny.github.io/sonicframe/languages.html).
 - **One place for it all, the `a11y` group,** by place and action. On the tag, the attributes start with `a11y-`.
 
     ```js
@@ -162,39 +139,31 @@ More in the docs: [Accessibility](https://ediejohnny.github.io/sonicframe/access
 [Keyboard](https://ediejohnny.github.io/sonicframe/keyboard.html) and
 [The wave in words](https://ediejohnny.github.io/sonicframe/words.html).
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/inside.svg" alt="" width="24" height="24"> What's inside
+## What's inside
 
-| Part                             | What it does                                                                                          | Docs                                                                 |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| The frame (`sonicframe`)         | The waveform: draws it, follows an `<audio>` or `<video>`, seeks by click, drag and keys.             | [The frame](https://ediejohnny.github.io/sonicframe/frame.html)      |
-| The player (`sonicframe/player`) | A whole player: play, time, speed, skip, volume, zoom buttons, and the `<sonic-player>` tag.          | [Player basics](https://ediejohnny.github.io/sonicframe/player.html) |
-| Themes and palettes              | A whole look in one word; make your own from any of them.                                             | [Themes](https://ediejohnny.github.io/sonicframe/theming.html)       |
-| Plugins                          | Markers, chapters, regions, a timeline, captions, a spectrogram, skipped silences and live frequency. | [Plugins](https://ediejohnny.github.io/sonicframe/plugins.html)      |
-| Long sounds                      | Zoom, scroll, a minimap, and audiowaveform `.dat` and JSON files, read and written.                   | [Zoom and scroll](https://ediejohnny.github.io/sonicframe/zoom.html) |
-| Chapters                         | WebVTT and Podcasting 2.0 JSON chapters: lines on the wave, keys, and a list in the player.           | [Chapters](https://ediejohnny.github.io/sonicframe/chapters.html)    |
-| Analysis (`sonicframe/analysis`) | Levels, silences, the wave in words and waveform files, pure, in the browser or in Node.              | [Analysis](https://ediejohnny.github.io/sonicframe/analysis.html)    |
+| Part                             | What it does                                                                                            | Docs                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| The frame (`sonicframe`)         | The waveform: draws it, follows an `<audio>` or `<video>`, seeks by click, drag and keys.               | [The frame](https://ediejohnny.github.io/sonicframe/frame.html)           |
+| The player (`sonicframe/player`) | A whole player: play, time, speed, skip, volume, zoom buttons, and the `<sonic-player>` tag.            | [Player basics](https://ediejohnny.github.io/sonicframe/player.html)      |
+| Themes and palettes              | A whole look in one word; make your own from any of them, with a background of its own.                 | [Themes](https://ediejohnny.github.io/sonicframe/theming.html)            |
+| Plugins                          | Markers, chapters, regions, a timeline, captions, a spectrogram, skipped silences and live frequency.   | [Plugins](https://ediejohnny.github.io/sonicframe/plugins.html)           |
+| Long sounds                      | Zoom, scroll, a minimap, and audiowaveform `.dat` and JSON files, read and written.                     | [Zoom and scroll](https://ediejohnny.github.io/sonicframe/zoom.html)      |
+| Chapters                         | WebVTT and Podcasting 2.0 JSON chapters: lines on the wave, keys, and a list in the player.             | [Chapters](https://ediejohnny.github.io/sonicframe/chapters.html)         |
+| Analysis (`sonicframe/analysis`) | Levels, silences, the wave in words and waveform files, pure, in the browser or in Node.                | [Analysis](https://ediejohnny.github.io/sonicframe/analysis.html)         |
+| Recording (`sonicframe/record`)  | Record from the microphone, hear it back and send it: a ready-made screen, a tag, or the bare recorder. | [Recording](https://ediejohnny.github.io/sonicframe/recording.html)       |
+| Backgrounds                      | A player's own background: a color, a gradient or an image, with filters, effects and gentle motion.    | [Backgrounds](https://ediejohnny.github.io/sonicframe/backgrounds.html)   |
+| Lock screen and media keys       | The system's media controls: title, pictures, play, pause, skip, seek and chapters.                     | [Lock screen](https://ediejohnny.github.io/sonicframe/media-session.html) |
+| Languages                        | Every word in English, Portuguese (Brazil or Portugal), Spanish or French, or a language of your own.   | [Languages](https://ediejohnny.github.io/sonicframe/languages.html)       |
 
 Every option, method, event and attribute is in the
 [Reference](https://ediejohnny.github.io/sonicframe/frame-options.html).
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/gallery.svg" alt="" width="24" height="24"> Gallery
-
-![The ten drawings, each part played: bars, needles, blocks, dots, steps, line, area, scope, pulse and track](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/drawings.png)
-
-![Six themes, one per row: card, a podcast card; bubble, a chat voice note; pulse, a heartbeat monitor; glass; retro, in 8-bit steps; and brutal](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/themes.png)
-
-![Plugins on the wave: two markers, a region named Verse, a timeline, a caption with badges, a spectrogram under a line, and live frequency bars](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/plugins.png)
-
-![The bubble and pill themes, each in all eight palettes](https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/gallery.png)
-
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/narrow.png" alt="On a phone the player turns into a voice note: the play button beside the wave, the time under the wave on the left, and the speed and zoom buttons on its right" width="360">
-
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/browsers.svg" alt="" width="24" height="24"> Browser support
+## Browser support
 
 Current Chrome, Edge, Firefox and Safari. Rounded bars fall back to drawn arcs where `roundRect` is missing, and sizes
 fall back to CSS pixels times the screen density where `device-pixel-content-box` is missing.
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/security.svg" alt="" width="24" height="24"> Security
+## Security
 
 - No HTML is ever parsed: text goes in as text, icons are built element by element, and nothing uses `innerHTML` or
   `eval`. Styles are set through the CSSOM, so a strict Content-Security-Policy without `'unsafe-inline'` works.
@@ -207,13 +176,14 @@ fall back to CSS pixels times the screen density where `device-pixel-content-box
 Report a vulnerability privately to the author (see the npm page) rather than in a public issue. The details are in
 [Security](https://ediejohnny.github.io/sonicframe/security.html).
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/contributing.svg" alt="" width="24" height="24"> Report a problem or contribute
+## Report a problem or contribute
 
 - Found a bug, or something hard to use? [Open an issue](https://github.com/ediejohnny/sonicframe/issues) with what
   you did, what you expected and what happened.
 - To run it: clone the repository, `npm install`, then `npm run dev` and open `/playground/`, the docs site with
   every example live. `npm test` runs the tests.
+- [CONTRIBUTING](CONTRIBUTING.md) says how to send a change, and how to add a language in one file.
 
-## <img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/icons/license.svg" alt="" width="24" height="24"> License
+## License
 
 [MIT](LICENSE) © Edie Johnny

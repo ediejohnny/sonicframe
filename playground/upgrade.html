@@ -5,7 +5,7 @@
         <title>Upgrade guide · SonicFrame</title>
         <meta
             name="description"
-            content="Moving from SonicFrame 0.4 to 0.5: what changes, and what stays the same."
+            content="Moving from SonicFrame 0.5 to 0.6: what changes, and what stays the same."
         />
     </head>
     <body>
@@ -13,9 +13,10 @@
             <div class="page-head">
                 <h1>Upgrade guide</h1>
                 <p class="lede">
-                    From 0.4 to 0.5. Every new feature is off until you turn it
-                    on, so an upgrade changes almost nothing on its own; the
-                    things that do are listed first.
+                    From 0.5 to 0.6. The public API only grew, and every new
+                    feature is off until you turn it on, so an upgrade changes
+                    almost nothing on its own; the things that do are listed
+                    first.
                 </p>
             </div>
 
@@ -23,36 +24,48 @@
                 <section class="section">
                     <h2>Update the package</h2>
                     <div class="code">
-                        <pre><code>npm install sonicframe@0.5</code></pre>
+                        <pre><code>npm install sonicframe@0.6</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                 </section>
 
                 <section class="section">
-                    <h2>What can look different</h2>
-                    <h3>The focus ring of a bordered control</h3>
+                    <h2>What can sound or look different</h2>
+                    <h3>One second is said in the singular</h3>
                     <p>
-                        A control with a border of its own (the player's speed
-                        button, an outlined play button) now shows its keyboard
-                        focus ring on that border, instead of 2 px around it:
-                        one line, not a border and a ring side by side. Controls
-                        without a border keep the ring 2 px out.
+                        A skip of one second now says "Back 1 second", not "Back
+                        1 seconds", by each language's own plural rules. If you
+                        gave the player your own <code>back</code> and
+                        <code>forward</code> labels, they still serve both; add
+                        <code>backOne</code> and <code>forwardOne</code> for the
+                        singular.
                     </p>
 
-                    <h3>The parts beside the wave line up with the bars</h3>
+                    <h3>A player in Portuguese speaks Portuguese everywhere</h3>
                     <p>
-                        The play button and the time beside a wave sat lower
-                        than the bars when a plugin added a strip above or below
-                        them. They now line up with the bars' middle.
+                        The volume slider's "muted", what the regions say and
+                        the markers' "and 3 more" spoke English whatever the
+                        player's language. They now speak it too. English stays
+                        the default.
                     </p>
 
-                    <h3>The time shows the second a seek asked for</h3>
+                    <h3>
+                        Options that are not numbers fall back to the default
+                    </h3>
                     <p>
-                        A browser can land a seek a hair short (an MP3 asked for
-                        0:15 can start at 14.998). The player's time and the
-                        slider's words now show 0:15 there, not 0:14; with
-                        <code>preload="none"</code>, they show where a seek
-                        before play will start, not 0:00.
+                        A number option given as <code>NaN</code> or as text now
+                        takes its default instead of breaking the part (no
+                        markers at all, a muted volume on an arrow key, a black
+                        spectrogram). If a page relied on one of those by
+                        accident, it now gets the default.
+                    </p>
+
+                    <h3>The package is larger, the recorder is apart</h3>
+                    <p>
+                        The new features make <code>sonicframe/player</code>
+                        larger. Recording lives in its own entry,
+                        <code>sonicframe/record</code>, so a page that does not
+                        record never loads it.
                     </p>
                 </section>
 
@@ -69,65 +82,87 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        Chapters from WebVTT or Podcasting 2.0
-                                        JSON (<code>chapters()</code>,
-                                        <code>readChapters</code>,
-                                        <code>loadChapters</code>)
+                                        Portuguese of Portugal
+                                        (<code>pt-PT</code>), Spanish
+                                        (<code>es</code>) and French
+                                        (<code>fr</code>);
+                                        <code>a11y.lang</code> on the frame and
+                                        the controls;
+                                        <code>registerLanguage</code> for a
+                                        language of your own
                                     </td>
                                     <td>
+                                        <a href="./languages.html">Languages</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A player's own background
+                                        (<code>look.background</code>), its
+                                        motion
+                                        (<code>look.backgroundAnimation</code>)
+                                        and the tag's
+                                        <code>background-</code> attributes
+                                    </td>
+                                    <td>
+                                        <a href="./backgrounds.html"
+                                            >Backgrounds</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The lock screen and the media keys
+                                        (<code>mediaSession()</code>, the
+                                        player's <code>mediaSession</code>
+                                        option and the tag's
+                                        <code>media-</code> attributes)
+                                    </td>
+                                    <td>
+                                        <a href="./media-session.html"
+                                            >Lock screen and media keys</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Recording from the microphone:
+                                        <code>createRecorder</code>,
+                                        <code>Recorder</code>,
+                                        <code>uploadRecording</code> and the
+                                        <code>&lt;sonic-recorder&gt;</code> tag
+                                    </td>
+                                    <td>
+                                        <a href="./recording.html">Recording</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>a11y.tooltip.readable</code>: the
+                                        tooltip's text in black or white,
+                                        whichever reads on its color
+                                    </td>
+                                    <td>
+                                        <a href="./markers.html">Markers</a>,
                                         <a href="./chapters.html">Chapters</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        The player's <code>chapters</code>
-                                        option, its list (popover or drawer,
-                                        <code>listLook</code>) and the tag's
-                                        <code>chapters</code> attribute
-                                    </td>
-                                    <td>
-                                        <a href="./chapters.html#on-the-player"
-                                            >Chapters on the player</a
-                                        >
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <code>underStart</code>,
-                                        <code>metaWrap</code>, long names
-                                        (<code>nameOverflow</code>,
-                                        <code>nameTooltip</code>,
-                                        <code>marquee</code>)
-                                    </td>
-                                    <td>
-                                        <a href="./layouts.html"
-                                            >Parts and layouts</a
-                                        >
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <code>frame.time</code> and
-                                        <code>formatPosition</code>
-                                    </td>
-                                    <td>
-                                        <a href="./frame-api.html"
-                                            >Frame methods and events</a
-                                        >
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                    <p>
+                        The record button of the recorder is red unless you pick
+                        another <code>recordStyle</code>. The recorder is new,
+                        so no page changes because of it.
+                    </p>
                 </section>
 
                 <section class="section">
                     <h2>For plugin authors</h2>
                     <p>
-                        Nothing changes for a plugin written for 0.4. To read
-                        where the sound is, prefer <code>frame.time</code> to
-                        the media's <code>currentTime</code>: before the media
-                        loads, it already says where a seek will start it.
+                        Nothing changes for a plugin written for 0.5.
+                        <code>host.lang</code> says the language the frame
+                        speaks, so a plugin can speak it too.
                     </p>
                 </section>
 
@@ -135,16 +170,22 @@
                     <h2>Fixed</h2>
                     <ul>
                         <li>
-                            A step to a whole second no longer shows one second
-                            less (0:04 for 0:05).
+                            A player no longer sets off "ResizeObserver loop
+                            completed with undelivered notifications", which
+                            error trackers and some test runners count as an
+                            error.
                         </li>
                         <li>
-                            Centered on short bars, the play button no longer
-                            sticks out of the player's line.
+                            A player with a timeline above the wave and zoom no
+                            longer lays itself out again on every frame.
                         </li>
                         <li>
-                            These docs: the fade between pages, and a site a
-                            screen reader and a keyboard can move through.
+                            The regions' labels come back after the player
+                            builds its wave anew.
+                        </li>
+                        <li>
+                            The shared tooltip keeps clear of the page's
+                            scrollbars.
                         </li>
                     </ul>
                     <p>

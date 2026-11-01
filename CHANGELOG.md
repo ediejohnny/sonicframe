@@ -7,6 +7,122 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-01
+
+### Added
+
+- `a11y.tooltip.readable` for `markers()` and `chapters()` (and so the player's `chapters`; on the tag, the
+  word `readable` in `chapter-options`): the tooltip's text in black or white, whichever reads on its color
+  (4.5:1), as the caption and the long chapter name already do. Off by default: the page's color for text on
+  the played color (`--sonicframe-on-progress`), as before.
+- Three more languages: Portuguese as spoken in Portugal (`pt-PT`), Spanish (`es`) and French (`fr`), for every
+  word SonicFrame says (names, values, announcements and the wave in words). `pt` stays the Portuguese of Brazil
+  and `en` the English of the United States. A tag finds its language the BCP 47 way, the whole tag first, then
+  shorter (`es-MX` speaks Spanish, `pt-BR` Brazilian Portuguese); any other tag still speaks English.
+- `registerLanguage(tag, words)` brings a whole language at run time (`ja`, say), checked against English: every
+  phrase, nothing more, the same marks; `languageProblems(words)` says what is wrong. Built-in languages cannot
+  be replaced. `LANGUAGE_NAMES` and the `Words`, `MarkerWords` and `RegionWords` types are exported.
+- `a11y.lang` on the frame (its plugins speak it too), `PlayButton` and `VolumeControl`, and `host.lang` for
+  plugins. English by default, as before; the player hands its language to its wave, so the plugins an app adds
+  to a player speak the player's language.
+- The markers' `words` (`{ more }`, the tooltip's "and 3 more"), the regions' `a11y.words` (what R and L say),
+  the volume control's `labels.muted` and the player's `muted` label.
+- `CONTRIBUTING.md`, with "Adding a language": one file and one line, checked by the tests.
+- A player's own background, `look.background`, off by default: a color, a gradient (two to five colors,
+  linear, radial or conic) or an image (a web, relative or `blob:` address; size, place and repeat), with
+  filters (blur, brightness, contrast, saturate, grayscale, sepia), an opacity and six ready-made effects
+  drawn by SonicFrame: `dim`, `vignette`, `frost`, `tint`, `duotone` and `grain`. It takes the surface's
+  place, sits behind the controls and is hidden from screen readers; colors are read as numbers before any
+  style gets them. Themes can bring one, and a player's own look changes only what it gives.
+- `look.backgroundAnimation`, off by default: `pan`, `zoom`, `pulse`, `hue` or `flow`, with its `duration`
+  and `strength`. It moves only while the sound plays unless `while: 'always'`, holds still under the mouse
+  or the focus with `pauseOnHover`, and never runs with reduced motion.
+- The tag's `background-` attributes: `background-color`, `background-gradient`, `background-image`,
+  `background-options`, `background-angle`, `background-blur`, `background-opacity`, `background-effects`,
+  `background-animation` and `background-duration`.
+- The lock screen and the media keys: `mediaSession()`, a plugin for the system's media controls, and the
+  player's `mediaSession` option, off by default. The controls show the title (the player's `label` unless
+  given), artist, album and pictures, and play, pause, skip (the controls' own step, or `look.skip`), seek and
+  stop; previous and next track go to your `onPrevious`/`onNext` or, on a player with chapters, to the chapter
+  before and after, and browsers that list chapters show them. The media that played last owns the page's
+  controls, and the others leave them alone. Words are cleaned, pictures come only from web, relative or
+  `blob:` addresses (at most eight), and the position is sent only for a sound of known length. On the tag:
+  `media-session`, `media-title`, `media-artist`, `media-album` and `media-artwork`, changed without stopping
+  the sound. A new docs page, "Lock screen and media keys".
+- `sonicframe/record`, a new entry for recording from the microphone: record, hear, send.
+    - `createRecorder({ container, onSend })`, a ready-made screen dressed like a player (theme, look, palette):
+      a record button; while recording, the time, a live wave (scrolling through the last `window` seconds, or
+      `live: 'fit'`) and the buttons to pause, stop and delete; then a player of the recording, and Send. The
+      parts of each stage are lists (`parts`), `hold` records while the button is held, and `afterSend` starts
+      over or keeps the recording. `onSend` may return a Promise: the screen says it is sending, and a failure
+      keeps the recording to send again.
+    - What follows a stop is yours: `afterStop` goes to review (the default), sends right away, or with
+      `'none'` only hands the recording over (`onRecorded`) and starts again, so a screen can be a single
+      record button. `actions` adds your own buttons to any stage, `icons` draws any button with your own
+      SVG path, `align` lines the buttons up beside the player of the recording (on its bars by default) and
+      `reviewLook` is that player's own look.
+    - Sending to your server: `upload` (address, method, form field, fields, headers) sends with no code,
+      `uploadRecording()` does the same from your own `onSend`, which now gets a `signal` and `progress`;
+      "Sending, 40%" shows under the parts, and `cancelSend` (off by default) lets a send be canceled.
+    - The record button's style (`recordStyle`): a red button (the default), the dot in the player's colors, a
+      microphone (its outline, or filled with `micStyle`; on the red button, or in the player's colors with
+      `micColor`), or a retro REC mark, in your own red (`recordColor`). While recording, REC shows as a badge before the time, as the stop
+      button, or holding the time (`recPlace`), and its dot can blink once a second (`recordBlink`, off by
+      default, never with reduced motion, still under the pointer or the focus).
+    - Accessibility: every button named, the focus on each stage's main button, the live wave hidden from
+      screen readers, and the live region saying each change and why the microphone cannot be used;
+      `a11y.announceEvery` also says the time while recording (off by default). Words in every language, with
+      `a11y.labels` for your own.
+    - `Recorder`, the same without a screen: `start()` (asks for the microphone only then), `pause()`,
+      `resume()`, `stop()` (the recording, with its length, type, size and peaks), `cancel()`, live `levels`, and
+      a `RecordError` whose `reason` says why it cannot record. The microphone is never sent to the speakers and
+      is let go on stop, cancel and destroy; a recording stops at `maxSeconds` (300 by default) and past
+      `maxBytes`.
+    - `<sonic-recorder>`, with `defineSonicRecorder()`, and its `sonicframe:` events.
+    - New docs: a "Voice" group with the page "Recording", and "A chat voice note" made with the recorder.
+
+### Changed
+
+- The README keeps only the logo, the badges and one picture of the player; every theme, palette and drawing is
+  live in the docs' [theme gallery](https://ediejohnny.github.io/sonicframe/themes.html) instead.
+
+### Fixed
+
+- The shared tooltip (markers, chapters, captions, a long chapter name) keeps clear of the page's scrollbars, as
+  the chapters popover already did.
+- The regions' labels show again after the player builds its wave anew (a new theme, look or volume control),
+  and on any frame the same regions plugin is set up on later.
+- A `max` that is not a number (`NaN`, a string) falls back to the default: every marker is kept (up to 2000)
+  instead of none, and the regions stay capped at 200 instead of unlimited. The same goes for the `threshold` of
+  `soundDescription()` and `outlineSound` (0.06), which found no pauses before.
+- The other numbers the options read within a range fall back to their default too when they are not numbers,
+  instead of turning into `NaN`: the timeline's `size` and `minSpacing`, the caption's `size`, `tooltipLimit`
+  and a tooltip section's `limit` (the tooltip showed only "(...)"), `skipSilences`' `lead` (it jumped to no
+  time at all), the browser voice's `rate`, `frequencyBands`' and the live frequency's `minHz` and `maxHz` (all
+  bars stayed at zero), the regions' `minLength` and the markers' `group` (crowded markers never shared a pill).
+- The numbers the options read without a range fall back to their default as well when they are not finite
+  numbers: the volume control's `size`, `width` and `step` (a step written as text muted the sound on an arrow
+  key) and the play button's `size` and `radius`, also through `setLook`; the frame's `cursorWidth` (the cursor
+  vanished), `stepSeconds` and `largeStepRatio` (Page Up sent the sound back to its start); the markers' and
+  chapters' line `width` (the lines vanished); `decodeAudio`'s `sampleRate` (decoding failed);
+  `createSpectrogram`'s `minDb` and `maxDb` (the picture went black); `levels`' `windowSeconds`,
+  `findSilences`' `thresholdDb`, `minDuration` and `windowSeconds`, and `silencesFromPeaks`' `threshold` and
+  `minDuration` (no silence was ever found). The Security page says the rule for every option.
+- A skip of one second says "Back 1 second", not "Back 1 seconds": the player's new `backOne` and `forwardOne`
+  labels are used when the language says the number in the singular, by its own plural rules (so "1,5
+  seconde" in French). An app's own `back` or `forward` without its singular still serves both.
+- A player in Portuguese says its words in Portuguese everywhere: the volume slider said "muted", and the regions
+  and the markers' "and N more" spoke English, whatever the player's language.
+- A player with a timeline above the wave and zoom no longer lays itself out again on every frame at some widths:
+  its parts move to meet the bars only for a difference of a whole pixel, so they settle.
+- A player no longer sets off "ResizeObserver loop completed with undelivered notifications" when it is made with
+  a strip beside the wave (a timeline, a caption, chapter titles) or when its width crosses into a voice note. The
+  page never showed it, but error trackers logged it, development overlays showed it as an error and some test
+  runners failed on it. The player now lines its parts up with the bars before the first paint.
+- The length on a chapter's picture in the list has room around it, instead of touching its edges.
+- The docs: a code block's Copy button has a column of its own, so the code no longer runs under it on a phone
+  or when a long line is scrolled.
+
 ## [0.5.0] - 2026-10-31
 
 ### Added

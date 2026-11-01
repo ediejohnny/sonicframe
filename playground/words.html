@@ -43,11 +43,38 @@
                             <button
                                 class="button small"
                                 type="button"
-                                data-words-lang="pt"
+                                data-words-lang="pt-BR"
                                 aria-pressed="false"
-                                lang="pt"
+                                lang="pt-BR"
                             >
-                                Português
+                                Português (Brasil)
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-words-lang="pt-PT"
+                                aria-pressed="false"
+                                lang="pt-PT"
+                            >
+                                Português (Portugal)
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-words-lang="es"
+                                aria-pressed="false"
+                                lang="es"
+                            >
+                                Español
+                            </button>
+                            <button
+                                class="button small"
+                                type="button"
+                                data-words-lang="fr"
+                                aria-pressed="false"
+                                lang="fr"
+                            >
+                                Français
                             </button>
                         </div>
                         <div id="words-player"></div>
@@ -155,12 +182,16 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
                             <tbody>
                                 <tr>
                                     <td><code>lang</code></td>
-                                    <td><code>'en'</code></td>
+                                    <td>the frame's</td>
                                     <td>
-                                        <code>'pt'</code>,
-                                        <code>'pt-BR'</code>…,
-                                        <code>'auto'</code>, or any tag with
-                                        your own <code>words</code>.
+                                        <code>'en'</code>, <code>'pt'</code>,
+                                        <code>'pt-PT'</code>, <code>'es'</code>,
+                                        <code>'fr'</code> (see
+                                        <a href="./languages.html">Languages</a
+                                        >), <code>'auto'</code>, or any tag with
+                                        your own <code>words</code>. Without
+                                        one, the frame's <code>a11y.lang</code>,
+                                        English unless it has one.
                                     </td>
                                 </tr>
                                 <tr>
@@ -200,7 +231,8 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
                                     <td><code>0.06</code></td>
                                     <td>
                                         Below this share of the loudest peak
-                                        counts as quiet.
+                                        counts as quiet, from 0.001 to 0.45;
+                                        anything that is not a number is 0.06.
                                     </td>
                                 </tr>
                                 <tr>
@@ -250,7 +282,8 @@ frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
                                     <td>
                                         Let <code>speak()</code> read it with
                                         the browser's voice;
-                                        <code>{ voices, rate }</code>.
+                                        <code>{ voices, rate }</code> (the rate
+                                        from 0.5 to 2, 1 by default).
                                     </td>
                                 </tr>
                                 <tr>

@@ -5,7 +5,7 @@
         <title>A chat voice note · SonicFrame</title>
         <meta
             name="description"
-            content="Voice notes in a chat: a compact player, skipped silences, a caption, and a list that stays light."
+            content="Voice notes in a chat: recorded with a live wave, played in a compact bubble with the long pauses skipped, in a list that stays light."
         />
     </head>
     <body>
@@ -13,9 +13,10 @@
             <div class="page-head">
                 <h1>A chat voice note</h1>
                 <p class="lede">
-                    A message bubble with a voice note: a round play button, a
-                    slim wave, the length under it, a speed button, and the long
-                    pauses skipped. A chat can hold hundreds of them.
+                    A voice note from the microphone to a message bubble: a
+                    round play button, a slim wave, the length under it, a speed
+                    button, and the long pauses skipped. A chat can hold
+                    hundreds of them.
                 </p>
             </div>
 
@@ -52,17 +53,26 @@ createPlayer({
                 </section>
 
                 <section class="section">
-                    <h2>Peaks when the note is recorded</h2>
+                    <h2>Recording the note</h2>
                     <p>
-                        The recorder already has the samples: compute 60 or so
-                        peaks and send them with the message, so the bubble
-                        draws at once and the audio loads only on play.
+                        The <a href="./recording.html">recorder</a> gives the
+                        note with its length and its peaks. Fold them to 60 or
+                        so and send them with the message, so the bubble draws
+                        at once and the audio loads only on play.
                     </p>
                     <div class="code">
-                        <pre><code>import { peaksFromChannel, silencesFromPeaks } from 'sonicframe';
+                        <pre><code>import { resample, silencesFromPeaks } from 'sonicframe';
+import { createRecorder } from 'sonicframe/record';
 
-const peaks = peaksFromChannel(recording.getChannelData(0), 60);
-const silences = silencesFromPeaks(peaks, recording.duration, { minDuration: 1.5 });</code></pre>
+createRecorder({
+    container: composer,
+    theme: 'bubble',
+    async onSend(recording) {
+        const peaks = resample(recording.peaks, 60);
+        const silences = silencesFromPeaks(peaks, recording.duration, { minDuration: 1.5 });
+        await chat.sendVoiceNote({ audio: recording.blob, duration: recording.duration, peaks, silences });
+    },
+});</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                 </section>

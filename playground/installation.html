@@ -98,6 +98,20 @@ bun add sonicframe</code></pre>
                                         (Node, Deno, Bun).
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>sonicframe/record</code></td>
+                                    <td>
+                                        <code>createRecorder</code>, the
+                                        <code>Recorder</code> without a screen,
+                                        and the
+                                        <code>&lt;sonic-recorder&gt;</code> tag.
+                                    </td>
+                                    <td>
+                                        <a href="./recording.html"
+                                            >Recording from the microphone</a
+                                        >: record, hear, send.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -244,7 +258,8 @@ npm run build</code></pre>
     "imports": {
         "sonicframe": "/vendor/sonicframe/index.js",
         "sonicframe/player": "/vendor/sonicframe/player.js",
-        "sonicframe/analysis": "/vendor/sonicframe/analysis.js"
+        "sonicframe/analysis": "/vendor/sonicframe/analysis.js",
+        "sonicframe/record": "/vendor/sonicframe/record.js"
     }
 }
 &lt;/script&gt;</code></pre>
@@ -267,7 +282,8 @@ npm run build</code></pre>
         "paths": {
             "sonicframe": ["./vendor/sonicframe/index.d.ts"],
             "sonicframe/player": ["./vendor/sonicframe/player.d.ts"],
-            "sonicframe/analysis": ["./vendor/sonicframe/analysis.d.ts"]
+            "sonicframe/analysis": ["./vendor/sonicframe/analysis.d.ts"],
+            "sonicframe/record": ["./vendor/sonicframe/record.d.ts"]
         }
     }
 }</code></pre>

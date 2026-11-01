@@ -1,6 +1,6 @@
-import type { KeyModifiers } from './core/keys';
-import type { ViewState } from './core/view';
-import type { ViewSource } from './core/zoom';
+import type { KeyModifiers } from './core/frame/keys';
+import type { ViewState } from './core/view/view';
+import type { ViewSource } from './core/view/zoom';
 
 /** Peaks with the duration they came with, as `readWaveform` and `loadWaveform` give them. */
 export type PeaksData = {
@@ -209,6 +209,11 @@ export type PluginHost = {
     readonly geometry: FrameGeometry | null;
     /** The part of the sound in view; always the whole sound while zoom is off. */
     readonly view: ViewState;
+    /**
+     * The language tag the frame speaks (its `a11y.lang`, `'en'` unless the app picks one): the
+     * built-in plugins say their words in it, and a plugin of the app's can choose its own by it.
+     */
+    readonly lang: string;
     /** Moves the view (ratios of the sound); does nothing while zoom is off. */
     setView(start: number, end: number, source?: ViewSource): void;
     /** Overrides the bar heights with live values (e.g. a spectrum); null gives the peaks back. */

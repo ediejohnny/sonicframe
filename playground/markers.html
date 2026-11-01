@@ -90,7 +90,7 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                                     <td><code>group</code></td>
                                     <td>
                                         Markers closer than this many pixels
-                                        become one pill.
+                                        become one pill (12; 0 never groups).
                                     </td>
                                 </tr>
                                 <tr>
@@ -105,11 +105,40 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                                     <td>Show a tooltip on hover.</td>
                                 </tr>
                                 <tr>
+                                    <td><code>words</code></td>
+                                    <td>
+                                        Your own words over the frame's
+                                        language: <code>{ more }</code>, the
+                                        tooltip's last line when a group has
+                                        more than five markers ("and
+                                        <code>{count}</code> more").
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>backGrace</code></td>
                                     <td>
                                         Seconds after a marker within which
                                         <kbd>Shift</kbd> + <kbd>M</kbd> goes to
                                         the one before (1; 0 lands on it).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>max</code></td>
+                                    <td>
+                                        The most markers kept (2000, also the
+                                        ceiling; anything that is not a number
+                                        is 2000).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.tooltip.readable</code></td>
+                                    <td>
+                                        Writes the tooltip's text in black or
+                                        white, whichever reads on its color
+                                        (4.5:1), as the caption does. Off: the
+                                        page's color for text on the played
+                                        color
+                                        (<code>--sonicframe-on-progress</code>).
                                     </td>
                                 </tr>
                             </tbody>

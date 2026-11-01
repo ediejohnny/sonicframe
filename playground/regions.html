@@ -104,7 +104,10 @@ frame.use(parts);</code></pre>
                                 <tr>
                                     <td><code>minLength</code></td>
                                     <td><code>0.25</code></td>
-                                    <td>The shortest region, in seconds.</td>
+                                    <td>
+                                        The shortest region, in seconds; at
+                                        least 0.01.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>color</code></td>
@@ -119,7 +122,10 @@ frame.use(parts);</code></pre>
                                 <tr>
                                     <td><code>max</code></td>
                                     <td><code>200</code></td>
-                                    <td>The most regions kept.</td>
+                                    <td>
+                                        The most regions kept, at most 200;
+                                        anything that is not a number is 200.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>scrollIntoView</code></td>
@@ -144,6 +150,17 @@ frame.use(parts);</code></pre>
                                     <td>
                                         <code>{ body, moving, edge }</code>, any
                                         CSS cursor.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.words</code></td>
+                                    <td>the frame's language</td>
+                                    <td>
+                                        What the keys say:
+                                        <code>{ place, loopOn, loopOff }</code>;
+                                        <code>place</code> takes
+                                        <code>{from}</code> and
+                                        <code>{to}</code> ("0:08 to 0:16").
                                     </td>
                                 </tr>
                                 <tr>

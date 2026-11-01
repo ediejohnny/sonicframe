@@ -41,7 +41,9 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'layouts.html', name: 'Parts and layouts' },
             { file: 'drawings.html', name: 'Drawings' },
             { file: 'theming.html', name: 'Themes and palettes' },
+            { file: 'backgrounds.html', name: 'Backgrounds' },
             { file: 'themes.html', name: 'Theme gallery' },
+            { file: 'media-session.html', name: 'Lock screen and media keys' },
             { file: 'element.html', name: 'The HTML tag' },
         ],
     },
@@ -51,6 +53,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'accessibility.html', name: 'Overview' },
             { file: 'keyboard.html', name: 'Keyboard' },
             { file: 'announcements.html', name: 'Screen readers' },
+            { file: 'languages.html', name: 'Languages' },
             { file: 'words.html', name: 'The wave in words' },
             { file: 'captions.html', name: 'Captions' },
             { file: 'motion.html', name: 'Motion' },
@@ -64,6 +67,13 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'chapters.html', name: 'Chapters' },
             { file: 'waveform-files.html', name: 'Ready-made peaks' },
             { file: 'long-sound.html', name: 'A one-hour sound' },
+        ],
+    },
+    {
+        group: 'Voice',
+        pages: [
+            { file: 'recording.html', name: 'Recording' },
+            { file: 'guide-voice-note.html', name: 'A chat voice note' },
         ],
     },
     {
@@ -84,7 +94,6 @@ export const PAGES: readonly DocsGroup[] = [
         group: 'Guides',
         pages: [
             { file: 'guide-podcast.html', name: 'A podcast player' },
-            { file: 'guide-voice-note.html', name: 'A chat voice note' },
             { file: 'performance.html', name: 'Many players on a page' },
         ],
     },
