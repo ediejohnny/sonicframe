@@ -396,11 +396,12 @@ parts.set(readRegions(await file.text())); // any of the four formats</code></pr
                                     <td><code>guardFormulas</code></td>
                                     <td><code>true</code></td>
                                     <td>
-                                        CSV: a <code>'</code> before a label a
-                                        spreadsheet would run as a formula
-                                        (<code>=</code>, <code>+</code>,
-                                        <code>-</code>, <code>@</code>), taken
-                                        back when it is read.
+                                        CSV: a <code>'</code> before a label, a
+                                        color or an id a spreadsheet would run
+                                        as a formula (<code>=</code>,
+                                        <code>+</code>, <code>-</code>,
+                                        <code>@</code>), taken back when it is
+                                        read.
                                     </td>
                                 </tr>
                             </tbody>
@@ -432,8 +433,12 @@ parts.set(readRegions(await file.text())); // any of the four formats</code></pr
                         Reading refuses a text over 512 KB, keeps at most 2000
                         regions, leaves out one whose time is not a number from
                         zero or whose end comes before its start, and cleans
-                        each label to one line. The same functions are on
-                        <code>sonicframe/analysis</code>, for a server.
+                        each label to one line. A text that is no such file
+                        throws a <code>TypeError</code>; a file that holds no
+                        region gives an empty list, so check its length before
+                        <code>set()</code> replaces the regions you have. The
+                        same functions are on <code>sonicframe/analysis</code>,
+                        for a server.
                     </p>
                 </section>
             </div>

@@ -89,12 +89,17 @@ export function regionFiles(host: HTMLElement, make: MakePlayer): () => void {
             return;
         }
 
-        try {
-            const found = readRegions(await file.text());
+        // A file that is no regions file, or holds none, leaves the regions as they were.
+        const found = await file
+            .text()
+            .then((text) => readRegions(text))
+            .catch(() => []);
+
+        if (found.length === 0) {
+            status.textContent = `${file.name} has no regions to read.`;
+        } else {
             parts.set(found);
             status.textContent = `Read ${found.length} regions from ${file.name}.`;
-        } catch {
-            status.textContent = `${file.name} has no regions to read.`;
         }
 
         picker.value = '';
