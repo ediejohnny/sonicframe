@@ -81,7 +81,7 @@ SonicFrame.create({
     container: document.querySelector('#wave'),
     media: document.querySelector('audio'),
     peaks: () => loadWaveform('/voice.dat'),
-    label: 'Playback position',
+    a11y: { label: 'Playback position' },
 });
 ```
 

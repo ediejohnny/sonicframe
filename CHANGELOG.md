@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-01
+
 The API is tidied up before it is promised: one name for one idea everywhere. Nothing breaks. Every old name
 keeps working, marked `@deprecated` with what to use instead, until 2.0.
 
