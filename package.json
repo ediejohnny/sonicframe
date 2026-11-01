@@ -41,6 +41,10 @@
             "types": "./dist/player.d.ts",
             "default": "./dist/player.js"
         },
+        "./record": {
+            "types": "./dist/record.d.ts",
+            "default": "./dist/record.js"
+        },
         "./package.json": "./package.json"
     },
     "scripts": {

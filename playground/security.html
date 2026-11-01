@@ -42,6 +42,13 @@
                         <pre><code>Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self'</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                    <p>
+                        A page that <a href="./recording.html">records</a> plays
+                        the recording from a <code>blob:</code> address, so it
+                        adds <code>media-src 'self' blob:</code>; one that sends
+                        recordings with <code>upload</code> lists that address
+                        in <code>connect-src</code>.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -71,6 +78,16 @@
                             The lock screen and the media keys: words in one
                             line of 120 characters, at most eight pictures from
                             web, relative or <code>blob:</code> addresses.
+                        </li>
+                        <li>
+                            Recording: the microphone only after a press, never
+                            sent to the speakers, let go on stop, cancel and
+                            destroy; a recording capped at 100 MiB and 3600
+                            seconds. An upload goes only to a web or relative
+                            address, with header names checked and values kept
+                            to one line, every text capped, and the server's
+                            answer kept to 64 KiB; the app's icons are taken
+                            only as path data.
                         </li>
                         <li>
                             Marks, regions, analysis windows, FFT sizes, live

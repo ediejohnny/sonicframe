@@ -108,6 +108,9 @@ createPlayer({ container, src, a11y: { lang: 'es' } });
 // A wave of your own: its plugins speak its language.
 new SonicFrame({ container, media, a11y: { lang: 'pt-PT' }, plugins: [regions()] });
 
+// The recorder, and the player of its recording.
+createRecorder({ container, onSend, a11y: { lang: 'fr' } });
+
 // The controls on their own.
 PlayButton.create({ container, media, a11y: { lang: 'auto' } });
 VolumeControl.create({ container, media, a11y: { lang: 'auto' } });

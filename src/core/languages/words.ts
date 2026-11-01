@@ -136,6 +136,53 @@ export type RegionWords = {
     loopOff: string;
 };
 
+/** What the voice recorder (`sonicframe/record`) says and names. `{name}` marks are filled in. */
+export type RecorderWords = {
+    /** The recorder as a whole (a group). */
+    recorder: string;
+    record: string;
+    stop: string;
+    pause: string;
+    resume: string;
+    discard: string;
+    send: string;
+    /** The player of the recording, to hear it before sending. */
+    review: string;
+    /** Shown and said while the browser asks for the microphone. */
+    asking: string;
+    /** Said when recording starts or goes on. */
+    recording: string;
+    paused: string;
+    /** Said when recording stops: `{time}`, its length. */
+    stopped: string;
+    /** Said when recording stops at its limit. */
+    limit: string;
+    deleted: string;
+    sending: string;
+    /** Shown while sending, when the app tells how far it got: `{percent}`, from 0 to 100. */
+    sendingPercent: string;
+    sent: string;
+    sendFailed: string;
+    /** The send button while sending, with `cancelSend`. */
+    cancelSend: string;
+    /** Said when a send is canceled. */
+    sendCanceled: string;
+    /** Why recording cannot happen: the microphone blocked. */
+    denied: string;
+    /** No microphone. */
+    missing: string;
+    /** A page without HTTPS. */
+    insecure: string;
+    /** A browser that cannot record. */
+    unsupported: string;
+    /** Anything else that broke the recording. */
+    failed: string;
+    /** The recording grew past its size cap. */
+    tooLarge: string;
+    /** Said every few seconds while recording, when asked: `{time}`. */
+    elapsed: string;
+};
+
 /** The player's labels that the pieces it is built of bring. */
 type Borrowed =
     | 'play'
@@ -190,4 +237,5 @@ export type Words = {
     description: DescriptionWords;
     /** The ready-made player's own words; it borrows the rest of its labels from the pieces above. */
     player: Omit<PlayerLabels, Borrowed>;
+    recorder: RecorderWords;
 };

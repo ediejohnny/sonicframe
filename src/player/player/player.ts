@@ -26,7 +26,6 @@ import {
     type PlayerLook,
 } from '../../core/player/look';
 import {
-    choosePalette,
     DEFAULT_PALETTE,
     unknownPalette,
     type Palette,
@@ -53,7 +52,6 @@ import type { SonicFrameOptions } from '../../dom/frame/frame-options';
 import { css } from '../../dom/shared/css';
 import { useFont } from '../../dom/shared/fonts';
 import { observeSize } from '../../dom/shared/observe';
-import { onSchemeChange, prefersDark } from '../../dom/shared/scheme';
 import { remPixels } from '../../dom/shared/units';
 import type { ChaptersPlugin } from '../../plugins/chapters/chapters-options';
 import type { SoundDescriptionPlugin } from '../../plugins/description/description';
@@ -76,7 +74,7 @@ import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
 import { farGroup, placeOf, PlayerLayout, type Piece } from './player-layout';
 import type { PlayerEvents, PlayerOptions } from './player-options';
 import { PlayerBackdrop } from '../background/backdrop';
-import { finishBox, wearPalette } from './player-paint';
+import { finishBox, followPalette, wearPalette } from './player-paint';
 import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
 import { PlayerSession } from './player-session';
 import { PlayerSound } from './player-sound';
@@ -889,24 +887,15 @@ export class Player {
     /** Wears the palette chosen: `'auto'` follows the system; an unknown name is reported and left out. */
     private applyPalette(): void {
         this.stopScheme?.();
-        this.stopScheme = null;
-
         const choice = this.palette;
-
-        if (choice === 'auto') {
-            const follow = (dark: boolean): void =>
-                this.paint(choosePalette('auto', dark));
-            this.stopScheme = onSchemeChange(follow);
-            follow(prefersDark());
-
-            return;
-        }
 
         if (unknownPalette(choice)) {
             this.later(unknownName('palette', choice));
         }
 
-        this.paint(choosePalette(choice, false));
+        this.stopScheme = followPalette(choice, (palette) =>
+            this.paint(palette),
+        );
     }
 
     /** Puts a palette on the player (null: SonicFrame's own colors), then its box, then the wave's colors. */

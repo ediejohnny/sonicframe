@@ -15,6 +15,7 @@ import {
 } from 'vite-plus/test';
 import { recordingOf } from '../../support/fakes';
 import { mount, fakeMedia, type Mounted } from '../../support/helpers';
+import { FakeRecorder } from '../../support/recording';
 
 let mounted: Mounted | null = null;
 
@@ -36,38 +37,6 @@ describe('frame.exportClip', () => {
         await expect(mounted.frame.exportClip()).rejects.toThrow(/no audio/);
     });
 });
-
-/** A recorder that keeps only its state; as in browsers, stopping an idle one does nothing and fires nothing. */
-class FakeRecorder {
-    static failStart = false;
-
-    static isTypeSupported(): boolean {
-        return true;
-    }
-
-    state: 'inactive' | 'recording' = 'inactive';
-    readonly mimeType = 'video/webm';
-    ondataavailable: ((event: { data: Blob }) => void) | null = null;
-    onerror: (() => void) | null = null;
-    onstop: (() => void) | null = null;
-
-    start(): void {
-        if (FakeRecorder.failStart) {
-            throw new DOMException('no tracks to record', 'NotSupportedError');
-        }
-
-        this.state = 'recording';
-    }
-
-    stop(): void {
-        if (this.state === 'inactive') {
-            return;
-        }
-
-        this.state = 'inactive';
-        this.onstop?.();
-    }
-}
 
 /** An audio context whose `resume` settles or, like a page before any user gesture, never does. */
 class FakeAudioContext {

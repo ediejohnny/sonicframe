@@ -19,19 +19,12 @@ import type {
     PlayerZoom,
 } from '../player/player-options';
 import type { MediaSessionDetails } from '../../core/session/media-session';
+import { attributeNumber } from '../../dom/shared/custom-element';
 import { backgroundLookOf } from './background-attributes';
 
 /** The words of an attribute, lowercase. */
 function wordsOf(value: string): Set<string> {
     return new Set(value.toLowerCase().split(/\s+/));
-}
-
-/** A number from an attribute, or undefined when it is not one. */
-function numberOf(value: string | null): number | undefined {
-    const text = value?.trim() ?? '';
-    const number = Number(text);
-
-    return text !== '' && Number.isFinite(number) ? number : undefined;
 }
 
 /**
@@ -57,7 +50,7 @@ function zoomOf(
         followType: words.has('center') ? 'center' : 'page',
         edgeScroll: words.has('edges'),
         buttons: words.has('buttons'),
-        max: numberOf(max),
+        max: attributeNumber(max),
     };
 }
 
@@ -206,8 +199,10 @@ function peaksReading(element: Element): ReadWaveformOptions {
 
     return {
         channel:
-            channel?.trim().toLowerCase() === 'all' ? 'all' : numberOf(channel),
-        maxPeaks: numberOf(element.getAttribute('peaks-max')),
+            channel?.trim().toLowerCase() === 'all'
+                ? 'all'
+                : attributeNumber(channel),
+        maxPeaks: attributeNumber(element.getAttribute('peaks-max')),
         normalize: element.hasAttribute('peaks-normalize'),
     };
 }
