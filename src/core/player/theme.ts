@@ -11,14 +11,17 @@
 import type { BarStyle, WaveName, WaveStyle } from '../../types';
 import { within } from '../shared/checked';
 import { DEFAULT_LOOK, resolveLook, type PlayerLook } from './look';
-import type { PaletteChoice, PaletteName } from './palettes';
-import { THEMES, isThemeName } from './themes';
+import type { PaletteChoice } from './palettes';
+import { THEMES, isThemeName, type ThemeName } from './themes';
 
 export type Theme = {
     /** How the player is put together. */
     look: Partial<PlayerLook>;
-    /** The palette used unless the player names one (`'default'`: SonicFrame's own colors). */
-    palette: PaletteName | 'auto' | 'default';
+    /**
+     * The palette used unless the player names one: a name, `'auto'`, `'default'` (SonicFrame's own
+     * colors) or your own colors (any left out come from `light`).
+     */
+    palette: PaletteChoice;
     /** How the sound is drawn. */
     wave: Partial<WaveStyle>;
     /** The bars' density and shape. */
@@ -26,7 +29,12 @@ export type Theme = {
 };
 
 /** A theme to make: any part of one, laid over the theme named in `extends`. */
-export type ThemeInput = Partial<Theme> & { extends?: string };
+export type ThemeInput = Partial<Omit<Theme, 'wave'>> & {
+    /** How the sound is drawn: a drawing's name (`'bars'`), or its details. */
+    wave?: WaveName | Partial<WaveStyle>;
+    /** The theme this one builds on: a built-in or registered name; the default theme otherwise. */
+    extends?: ThemeName | (string & {});
+};
 
 /** A player's own choices, at creation or through a setter: they always win over its theme. */
 export type OwnChoices = {
@@ -97,6 +105,13 @@ function mergeLook(
     return merged;
 }
 
+/** A drawing given by its name or by its details, as details. */
+function waveOf(
+    wave: WaveName | Partial<WaveStyle> | undefined,
+): Partial<WaveStyle> {
+    return typeof wave === 'string' ? { style: wave } : (wave ?? {});
+}
+
 /** A built-in or registered theme by name, or null. */
 export function findTheme(name: string): Theme | null {
     if (isThemeName(name)) {
@@ -116,7 +131,7 @@ export function defineTheme(input: ThemeInput): Theme {
     return {
         look: mergeLook(parent.look, input.look),
         palette: input.palette ?? parent.palette,
-        wave: { ...parent.wave, ...input.wave },
+        wave: { ...parent.wave, ...waveOf(input.wave) },
         bar: cleanBar({ ...parent.bar, ...input.bar }),
     };
 }
@@ -145,15 +160,11 @@ export function themeParts(
     options: OwnChoices,
 ): ThemeParts {
     const base = theme ?? THEMES.default;
-    const own: Partial<WaveStyle> =
-        typeof options.wave === 'string'
-            ? { style: options.wave }
-            : (options.wave ?? {});
 
     return {
         look: resolveLook(resolveLook(DEFAULT_LOOK, base.look), options.look),
         palette: options.palette ?? base.palette,
-        wave: { ...base.wave, ...own },
+        wave: { ...base.wave, ...waveOf(options.wave) },
         bar: cleanBar({ ...base.bar, ...options.bar }),
     };
 }

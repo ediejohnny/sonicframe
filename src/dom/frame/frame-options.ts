@@ -1,5 +1,6 @@
 /** What a frame takes: its options, grouped by place, and the bars and colors it draws by default. */
 
+import type { LanguageTag } from '../../core/languages/language';
 import type { ValueText } from '../../core/frame/controller';
 import { PROGRESS, WAVE } from '../../core/shared/variables';
 import type { ZoomOptions, ZoomWords } from '../../core/view/zoom';
@@ -65,7 +66,7 @@ export type SonicFrameA11y = {
      * Portuguese of Brazil), `'pt-PT'`, `'es'`, `'fr'`, a registered one (`registerLanguage`), or
      * `'auto'` (the page's). A tag with a region finds its language (`'es-MX'` speaks Spanish).
      */
-    lang?: string;
+    lang?: LanguageTag;
     zoom?: {
         /** Says the new view through the live region after a zoom by the keys, a button or two fingers. Off by default. */
         announce?: boolean;

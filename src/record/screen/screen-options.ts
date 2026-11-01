@@ -1,10 +1,12 @@
 /** What the recorder's screen takes and tells: its options, its parts in each state, and its events. */
 
+import type { LanguageTag } from '../../core/languages/language';
 import type { RecorderWords } from '../../core/languages/words';
 import type { FontChoice } from '../../core/player/fonts';
 import type { PlayerLook } from '../../core/player/look';
 import type { PaletteChoice } from '../../core/player/palettes';
 import type { ThemeInput } from '../../core/player/theme';
+import type { ThemeName } from '../../core/player/themes';
 import type { RecorderState } from '../../core/recording/recording';
 import type { BarStyle, WaveName, WaveStyle } from '../../types';
 import type { RecorderUpload } from '../../core/recording/upload';
@@ -105,6 +107,16 @@ export type RecorderIcon =
     | 'send'
     | 'cancel';
 
+export const RECORDER_ICONS: readonly RecorderIcon[] = Object.freeze([
+    'record',
+    'stop',
+    'pause',
+    'resume',
+    'discard',
+    'send',
+    'cancel',
+]);
+
 /** How the record button looks: the screen's dot, a red button, a microphone, or a retro REC badge. */
 export type RecordStyle = 'dot' | 'red' | 'mic' | 'rec';
 
@@ -156,9 +168,25 @@ export const RECORDER_AFTER_STOP: readonly RecorderAfterStop[] = Object.freeze([
     'none',
 ]);
 
+/** What follows a send: start over (the default) or keep the recording on screen. */
+export type RecorderAfterSend = 'reset' | 'keep';
+
+export const RECORDER_AFTER_SEND: readonly RecorderAfterSend[] = Object.freeze([
+    'reset',
+    'keep',
+]);
+
+/** How the live wave moves while recording: scrolling through the last seconds, or fitting it all. */
+export type RecorderLive = 'scroll' | 'fit';
+
+export const RECORDER_LIVE: readonly RecorderLive[] = Object.freeze([
+    'scroll',
+    'fit',
+]);
+
 export type RecorderScreenA11y = {
     /** The language of the screen's words and its player's: `'en'` by default, `'auto'` the page's. */
-    lang?: string;
+    lang?: LanguageTag;
     /** Your own words, over the language's. */
     labels?: Partial<RecorderWords>;
     /** Says the time recorded every this many seconds while recording; 0 (the default) never. */
@@ -173,11 +201,11 @@ export type RecorderScreenOptions = RecorderOptions & {
     /** The app's own buttons, by name; each shows where its name is listed in `parts`. */
     actions?: Readonly<Record<string, RecorderAction>>;
     /** The live wave scrolls through the last seconds (`'scroll'`, the default) or fits the whole recording (`'fit'`). */
-    live?: 'scroll' | 'fit';
+    live?: RecorderLive;
     /** Seconds the scrolling wave shows: 10 by default, from 2 to 60. */
     window?: number;
     /** A theme, as the player takes it; it dresses the screen and the player of the recording. */
-    theme?: string | ThemeInput;
+    theme?: ThemeName | (string & {}) | ThemeInput;
     /** The screen's look, as the player's; laid over the theme's. */
     look?: Partial<PlayerLook>;
     /** The look of the player of the recording alone, laid over `look`; its rows under the wave start under its play button unless this says otherwise. */
@@ -221,7 +249,7 @@ export type RecorderScreenOptions = RecorderOptions & {
     /** While sending, the send button cancels the send (its signal aborts, the recording stays in review). Off by default. */
     cancelSend?: boolean;
     /** After a send: back to the start (`'reset'`, the default) or keep the recording (`'keep'`). */
-    afterSend?: 'reset' | 'keep';
+    afterSend?: RecorderAfterSend;
     /** Recording while the record button is held, stopping on release; a click still records. Off by default. */
     hold?: boolean;
     a11y?: RecorderScreenA11y;

@@ -13,7 +13,12 @@ export {
     peakLevel,
     silencesFromPeaks,
     type ChannelSource,
+    type FindSilencesOptions,
+    type Levels,
+    type LevelsOptions,
+    type PeakLevel,
     type Silence,
+    type SilencesFromPeaksOptions,
 } from './core/analysis/analysis';
 export {
     chapterAt,
@@ -24,15 +29,12 @@ export {
     readChapters,
     type Chapter,
     type ChapterInput,
-    type ChaptersFetcher,
+    type ChaptersSource,
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export {
-    DESCRIPTION_WORDS,
     describeSound,
-    soundWords,
     type DescribeOptions,
-    type SoundWords,
 } from './core/description/describe';
 export {
     nextPart,
@@ -40,24 +42,31 @@ export {
     partAt,
     silenceAt,
     type OutlineOptions,
+    type SilenceKind,
     type SoundLevel,
     type SoundOutline,
     type SoundPart,
 } from './core/description/outline';
-export type { DescriptionWords, Words } from './core/languages/words';
+export type {
+    DescriptionWords,
+    RecorderWords,
+    Words,
+} from './core/languages/words';
 export {
     LANGUAGE_NAMES,
     registerLanguage,
+    wordsFor,
     type Language,
+    type LanguageTag,
 } from './core/languages/language';
 export { languageProblems } from './core/languages/language-check';
 export {
     loadWaveform,
     readWaveform,
     type LoadWaveformOptions,
-    type WaveformFetcher,
-    type WaveformResponse,
 } from './core/peaks/read-waveform';
+export { resample as resamplePeaks } from './core/peaks/peaks';
+export type { FetchedResponse, Fetcher } from './core/shared/fetch';
 export type {
     ReadWaveformOptions,
     WaveformData,
@@ -68,3 +77,30 @@ export {
     type WaveformJson,
     type WriteWaveformOptions,
 } from './core/peaks/write-waveform';
+
+// Names kept until 2.0: each works as before, and its note says what to use instead.
+
+import {
+    soundWords as describeSoundWords,
+    DESCRIPTION_WORDS as descriptionWords,
+    type SoundWords as DescribeSoundWords,
+} from './core/description/describe';
+import type { FetchedResponse, Fetcher } from './core/shared/fetch';
+
+/** @deprecated The description plugin's own pieces; goes in 2.0. */
+export const soundWords: typeof describeSoundWords = describeSoundWords;
+
+/** @deprecated The description plugin's own pieces; goes in 2.0. */
+export type SoundWords = DescribeSoundWords;
+
+/** @deprecated Use `wordsFor(tag).description`; goes in 2.0. */
+export const DESCRIPTION_WORDS: typeof descriptionWords = descriptionWords;
+
+/** @deprecated Use `Fetcher`; goes in 2.0. */
+export type WaveformFetcher = Fetcher;
+
+/** @deprecated Use `Fetcher`; goes in 2.0. */
+export type ChaptersFetcher = Fetcher;
+
+/** @deprecated Use `FetchedResponse`; goes in 2.0. */
+export type WaveformResponse = FetchedResponse;

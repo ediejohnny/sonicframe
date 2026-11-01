@@ -8,6 +8,7 @@
  * screen reader (never on its own: only through `speak()`). Text only ever goes in as text.
  */
 
+import type { LanguageTag } from '../../core/languages/language';
 import { soundWords, type SoundWords } from '../../core/description/describe';
 import {
     nextPart,
@@ -41,7 +42,7 @@ export type SoundDescriptionOptions = OutlineOptions & {
      * The frame's language by default (English unless it has one); `'en'`, `'pt'`, `'pt-PT'`, `'es'`,
      * `'fr'`, a registered one, any tag with your own `words`, or `'auto'` (the page's language).
      */
-    lang?: string;
+    lang?: LanguageTag;
     /** Your own phrases, over the built-in ones. */
     words?: Partial<DescriptionWords>;
     /** Positions as words (`'words'`, the default) or as a clock (`'clock'`). */

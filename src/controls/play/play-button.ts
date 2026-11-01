@@ -14,7 +14,7 @@ import {
     type ButtonLook,
     type ButtonShape,
 } from '../../core/controls/button';
-import { wordsFor } from '../../core/languages/language';
+import { wordsFor, type LanguageTag } from '../../core/languages/language';
 import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { applyStyles } from '../../core/shared/styles';
@@ -46,7 +46,7 @@ export type PlayButtonOptions = {
          * The language of the button's names: `'en'` (the default), `'pt'`, `'pt-PT'`, `'es'`, `'fr'`,
          * a registered one, or `'auto'` (the page's).
          */
-        lang?: string;
+        lang?: LanguageTag;
     };
 };
 

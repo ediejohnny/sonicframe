@@ -49,6 +49,14 @@ describe('outlining a sound', () => {
         expect(outline?.loudest).toBeCloseTo(12.15, 1);
     });
 
+    it('reads peaks straight from a Float32Array, as decoded audio gives them', () => {
+        const outline = outlineSound(Float32Array.from(NOTE), 33);
+
+        expect(outline?.parts).toHaveLength(2);
+        expect(outline?.parts[0].end).toBeCloseTo(20, 5);
+        expect(outline?.parts[1].start).toBeCloseTo(24, 5);
+    });
+
     it('says nothing without peaks or a real duration', () => {
         expect(outlineSound([], 10)).toBeNull();
         expect(outlineSound([0.5], 0)).toBeNull();

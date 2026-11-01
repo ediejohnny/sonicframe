@@ -6,7 +6,7 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
-import { chapters, type ChaptersFetcher } from '../../../src/index';
+import { chapters, type Fetcher } from '../../../src/index';
 import { firePointer, playTo, pressKey } from '../../support/events';
 import { recordingOf } from '../../support/fakes';
 import {
@@ -269,7 +269,7 @@ describe('the strip of titles', () => {
 });
 
 describe('where the chapters come from', () => {
-    function vtt(calls: { count: number }): ChaptersFetcher {
+    function vtt(calls: { count: number }): Fetcher {
         const bytes = new TextEncoder().encode(
             'WEBVTT\n\n00:00.000 --> 00:30.000\nOne\n\n00:30.000 --> 01:40.000\nTwo',
         );

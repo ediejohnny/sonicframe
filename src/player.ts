@@ -12,6 +12,7 @@ export type {
     ChaptersPlugin,
     PlayerA11y,
     PlayerChapterList,
+    PlayerChapterListStyle,
     PlayerChapters,
     PlayerDecode,
     PlayerDescription,
@@ -23,6 +24,24 @@ export type {
     PlayerOptions,
     PlayerZoom,
 } from './player/player/player-options';
+export type {
+    BarStyle,
+    ButtonFill,
+    ButtonShape,
+    ChaptersOptions,
+    MinimapOptions,
+    PeaksSource,
+    PlayButton,
+    Plugin,
+    SonicFrame,
+    SoundDescriptionOptions,
+    SpeechOptions,
+    TooltipA11y,
+    VolumeControl,
+    WaveName,
+    WaveStyle,
+    ZoomOptions,
+} from './player/player/player-types';
 export {
     loadWaveform,
     readWaveform,
@@ -34,6 +53,7 @@ export {
     readChapters,
     type Chapter,
     type ChapterInput,
+    type ChaptersSource,
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export { defineSonicPlayer, PLAYER_ATTRIBUTES } from './player/element/element';
@@ -41,14 +61,12 @@ export type { PlayerLabels, Words } from './core/languages/words';
 export {
     LANGUAGE_NAMES,
     registerLanguage,
+    wordsFor,
     type Language,
+    type LanguageTag,
 } from './core/languages/language';
 export { languageProblems } from './core/languages/language-check';
-export {
-    PLAYER_LABELS,
-    playerWords,
-    type PlayerWords,
-} from './core/player/labels';
+export { PLAYER_LABELS } from './core/player/labels';
 export {
     DEFAULT_LOOK,
     PART_NAMES,
@@ -84,7 +102,6 @@ export {
     PALETTE_NAMES,
     PALETTES,
     paletteVariables,
-    pickPalette,
     type Palette,
     type PaletteChoice,
     type PaletteName,
@@ -92,9 +109,34 @@ export {
 export {
     FONT_NAMES,
     FONT_STACKS,
-    resolveFont,
-    safeFontUrl,
     type FontChoice,
     type FontName,
     type FontSource,
 } from './core/player/fonts';
+
+// Names kept until 2.0: each works as before, and its note says what to use instead.
+
+import {
+    playerWords as labelWords,
+    type PlayerWords as LabelWords,
+} from './core/player/labels';
+import { pickPalette as choosePalette } from './core/player/palettes';
+import {
+    resolveFont as fontStack,
+    safeFontUrl as fontUrl,
+} from './core/player/fonts';
+
+/** @deprecated The player's own words come from `wordsFor(tag).player`; goes in 2.0. */
+export const playerWords: typeof labelWords = labelWords;
+
+/** @deprecated The player's own words come from `wordsFor(tag).player`; goes in 2.0. */
+export type PlayerWords = LabelWords;
+
+/** @deprecated Use `PALETTES[name]`; the player picks the dark variant itself. Goes in 2.0. */
+export const pickPalette: typeof choosePalette = choosePalette;
+
+/** @deprecated The player resolves its `font` itself; goes in 2.0. */
+export const resolveFont: typeof fontStack = fontStack;
+
+/** @deprecated The player checks a font's address itself; goes in 2.0. */
+export const safeFontUrl: typeof fontUrl = fontUrl;

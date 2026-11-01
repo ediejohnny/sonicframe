@@ -3,6 +3,7 @@
 import type {
     Chapter,
     ChapterInput,
+    ChaptersSource,
     LoadChaptersOptions,
 } from '../../core/chapters/chapters';
 import { EN } from '../../core/languages/en';
@@ -82,7 +83,7 @@ export type ChaptersPlugin = Plugin & {
     /** The chapter playing, or null. */
     readonly current: Chapter | null;
     /** Replaces the chapters: a list, WebVTT or JSON text, or null for none. Throws on what is not chapters. */
-    set(input: unknown): void;
+    set(input: ChaptersSource): void;
     /** Fetches a chapters file and shows it; rejects when it cannot. */
     load(url: string): Promise<void>;
     /** Goes to a chapter's start; false when there is no such chapter or no duration yet. */

@@ -166,7 +166,7 @@ function levelOf(values: readonly number[], quiet: number): SoundLevel {
  * duration in seconds. Null without peaks or without a real duration.
  */
 export function outlineSound(
-    peaks: readonly number[],
+    peaks: ArrayLike<number>,
     duration: number,
     options: OutlineOptions = {},
 ): SoundOutline | null {
@@ -247,11 +247,14 @@ export function partAt(outline: SoundOutline, time: number): number {
     );
 }
 
+/** A quiet stretch inside the sound (a pause) or at its ends (silence). */
+export type SilenceKind = 'pause' | 'silence';
+
 /** Which silence `time` is in: a pause between two parts, the silence at an end, or none (null). */
 export function silenceAt(
     outline: SoundOutline,
     time: number,
-): 'pause' | 'silence' | null {
+): SilenceKind | null {
     if (partAt(outline, time) >= 0) {
         return null;
     }

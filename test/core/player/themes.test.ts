@@ -106,6 +106,18 @@ describe('defineTheme and registerTheme', () => {
         );
     });
 
+    it('takes a drawing by its name, as the player does, keeping the rest of the parent’s', () => {
+        const theme = defineTheme({ extends: 'bubble', wave: 'scope' });
+
+        expect(theme.wave).toEqual({ ...THEMES.bubble.wave, style: 'scope' });
+    });
+
+    it('keeps a palette of its own, colors left out included', () => {
+        const theme = defineTheme({ palette: { progress: '#ff0000' } });
+
+        expect(theme.palette).toEqual({ progress: '#ff0000' });
+    });
+
     it('merges the button instead of replacing it', () => {
         const theme = defineTheme({
             extends: 'bubble',

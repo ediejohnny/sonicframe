@@ -19,9 +19,7 @@ export {
 export {
     DEFAULT_RECORD_TYPES,
     MAX_RECORDING_BYTES,
-    RECORDER_EVENTS,
     RECORDER_STATES,
-    type RecorderEvent,
     type RecorderState,
 } from './core/recording/recording';
 export {
@@ -38,13 +36,18 @@ export {
     RECORD_STYLES,
     type RecPlace,
     type RecordStyle,
+    RECORDER_AFTER_SEND,
     RECORDER_AFTER_STOP,
     RECORDER_ALIGNS,
+    RECORDER_ICONS,
+    RECORDER_LIVE,
     RECORDER_PARTS,
     type RecorderAction,
+    type RecorderAfterSend,
     type RecorderAfterStop,
     type RecorderAlign,
     type RecorderIcon,
+    type RecorderLive,
     type RecorderPart,
     type RecorderPartName,
     type RecorderParts,
@@ -64,3 +67,18 @@ export {
     RECORDER_ATTRIBUTES,
 } from './record/element/recorder-element';
 export type { RecorderWords } from './core/languages/words';
+export type { LanguageTag } from './core/languages/language';
+export type { LevelTrack } from './core/recording/levels';
+
+// Names kept until 2.0: each works as before, and its note says what to use instead.
+
+import {
+    RECORDER_EVENTS as screenSteps,
+    type RecorderEvent as ScreenStep,
+} from './core/recording/recording';
+
+/** @deprecated The steps of the screen's own state machine, not events; goes in 2.0. */
+export const RECORDER_EVENTS: typeof screenSteps = screenSteps;
+
+/** @deprecated The steps of the screen's own state machine, not events; goes in 2.0. */
+export type RecorderEvent = ScreenStep;

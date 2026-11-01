@@ -12,8 +12,8 @@ import {
     MAX_CHAPTERS,
     nextChapter,
     readChapters,
-    type ChaptersFetcher,
 } from '../../../src/core/chapters/chapters';
+import type { Fetcher } from '../../../src/core/shared/fetch';
 import { serve } from '../../support/responses';
 import { starts, titles } from './chapter-fields';
 
@@ -21,7 +21,7 @@ import { starts, titles } from './chapter-fields';
 function respond(
     text: string,
     options: { status?: number; length?: number } = {},
-): ChaptersFetcher {
+): Fetcher {
     return serve(new TextEncoder().encode(text), options);
 }
 
@@ -341,7 +341,7 @@ describe('loadChapters', () => {
 
     it('fetches an address once per page unless it is not shared', async () => {
         let calls = 0;
-        const fetcher: ChaptersFetcher = (url) => {
+        const fetcher: Fetcher = (url) => {
             calls++;
 
             return respond('{"chapters":[{"startTime":0,"title":"A"}]}')(url);

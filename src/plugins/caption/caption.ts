@@ -17,14 +17,14 @@ import type { Lane, Plugin, PluginHost } from '../../types';
 /** One block of tooltip text: a `label` (e.g. "Auto-transcript") and the text, with its own cap. */
 export type TooltipSection = { label?: string; text: string; limit?: number };
 
-/** The tooltip's text: a single string, several labelled sections, or `'caption'` (the line itself). */
-export type TooltipContent = string | TooltipSection[];
+/** The tooltip's text: a single string, or several labelled sections. */
+export type TooltipContent = string | readonly TooltipSection[];
 
 export type CaptionOptions = {
     /** The caption text. */
     text?: string;
     /** Up to three short marks shown before the text (e.g. `['auto', 'pt']`). */
-    badges?: string[];
+    badges?: readonly string[];
     /** What the tooltip shows; left out, it repeats the caption text, longer. */
     tooltip?: TooltipContent;
     /** The most characters the tooltip shows before a word-boundary cut. */

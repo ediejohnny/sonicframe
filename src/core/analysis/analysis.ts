@@ -16,6 +16,41 @@ export type ChannelSource = {
 /** A stretch of quiet, in seconds. */
 export type Silence = { start: number; end: number };
 
+/** The options of `levels`. */
+export type LevelsOptions = {
+    /** The window, in seconds: 0.05 by default. */
+    windowSeconds?: number;
+};
+
+/** What `levels` gives: the RMS and the peak of each window, and the window used, in seconds. */
+export type Levels = { rms: number[]; peak: number[]; windowSeconds: number };
+
+/** The options of `findSilences`. */
+export type FindSilencesOptions = {
+    /** Below this level, in dB of the RMS, is quiet: -45 by default. */
+    thresholdDb?: number;
+    /** The shortest silence kept, in seconds: 0.4 by default. */
+    minDuration?: number;
+    /** The window the level is measured on, in seconds: 0.02 by default. */
+    windowSeconds?: number;
+};
+
+/** The options of `silencesFromPeaks`. */
+export type SilencesFromPeaksOptions = {
+    /** Below this peak, on the peaks' own 0..1 scale, is quiet: 0.05 by default. */
+    threshold?: number;
+    /** The shortest silence kept, in seconds: 0.4 by default. */
+    minDuration?: number;
+};
+
+/** What `peakLevel` gives: the loudest sample, in dB too, and whether (and how often) the sound clips. */
+export type PeakLevel = {
+    peak: number;
+    peakDb: number;
+    clipped: boolean;
+    clipRuns: number;
+};
+
 const MAX_WINDOWS = 200_000;
 const MAX_SILENCES = 10_000;
 
@@ -27,8 +62,8 @@ function amplitudeFromDb(db: number): number {
 export function levels(
     samples: ArrayLike<number>,
     sampleRate: number,
-    options: { windowSeconds?: number } = {},
-): { rms: number[]; peak: number[]; windowSeconds: number } {
+    options: LevelsOptions = {},
+): Levels {
     const wanted = Math.max(
         1,
         Math.round(sampleRate * finiteOr(options.windowSeconds, 0.05)),
@@ -67,11 +102,7 @@ export function levels(
 export function findSilences(
     samples: ArrayLike<number>,
     sampleRate: number,
-    options: {
-        thresholdDb?: number;
-        minDuration?: number;
-        windowSeconds?: number;
-    } = {},
+    options: FindSilencesOptions = {},
 ): Silence[] {
     const minDuration = finiteOr(options.minDuration, 0.4);
     const thresholdDb = finiteOr(options.thresholdDb, -45);
@@ -119,7 +150,7 @@ export function findSilences(
 export function silencesFromPeaks(
     peaks: ArrayLike<number>,
     duration: number,
-    options: { threshold?: number; minDuration?: number } = {},
+    options: SilencesFromPeaksOptions = {},
 ): Silence[] {
     const threshold = finiteOr(options.threshold, 0.05);
     const minDuration = finiteOr(options.minDuration, 0.4);
@@ -162,12 +193,7 @@ export function silencesFromPeaks(
 }
 
 /** The loudest sample and whether (and how often) the sound clips. */
-export function peakLevel(samples: ArrayLike<number>): {
-    peak: number;
-    peakDb: number;
-    clipped: boolean;
-    clipRuns: number;
-} {
+export function peakLevel(samples: ArrayLike<number>): PeakLevel {
     let peak = 0;
     let clipRuns = 0;
     let inClip = false;

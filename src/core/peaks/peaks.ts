@@ -104,7 +104,7 @@ export function loadPeaks(
  * Fits peaks into `count` values. Folding keeps the loudest point of each slice, so short sounds
  * never vanish; stretching blends neighbours, so a short list does not turn into steps.
  */
-export function resample(peaks: readonly number[], count: number): number[] {
+export function resample(peaks: ArrayLike<number>, count: number): number[] {
     const length = peaks.length;
     const total = Math.floor(count);
 
@@ -113,7 +113,7 @@ export function resample(peaks: readonly number[], count: number): number[] {
     }
 
     if (total === length) {
-        return [...peaks];
+        return Array.from(peaks);
     }
 
     if (total > length) {

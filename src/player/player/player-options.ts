@@ -1,11 +1,13 @@
 /** What a player takes and what it tells: its options, grouped by place, and its events. */
 
+import type { LanguageTag } from '../../core/languages/language';
 import type { Chapter, ChapterInput } from '../../core/chapters/chapters';
 import type { PlayerLabels } from '../../core/languages/words';
 import type { FontChoice } from '../../core/player/fonts';
 import type { PlayerLook } from '../../core/player/look';
 import type { PaletteChoice } from '../../core/player/palettes';
 import type { ThemeInput } from '../../core/player/theme';
+import type { ThemeName } from '../../core/player/themes';
 import type { ZoomOptions } from '../../core/view/zoom';
 import type { SonicFrameOptions } from '../../dom/frame/frame-options';
 import type { ChapterListLook } from '../../plugins/chapters/chapter-list-look';
@@ -58,7 +60,7 @@ export type PlayerOptions = {
      * A whole player in one name (`'bubble'`, `'pulse'`, a name you registered) or one made with
      * `defineTheme`. The options below win over it.
      */
-    theme?: string | ThemeInput;
+    theme?: ThemeName | (string & {}) | ThemeInput;
     /** How the player is put together (parts, sizes, finish); laid over the theme's look. */
     look?: Partial<PlayerLook>;
     /**
@@ -127,7 +129,7 @@ export type PlayerA11y = {
      * registered one (`registerLanguage`), or `'auto'` (the page's language). A tag with a region finds
      * its language (`'es-MX'` speaks Spanish). Given, it also marks the player with it.
      */
-    lang?: string;
+    lang?: LanguageTag;
     /** Your own accessible names and words, over the language's. */
     labels?: Partial<PlayerLabels>;
     /**
