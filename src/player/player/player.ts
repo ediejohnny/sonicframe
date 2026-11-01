@@ -70,6 +70,7 @@ import {
     ChapterParts,
     type ChapterHost,
 } from '../chapters/chapter-parts';
+import { playerKeyboard, type PlayerKeyboard } from '../keys/player-keys';
 import { listenPart } from '../parts/listen-button';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
@@ -139,6 +140,7 @@ export class Player {
     private width: number | null = null;
     private readonly stopSize: () => void;
     private stopScheme: (() => void) | null = null;
+    private readonly keyboard: PlayerKeyboard | null;
     private destroyed = false;
 
     constructor(options: PlayerOptions) {
@@ -232,6 +234,8 @@ export class Player {
             this.width = size.width / size.pixelRatio;
             outsideSizeReport(this.settle);
         });
+
+        this.keyboard = playerKeyboard(options, this.host);
     }
 
     /** Fits the player to its size now: the voice note, the parts on the bars, the names, the background. */
@@ -383,6 +387,7 @@ export class Player {
         this.abort.abort();
         this.stopScheme?.();
         this.stopSize();
+        this.keyboard?.destroy();
         this.teardown();
         this.chapterParts.destroy();
         this.backdrop.destroy();

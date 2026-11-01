@@ -80,6 +80,34 @@ export function unmutedLevel(volume: number): number {
     return volume > 0 ? clampLevel(volume) : 0.5;
 }
 
+/** What the volume changes on a media element. */
+export type VolumeMedia = { volume: number; muted: boolean };
+
+/** The level a media plays at, as a volume control shows it: 0 while muted. */
+export function shownLevel(media: VolumeMedia): number {
+    return media.muted ? 0 : clampLevel(media.volume);
+}
+
+/** Sets a media's level, kept to 0..1 in hundredths; a level above 0 unmutes it. */
+export function setMediaLevel(media: VolumeMedia, level: number): void {
+    const value = clampLevel(level);
+    media.volume = value;
+
+    if (value > 0 && media.muted) {
+        media.muted = false;
+    }
+}
+
+/** Mutes a playing media, or unmutes a muted or silent one at its level (half, if it was silent). */
+export function toggleMute(media: VolumeMedia): void {
+    if (media.muted || !(media.volume > 0)) {
+        media.volume = unmutedLevel(media.volume);
+        media.muted = false;
+    } else {
+        media.muted = true;
+    }
+}
+
 /** The level under a pointer `offset` CSS pixels into a bar `width` wide. */
 export function levelAt(offset: number, width: number): number {
     return width > 0 ? clampLevel(offset / width) : 0;

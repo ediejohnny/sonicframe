@@ -9,9 +9,10 @@
 
 import { iconButtonBox } from '../../core/controls/button';
 import {
-    clampLevel,
+    setMediaLevel,
+    shownLevel,
     SPEAKER_PATH,
-    unmutedLevel,
+    toggleMute,
     VOLUME_MARKS,
     volumeIcon,
     volumeText,
@@ -264,26 +265,14 @@ export class VolumeControl {
 
     /** The level shown: 0 while muted. */
     private shown(): number {
-        const media = this.media;
-
-        return media === null || media.muted ? 0 : clampLevel(media.volume);
+        return this.media === null ? 0 : shownLevel(this.media);
     }
 
     private setLevel(level: number): void {
-        const media = this.media;
-
-        if (media === null) {
-            return;
+        if (this.media !== null) {
+            setMediaLevel(this.media, level);
+            this.update();
         }
-
-        const value = clampLevel(level);
-        media.volume = value;
-
-        if (value > 0 && media.muted) {
-            media.muted = false;
-        }
-
-        this.update();
     }
 
     private readonly update = (): void => {
@@ -307,20 +296,10 @@ export class VolumeControl {
     };
 
     private readonly onToggle = (): void => {
-        const media = this.media;
-
-        if (media === null) {
-            return;
+        if (this.media !== null) {
+            toggleMute(this.media);
+            this.update();
         }
-
-        if (media.muted || !(media.volume > 0)) {
-            media.volume = unmutedLevel(media.volume);
-            media.muted = false;
-        } else {
-            media.muted = true;
-        }
-
-        this.update();
     };
 
     private readonly onOpen = (): void => {

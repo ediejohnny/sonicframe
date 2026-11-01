@@ -5,7 +5,7 @@
         <title>Keyboard · SonicFrame</title>
         <meta
             name="description"
-            content="Every key SonicFrame answers: the wave, zoom, markers, chapters, regions, the description and the minimap."
+            content="Every key SonicFrame answers: the wave, the player, zoom, markers, chapters, regions, the description and the minimap."
         />
     </head>
     <body>
@@ -13,9 +13,10 @@
             <div class="page-head">
                 <h1>Keyboard</h1>
                 <p class="lede">
-                    Everything a pointer does, the keyboard does too. Keys work
-                    while the wave has focus, and never take a key held with
-                    Ctrl, Alt or ⌘, which belong to the browser and the page.
+                    Everything a pointer does, the keyboard does too. The wave's
+                    keys work while it has focus, the player's own anywhere in
+                    it, and none takes a key held with Ctrl, Alt or ⌘, which
+                    belong to the browser and the page.
                 </p>
             </div>
 
@@ -46,6 +47,78 @@
                     <p>
                         Press <kbd>Tab</kbd> until the wave above is focused,
                         and try the keys on this page.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>The player</h2>
+                    <p>
+                        With <code>keys: true</code>, the ready-made player
+                        answers its own keys with the focus anywhere in it. Off
+                        by default.
+                    </p>
+                    <ul class="keys">
+                        <li><kbd>Space</kbd> plays and pauses</li>
+                        <li>
+                            <kbd>M</kbd> mutes and unmutes (a silent sound comes
+                            back at half)
+                        </li>
+                        <li>
+                            <kbd>←</kbd> <kbd>→</kbd> go back and forward
+                            <code>seconds</code> (5)
+                        </li>
+                        <li>
+                            <kbd>↑</kbd> <kbd>↓</kbd> turn the volume up and
+                            down by <code>volumeStep</code> (5 %)
+                        </li>
+                        <li>
+                            <kbd>&gt;</kbd> <kbd>&lt;</kbd> go up and down the
+                            look's <code>speeds</code>, in order
+                        </li>
+                    </ul>
+                    <p>
+                        The control with the focus keeps the keys it uses: on
+                        the wave the arrows are the slider's, and
+                        <kbd>M</kbd> goes to the next marker when the page has
+                        markers; on a button, <kbd>Space</kbd> presses the
+                        button. Nothing happens while someone types in a field,
+                        nor in your own part of the player (<code>slot</code>).
+                        A held <kbd>Space</kbd> or <kbd>M</kbd> acts once.
+                    </p>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src,
+    keys: {
+        scope: 'page', // also while nothing on the page has the focus
+        play: [' ', 'k'], // Space or K
+        mute: false, // no mute key
+        seconds: 10,
+    },
+    a11y: { keys: { announce: true } }, // "Volume 55%", "Playback speed 1.5×"
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-label="Player with its own keys"
+                        data-options='{"keys":true,"volume":true,"a11y":{"keys":{"announce":true}},"look":{"line":["play","wave","time","speed"]}}'
+                    ></div>
+                    <p>
+                        Each key is one name or several, as
+                        <code>KeyboardEvent.key</code> writes them (<code
+                            >' '</code
+                        >, <code>'m'</code>, <code>'ArrowUp'</code>), or
+                        <code>false</code> to turn it off: <code>play</code>,
+                        <code>mute</code>, <code>back</code>,
+                        <code>forward</code>, <code>volumeUp</code>,
+                        <code>volumeDown</code>, <code>faster</code> and
+                        <code>slower</code>. A letter works whatever its case.
+                        With <code>scope: 'page'</code>, the keys also reach the
+                        player that played last (the first one, before any
+                        played) while nothing on the page has the focus; a focus
+                        in another player is that player's.
                     </p>
                 </section>
 

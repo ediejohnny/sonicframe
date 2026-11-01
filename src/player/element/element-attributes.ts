@@ -20,7 +20,6 @@ import { attributeNumber } from '../../dom/shared/custom-element';
 import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { backgroundLookOf } from './background-attributes';
 
-/** The words of an attribute, lowercase. */
 /** The tag's older short words, each read as the option's name in kebab-case until 2.0. */
 const OLD_WORDS: Readonly<Record<string, string>> = {
     edges: 'edge-scroll',
@@ -29,6 +28,7 @@ const OLD_WORDS: Readonly<Record<string, string>> = {
     stay: 'stay-open',
 };
 
+/** The words of an attribute, lowercase. */
 function wordsOf(value: string): Set<string> {
     return new Set(
         value
@@ -201,10 +201,11 @@ function peaksReading(element: Element): ReadWaveformOptions {
     };
 }
 
-/** The accessibility attributes: the language, the description, the zoom's and the minimap's. */
+/** The accessibility attributes: the language, the description, the zoom's, the minimap's and the keys'. */
 function a11yOf(element: Element): PlayerA11y {
     const zoom = element.getAttribute('a11y-zoom');
     const strip = element.getAttribute('a11y-minimap');
+    const keys = element.getAttribute('a11y-keys');
 
     return {
         lang: element.getAttribute('a11y-lang') ?? undefined,
@@ -216,7 +217,20 @@ function a11yOf(element: Element): PlayerA11y {
                 : { announce: wordsOf(zoom).has('announce') },
         minimap:
             strip === null ? undefined : { keys: wordsOf(strip).has('keys') },
+        keys:
+            keys === null
+                ? undefined
+                : { announce: wordsOf(keys).has('announce') },
     };
+}
+
+/** The player's keys from the `keys` attribute: present turns them on, and `page` lets them reach the page. */
+function keysOf(value: string | null): PlayerOptions['keys'] {
+    if (value === null) {
+        return undefined;
+    }
+
+    return wordsOf(value).has('page') ? { scope: 'page' } : true;
 }
 
 /** Everything the tag's attributes say, as the player's options (all but the container). */
@@ -249,6 +263,7 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
             element.getAttribute('a11y-chapters'),
         ),
         mediaSession: sessionOf(element),
+        keys: keysOf(element.getAttribute('keys')),
         a11y: a11yOf(element),
         look: backgroundLookOf(element),
     };

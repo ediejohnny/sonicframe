@@ -6,6 +6,7 @@ import type { PlayerLabels } from '../../core/languages/words';
 import type { FontChoice } from '../../core/player/fonts';
 import type { PlayerLook } from '../../core/player/look';
 import type { PaletteChoice } from '../../core/player/palettes';
+import type { PlayerKeys } from '../../core/player/player-keys';
 import type { ThemeInput } from '../../core/player/theme';
 import type { ThemeName } from '../../core/player/themes';
 import type { ZoomOptions } from '../../core/view/zoom';
@@ -34,6 +35,7 @@ import type {
 export type {
     ChapterListLook,
     ChaptersPlugin,
+    PlayerKeys,
     MediaSessionOptions,
     MediaSessionPlugin,
 };
@@ -102,6 +104,12 @@ export type PlayerOptions = {
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
     slot?: HTMLElement | null;
+    /**
+     * The player's own keys: Space plays and pauses, M mutes, ← → skip, ↑ ↓ change the volume and
+     * `>` `<` the speed (see `PlayerKeys`). The control with the focus keeps the keys it uses (the
+     * wave's arrows), and nothing happens while someone types. Off by default.
+     */
+    keys?: boolean | PlayerKeys;
     /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */
@@ -149,6 +157,11 @@ export type PlayerA11y = {
      * Off by default: the minimap is hidden from screen readers.
      */
     minimap?: { keys?: boolean };
+    /**
+     * `announce` says what the player's keys change: the volume ("Volume 55%"), the speed and the
+     * place after a skip. Off by default.
+     */
+    keys?: { announce?: boolean };
 };
 
 /**
