@@ -91,7 +91,7 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
                   animationType: words.has('fade') ? 'fade' : 'pulse',
               }
             : false,
-        announceWhenReady: words.has('announce'),
+        announce: words.has('announce'),
     };
 }
 
@@ -99,18 +99,21 @@ function descriptionOf(value: string | null): PlayerDescription | undefined {
  * The chapters from the `chapters` attribute (the address of a WebVTT or JSON file) and the words of
  * `chapter-options`: `list` (in the player, or `popover` or `drawer` with `left`, `backdrop`), with
  * `open`, `stay`, `animation`, `slide` and `swipe`; `lane` (a strip of titles under the wave) or
- * `above`, `announce`, `images`, `links`, `no-keys`, `no-lines` and `readable` (the tooltip's text
- * in black or white, whichever reads); any other word is ignored.
+ * `above`, `images`, `links`, `no-keys` and `no-lines`; and the words of `a11y-chapters`: `announce`,
+ * `readable` (the tooltip's text in black or white, whichever reads) and `no-value-note`. Any other word
+ * is ignored; `announce` and `readable` are still read from `chapter-options` too.
  */
 function chaptersOf(
     src: string | null,
     value: string | null,
+    access: string | null,
 ): PlayerChapters | undefined {
     if (src === null) {
         return undefined;
     }
 
     const words = wordsOf(value ?? '');
+    const heard = wordsOf(access ?? '');
 
     return {
         src,
@@ -135,12 +138,17 @@ function chaptersOf(
             : words.has('lane')
               ? 'below'
               : false,
-        announceChange: words.has('announce'),
         images: words.has('images'),
         links: words.has('links'),
         keys: !words.has('no-keys'),
         lines: !words.has('no-lines'),
-        a11y: { tooltip: { readable: words.has('readable') } },
+        a11y: {
+            announce: heard.has('announce') || words.has('announce'),
+            tooltip: {
+                readable: heard.has('readable') || words.has('readable'),
+            },
+            ...(heard.has('no-value-note') ? { valueNote: false } : {}),
+        },
     };
 }
 
@@ -154,6 +162,7 @@ export function sessionDetailsOf(
     return {
         title:
             element.getAttribute('media-title') ??
+            element.getAttribute('a11y-label') ??
             element.getAttribute('label') ??
             '',
         artist: element.getAttribute('media-artist') ?? '',
@@ -214,6 +223,7 @@ function a11yOf(element: Element): PlayerA11y {
 
     return {
         lang: element.getAttribute('a11y-lang') ?? undefined,
+        label: element.getAttribute('a11y-label') ?? undefined,
         description: descriptionOf(element.getAttribute('a11y-description')),
         zoom:
             zoom === null
@@ -250,6 +260,7 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         chapters: chaptersOf(
             element.getAttribute('chapters'),
             element.getAttribute('chapter-options'),
+            element.getAttribute('a11y-chapters'),
         ),
         mediaSession: sessionOf(element),
         a11y: a11yOf(element),

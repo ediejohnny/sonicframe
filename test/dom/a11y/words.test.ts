@@ -51,6 +51,30 @@ describe('what each piece says on its own', () => {
         expect(mounted.container.getAttribute('aria-label')).toBe('Voice note');
     });
 
+    it('takes the name and the spoken position from the a11y group, over the old top-level ones', () => {
+        mounted = mount({
+            media: fakeMedia({ duration: 10 }),
+            label: 'Old name',
+            valueText: () => 'old words',
+            a11y: { label: 'Voice note', valueText: (time) => `at ${time}` },
+        });
+
+        expect(mounted.container.getAttribute('aria-label')).toBe('Voice note');
+        expect(mounted.container.getAttribute('aria-valuetext')).toBe('at 0');
+
+        mounted.frame.destroy();
+        mounted.unmount();
+        mounted = mount({
+            media: fakeMedia({ duration: 10 }),
+            a11y: { valueText: () => 'quiet' },
+        });
+
+        expect(mounted.container.getAttribute('aria-label')).toBe(
+            'Audio position',
+        );
+        expect(mounted.container.getAttribute('aria-valuetext')).toBe('quiet');
+    });
+
     it('names the play button by what a press does: Play, and Pause while it plays', () => {
         const paused = PlayButton.create({
             container: host(),

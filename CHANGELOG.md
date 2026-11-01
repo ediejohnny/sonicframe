@@ -21,6 +21,14 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   `ZoomOptions`, `WaveStyle`, `PlayerChapterListStyle` and the rest).
 - `wordsFor(tag)`: every word of the language a tag finds, frozen.
 - `normalizePeaks` and `resamplePeaks`; `resamplePeaks` is on `sonicframe/analysis` too.
+- Everything a screen reader hears now lives in the `a11y` group, by place, and your own words are always
+  `a11y.words`: the frame's `a11y.label` and `a11y.valueText`; `a11y.words` on `PlayButton`,
+  `VolumeControl`, `markers()`, `chapters()`, the player and the recorder screen; `a11y.valueNote` and
+  `a11y.announce` on `chapters()`; the player's `a11y.label`; `announce` on `soundDescription()`. On the
+  tag, `a11y-label` and `a11y-chapters` (`announce`, `readable`, `no-value-note`). The types `MarkersA11y` and
+  `ChaptersA11y` name the groups.
+- The zoom's and the minimap's words can be phrases (`'Zoom {level}: {from} to {to}'`), like every other
+  word, as well as functions; the minimap takes its name as `a11y.words.label`.
 
 ### Changed
 
@@ -35,6 +43,13 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
 - `normalize` and `resample` (use `normalizePeaks` and `resamplePeaks`), `Claim` (`PointerClaim`),
   `WaveformFetcher` and `ChaptersFetcher` (`Fetcher`), `WaveformResponse` (`FetchedResponse`), and
   `CHAPTER_WORDS`, `ZOOM_WORDS`, `MINIMAP_WORDS` and `DESCRIPTION_WORDS` (`wordsFor`).
+- Accessibility outside the `a11y` group (use the name in parentheses; given both, the new one wins): the
+  frame's `label` and `valueText` (`a11y.label`, `a11y.valueText`), `labels` of `PlayButton` and
+  `VolumeControl` (`a11y.words`), `words` of `markers()` and `chapters()` (`a11y.words`), the chapters'
+  `valueNote` and `announceChange` (`a11y.valueNote`, `a11y.announce`), the player's `label` (`a11y.label`),
+  `a11y.labels` of the player and the recorder screen (`a11y.words`), the minimap's `a11y.label`
+  (`a11y.words.label`), `soundDescription`'s `announceWhenReady` (`announce`), and the words `announce` and
+  `readable` in the tag's `chapter-options` (`a11y-chapters`).
 - Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,
   `soundWords`, `SoundWords`, `playerWords`, `PlayerWords`, `pickPalette`, `resolveFont`, `safeFontUrl`,
   `RecorderEvent` and `RECORDER_EVENTS`.

@@ -340,4 +340,23 @@ describe('the minimap as a keyboard slider', () => {
         expect(strip.getAttribute('aria-label')).toBe('Parte visível');
         expect(strip.getAttribute('aria-valuetext')).toBe('0:00-0:50/1:40');
     });
+
+    it('takes its name and its value as phrases in a11y.words, over the old label', () => {
+        const { mounted: frame, strip } = shown({
+            a11y: {
+                keys: true,
+                label: 'Old name',
+                words: {
+                    label: 'Parte visível',
+                    value: '{from} até {to} de {total}',
+                },
+            },
+        });
+        frame.frame.setView(0, 0.5);
+
+        expect(strip.getAttribute('aria-label')).toBe('Parte visível');
+        expect(strip.getAttribute('aria-valuetext')).toBe(
+            '0:00 até 0:50 de 1:40',
+        );
+    });
 });

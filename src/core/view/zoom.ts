@@ -94,13 +94,32 @@ export type ZoomSettings = {
 
 /** The words said about a view, in the frame's language unless the app brings its own. */
 export type ZoomWords = {
-    /** `level` is rounded to one decimal; `from` and `to` are times, or percentages while the duration is unknown. */
+    /**
+     * A phrase with `{level}`, `{from}` and `{to}`, or a function of them. The level is rounded to
+     * one decimal; `from` and `to` are times, or percentages while the duration is unknown.
+     */
+    view: string | ((level: number, from: string, to: string) => string);
+};
+
+/** The words said about a view, ready to say. */
+export type SpokenZoom = {
     view(level: number, from: string, to: string): string;
 };
 
-/** The words said about a view in the language a tag finds, its level written as that language writes numbers. */
-export function zoomWords(lang: string | null | undefined): ZoomWords {
-    const phrase = wordsFor(lang).zoom.view;
+/**
+ * The words said about a view in the language a tag finds, the app's own over them; a phrase writes
+ * the level as that language writes numbers.
+ */
+export function zoomWords(
+    lang: string | null | undefined,
+    own?: Partial<ZoomWords>,
+): SpokenZoom {
+    const phrase = own?.view ?? wordsFor(lang).zoom.view;
+
+    if (typeof phrase === 'function') {
+        return { view: phrase };
+    }
+
     const level = new Intl.NumberFormat(localeFor(lang, false), {
         maximumFractionDigits: 1,
         useGrouping: false,
@@ -113,7 +132,7 @@ export function zoomWords(lang: string | null | undefined): ZoomWords {
 }
 
 /** The words said about a view in English. */
-export const ZOOM_WORDS: Readonly<ZoomWords> = Object.freeze(zoomWords('en'));
+export const ZOOM_WORDS: Readonly<SpokenZoom> = Object.freeze(zoomWords('en'));
 
 /** The largest zoom anyone can ask for. */
 export const MAX_ZOOM = 10_000;
@@ -234,7 +253,7 @@ export function wheelFactor(
 
 /** The words for a view: its zoom, and where it starts and ends (in seconds, or in percent). */
 export function viewWords(
-    words: ZoomWords,
+    words: SpokenZoom,
     view: View,
     duration: number | null,
 ): string {

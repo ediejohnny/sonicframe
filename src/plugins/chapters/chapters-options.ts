@@ -49,9 +49,9 @@ export type ChaptersOptions = {
     laneHeight?: number;
     /** C and Shift+C (or your own letter); true by default, false turns them off. */
     keys?: boolean | ChaptersKeys;
-    /** The chapter in the slider's value in words ("1:20 / 9:00, Chapter 2 of 5: Interview"). On by default. */
+    /** @deprecated Use `a11y.valueNote`; `valueNote` goes in 2.0. */
     valueNote?: boolean;
-    /** Says the new chapter when playback enters it. Off by default. */
+    /** @deprecated Use `a11y.announce`; `announceChange` goes in 2.0. */
     announceChange?: boolean;
     /**
      * An element of yours that gets the list of chapters (a `nav` with buttons: number or playing
@@ -66,13 +66,23 @@ export type ChaptersOptions = {
     images?: boolean;
     /** Links in the list, when a chapter has one; they open in a new tab. Off by default. */
     links?: boolean;
-    /** Your own words, over those of the frame's language. */
+    /** @deprecated Use `a11y.words`; `words` goes in 2.0. */
     words?: Partial<ChapterWords>;
     /** Called when the chapter playing changes (null and -1 outside every chapter). */
     onChange?: (chapter: Chapter | null, index: number) => void;
     /** Called with the chapters shown whenever they change (set, loaded, cleared). */
     onChapters?: (chapters: readonly Chapter[]) => void;
-    a11y?: TooltipA11y;
+    a11y?: ChaptersA11y;
+};
+
+/** The accessibility of the chapters: what a screen reader hears, and the tooltip's text. */
+export type ChaptersA11y = TooltipA11y & {
+    /** The chapter in the slider's value in words ("1:20 / 9:00, Chapter 2 of 5: Interview"). On by default. */
+    valueNote?: boolean;
+    /** Says the new chapter when playback enters it. Off by default. */
+    announce?: boolean;
+    /** Your own words, over those of the frame's language. */
+    words?: Partial<ChapterWords>;
 };
 
 export type ChaptersPlugin = Plugin & {

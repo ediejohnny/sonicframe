@@ -52,6 +52,8 @@ export type SoundDescriptionOptions = OutlineOptions & {
     /** An element of yours that shows the text; it is given back as it was on destroy. */
     target?: HTMLElement | null;
     /** Say the description once if it arrives while the wave has focus; off by default. */
+    announce?: boolean;
+    /** @deprecated Use `announce`; `announceWhenReady` goes in 2.0. */
     announceWhenReady?: boolean;
     /** Keys D (again) and P / Shift+P (between the parts): true, your own letters, or false (the default). */
     keys?: boolean | SoundDescriptionKeys;
@@ -173,7 +175,7 @@ export function soundDescription(
 
         if (
             arrived &&
-            options.announceWhenReady &&
+            (options.announce ?? options.announceWhenReady) === true &&
             next !== null &&
             current.container.contains(document.activeElement)
         ) {

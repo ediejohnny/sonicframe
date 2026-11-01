@@ -187,4 +187,41 @@ describe('the controls in the language the app picks', () => {
             }),
         ).toEqual(['Mute', 'silent']);
     });
+
+    it('takes a control’s own words from a11y.words, one at a time, over the old labels', () => {
+        const paused = afterTest(
+            PlayButton.create({
+                container: pageHost(BOX),
+                media: fakeMedia({ duration: 10 }),
+                a11y: { lang: 'fr', words: { pause: 'Arrêter' } },
+            }),
+        );
+        const playing = afterTest(
+            PlayButton.create({
+                container: pageHost(BOX),
+                media: fakeMedia({ duration: 10, paused: false }),
+                labels: { play: 'Old', pause: 'Old' },
+                a11y: { lang: 'fr', words: { pause: 'Arrêter' } },
+            }),
+        );
+        const element = pageHost(BOX);
+        afterTest(
+            VolumeControl.create({
+                container: element,
+                media: fakeMedia({ duration: 10 }),
+                a11y: { lang: 'fr', words: { volume: 'Niveau' } },
+            }),
+        );
+
+        expect(paused.element.getAttribute('aria-label')).toBe('Lecture');
+        expect(playing.element.getAttribute('aria-label')).toBe('Arrêter');
+        expect(
+            element.querySelector('button')?.getAttribute('aria-label'),
+        ).toBe('Couper le son');
+        expect(
+            element
+                .querySelector('[role="slider"]')
+                ?.getAttribute('aria-label'),
+        ).toBe('Niveau');
+    });
 });

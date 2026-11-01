@@ -19,3 +19,31 @@ describe('chapter-options', () => {
         expect(chaptersOf('list').a11y?.tooltip?.readable).not.toBe(true);
     });
 });
+
+describe('a11y-chapters', () => {
+    /** The chapters' options with these words in `a11y-chapters` (and `chapter-options`, if given). */
+    function a11yOf(words: string, options = 'list'): PlayerChapters['a11y'] {
+        const element = document.createElement('sonic-player');
+        element.setAttribute('chapters', '/talk.vtt');
+        element.setAttribute('chapter-options', options);
+        element.setAttribute('a11y-chapters', words);
+
+        return (optionsOf(element).chapters as PlayerChapters).a11y;
+    }
+
+    it('turns the announcement, the readable tooltip and the slider note on and off', () => {
+        expect(a11yOf('announce readable')).toMatchObject({
+            announce: true,
+            tooltip: { readable: true },
+        });
+        expect(a11yOf('no-value-note')?.valueNote).toBe(false);
+        expect(a11yOf('')?.announce).not.toBe(true);
+    });
+
+    it('takes over the words the chapter-options attribute used to carry', () => {
+        expect(a11yOf('', 'list announce readable')).toMatchObject({
+            announce: true,
+            tooltip: { readable: true },
+        });
+    });
+});

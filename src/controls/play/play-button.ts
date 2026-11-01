@@ -15,6 +15,7 @@ import {
     type ButtonShape,
 } from '../../core/controls/button';
 import { wordsFor, type LanguageTag } from '../../core/languages/language';
+import type { Words } from '../../core/languages/words';
 import { finiteOr } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import { applyStyles } from '../../core/shared/styles';
@@ -36,7 +37,7 @@ export type PlayButtonOptions = {
     /** Corner radius in CSS pixels, instead of the shape's own. */
     radius?: number | null;
     colors?: Partial<ButtonColors>;
-    /** Accessible names for both states; they win over the language's. */
+    /** @deprecated Use `a11y.words`; `labels` goes in 2.0. */
     labels?: { play: string; pause: string };
     /** Starting this media pauses every other media that has an exclusive play button (default true). */
     exclusive?: boolean;
@@ -47,6 +48,8 @@ export type PlayButtonOptions = {
          * a registered one, or `'auto'` (the page's).
          */
         lang?: LanguageTag;
+        /** The button's names, while paused and while playing; any given wins over the language's. */
+        words?: Partial<Words['playButton']>;
     };
 };
 
@@ -96,10 +99,12 @@ export class PlayButton {
             throw new TypeError('sonicframe: a container element is required');
         }
 
-        this.labels =
-            options.labels ??
-            wordsFor(chosenLanguage(options.a11y?.lang, options.container))
-                .playButton;
+        this.labels = {
+            ...wordsFor(chosenLanguage(options.a11y?.lang, options.container))
+                .playButton,
+            ...options.labels,
+            ...options.a11y?.words,
+        };
         this.exclusive = options.exclusive ?? true;
         this.look = {
             shape: options.shape ?? 'circle',

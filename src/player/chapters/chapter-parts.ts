@@ -194,11 +194,14 @@ export class ChapterParts {
             list: this.list?.content ?? null,
             header: this.list?.settings.header === true,
             listLook: typeof list === 'object' ? list.look : undefined,
-            words: {
-                chapter: labels.chapter,
-                list: labels.chapters,
-                none: labels.noChapter,
-                link: labels.chapterLink,
+            a11y: {
+                ...own.a11y,
+                words: {
+                    chapter: labels.chapter,
+                    list: labels.chapters,
+                    none: labels.noChapter,
+                    link: labels.chapterLink,
+                },
             },
             onChange: (chapter, index) => {
                 this.showChapter();

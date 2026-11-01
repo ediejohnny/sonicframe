@@ -6,7 +6,10 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { soundDescription } from '../../../src/index';
+import {
+    soundDescription,
+    type SoundDescriptionOptions,
+} from '../../../src/index';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
 import { NOTE } from '../../support/sounds';
 
@@ -184,17 +187,28 @@ describe('the description elsewhere', () => {
         expect(target.hasAttribute('lang')).toBe(false);
     });
 
-    it('says it once when it arrives while the wave has focus, only when asked', async () => {
-        mounted = mount({
-            media: fakeMedia({ duration: 33 }),
-            plugins: [soundDescription({ announceWhenReady: true })],
-        });
-        mounted.container.focus();
-        document.querySelector('[role="status"]')?.replaceChildren();
+    it('says it once when it arrives while the wave has focus, when asked by announce or its old name', () => {
+        const asked: SoundDescriptionOptions[] = [
+            { announce: true, announceWhenReady: false },
+            { announceWhenReady: true },
+        ];
 
-        mounted.frame.setPeaks(NOTE);
+        for (const options of asked) {
+            mounted = mount({
+                media: fakeMedia({ duration: 33 }),
+                plugins: [soundDescription(options)],
+            });
+            mounted.container.focus();
+            document.querySelector('[role="status"]')?.replaceChildren();
 
-        expect(spoken()).toBe(ENGLISH);
+            mounted.frame.setPeaks(NOTE);
+
+            expect(spoken(), JSON.stringify(options)).toBe(ENGLISH);
+            mounted.frame.destroy();
+            mounted.unmount();
+        }
+
+        mounted = null;
     });
 
     it('stays quiet when the description arrives, by default', () => {

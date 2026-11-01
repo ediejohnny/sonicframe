@@ -10,7 +10,10 @@ export type { TooltipA11y } from '../../dom/shared/tooltip';
 export type { PlayButton } from '../../controls/play/play-button';
 export type { VolumeControl } from '../../controls/volume/volume';
 export type { ButtonFill, ButtonShape } from '../../core/controls/button';
-export type { ChaptersOptions } from '../../plugins/chapters/chapters-options';
+export type {
+    ChaptersA11y,
+    ChaptersOptions,
+} from '../../plugins/chapters/chapters-options';
 export type { SoundDescriptionOptions } from '../../plugins/description/description';
 export type { MinimapOptions } from '../../plugins/minimap/minimap';
 export type {

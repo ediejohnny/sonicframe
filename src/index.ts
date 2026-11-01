@@ -33,6 +33,7 @@ export {
 export type { Mark } from './core/marks/markers';
 export {
     markers,
+    type MarkersA11y,
     type MarkersOptions,
     type MarkersPlugin,
 } from './plugins/markers/markers';
@@ -52,6 +53,7 @@ export type { Region } from './plugins/regions/region-store';
 export { timeline, type TimelineOptions } from './plugins/timeline/timeline';
 export { chapters } from './plugins/chapters/chapters';
 export {
+    type ChaptersA11y,
     type ChaptersKeys,
     type ChaptersOptions,
     type ChaptersPlugin,

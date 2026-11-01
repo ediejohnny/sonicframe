@@ -12,6 +12,7 @@ import type { ZoomOptions } from '../../core/view/zoom';
 import type { SonicFrameOptions } from '../../dom/frame/frame-options';
 import type { ChapterListLook } from '../../plugins/chapters/chapter-list-look';
 import type {
+    ChaptersA11y,
     ChaptersOptions,
     ChaptersPlugin,
 } from '../../plugins/chapters/chapters-options';
@@ -101,7 +102,7 @@ export type PlayerOptions = {
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
     slot?: HTMLElement | null;
-    /** The player's accessible name (over the `player` label). */
+    /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */
     a11y?: PlayerA11y;
@@ -130,7 +131,11 @@ export type PlayerA11y = {
      * its language (`'es-MX'` speaks Spanish). Given, it also marks the player with it.
      */
     lang?: LanguageTag;
+    /** The player's accessible name: its `player` word (`'Audio player'`) by default. */
+    label?: string;
     /** Your own accessible names and words, over the language's. */
+    words?: Partial<PlayerLabels>;
+    /** @deprecated Use `a11y.words`; `a11y.labels` goes in 2.0. */
     labels?: Partial<PlayerLabels>;
     /**
      * The sound in words for screen readers (see `soundDescription`): true, or its options plus
@@ -152,10 +157,18 @@ export type PlayerA11y = {
  */
 export type PlayerChapters = Omit<
     ChaptersOptions,
-    'list' | 'words' | 'onChange' | 'onChapters' | 'header' | 'listLook'
+    | 'list'
+    | 'words'
+    | 'onChange'
+    | 'onChapters'
+    | 'header'
+    | 'listLook'
+    | 'a11y'
 > & {
     /** The list of chapters: true (in the player, under the wave) or its options. Off by default. */
     list?: boolean | PlayerChapterList;
+    /** What a screen reader hears of the chapters; their words are the player's (`a11y.words`). */
+    a11y?: Omit<ChaptersA11y, 'words'>;
 };
 
 /** How the player's list of chapters shows and looks; every extra is off by default. */

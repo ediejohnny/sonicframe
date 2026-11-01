@@ -188,6 +188,34 @@ describe('what a screen reader hears', () => {
         );
     });
 
+    it('takes the note, the announcement and the words from its a11y group, over the old names', () => {
+        const quiet = showFrame([
+            plugin({ valueNote: true, a11y: { valueNote: false } }),
+        ]);
+        playTo(quiet.media, 30);
+        expect(quiet.container.getAttribute('aria-valuetext')).toBe(
+            '0:30 / 1:40',
+        );
+        takeOff(quiet);
+
+        const media = fakeMedia({ duration: 100, paused: false });
+        const told = showFrame(
+            [
+                plugin({
+                    words: { chapter: 'old' },
+                    a11y: {
+                        announce: true,
+                        words: { chapter: 'Parte {index}' },
+                    },
+                }),
+            ],
+            media,
+        );
+        playTo(media, 30);
+        expect(said()).toBe('Parte 2: Interview');
+        takeOff(told);
+    });
+
     it("says the chapters in the frame's language", () => {
         const media = fakeMedia({ duration: 100 });
         const { container } = mountShown({

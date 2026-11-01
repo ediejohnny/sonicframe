@@ -23,7 +23,7 @@ import {
     zoomKey,
     type ViewSource,
     type ZoomSettings,
-    type ZoomWords,
+    type SpokenZoom,
 } from '../../core/view/zoom';
 import type { SeekEvent } from '../../types';
 import { announce } from '../a11y/announce';
@@ -56,7 +56,7 @@ export class FrameView {
         private readonly host: ViewHost,
         /** Whether a move by the keys, a button or two fingers is said aloud. */
         private readonly announces: boolean,
-        private readonly words: ZoomWords,
+        private readonly words: SpokenZoom,
     ) {}
 
     /** The part of the sound in view, as ratios. */

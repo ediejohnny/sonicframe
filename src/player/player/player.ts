@@ -156,7 +156,9 @@ export class Player {
         const a11y = options.a11y ?? {};
         this.words = playerWords(
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
-            a11y.labels,
+            a11y.labels === undefined && a11y.words === undefined
+                ? undefined
+                : { ...a11y.labels, ...a11y.words },
         );
 
         this.element = document.createElement('div');
@@ -164,7 +166,10 @@ export class Player {
         this.element.setAttribute('role', 'group');
         this.element.setAttribute(
             'aria-label',
-            cleanText(options.label ?? this.words.labels.player, 120),
+            cleanText(
+                a11y.label ?? options.label ?? this.words.labels.player,
+                120,
+            ),
         );
 
         // A language the app chose marks the player, so a screen reader says its words in that voice.

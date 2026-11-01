@@ -111,7 +111,9 @@ export class RecorderScreen {
         const a11y = options.a11y ?? {};
         this.words = recorderWords(
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
-            a11y.labels,
+            a11y.labels === undefined && a11y.words === undefined
+                ? undefined
+                : { ...a11y.labels, ...a11y.words },
         );
         const theme =
             options.theme === undefined

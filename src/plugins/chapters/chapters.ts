@@ -39,7 +39,11 @@ import {
 const MAX_WORD = 120;
 
 export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
-    let words = mergeWords(CHAPTER_WORDS, options.words, MAX_WORD);
+    const own = { ...options.words, ...options.a11y?.words };
+    const announce =
+        (options.a11y?.announce ?? options.announceChange) === true;
+    const valueNote = (options.a11y?.valueNote ?? options.valueNote) !== false;
+    let words = mergeWords(CHAPTER_WORDS, own, MAX_WORD);
     const keys = options.keys ?? true;
     const letter =
         keys === false
@@ -106,7 +110,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         if (
             playing &&
-            options.announceChange === true &&
+            announce &&
             next >= 0 &&
             current !== null &&
             current.media !== null &&
@@ -288,11 +292,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
 
         setup(frame): void {
             host = frame;
-            words = mergeWords(
-                wordsFor(frame.lang).chapters,
-                options.words,
-                MAX_WORD,
-            );
+            words = mergeWords(wordsFor(frame.lang).chapters, own, MAX_WORD);
 
             if (options.lane === 'above' || options.lane === 'below') {
                 lane = new ChapterLane(
@@ -375,7 +375,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         },
 
         valueNote(time): string | void {
-            if (options.valueNote === false || time === null) {
+            if (!valueNote || time === null) {
                 return;
             }
 

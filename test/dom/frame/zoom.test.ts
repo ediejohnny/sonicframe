@@ -330,6 +330,24 @@ describe('announcing a zoom', () => {
         expect(region()).toBe('2|0:00|2:40');
     });
 
+    it('says the view in a phrase of your own, with its level and its two ends', () => {
+        const { container } = mountShown({
+            zoom: { keys: true },
+            media: fakeMedia({ duration: 320 }),
+            peaks: HALVES,
+            a11y: {
+                zoom: {
+                    announce: true,
+                    words: { view: 'Lupa {level}: {from}–{to}' },
+                },
+            },
+        });
+
+        pressKey(container, '+');
+
+        expect(region()).toBe('Lupa 2: 0:00–2:40');
+    });
+
     it('says nothing unless asked', () => {
         const { container } = mountShown({
             zoom: { keys: true },

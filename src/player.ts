@@ -28,6 +28,7 @@ export type {
     BarStyle,
     ButtonFill,
     ButtonShape,
+    ChaptersA11y,
     ChaptersOptions,
     MinimapOptions,
     PeaksSource,

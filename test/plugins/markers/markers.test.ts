@@ -148,6 +148,12 @@ describe('markers on the page', () => {
         expect(lastLine('pt-BR')).toBe('e mais 3');
         expect(lastLine('fr')).toBe('et 3 de plus');
         expect(lastLine('es', { words: { more: '+{count}' } })).toBe('+3');
+        expect(
+            lastLine('es', {
+                words: { more: 'old' },
+                a11y: { words: { more: '{count} más' } },
+            }),
+        ).toBe('3 más');
         // The count is written as the language writes numbers.
         expect(lastLine(undefined, {}, 1008)).toBe('and 1,003 more');
         expect(lastLine('pt-BR', {}, 1008)).toBe('e mais 1.003');

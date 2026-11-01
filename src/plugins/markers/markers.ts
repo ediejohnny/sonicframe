@@ -37,6 +37,12 @@ import type {
     WavePoint,
 } from '../../types';
 
+/** The accessibility of the markers: the tooltip's text, and your own words over the language's. */
+export type MarkersA11y = TooltipA11y & {
+    /** What the markers say (the tooltip's `'and 3 more'`), over the frame's language. */
+    words?: Partial<MarkerWords>;
+};
+
 export type MarkersOptions = {
     /** Moments to mark, in seconds (the simple form). */
     times?: readonly number[];
@@ -61,9 +67,9 @@ export type MarkersOptions = {
     backGrace?: number;
     /** Called when a marker or a group is chosen (click or keyboard). */
     onSelect?: (marks: Mark[]) => void;
-    /** Your own words, over those of the frame's language. */
+    /** @deprecated Use `a11y.words`; `words` goes in 2.0. */
     words?: Partial<MarkerWords>;
-    a11y?: TooltipA11y;
+    a11y?: MarkersA11y;
 };
 
 export type MarkersPlugin = Plugin & {
@@ -103,7 +109,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
 
     /** The tooltip's last line, for `count` markers left out, in the frame's language. */
     function more(frame: PluginHost, count: number): string {
-        const own = options.words;
+        const own = { ...options.words, ...options.a11y?.words };
         const words = mergeWords(wordsFor(frame.lang).markers, own, MAX_WORD);
         const locale = localeFor(frame.lang, own !== undefined);
 

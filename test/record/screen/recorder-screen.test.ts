@@ -379,6 +379,14 @@ describe('the recorder screen', () => {
         expect(said()).toBe('0:05 recorded');
     });
 
+    it('takes the app’s words from a11y.words, over the old a11y.labels', async () => {
+        const { made } = screen({
+            a11y: { labels: { record: 'Old' }, words: { record: 'Talk' } },
+        });
+
+        expect(button(made, 'record')?.getAttribute('aria-label')).toBe('Talk');
+    });
+
     it('speaks the language asked for, with the app’s own words over it', async () => {
         const { made } = screen({
             a11y: { lang: 'pt', labels: { send: 'Mandar' } },

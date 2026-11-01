@@ -188,6 +188,8 @@ export type RecorderScreenA11y = {
     /** The language of the screen's words and its player's: `'en'` by default, `'auto'` the page's. */
     lang?: LanguageTag;
     /** Your own words, over the language's. */
+    words?: Partial<RecorderWords>;
+    /** @deprecated Use `a11y.words`; `a11y.labels` goes in 2.0. */
     labels?: Partial<RecorderWords>;
     /** Says the time recorded every this many seconds while recording; 0 (the default) never. */
     announceEvery?: number;

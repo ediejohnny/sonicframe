@@ -49,7 +49,7 @@ export type VolumeControlOptions = {
     /** How far an arrow key moves the level (0..1); 0.05 by default. */
     step?: number;
     colors?: Partial<VolumeColors>;
-    /** Accessible names, and the slider's value while muted; they win over the language's. */
+    /** @deprecated Use `a11y.words`; `labels` goes in 2.0. */
     labels?: { mute: string; unmute: string; volume: string; muted?: string };
     /** Accessibility options. */
     a11y?: {
@@ -58,6 +58,8 @@ export type VolumeControlOptions = {
          * a registered one, or `'auto'` (the page's).
          */
         lang?: LanguageTag;
+        /** The control's names, and the slider's value while muted; any given wins over the language's. */
+        words?: Partial<Words['volume']>;
     };
 };
 
@@ -128,6 +130,7 @@ export class VolumeControl {
             ...wordsFor(chosenLanguage(options.a11y?.lang, options.container))
                 .volume,
             ...options.labels,
+            ...options.a11y?.words,
         };
         this.slider = options.slider ?? 'always';
         this.size = finiteOr(options.size, 32);
