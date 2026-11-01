@@ -72,6 +72,23 @@ describe('routing the pointer to plugins', () => {
         expect(calls).toEqual(['up']);
         expect(media.currentTime).toBe(0);
     });
+
+    it('tells a plugin the kind of pointer, a mouse for one the browser leaves unnamed', () => {
+        const kinds: string[] = [];
+        const { container } = shown({
+            name: 't',
+            pointerDown: (point) => {
+                kinds.push(point.pointerType);
+            },
+        });
+
+        for (const pointerType of ['pen', 'touch', '', 'mouse']) {
+            firePointer(container, 'pointerdown', 50, { pointerType });
+            firePointer(container, 'pointerup', 50, { pointerType });
+        }
+
+        expect(kinds).toEqual(['pen', 'touch', 'mouse', 'mouse']);
+    });
 });
 
 describe('routing the keyboard to plugins', () => {

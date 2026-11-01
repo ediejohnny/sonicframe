@@ -31,6 +31,8 @@ import {
 export type Recording = {
     readonly blob: Blob;
     /** The audio type the browser recorded. */
+    readonly mimeType: string;
+    /** @deprecated Use `mimeType`; `type` goes in 2.0. */
     readonly type: string;
     /** In seconds: the time recorded, pauses left out. */
     readonly duration: number;
@@ -46,17 +48,27 @@ export type RecorderOptions = {
     /** The microphone's settings, over echo, noise and gain control (all on). */
     constraints?: MediaTrackConstraints;
     /** The audio types to try, in order: Opus in WebM, then MP4, then Opus in Ogg by default. */
+    mimeTypes?: string | readonly string[];
+    /** @deprecated Use `mimeTypes`; `mimeType` goes in 2.0. */
     mimeType?: string | readonly string[];
     /** The recorder's bitrate; the browser's own by default. */
     audioBitsPerSecond?: number;
-    /** Decode the sound for its peaks when it stops. On by default. */
-    decode?: boolean;
-    /** How many decoded peaks: 1000 by default, from 1 to 100 000. */
+    /** Decode the sound for its peaks when it stops: true (the default), its options, or false. */
+    decode?: boolean | RecorderDecode;
+    /** @deprecated Use `decode.peakCount`; `peaks` goes in 2.0. */
     peaks?: number;
     /** Live levels a second: 20 by default, from 1 to 100. */
+    levelsPerSecond?: number;
+    /** @deprecated Use `levelsPerSecond`; `rate` goes in 2.0. */
     rate?: number;
     /** The largest recording, in bytes; only lowers 104 857 600 (100 MiB). */
     maxBytes?: number;
+};
+
+/** How a stopped recording is decoded for its peaks. */
+export type RecorderDecode = {
+    /** How many peaks: 1000 by default, from 1 to 100 000. */
+    peakCount?: number;
 };
 
 export type RecorderEvents = {
@@ -109,7 +121,10 @@ export class Recorder {
             1,
             MAX_RECORDING_BYTES,
         );
-        this.levels = new LevelTrack(options.rate, this.limit);
+        this.levels = new LevelTrack(
+            options.levelsPerSecond ?? options.rate,
+            this.limit,
+        );
     }
 
     get state(): RecorderPhase {
@@ -268,7 +283,7 @@ export class Recorder {
     }
 
     private recorderOptions(): MediaRecorderOptions {
-        const asked = this.options.mimeType;
+        const asked = this.options.mimeTypes ?? this.options.mimeType;
         const candidates =
             typeof asked === 'string'
                 ? [asked]
@@ -352,20 +367,32 @@ export class Recorder {
         duration: number,
     ): Promise<Recording> {
         let peaks: readonly number[] = [...this.levels.levels];
+        const decode = this.options.decode;
 
-        if (this.options.decode !== false) {
+        if (decode !== false) {
+            const count =
+                (typeof decode === 'object' ? decode.peakCount : undefined) ??
+                this.options.peaks;
+
             try {
                 const decoded = await decodeAudio(blob);
                 peaks = peaksFromChannel(
                     decoded.samples,
-                    within(this.options.peaks, 1000, 1, 100_000, Math.round),
+                    within(count, 1000, 1, 100_000, Math.round),
                 );
             } catch {
                 // The live levels stay.
             }
         }
 
-        return { blob, type, duration, peaks, size: blob.size };
+        return {
+            blob,
+            mimeType: type,
+            type,
+            duration,
+            peaks,
+            size: blob.size,
+        };
     }
 
     /** Lets everything go: the clock, the recorder, the level reader and the microphone. */

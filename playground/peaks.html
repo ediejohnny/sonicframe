@@ -99,6 +99,48 @@ new SonicFrame({
                             >ready-made waveform files</a
                         >.
                     </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <code>loadPeaks(url, options)</code>
+                                    </th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>shared</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Fetch the same address once per page;
+                                        <code>false</code> fetches every time.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>fetcher</code></td>
+                                    <td><code>fetch</code></td>
+                                    <td>
+                                        Your own <code>Fetcher</code>: it takes
+                                        the address and gives a response with
+                                        <code>ok</code>, <code>status</code> and
+                                        <code>arrayBuffer()</code>, as for
+                                        <code>loadWaveform</code> and
+                                        <code>loadChapters</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code">
+                        <pre><code>const peaks = await loadPeaks('/voice.peaks.json', {
+    shared: false,
+    fetcher: (url) =&gt; fetch(url, { credentials: 'include' }),
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
 
                 <section class="section">

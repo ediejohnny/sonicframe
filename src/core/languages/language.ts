@@ -17,13 +17,30 @@ import type { Words } from './words';
 /** The built-in languages: `en` is the English of the United States, `pt` the Portuguese of Brazil. */
 export type Language = 'en' | 'pt' | 'pt-PT' | 'es' | 'fr';
 
+/**
+ * A language an app asks a piece to speak: a built-in one, `'auto'` (the page's), or any other tag
+ * (a registered language, or one that falls back to English). The names are offered as you type.
+ */
+export type LanguageTag = Language | 'auto' | (string & {});
+
+/** `value` frozen all the way down, in place, so no app can change a built-in word for the whole page. */
+function frozen<T extends object>(value: T): Readonly<T> {
+    for (const inner of Object.values(value)) {
+        if (typeof inner === 'object' && inner !== null) {
+            frozen(inner);
+        }
+    }
+
+    return Object.freeze(value);
+}
+
 /** Each built-in language's words, one line each. */
 const LANGUAGES: Readonly<Record<Language, Readonly<Words>>> = Object.freeze({
-    en: EN,
-    pt: PT,
-    'pt-PT': PT_PT,
-    es: ES,
-    fr: FR,
+    en: frozen(EN),
+    pt: frozen(PT),
+    'pt-PT': frozen(PT_PT),
+    es: frozen(ES),
+    fr: frozen(FR),
 });
 
 export const LANGUAGE_NAMES: readonly Language[] = Object.freeze(

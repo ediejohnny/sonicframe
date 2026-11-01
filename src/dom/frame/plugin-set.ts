@@ -7,11 +7,11 @@
 
 import { cleanText } from '../../core/shared/text';
 import type {
-    Claim,
     FrameGeometry,
     PaintContext,
     Plugin,
     PluginHost,
+    PointerClaim,
     WavePoint,
 } from '../../types';
 
@@ -70,7 +70,7 @@ export class PluginSet {
     }
 
     /** Offers a press to the plugins, the newest first; the one that claimed it, and how. */
-    claim(point: WavePoint): { plugin: Plugin; claim: Claim } | null {
+    claim(point: WavePoint): { plugin: Plugin; claim: PointerClaim } | null {
         for (let i = this.list.length - 1; i >= 0; i--) {
             const plugin = this.list[i];
 

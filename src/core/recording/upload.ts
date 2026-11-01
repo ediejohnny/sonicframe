@@ -15,6 +15,8 @@ export type RecorderUpload = {
     /** `'POST'` (the default) or `'PUT'`. */
     method?: 'POST' | 'PUT';
     /** A form with the file in `field` and the `fields` (`'form'`, the default), or the file alone as the body (`'raw'`). */
+    bodyType?: 'form' | 'raw';
+    /** @deprecated Use `bodyType`; `body` goes in 2.0. */
     body?: 'form' | 'raw';
     /** The form field that holds the file: `'file'` by default, up to 100 characters. */
     field?: string;
@@ -81,7 +83,7 @@ export function uploadPlan(
     return {
         url,
         method: upload.method === 'PUT' ? 'PUT' : 'POST',
-        raw: upload.body === 'raw',
+        raw: (upload.bodyType ?? upload.body) === 'raw',
         field: textOr(upload.field, 100, 'file'),
         filename: textOr(
             upload.filename,

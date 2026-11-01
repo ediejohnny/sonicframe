@@ -7,15 +7,21 @@
  */
 
 import { niceTicks } from '../../core/marks/ticks';
-import { within } from '../../core/shared/checked';
+import { oneOf, within } from '../../core/shared/checked';
+import type { CssLength } from '../../core/shared/length';
 import { formatTime } from '../../core/shared/timing';
 import { css } from '../../dom/shared/css';
-import type { Plugin, PluginHost } from '../../types';
+import { lengthPixels } from '../../dom/shared/units';
+import type { Placement, Plugin, PluginHost } from '../../types';
 
 export type TimelineOptions = {
-    /** Which side of the bars the ruler sits on. */
-    side?: 'above' | 'below';
-    /** The lane's height in CSS pixels. */
+    /** Where the ruler sits: `'below'` the bars (the default) or `'above'` them. */
+    placement?: Placement;
+    /** @deprecated Use `placement`; `side` goes in 2.0. */
+    side?: Placement;
+    /** The lane's height: a number in CSS pixels, or written with its unit (`'1rem'`). 14 by default. */
+    height?: number | CssLength;
+    /** @deprecated Use `height`; `size` goes in 2.0. */
     size?: number;
     /** Least space between labels, in CSS pixels. */
     minSpacing?: number;
@@ -28,8 +34,11 @@ export type TimelineOptions = {
 };
 
 export function timeline(options: TimelineOptions = {}): Plugin {
-    const side = options.side ?? 'below';
-    const size = within(options.size, 14, 1, Number.POSITIVE_INFINITY);
+    const side = oneOf(
+        options.placement,
+        ['above', 'below'],
+        options.side === 'above' ? 'above' : 'below',
+    );
     const minSpacing = within(
         options.minSpacing,
         48,
@@ -167,7 +176,15 @@ export function timeline(options: TimelineOptions = {}): Plugin {
 
         setup(frame): void {
             host = frame;
-            lane = frame.addLane(side, size);
+            lane = frame.addLane(
+                side,
+                within(
+                    lengthPixels(options.height ?? options.size, 'px'),
+                    14,
+                    1,
+                    Number.POSITIVE_INFINITY,
+                ),
+            );
             lane.element.setAttribute('aria-hidden', 'true');
             lane.element.style.setProperty('color', color);
             lane.element.style.setProperty('overflow', 'hidden');

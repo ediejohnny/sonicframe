@@ -7,6 +7,129 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+The API is tidied up before it is promised: one name for one idea everywhere. Nothing breaks. Every old name
+keeps working, marked `@deprecated` with what to use instead, until 2.0.
+
+### Added
+
+- Types an app or a plugin needs to name: `WavePoint`, `PointerClaim`, `Placement`, `KeyModifiers`,
+  `TooltipA11y`, `ClipResult`, `VolumeLook`, `Fetcher`, `FetchedResponse`, `ChaptersSource` and `LanguageTag`;
+  the options and results of the analysis functions (`LevelsOptions`, `Levels`, `FindSilencesOptions`,
+  `SilencesFromPeaksOptions`, `PeakLevel`, `SilenceKind`); `RecorderWords` on every entry; `LevelTrack`,
+  `RecorderAfterSend`, `RecorderLive`, `RECORDER_AFTER_SEND`, `RECORDER_LIVE` and `RECORDER_ICONS` on
+  `sonicframe/record`; and on `sonicframe/player`, every type its options and getters reach (`MinimapOptions`,
+  `ZoomOptions`, `WaveStyle`, `PlayerChapterListStyle` and the rest).
+- `wordsFor(tag)`: every word of the language a tag finds, frozen.
+- `normalizePeaks` and `resamplePeaks`; `resamplePeaks` is on `sonicframe/analysis` too.
+- Everything a screen reader hears now lives in the `a11y` group, by place, and your own words are always
+  `a11y.words`: the frame's `a11y.label` and `a11y.valueText`; `a11y.words` on `PlayButton`,
+  `VolumeControl`, `markers()`, `chapters()`, the player and the recorder screen; `a11y.valueNote` and
+  `a11y.announce` on `chapters()`; the player's `a11y.label`; `announce` on `soundDescription()`. On the
+  tag, `a11y-label` and `a11y-chapters` (`announce`, `readable`, `no-value-note`). The types `MarkersA11y` and
+  `ChaptersA11y` name the groups.
+- The zoom's and the minimap's words can be phrases (`'Zoom {level}: {from} to {to}'`), like every other
+  word, as well as functions; the minimap takes its name as `a11y.words.label`.
+- The player: `showVolume(show)`, `setBar(bar)` and `setLabel(label)`, and the `descriptionchange` event. The
+  look's names say what they measure: `narrowWidth`, `waveMinWidth`, `fontWeight`, `volumeSlider`,
+  `marqueePauseOnHover` and `marqueePauseSeconds` (in seconds, like every other time); the part
+  `previousChapter` (class `.sonicframe-previous-chapter`); `decode.peakCount`; the chapter list's `box`. The play
+  button's `size` takes rem too (`'2.5rem'`), so it grows with the page's text.
+- The tag: the `player` property gives the player it built (`chapters.go()`, `setLook()`), the
+  `SonicPlayerElement` type and `document.createElement('sonic-player')` know it, and `PlayerAttribute` names its
+  attributes. Its words follow the options' names in kebab-case: `chapters-options`, `stay-open`, `edge-scroll`,
+  `auto-hide`, `pause-in-value` and `pause-on-hover`.
+
+- Plugins: `markers()` takes `items`, gives them back as `items`, groups by `groupDistance` and takes its keys
+  as `keys` (your own letter, or `false`; `keys.backGrace`); `regions()` gives `items`, replaces them all with
+  `set(items)`, creates by `create` (on or off) and `createGesture`, and takes each key as your own letter or
+  `false` (`keys: { select, loop, play, nudge, remove, release }`); `regions()` and `skipSilences()` snap their
+  edges with `pixelSnap`; `skipSilences()` takes its shade as `color`. The types `MarkersKeys` and
+  `RegionsKeys` name the keys.
+- `chapters()` tells `onChapterChange`, gives the chapters as `items`, and turns its strip of titles on with
+  `lane: true`, placed by `lanePlacement` (`'below'` by default, or `'above'`).
+- Heights take their unit: `height` on `timeline()` and `caption()`, `height` and `gap` on `minimap()` and
+  `laneHeight` on `chapters()` take `'1.5rem'` or `'20px'` as well as a number (in pixels, and in rem for
+  `laneHeight`, as before). The type `CssLength` names them.
+- `timeline()` and `minimap()` sit over the wave with `placement: 'above'`.
+- `caption()` cuts its tooltip at `tooltipMax` and a section at its `max`, and its tooltip's colors follow
+  `a11y.tooltip.readable` (on by default, as it always was; off, the page's color for text on the played color).
+- `timeFormat` on `soundDescription()` and `describeSound()`, `bands` on `liveFrequency()`, and `channel:
+  'all' | 'each'` on `writeWaveform()`.
+- `loadPeaks(url, { fetcher, shared })` takes the same `Fetcher` as the other loaders, and `shared: false`
+  fetches every time. The type `LoadPeaksOptions` names them.
+- Recording: the screen's states are `RecorderScreenState` and `RECORDER_SCREEN_STATES` (the `Recorder` alone
+  has its `RecorderPhase`); `Recorder` takes `decode: { peakCount }` (the type `RecorderDecode`, as the
+  player's `decode.peakCount`), `levelsPerSecond` and `mimeTypes`, and a `Recording` names its type as
+  `mimeType`; the screen takes `liveSeconds` and `recBlink`, and tells `statechange`; an upload takes
+  `bodyType`.
+- `<sonic-recorder>`: `max-seconds`, `live-seconds`, `after-send="reset|keep"` and `rec-blink`, and `wave` and
+  `font` (with `font-src` or `font-stylesheet`), as `<sonic-player>` reads them; it dispatches
+  `sonicframe:statechange`, and it builds again when the `icon-<name>` of one of the page's buttons changes.
+
+### Changed
+
+- `lang` offers the built-in tags and `'auto'` as you type, `theme` and `extends` the theme names, and
+  `WavePoint.pointerType` is `'mouse' | 'touch' | 'pen'` (a pointer the browser leaves unnamed is a mouse).
+- A palette of your own may leave colors out (they come from `light`), a theme takes a palette of its own and a
+  drawing by its name (`wave: 'bars'`), `outlineSound` and `resamplePeaks` read any list of numbers (a
+  `Float32Array`), and `ChaptersPlugin.set` says what it takes.
+- A palette colors the chapters' lines too (`--sonicframe-chapter`, its quiet color), so they no longer stay gray
+  on a dark palette.
+- `PART_NAMES` lists `previousChapter` where it listed `prevChapter`; `prevChapter` is still read as it.
+- The recorder screen refuses an app's button named `resume` or `cancel`, the names of two of its own icons: on
+  `<sonic-recorder>`, its `icon-resume` or `icon-cancel` would draw both.
+- `findSilences` keeps its `windowSeconds` from 0.001 to 1 second (a longer window took the whole sound as one
+  stretch), and the TSDoc of each `threshold` says what it measures against.
+
+### Fixed
+
+- `soundDescription()` with a `keys.backGrace` that is not a number kept Shift+P from going back at all; it
+  now takes the usual second.
+- `silencesFromPeaks` with a `threshold` over 0.5 never ended a silence (it ends above twice the threshold,
+  past the loudest peak); the threshold is kept from 0.001 to 0.45, as `outlineSound`'s is.
+
+### Deprecated
+
+- `normalize` and `resample` (use `normalizePeaks` and `resamplePeaks`), `Claim` (`PointerClaim`),
+  `WaveformFetcher` and `ChaptersFetcher` (`Fetcher`), `WaveformResponse` (`FetchedResponse`), and
+  `CHAPTER_WORDS`, `ZOOM_WORDS`, `MINIMAP_WORDS` and `DESCRIPTION_WORDS` (`wordsFor`).
+- Accessibility outside the `a11y` group (use the name in parentheses; given both, the new one wins): the
+  frame's `label` and `valueText` (`a11y.label`, `a11y.valueText`), `labels` of `PlayButton` and
+  `VolumeControl` (`a11y.words`), `words` of `markers()` and `chapters()` (`a11y.words`), the chapters'
+  `valueNote` and `announceChange` (`a11y.valueNote`, `a11y.announce`), the player's `label` (`a11y.label`),
+  `a11y.labels` of the player and the recorder screen (`a11y.words`), the minimap's `a11y.label`
+  (`a11y.words.label`), `soundDescription`'s `announceWhenReady` (`announce`), and the words `announce` and
+  `readable` in the tag's `chapter-options` (`a11y-chapters`).
+- The player's names that did not say what they are: `setVolume` (`showVolume`), the look's `narrow`, `waveMin`,
+  `weight`, `volume`, `marqueeHoverPause` and `marqueePause` in milliseconds (`narrowWidth`, `waveMinWidth`,
+  `fontWeight`, `volumeSlider`, `marqueePauseOnHover`, `marqueePauseSeconds`), the part `prevChapter` and its
+  class `.sonicframe-prev-chapter` (`previousChapter`), `decode.peaks` (`decode.peakCount`), the chapter list's
+  `style` (`box`), the `description` event (`descriptionchange`) and the type `ButtonAnimation`
+  (`ListenButtonAnimation`). A resolved look gives each old name back with the same value.
+- The plugins' names that meant two things or said nothing: `markers()`' `marks` and `times` (`items`), its
+  getter `marks` (`items`), `group` (`groupDistance`) and `backGrace` (`keys.backGrace`); `regions()`' `list()`
+  (`items`) and `create: 'shift-drag' | 'drag'` (`createGesture`); `snap` on `regions()` and `skipSilences()`
+  (`pixelSnap`; the `snap` of markers and chapters, a click going to the exact moment, stays); `skipSilences()`'
+  `dimColor` (`color`); `chapters()`' `onChange` (`onChapterChange`), its getter `chapters` (`items`) and `lane:
+  'above' | 'below'` (`lane: true` and `lanePlacement`); `size` on `timeline()` and `caption()` (`height`);
+  `side` on `timeline()` and `minimap()` (`placement`; `side` keeps meaning left or right); `caption()`'
+  `tooltipLimit` and a section's `limit` (`tooltipMax`, `max`); `times` on `soundDescription()` and
+  `describeSound()` (`timeFormat`); `liveFrequency()`'s `bars` (`bands`); `writeWaveform()`'s `channels: 'mix'
+  | 'each'` (`channel: 'all' | 'each'`); a fetcher as `loadPeaks`' second argument, and its type `PeaksFetcher`
+  (`{ fetcher }`, a `Fetcher`).
+- The tag's older words: `chapter-options` (`chapters-options`), `stay`, `edges`, `autohide`, `pauses` and
+  `hover-pause` (`stay-open`, `edge-scroll`, `auto-hide`, `pause-in-value`, `pause-on-hover`).
+- Recording: `RecorderState` and `RECORDER_STATES` (`RecorderScreenState`, `RECORDER_SCREEN_STATES`);
+  `Recorder`'s `peaks`, `rate` and `mimeType` (`decode.peakCount`, `levelsPerSecond`, `mimeTypes`); a
+  `Recording`'s `type` (`mimeType`; both are given until 2.0); the screen's `window` and `recordBlink`
+  (`liveSeconds`, `recBlink`) and its `state` event (`statechange`; both are told until 2.0); an upload's
+  `body` (`bodyType`); and on `<sonic-recorder>`, `max`, `window`, `keep`, `record-blink` and
+  `sonicframe:state` (`max-seconds`, `live-seconds`, `after-send="keep"`, `rec-blink`,
+  `sonicframe:statechange`).
+- Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,
+  `soundWords`, `SoundWords`, `playerWords`, `PlayerWords`, `pickPalette`, `resolveFont`, `safeFontUrl`,
+  `RecorderEvent` and `RECORDER_EVENTS`.
+
 ## [0.6.0] - 2026-11-01
 
 ### Added

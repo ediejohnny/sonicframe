@@ -1,15 +1,18 @@
 /** What a player takes and what it tells: its options, grouped by place, and its events. */
 
+import type { LanguageTag } from '../../core/languages/language';
 import type { Chapter, ChapterInput } from '../../core/chapters/chapters';
 import type { PlayerLabels } from '../../core/languages/words';
 import type { FontChoice } from '../../core/player/fonts';
 import type { PlayerLook } from '../../core/player/look';
 import type { PaletteChoice } from '../../core/player/palettes';
 import type { ThemeInput } from '../../core/player/theme';
+import type { ThemeName } from '../../core/player/themes';
 import type { ZoomOptions } from '../../core/view/zoom';
 import type { SonicFrameOptions } from '../../dom/frame/frame-options';
 import type { ChapterListLook } from '../../plugins/chapters/chapter-list-look';
 import type {
+    ChaptersA11y,
     ChaptersOptions,
     ChaptersPlugin,
 } from '../../plugins/chapters/chapters-options';
@@ -58,7 +61,7 @@ export type PlayerOptions = {
      * A whole player in one name (`'bubble'`, `'pulse'`, a name you registered) or one made with
      * `defineTheme`. The options below win over it.
      */
-    theme?: string | ThemeInput;
+    theme?: ThemeName | (string & {}) | ThemeInput;
     /** How the player is put together (parts, sizes, finish); laid over the theme's look. */
     look?: Partial<PlayerLook>;
     /**
@@ -99,7 +102,7 @@ export type PlayerOptions = {
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
     slot?: HTMLElement | null;
-    /** The player's accessible name (over the `player` label). */
+    /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */
     a11y?: PlayerA11y;
@@ -127,8 +130,12 @@ export type PlayerA11y = {
      * registered one (`registerLanguage`), or `'auto'` (the page's language). A tag with a region finds
      * its language (`'es-MX'` speaks Spanish). Given, it also marks the player with it.
      */
-    lang?: string;
+    lang?: LanguageTag;
+    /** The player's accessible name: its `player` word (`'Audio player'`) by default. */
+    label?: string;
     /** Your own accessible names and words, over the language's. */
+    words?: Partial<PlayerLabels>;
+    /** @deprecated Use `a11y.words`; `a11y.labels` goes in 2.0. */
     labels?: Partial<PlayerLabels>;
     /**
      * The sound in words for screen readers (see `soundDescription`): true, or its options plus
@@ -150,10 +157,19 @@ export type PlayerA11y = {
  */
 export type PlayerChapters = Omit<
     ChaptersOptions,
-    'list' | 'words' | 'onChange' | 'onChapters' | 'header' | 'listLook'
+    | 'list'
+    | 'words'
+    | 'onChapterChange'
+    | 'onChange'
+    | 'onChapters'
+    | 'header'
+    | 'listLook'
+    | 'a11y'
 > & {
     /** The list of chapters: true (in the player, under the wave) or its options. Off by default. */
     list?: boolean | PlayerChapterList;
+    /** What a screen reader hears of the chapters; their words are the player's (`a11y.words`). */
+    a11y?: Omit<ChaptersA11y, 'words'>;
 };
 
 /** How the player's list of chapters shows and looks; every extra is off by default. */
@@ -204,6 +220,8 @@ export type PlayerChapterList = {
     /** The list's own font, as the player's `font` takes it; the player's by default. */
     font?: FontChoice;
     /** The list's own box; each one left out keeps the list's default. */
+    box?: PlayerChapterListStyle;
+    /** @deprecated Use `box`; `style` goes in 2.0. */
     style?: PlayerChapterListStyle;
 };
 
@@ -240,10 +258,12 @@ export type PlayerZoom = ZoomOptions & {
 /** How the player decodes a sound for its peaks. */
 export type PlayerDecode = {
     /** How many peaks: 1000, from 100 to 100 000. */
+    peakCount?: number;
+    /** @deprecated Use `peakCount`; `peaks` goes in 2.0. */
     peaks?: number;
     /**
      * With zoom on, peaks per second of sound, so zooming in shows detail: 100, from 1 to 1000. The
-     * count never falls below `peaks`, nor rises past 1 000 000.
+     * count never falls below `peakCount`, nor rises past 1 000 000.
      */
     peaksPerSecond?: number;
     /** The longest sound decoded, in seconds; a longer one is read evenly through. Only lowers 1800. */
@@ -259,7 +279,7 @@ export type PlayerDescription = SoundDescriptionOptions & {
 };
 
 /** How the reading button moves while it reads: it grows and shrinks back, or fades and comes back. */
-export type ButtonAnimation = 'pulse' | 'fade';
+export type ListenButtonAnimation = 'pulse' | 'fade';
 
 /** The button that reads the description aloud. */
 export type PlayerListenButton = {
@@ -270,7 +290,7 @@ export type PlayerListenButton = {
      */
     animation?: boolean;
     /** `'pulse'` (the default: it grows a little and back) or `'fade'` (half transparent and back). */
-    animationType?: ButtonAnimation;
+    animationType?: ListenButtonAnimation;
 };
 
 /**
@@ -278,6 +298,9 @@ export type PlayerListenButton = {
  * playing when the player has chapters (null and -1 outside every chapter).
  */
 export type PlayerEvents = SonicFrameEvents & {
+    /** The sound in words arrived or changed (null while there is none). */
+    descriptionchange: [text: string | null];
+    /** @deprecated Use `descriptionchange`; `description` goes in 2.0. */
     description: [text: string | null];
     chapterchange: [chapter: Chapter | null, index: number];
 };

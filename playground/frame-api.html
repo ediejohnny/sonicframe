@@ -151,6 +151,56 @@
                             </tbody>
                         </table>
                     </div>
+                    <h3>In what unit</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Unit</th>
+                                    <th>Taken by</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        A ratio: 0 is the start of the whole
+                                        sound, 1 its end
+                                    </td>
+                                    <td>
+                                        <code>setProgress</code>,
+                                        <code>seekTo</code>,
+                                        <code>setView</code>,
+                                        <code>scrollTo</code>, and the
+                                        <code>at</code> of
+                                        <code>zoomTo</code> and
+                                        <code>zoomBy</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Seconds</td>
+                                    <td><code>setDuration</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A zoom level: 1 shows the whole sound, 2
+                                        half of it
+                                    </td>
+                                    <td><code>zoomTo</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A factor of the level: 2 zooms in twice
+                                        as close, 0.5 back out
+                                    </td>
+                                    <td><code>zoomBy</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        To go to a moment in seconds, divide by the length:
+                        <code>frame.seekTo(42 / frame.duration)</code>.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -346,16 +396,6 @@ PlayButton.create({ container, media, shape: 'circle', fill: 'solid', size: 32 }
                                     <td><code>{ background, icon }</code>.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>labels</code></td>
-                                    <td>
-                                        <code>Play</code> / <code>Pause</code>
-                                    </td>
-                                    <td>
-                                        The accessible names, over the
-                                        language's.
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td><code>exclusive</code></td>
                                     <td><code>true</code></td>
                                     <td>
@@ -370,6 +410,16 @@ PlayButton.create({ container, media, shape: 'circle', fill: 'solid', size: 32 }
                                         The language of the names; see
                                         <a href="./languages.html">Languages</a
                                         >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.words</code></td>
+                                    <td>
+                                        <code>Play</code> / <code>Pause</code>
+                                    </td>
+                                    <td>
+                                        <code>{ play, pause }</code>, the
+                                        accessible names, over the language's.
                                     </td>
                                 </tr>
                             </tbody>
@@ -442,21 +492,21 @@ VolumeControl.create({ container, media, slider: 'hover' });</code></pre>
                                     <td><code>{ icon, track, fill }</code>.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>labels</code></td>
-                                    <td>the language's</td>
-                                    <td>
-                                        <code>{ mute, unmute, volume }</code>,
-                                        and <code>muted</code>, the slider's
-                                        value while muted.
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td><code>a11y.lang</code></td>
                                     <td><code>'en'</code></td>
                                     <td>
                                         The language of the names; see
                                         <a href="./languages.html">Languages</a
                                         >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.words</code></td>
+                                    <td>the language's</td>
+                                    <td>
+                                        <code>{ mute, unmute, volume }</code>,
+                                        and <code>muted</code>, the slider's
+                                        value while muted.
                                     </td>
                                 </tr>
                             </tbody>

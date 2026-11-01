@@ -14,6 +14,9 @@ export type FetchedResponse = {
     arrayBuffer(): Promise<ArrayBuffer>;
 };
 
+/** The part of `fetch` the loaders use, so tests and apps can bring their own. */
+export type Fetcher = (url: string) => Promise<FetchedResponse>;
+
 /**
  * The promise `start` gives for `key`, started once per page and shared by every caller; a failure
  * is forgotten, so the next call tries again.

@@ -26,7 +26,7 @@
                         <pre><code>import { markers } from 'sonicframe';
 
 const flags = markers({
-    marks: [
+    items: [
         { time: 2.4, label: 'Title' },
         { time: 9, label: 'Second line' },
         { time: 21, label: 'Last lines', color: 'var(--danger)' },
@@ -46,7 +46,8 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                         Times are in seconds, so markers stay in place when the
                         wave changes size; nothing is drawn while the length is
                         unknown. Markers that crowd together become one pill
-                        with a count.
+                        with a count. <code>flags.items</code> gives them back,
+                        in the order given.
                     </p>
                 </section>
 
@@ -62,16 +63,12 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>times</code></td>
+                                    <td><code>items</code></td>
                                     <td>
-                                        Moments in seconds (the simple form).
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><code>marks</code></td>
-                                    <td>
-                                        <code>{ time, label, color, id }</code>
-                                        (the richer form).
+                                        The moments to mark, each
+                                        <code>{ time, label, color, id }</code>;
+                                        only <code>time</code> (in seconds) is
+                                        needed.
                                     </td>
                                 </tr>
                                 <tr>
@@ -87,7 +84,7 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                                     <td>Line width in CSS pixels.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>group</code></td>
+                                    <td><code>groupDistance</code></td>
                                     <td>
                                         Markers closer than this many pixels
                                         become one pill (12; 0 never groups).
@@ -105,21 +102,36 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                                     <td>Show a tooltip on hover.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>words</code></td>
+                                    <td><code>keys</code></td>
                                     <td>
-                                        Your own words over the frame's
-                                        language: <code>{ more }</code>, the
-                                        tooltip's last line when a group has
-                                        more than five markers ("and
-                                        <code>{count}</code> more").
+                                        <kbd>M</kbd> and <kbd>Shift</kbd> +
+                                        <kbd>M</kbd> (on by default);
+                                        <code>false</code> turns them off.
+                                        <code>{ letter, backGrace }</code>
+                                        changes them.
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>backGrace</code></td>
+                                    <td><code>keys.letter</code></td>
+                                    <td>
+                                        Your own letter in place of
+                                        <kbd>M</kbd> (<code>'m'</code>);
+                                        <code>false</code> turns the keys off.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>keys.backGrace</code></td>
                                     <td>
                                         Seconds after a marker within which
                                         <kbd>Shift</kbd> + <kbd>M</kbd> goes to
                                         the one before (1; 0 lands on it).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>onSelect</code></td>
+                                    <td>
+                                        Called with the markers chosen by a
+                                        click or a key.
                                     </td>
                                 </tr>
                                 <tr>
@@ -141,6 +153,16 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                                         (<code>--sonicframe-on-progress</code>).
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>a11y.words</code></td>
+                                    <td>
+                                        Your own words over the frame's
+                                        language: <code>{ more }</code>, the
+                                        tooltip's last line when a group has
+                                        more than five markers ("and
+                                        <code>{count}</code> more").
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -155,6 +177,11 @@ flags.set([3, 18]); // replace them; plain times work too</code></pre>
                         reached by a key comes into view. Caps Lock changes
                         nothing.
                     </p>
+                    <div class="code">
+                        <pre><code>markers({ items, keys: { letter: 'k', backGrace: 2 } }); // K and Shift+K
+markers({ items, keys: false }); // no keys</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
             </div>
         </main>

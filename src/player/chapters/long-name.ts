@@ -22,9 +22,9 @@ export type LongNameLook = Pick<
     | 'marquee'
     | 'marqueeType'
     | 'marqueeGap'
-    | 'marqueeHoverPause'
+    | 'marqueePauseOnHover'
     | 'marqueeSpeed'
-    | 'marqueePause'
+    | 'marqueePauseSeconds'
 >;
 
 const AT_REST = 'translateX(0px)';
@@ -83,7 +83,7 @@ export class LongName {
             this.listenTooltip();
         }
 
-        if (look.marquee && look.marqueeHoverPause) {
+        if (look.marquee && look.marqueePauseOnHover) {
             this.listenHover();
         }
     }
@@ -208,7 +208,7 @@ export class LongName {
         }
 
         const speed = remPixels(look.marqueeSpeed);
-        const pause = look.marqueePause;
+        const pause = look.marqueePauseSeconds * 1000;
         let distance = overflow + fade;
         let timing: MarqueeTiming | null;
 

@@ -26,15 +26,15 @@
                     <h2>Turning it on</h2>
                     <p>
                         <code>mediaSession: true</code> names the sound after
-                        the player's <code>label</code>; give your own words and
-                        pictures instead. The controls only learn about the
-                        sound once it plays.
+                        the player's <code>a11y.label</code>; give your own
+                        words and pictures instead. The controls only learn
+                        about the sound once it plays.
                     </p>
                     <div class="code">
                         <pre><code>createPlayer({
     container,
     src: '/sounds/little-elf.mp3',
-    label: 'The Little Elf',
+    a11y: { label: 'The Little Elf' },
     mediaSession: {
         artist: 'John Kendrick Bangs',
         album: 'Poems',
@@ -143,7 +143,7 @@
                         class="stage"
                         data-demo="player"
                         data-label="The Little Elf"
-                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt"},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","prevChapter","nextChapter"]},"mediaSession":{"artist":"John Kendrick Bangs"}}'
+                        data-options='{"chapters":{"src":"./sounds/little-elf-chapters.vtt"},"look":{"underStart":"line","line":["play","wave"],"meta":["time","chapter","spacer","previousChapter","nextChapter"]},"mediaSession":{"artist":"John Kendrick Bangs"}}'
                     ></div>
                 </section>
 
@@ -220,7 +220,8 @@ frame.use(controls);</code></pre>
                     </div>
                     <p>
                         Without <code>media-title</code>, the title is the
-                        <code>label</code>. A changed <code>media-</code>
+                        <code>a11y-label</code> (or the <code>label</code>). A
+                        changed <code>media-</code>
                         attribute shows at once, and the sound keeps playing.
                     </p>
                 </section>
@@ -239,7 +240,9 @@ frame.use(controls);</code></pre>
                             <tbody>
                                 <tr>
                                     <td><code>title</code></td>
-                                    <td>the player's <code>label</code></td>
+                                    <td>
+                                        the player's <code>a11y.label</code>
+                                    </td>
                                     <td>The sound's name.</td>
                                 </tr>
                                 <tr>

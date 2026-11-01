@@ -49,6 +49,14 @@ describe('outlining a sound', () => {
         expect(outline?.loudest).toBeCloseTo(12.15, 1);
     });
 
+    it('reads peaks straight from a Float32Array, as decoded audio gives them', () => {
+        const outline = outlineSound(Float32Array.from(NOTE), 33);
+
+        expect(outline?.parts).toHaveLength(2);
+        expect(outline?.parts[0].end).toBeCloseTo(20, 5);
+        expect(outline?.parts[1].start).toBeCloseTo(24, 5);
+    });
+
     it('says nothing without peaks or a real duration', () => {
         expect(outlineSound([], 10)).toBeNull();
         expect(outlineSound([0.5], 0)).toBeNull();
@@ -332,6 +340,15 @@ describe('moving between the parts', () => {
             'Part 2 of 4, 0:08.',
         );
         expect(soundWords().part(1, 4, 8.9)).toBe('Part 2 of 4, 8 seconds.');
+    });
+
+    it('takes the clock from timeFormat, over the old times', () => {
+        expect(soundWords({ timeFormat: 'clock' }).part(1, 4, 8.9)).toBe(
+            'Part 2 of 4, 0:08.',
+        );
+        expect(
+            soundWords({ timeFormat: 'words', times: 'clock' }).part(1, 4, 8.9),
+        ).toBe('Part 2 of 4, 8 seconds.');
     });
 
     it('finds the next part and, like a previous track, the start of this one', () => {

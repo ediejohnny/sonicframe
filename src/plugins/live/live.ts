@@ -23,7 +23,9 @@ export type LiveFrequencyOptions = {
     /** Frequency range mapped across the bars. */
     minHz?: number;
     maxHz?: number;
-    /** How many bands to feed the bars (at most 512). */
+    /** How many bands of the spectrum feed the bars: 48, at most 512. */
+    bands?: number;
+    /** @deprecated Use `bands`; `bars` goes in 2.0. */
     bars?: number;
 };
 
@@ -34,7 +36,12 @@ export function liveFrequency(options: LiveFrequencyOptions = {}): Plugin {
         2048,
     );
     const smoothing = within(options.smoothing, 0.8, 0, 0.99);
-    const bars = within(options.bars, 48, 1, Number.POSITIVE_INFINITY);
+    const bands = within(
+        options.bands ?? options.bars,
+        48,
+        1,
+        Number.POSITIVE_INFINITY,
+    );
 
     let host: PluginHost | null = null;
     let tap: MediaTap | null = null;
@@ -92,7 +99,7 @@ export function liveFrequency(options: LiveFrequencyOptions = {}): Plugin {
 
             tap.analyser.getByteFrequencyData(spectrum);
             host.setValues(
-                frequencyBands(spectrum, bars, tap.sampleRate, {
+                frequencyBands(spectrum, bands, tap.sampleRate, {
                     minHz: options.minHz,
                     maxHz: options.maxHz,
                 }),

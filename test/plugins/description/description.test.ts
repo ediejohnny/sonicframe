@@ -6,7 +6,10 @@
  */
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { soundDescription } from '../../../src/index';
+import {
+    soundDescription,
+    type SoundDescriptionOptions,
+} from '../../../src/index';
 import { fakeMedia, mount, type Mounted } from '../../support/helpers';
 import { NOTE } from '../../support/sounds';
 
@@ -50,6 +53,28 @@ describe('the description on the slider', () => {
 
         expect(described(mounted.container)).toBe(ENGLISH);
         expect(plugin.text).toBe(ENGLISH);
+    });
+
+    it('gives the positions as a clock with timeFormat, over the old times', () => {
+        const clock =
+            '33 seconds. Sound until 0:20, a pause of 4 seconds, then sound to the end. ' +
+            'Loudest at 0:12.';
+        const cases: [SoundDescriptionOptions, string][] = [
+            [{ timeFormat: 'clock' }, clock],
+            [{ timeFormat: 'words', times: 'clock' }, ENGLISH],
+            [{ times: 'clock' }, clock],
+        ];
+
+        for (const [options, text] of cases) {
+            const plugin = soundDescription(options);
+            mounted = mount({
+                media: fakeMedia({ duration: 33 }),
+                peaks: NOTE,
+                plugins: [plugin],
+            });
+
+            expect(plugin.text).toBe(text);
+        }
     });
 
     it("keeps the page's own ids and takes only its own out", () => {
@@ -184,17 +209,28 @@ describe('the description elsewhere', () => {
         expect(target.hasAttribute('lang')).toBe(false);
     });
 
-    it('says it once when it arrives while the wave has focus, only when asked', async () => {
-        mounted = mount({
-            media: fakeMedia({ duration: 33 }),
-            plugins: [soundDescription({ announceWhenReady: true })],
-        });
-        mounted.container.focus();
-        document.querySelector('[role="status"]')?.replaceChildren();
+    it('says it once when it arrives while the wave has focus, when asked by announce or its old name', () => {
+        const asked: SoundDescriptionOptions[] = [
+            { announce: true, announceWhenReady: false },
+            { announceWhenReady: true },
+        ];
 
-        mounted.frame.setPeaks(NOTE);
+        for (const options of asked) {
+            mounted = mount({
+                media: fakeMedia({ duration: 33 }),
+                plugins: [soundDescription(options)],
+            });
+            mounted.container.focus();
+            document.querySelector('[role="status"]')?.replaceChildren();
 
-        expect(spoken()).toBe(ENGLISH);
+            mounted.frame.setPeaks(NOTE);
+
+            expect(spoken(), JSON.stringify(options)).toBe(ENGLISH);
+            mounted.frame.destroy();
+            mounted.unmount();
+        }
+
+        mounted = null;
     });
 
     it('stays quiet when the description arrives, by default', () => {
@@ -268,6 +304,33 @@ describe('keys and the value, when turned on', () => {
 
         expect(media.currentTime).toBe(0);
         expect(spoken()).toBe('Parte 1 de 2, no início.');
+    });
+
+    it('goes back by its own grace, and by the usual second when the grace is not a number', () => {
+        // Part 2 starts at 24 s: within the grace, Shift+P goes to part 1; past it, to 24.
+        const cases: [unknown, number, number][] = [
+            [0, 24.5, 24],
+            [Number.NaN, 24.5, 0],
+            ['3', 26, 24],
+        ];
+
+        for (const [backGrace, from, to] of cases) {
+            const media = fakeMedia({ duration: 33 });
+            mounted = mount({
+                media,
+                peaks: NOTE,
+                plugins: [
+                    soundDescription({
+                        keys: { backGrace: backGrace as number },
+                    }),
+                ],
+            });
+            media.currentTime = from;
+            media.fire('timeupdate');
+            press(mounted.container, 'p', true);
+
+            expect(media.currentTime).toBeCloseTo(to, 5);
+        }
     });
 
     it('takes other letters, or none', () => {

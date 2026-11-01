@@ -7,6 +7,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { PALETTES } from '../../../src/player';
 import { defineSonicRecorder, type Recording } from '../../../src/record';
+import { recorderOptionsOf } from '../../../src/record/element/recorder-element';
 import { recordAnimations } from '../../support/animations';
 import { afterTest } from '../../support/helpers';
 import { stubMicrophone } from '../../support/recording';
@@ -372,5 +373,124 @@ describe('the <sonic-recorder> tag', () => {
                 .querySelector('.sonicframe-record')
                 ?.getAttribute('aria-label'),
         ).toBe('Grabar');
+    });
+});
+
+describe('the names of 0.7, with the old ones kept until 2.0', () => {
+    it('stops at max-seconds, over the old max', async () => {
+        stubMicrophone();
+        const element = tag({ 'max-seconds': '2', max: '5' });
+        await press(element, 'record');
+        await vi.advanceTimersByTimeAsync(2100);
+
+        expect(parts(element)).toEqual(['discard', 'player', 'send']);
+    });
+
+    it('keeps or resets after a send by after-send, over the old keep', async () => {
+        stubMicrophone();
+        const cases: [Record<string, string>, string[]][] = [
+            [{ 'after-send': 'keep' }, ['discard', 'player', 'send']],
+            [{ 'after-send': 'reset', keep: '' }, ['record']],
+            [{ 'after-send': 'later', keep: '' }, ['record']],
+        ];
+
+        for (const [attributes, after] of cases) {
+            const element = tag(attributes);
+            await press(element, 'record');
+            await press(element, 'stop');
+            await press(element, 'send');
+
+            expect(parts(element)).toEqual(after);
+        }
+    });
+
+    it('shows live-seconds of the scrolling wave, over the old window', async () => {
+        const fed = liveWaveFeed();
+        stubMicrophone();
+        await press(tag({ 'live-seconds': '2', window: '5' }), 'record');
+        await vi.advanceTimersByTimeAsync(500);
+
+        // 2 seconds of 20 slices.
+        expect(fed.at(-1)?.length).toBe(40);
+    });
+
+    it('blinks its REC dot with rec-blink', async () => {
+        stubMicrophone();
+        const started = recordAnimations();
+        await press(tag({ 'record-style': 'rec', 'rec-blink': '' }), 'record');
+
+        expect(started).toHaveLength(1);
+    });
+
+    it('dispatches statechange, and the old state too', async () => {
+        stubMicrophone();
+        const element = tag();
+        const heard: string[] = [];
+
+        for (const name of ['statechange', 'state']) {
+            element.addEventListener(`sonicframe:${name}`, (event) =>
+                heard.push(
+                    `${name} ${String((event as CustomEvent<unknown[]>).detail[0])}`,
+                ),
+            );
+        }
+
+        await press(element, 'record');
+
+        expect(heard).toEqual([
+            'statechange asking',
+            'state asking',
+            'statechange recording',
+            'state recording',
+        ]);
+    });
+
+    it('reads its drawing and its font as the player tag does', () => {
+        const element = document.createElement('sonic-recorder');
+        element.setAttribute('wave', 'line');
+        element.setAttribute('font', 'Georgia');
+
+        expect(recorderOptionsOf(element)).toMatchObject({
+            wave: 'line',
+            font: 'Georgia',
+        });
+    });
+
+    it('builds again when one of its new attributes changes', () => {
+        stubMicrophone();
+
+        for (const [name, value] of [
+            ['max-seconds', '2'],
+            ['live-seconds', '2'],
+            ['after-send', 'keep'],
+            ['rec-blink', ''],
+            ['wave', 'line'],
+            ['font', 'Georgia'],
+        ]) {
+            const element = tag();
+            const before = element.querySelector('.sonicframe-recorder');
+            element.setAttribute(name, value);
+
+            expect(element.querySelector('.sonicframe-recorder')).not.toBe(
+                before,
+            );
+        }
+    });
+
+    it("builds again when the icon of one of the page's buttons changes", async () => {
+        stubMicrophone();
+        const element = tag({
+            actions: 'save:Save',
+            'icon-save': 'M5 5h14v14H5z',
+            'idle-parts': 'save record',
+        });
+        element.setAttribute('icon-save', 'M2 2h20v20H2z');
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(
+            element
+                .querySelector('.sonicframe-action-save path')
+                ?.getAttribute('d'),
+        ).toBe('M2 2h20v20H2z');
     });
 });

@@ -71,13 +71,13 @@
                 <section class="section">
                     <h2>The voice note on phones</h2>
                     <p>
-                        A player narrower than <code>narrow</code> (22 rem) with
-                        the wave in its line turns into a voice note: the play
-                        button stays beside the wave, centered on it; the time
-                        goes under the wave on the left, and the other controls
-                        go on the right of the time, wrapping only the ones that
-                        do not fit. The pieces are moved, never built again, so
-                        nothing flickers. This player is 20 rem wide:
+                        A player narrower than <code>narrowWidth</code> (22 rem)
+                        with the wave in its line turns into a voice note: the
+                        play button stays beside the wave, centered on it; the
+                        time goes under the wave on the left, and the other
+                        controls go on the right of the time, wrapping only the
+                        ones that do not fit. The pieces are moved, never built
+                        again, so nothing flickers. This player is 20 rem wide:
                     </p>
                     <div
                         class="stage narrow-demo"
@@ -95,7 +95,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>narrow</code></td>
+                                    <td><code>narrowWidth</code></td>
                                     <td><code>22</code></td>
                                     <td>
                                         The width, in rem, under which the
@@ -129,7 +129,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>waveMin</code></td>
+                                    <td><code>waveMinWidth</code></td>
                                     <td><code>8</code></td>
                                     <td>
                                         On a wider line with zoom buttons, the
@@ -251,7 +251,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>marqueeHoverPause</code></td>
+                                    <td><code>marqueePauseOnHover</code></td>
                                     <td><code>true</code></td>
                                     <td>
                                         The name stops walking while the mouse
@@ -267,13 +267,13 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>marqueePause</code></td>
-                                    <td><code>1500</code></td>
+                                    <td><code>marqueePauseSeconds</code></td>
+                                    <td><code>1.5</code></td>
                                     <td>
                                         How long it rests before it walks; in
                                         <code>'restart'</code> and
                                         <code>'bounce'</code>, at its end too
-                                        (milliseconds, 0 to 10000).
+                                        (seconds, 0 to 10).
                                     </td>
                                 </tr>
                                 <tr>
@@ -329,8 +329,11 @@
                                         >
                                     </td>
                                     <td>
-                                        The play button; <code>size</code> in
-                                        CSS pixels.
+                                        The play button. A number
+                                        <code>size</code> is in CSS pixels (16
+                                        to 96). Written in rem
+                                        (<code>'2.5rem'</code>, 1 to 6), the
+                                        button grows with the page's text.
                                     </td>
                                 </tr>
                                 <tr>
@@ -412,7 +415,7 @@
                                     <td>
                                         <code>font</code>,
                                         <code>fontSize</code>,
-                                        <code>weight</code>,
+                                        <code>fontWeight</code>,
                                         <code>uppercase</code>
                                     </td>
                                     <td>
@@ -420,7 +423,10 @@
                                         <code>0.8125</code>, <code>500</code>,
                                         <code>false</code>
                                     </td>
-                                    <td>The text.</td>
+                                    <td>
+                                        The text; <code>fontWeight</code> from
+                                        100 to 900.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>skip</code></td>
@@ -436,7 +442,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>volume</code></td>
+                                    <td><code>volumeSlider</code></td>
                                     <td><code>'hover'</code></td>
                                     <td>
                                         <code>'always'</code> or

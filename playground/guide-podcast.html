@@ -58,11 +58,14 @@ const player = createPlayer({
     look: { line: ['play', 'back', 'wave', 'forward', 'time', 'speed'], skip: 15 },
     zoom: { wheel: true, keys: true, follow: true, buttons: true },
     minimap: { autoHide: true },
-    label: 'Episode 12: the sound of cities',
-    a11y: { description: { keys: true }, zoom: { announce: true } },
+    a11y: {
+        label: 'Episode 12: the sound of cities',
+        description: { keys: true },
+        zoom: { announce: true },
+    },
     plugins: [
         markers({
-            marks: [
+            items: [
                 { time: 0, label: 'Intro' },
                 { time: 312, label: 'Interview' },
                 { time: 2410, label: 'Questions' },

@@ -154,9 +154,9 @@ export const PALETTES: Readonly<Record<PaletteName, Readonly<Palette>>> =
 /**
  * A palette choice: a built-in name, `'auto'` (light or dark, following the system), `'default'`
  * (SonicFrame's own colors, leaving every `--sonicframe-*` variable to the page, as without a
- * palette), or your own colors.
+ * palette), or your own colors (any left out come from `light`).
  */
-export type PaletteChoice = PaletteName | 'auto' | 'default' | Palette;
+export type PaletteChoice = PaletteName | 'auto' | 'default' | Partial<Palette>;
 
 /**
  * SonicFrame's own colors (the fallbacks of its variables). `'default'` sets none of them; they only
@@ -200,7 +200,7 @@ export function pickPalette(
 const MAX_COLOR = 64;
 
 /** Your own palette, each color cleaned and capped; a missing one comes from the light palette. */
-export function cleanPalette(colors: Palette): Palette {
+export function cleanPalette(colors: Partial<Palette>): Palette {
     const base: Palette = PALETTES.light;
     const clean = { ...base };
 
@@ -255,6 +255,7 @@ export function paletteVariables(palette: Palette): [string, string][] {
         ['--sonicframe-on-progress', palette.onAccent],
         ['--sonicframe-marker', palette.marker],
         ['--sonicframe-timeline', palette.muted],
+        ['--sonicframe-chapter', palette.muted],
         ['--sonicframe-region', palette.region],
         ['--sonicframe-dim', palette.dim],
         ['--sonicframe-badge', palette.dim],

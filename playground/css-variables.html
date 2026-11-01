@@ -186,6 +186,87 @@
                         none of them, so your page's values show.
                     </p>
                 </section>
+
+                <section class="section">
+                    <h2>What each palette color sets</h2>
+                    <p>
+                        A palette names colors by their role; the player turns
+                        each one into the properties of the places it paints.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Palette color</th>
+                                    <th>Properties it sets</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>surface</code></td>
+                                    <td><code>--sonicframe-surface</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>text</code></td>
+                                    <td><code>--sonicframe-text</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>muted</code></td>
+                                    <td>
+                                        <code>--sonicframe-muted</code>,
+                                        <code>--sonicframe-timeline</code>,
+                                        <code>--sonicframe-chapter</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>border</code></td>
+                                    <td><code>--sonicframe-border</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>wave</code></td>
+                                    <td><code>--sonicframe-wave</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>progress</code></td>
+                                    <td>
+                                        <code>--sonicframe-progress</code>,
+                                        <code>--sonicframe-knob</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>accent</code></td>
+                                    <td><code>--sonicframe-button</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>onAccent</code></td>
+                                    <td>
+                                        <code>--sonicframe-button-icon</code>,
+                                        <code>--sonicframe-on-progress</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>marker</code></td>
+                                    <td><code>--sonicframe-marker</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>region</code></td>
+                                    <td><code>--sonicframe-region</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>dim</code></td>
+                                    <td>
+                                        <code>--sonicframe-dim</code>,
+                                        <code>--sonicframe-badge</code>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        <code>paletteVariables(palette)</code> gives the same
+                        list as pairs, for a page that sets them itself.
+                    </p>
+                </section>
             </div>
         </main>
         <script type="module" src="./docs/page.ts"></script>

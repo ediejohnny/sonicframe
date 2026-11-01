@@ -221,6 +221,53 @@ describe("the player's words", () => {
     });
 });
 
+describe('the a11y group of the player', () => {
+    it('takes its name and its words in a11y, over the old label and labels', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            label: 'Old name',
+            a11y: {
+                lang: 'pt',
+                label: 'Mensagem de voz',
+                labels: { play: 'Old', pause: 'Old' },
+                words: { play: 'Ouvir' },
+            },
+        });
+
+        expect(labelOf('.sonicframe-player')).toBe('Mensagem de voz');
+        expect(labelOf('.sonicframe-play')).toBe('Ouvir');
+    });
+
+    it('still takes the old label and labels alone', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 33 }),
+            label: 'Episode',
+            a11y: { labels: { play: 'Listen' } },
+        });
+
+        expect(labelOf('.sonicframe-player')).toBe('Episode');
+        expect(labelOf('.sonicframe-play')).toBe('Listen');
+    });
+
+    it('takes its name from the a11y-label attribute, over label', () => {
+        defineSonicPlayer();
+        const host = document.createElement('sonic-player');
+        keep(host);
+        host.setAttribute('src', 'note.ogg');
+        host.setAttribute('label', 'Old name');
+        host.setAttribute('a11y-label', 'Voice note');
+        document.body.append(host);
+
+        expect(labelOf('.sonicframe-player')).toBe('Voice note');
+
+        host.removeAttribute('a11y-label');
+
+        expect(labelOf('.sonicframe-player')).toBe('Old name');
+    });
+});
+
 describe('the <sonic-player> tag', () => {
     it('takes the language and the description as a11y- attributes', () => {
         defineSonicPlayer();

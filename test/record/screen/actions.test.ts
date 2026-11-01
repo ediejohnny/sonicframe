@@ -51,6 +51,17 @@ describe("the app's own buttons", () => {
         expect(made.recording).not.toBeNull();
     });
 
+    it('never take the name of an icon of the screen (cancel, resume), which a tag would share with it', () => {
+        const own = { label: 'Mine', press: () => undefined };
+        const { made } = screen({
+            actions: { cancel: own, resume: own, keep: own },
+            parts: { idle: ['cancel', 'resume', 'keep', 'record'] },
+        });
+
+        expect(parts(made)).toEqual(['action', 'record']);
+        expect(action(made, 'keep')).not.toBeNull();
+    });
+
     it('lead the stage when marked main, taking the focus', async () => {
         const { made } = screen({
             actions: {

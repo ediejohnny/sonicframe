@@ -8,6 +8,7 @@
  * screen reader (never on its own: only through `speak()`). Text only ever goes in as text.
  */
 
+import type { LanguageTag } from '../../core/languages/language';
 import { soundWords, type SoundWords } from '../../core/description/describe';
 import {
     nextPart,
@@ -17,6 +18,7 @@ import {
     type SoundOutline,
 } from '../../core/description/outline';
 import type { DescriptionWords } from '../../core/languages/words';
+import { within } from '../../core/shared/checked';
 import { keyLetter } from '../../core/shared/keys';
 import { cleanText } from '../../core/shared/text';
 import { pageLanguage } from '../../dom/a11y/page-language';
@@ -41,16 +43,20 @@ export type SoundDescriptionOptions = OutlineOptions & {
      * The frame's language by default (English unless it has one); `'en'`, `'pt'`, `'pt-PT'`, `'es'`,
      * `'fr'`, a registered one, any tag with your own `words`, or `'auto'` (the page's language).
      */
-    lang?: string;
+    lang?: LanguageTag;
     /** Your own phrases, over the built-in ones. */
     words?: Partial<DescriptionWords>;
     /** Positions as words (`'words'`, the default) or as a clock (`'clock'`). */
+    timeFormat?: 'words' | 'clock';
+    /** @deprecated Use `timeFormat`; `times` goes in 2.0. */
     times?: 'words' | 'clock';
     /** Describe the slider through its `aria-describedby`; true by default. */
     describedBy?: boolean;
     /** An element of yours that shows the text; it is given back as it was on destroy. */
     target?: HTMLElement | null;
     /** Say the description once if it arrives while the wave has focus; off by default. */
+    announce?: boolean;
+    /** @deprecated Use `announce`; `announceWhenReady` goes in 2.0. */
     announceWhenReady?: boolean;
     /** Keys D (again) and P / Shift+P (between the parts): true, your own letters, or false (the default). */
     keys?: boolean | SoundDescriptionKeys;
@@ -104,11 +110,11 @@ export function soundDescription(
                     parts: keyLetter(options.keys.parts, 'p'),
                 }
               : { again: null, parts: null };
-    const backGrace = Math.max(
+    const backGrace = within(
+        typeof options.keys === 'object' ? options.keys.backGrace : undefined,
+        1,
         0,
-        (typeof options.keys === 'object'
-            ? options.keys.backGrace
-            : undefined) ?? 1,
+        Number.POSITIVE_INFINITY,
     );
     const display = new DescriptionDisplay(
         options.describedBy !== false,
@@ -139,7 +145,11 @@ export function soundDescription(
                 ? pageLanguage(current.container)
                 : (options.lang ?? current.lang);
 
-        return soundWords({ lang, words: options.words, times: options.times });
+        return soundWords({
+            lang,
+            words: options.words,
+            timeFormat: options.timeFormat ?? options.times,
+        });
     }
 
     function update(): void {
@@ -172,7 +182,7 @@ export function soundDescription(
 
         if (
             arrived &&
-            options.announceWhenReady &&
+            (options.announce ?? options.announceWhenReady) === true &&
             next !== null &&
             current.container.contains(document.activeElement)
         ) {

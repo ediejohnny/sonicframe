@@ -175,14 +175,16 @@ export type WavePoint = {
     /** The wave box size, in CSS pixels. */
     width: number;
     height: number;
-    /** `'mouse'`, `'touch'` or `'pen'`. */
-    pointerType: string;
+    pointerType: 'mouse' | 'touch' | 'pen';
     /** Whether Shift was held (a modifier for creating a region, say). */
     shiftKey: boolean;
 };
 
 /** A plugin's answer to a press: take it now, or only if it grows into a drag (a tap still seeks). */
-export type Claim = 'take' | 'drag';
+export type PointerClaim = 'take' | 'drag';
+
+/** Where a strip sits against the bars. */
+export type Placement = 'above' | 'below';
 
 /** A strip above or below the bars that a plugin owns (a caption, a timeline). */
 export type Lane = {
@@ -223,7 +225,7 @@ export type PluginHost = {
     /** Asks for a new picture on the next animation frame. */
     invalidate(): void;
     /** Takes a strip above or below the bars; the wave shrinks to make room. */
-    addLane(side: 'above' | 'below', cssPixels: number): Lane;
+    addLane(side: Placement, cssPixels: number): Lane;
     /** A layer over the canvas for text and tooltips (created once, shared by plugins). */
     overlay(): HTMLElement;
     /**
@@ -287,7 +289,7 @@ export type Plugin = {
      * A press on the wave: return `'take'` to own it now, or `'drag'` to own it only once it moves
      * past the drag threshold (a tap then still seeks). Plugins are asked last-added first.
      */
-    pointerDown?(point: WavePoint): Claim | void;
+    pointerDown?(point: WavePoint): PointerClaim | void;
     /** The owning plugin's pointer moved. */
     pointerMove?(point: WavePoint): void;
     /** The owning plugin's pointer was let go. */

@@ -9,7 +9,7 @@ import { css } from '../../dom/shared/css';
 import { prefersReducedMotion } from '../../dom/shared/motion';
 import type { SoundDescriptionPlugin } from '../../plugins/description/description';
 import type {
-    ButtonAnimation,
+    ListenButtonAnimation,
     PlayerListenButton,
 } from '../player/player-options';
 import { iconButton, nameButton, type PartHost } from './part-buttons';
@@ -22,13 +22,15 @@ const LISTEN_ICON =
 const BEAT_MS = 700;
 
 /** The keyframes of each animation of the button. */
-const BUTTON_ANIMATIONS: Readonly<Record<ButtonAnimation, Keyframe[]>> = {
+const BUTTON_ANIMATIONS: Readonly<Record<ListenButtonAnimation, Keyframe[]>> = {
     pulse: [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }],
     fade: [{ opacity: 1 }, { opacity: 0.5 }],
 };
 
 /** The animation the button asks for: none unless it is on; the pulse unless a known type is named. */
-function animationOf(settings: PlayerListenButton): ButtonAnimation | null {
+function animationOf(
+    settings: PlayerListenButton,
+): ListenButtonAnimation | null {
     if (settings.animation !== true) {
         return null;
     }

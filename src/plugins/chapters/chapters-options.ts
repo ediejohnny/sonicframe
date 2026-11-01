@@ -3,12 +3,14 @@
 import type {
     Chapter,
     ChapterInput,
+    ChaptersSource,
     LoadChaptersOptions,
 } from '../../core/chapters/chapters';
 import { EN } from '../../core/languages/en';
 import type { ChapterWords } from '../../core/languages/words';
+import type { CssLength } from '../../core/shared/length';
 import type { TooltipA11y } from '../../dom/shared/tooltip';
-import type { Plugin } from '../../types';
+import type { Placement, Plugin } from '../../types';
 import type { ChapterListLook } from './chapter-list-look';
 
 export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
@@ -42,15 +44,23 @@ export type ChaptersOptions = {
     tooltip?: boolean;
     /** A click on a line goes to its chapter's start. On by default. */
     snap?: boolean;
-    /** A strip with the chapters' titles over (`'above'`) or under (`'below'`) the wave; off by default. */
-    lane?: false | 'above' | 'below';
-    /** The strip's height, in rem. 1.25 by default. */
-    laneHeight?: number;
+    /**
+     * A strip with the chapters' titles beside the wave; off by default. The strings `'above'` and
+     * `'below'` turn it on there (deprecated: use `lanePlacement`; they go in 2.0).
+     */
+    lane?: boolean | Placement;
+    /** Where the strip sits: `'below'` the wave (the default) or `'above'` it. */
+    lanePlacement?: Placement;
+    /**
+     * The strip's height: a number in rem, or written with its unit (`'1.25rem'`, `'20px'`). 1.25 rem
+     * by default, kept from 0.5 to 4 rem.
+     */
+    laneHeight?: number | CssLength;
     /** C and Shift+C (or your own letter); true by default, false turns them off. */
     keys?: boolean | ChaptersKeys;
-    /** The chapter in the slider's value in words ("1:20 / 9:00, Chapter 2 of 5: Interview"). On by default. */
+    /** @deprecated Use `a11y.valueNote`; `valueNote` goes in 2.0. */
     valueNote?: boolean;
-    /** Says the new chapter when playback enters it. Off by default. */
+    /** @deprecated Use `a11y.announce`; `announceChange` goes in 2.0. */
     announceChange?: boolean;
     /**
      * An element of yours that gets the list of chapters (a `nav` with buttons: number or playing
@@ -65,24 +75,38 @@ export type ChaptersOptions = {
     images?: boolean;
     /** Links in the list, when a chapter has one; they open in a new tab. Off by default. */
     links?: boolean;
-    /** Your own words, over those of the frame's language. */
+    /** @deprecated Use `a11y.words`; `words` goes in 2.0. */
     words?: Partial<ChapterWords>;
     /** Called when the chapter playing changes (null and -1 outside every chapter). */
+    onChapterChange?: (chapter: Chapter | null, index: number) => void;
+    /** @deprecated Use `onChapterChange`; `onChange` goes in 2.0. */
     onChange?: (chapter: Chapter | null, index: number) => void;
     /** Called with the chapters shown whenever they change (set, loaded, cleared). */
     onChapters?: (chapters: readonly Chapter[]) => void;
-    a11y?: TooltipA11y;
+    a11y?: ChaptersA11y;
+};
+
+/** The accessibility of the chapters: what a screen reader hears, and the tooltip's text. */
+export type ChaptersA11y = TooltipA11y & {
+    /** The chapter in the slider's value in words ("1:20 / 9:00, Chapter 2 of 5: Interview"). On by default. */
+    valueNote?: boolean;
+    /** Says the new chapter when playback enters it. Off by default. */
+    announce?: boolean;
+    /** Your own words, over those of the frame's language. */
+    words?: Partial<ChapterWords>;
 };
 
 export type ChaptersPlugin = Plugin & {
     /** The chapters shown (those in the table of contents), in order. */
+    readonly items: readonly Chapter[];
+    /** @deprecated Use `items`; `chapters` goes in 2.0. */
     readonly chapters: readonly Chapter[];
     /** The index of the chapter playing, or -1. */
     readonly index: number;
     /** The chapter playing, or null. */
     readonly current: Chapter | null;
     /** Replaces the chapters: a list, WebVTT or JSON text, or null for none. Throws on what is not chapters. */
-    set(input: unknown): void;
+    set(input: ChaptersSource): void;
     /** Fetches a chapters file and shows it; rejects when it cannot. */
     load(url: string): Promise<void>;
     /** Goes to a chapter's start; false when there is no such chapter or no duration yet. */

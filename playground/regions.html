@@ -66,7 +66,25 @@ frame.use(parts);</code></pre>
                             <kbd>[</kbd> <kbd>]</kbd> nudge its start,
                             <kbd>{</kbd> <kbd>}</kbd> its end
                         </li>
+                        <li><kbd>Escape</kbd> stops it and lets it go</li>
                     </ul>
+                    <p>
+                        Each key can be turned off, and the two letters can be
+                        your own. <code>keys: false</code> turns them all off.
+                    </p>
+                    <div class="code">
+                        <pre><code>regions({
+    keys: {
+        select: 'g', // G and Shift+G in place of R ('r'; false turns it off)
+        loop: false, // no loop key ('l')
+        play: true, // Enter
+        nudge: true, // [ ] { }
+        remove: false, // Delete and Backspace
+        release: true, // Escape
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
 
                 <section class="section">
@@ -94,11 +112,19 @@ frame.use(parts);</code></pre>
                                 </tr>
                                 <tr>
                                     <td><code>create</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Whether the pointer makes regions;
+                                        <code>false</code> leaves it to code.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>createGesture</code></td>
                                     <td><code>'shift-drag'</code></td>
                                     <td>
-                                        <code>'shift-drag'</code>,
-                                        <code>'drag'</code> or
-                                        <code>false</code>.
+                                        How the pointer makes one:
+                                        <code>'shift-drag'</code> (a plain drag
+                                        still scrubs) or <code>'drag'</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -117,7 +143,15 @@ frame.use(parts);</code></pre>
                                 <tr>
                                     <td><code>keys</code></td>
                                     <td><code>true</code></td>
-                                    <td>The single-key shortcuts.</td>
+                                    <td>
+                                        The single-key shortcuts, all on;
+                                        <code>false</code> turns them off, or
+                                        <code
+                                            >{ select, loop, play, nudge,
+                                            remove, release }</code
+                                        >
+                                        sets each one (see Keys).
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>max</code></td>
@@ -136,7 +170,7 @@ frame.use(parts);</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>snap</code></td>
+                                    <td><code>pixelSnap</code></td>
                                     <td><code>false</code></td>
                                     <td>
                                         Edges on whole device pixels: a little
@@ -187,11 +221,16 @@ parts.update(made.id, { end: 28 });
 parts.play(made.id, { loop: true });
 parts.stop();
 parts.remove(made.id);
-parts.list(); // every region</code></pre>
+parts.select(null); // let the selection go (or select an id)
+parts.clear(); // remove every region
+parts.items; // every region, copies in the order added
+parts.set([{ start: 2, end: 6, label: 'Intro' }]); // replace them all</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <p>
-                        Regions are fitted to the sound once its length is
+                        <code>set(items)</code> replaces every region at once,
+                        lets the selection go and calls <code>onChange</code>
+                        once. Regions are fitted to the sound once its length is
                         known, and follow the view while zoomed in.
                     </p>
                 </section>

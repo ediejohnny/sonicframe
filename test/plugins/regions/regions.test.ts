@@ -142,6 +142,64 @@ describe('regions on the page', () => {
         expect(selected.at(-1)).toBe(2);
     });
 
+    it('creates by the gesture asked: a switch and its gesture, or the old single option', () => {
+        const drawn = (options: RegionsOptions): number => {
+            const { container, plugin } = shown(options);
+            firePointer(container, 'pointerdown', 40);
+            firePointer(container, 'pointermove', 100);
+            firePointer(container, 'pointerup', 100);
+
+            return plugin.items.length;
+        };
+
+        expect(drawn({ createGesture: 'drag' })).toBe(1);
+        expect(drawn({ create: true, createGesture: 'drag' })).toBe(1);
+        expect(drawn({ create: 'drag' })).toBe(1);
+        expect(drawn({ create: false, createGesture: 'drag' })).toBe(0);
+        expect(drawn({})).toBe(0);
+    });
+
+    it('takes its own letters, and lets each other key be turned off', () => {
+        const selected: (number | undefined)[] = [];
+        const { container, media, plugin } = shown({
+            items: [
+                { start: 2, end: 4 },
+                { start: 8, end: 12 },
+            ],
+            keys: { select: 'n', remove: false, play: false },
+            onSelect: (region) => selected.push(region?.start),
+        });
+
+        pressKey(container, 'r');
+        expect(selected).toEqual([]);
+
+        pressKey(container, 'n');
+        expect(selected).toEqual([2]);
+
+        pressKey(container, 'Enter');
+        pressKey(container, 'Delete');
+        expect(media.currentTime).toBe(0);
+        expect(plugin.items).toHaveLength(2);
+    });
+
+    it('gives its regions as items, and replaces them all with set', () => {
+        const changes: number[] = [];
+        const { plugin } = shown({
+            items: [{ start: 2, end: 4 }],
+            onChange: (list) => changes.push(list.length),
+        });
+
+        expect(plugin.items).toEqual(plugin.list());
+
+        plugin.set([
+            { start: 10, end: 12, label: 'a' },
+            { start: 20, end: 22, label: 'b' },
+        ]);
+
+        expect(plugin.items.map((region) => region.label)).toEqual(['a', 'b']);
+        expect(changes).toEqual([2]);
+    });
+
     it('removes the selected region on Delete', () => {
         const { container, plugin } = shown({ items: [{ start: 8, end: 12 }] });
 

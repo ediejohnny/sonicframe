@@ -4,7 +4,7 @@
  * without a browser. Everything is capped, so a long recording cannot blow up memory or time.
  */
 
-import { finiteOr } from '../shared/checked';
+import { finiteOr, within } from '../shared/checked';
 
 /** A structural stand-in for an `AudioBuffer`, so the core never names a DOM type. */
 export type ChannelSource = {
@@ -15,6 +15,48 @@ export type ChannelSource = {
 
 /** A stretch of quiet, in seconds. */
 export type Silence = { start: number; end: number };
+
+/** The options of `levels`. */
+export type LevelsOptions = {
+    /** The window, in seconds: 0.05 by default. */
+    windowSeconds?: number;
+};
+
+/** What `levels` gives: the RMS and the peak of each window, and the window used, in seconds. */
+export type Levels = { rms: number[]; peak: number[]; windowSeconds: number };
+
+/** The options of `findSilences`. */
+export type FindSilencesOptions = {
+    /**
+     * Below this level is quiet, in dB of each window's RMS (0 dB is a full-scale sample): -45 by
+     * default. A silence ends once the level rises 6 dB above it.
+     */
+    thresholdDb?: number;
+    /** The shortest silence kept, in seconds: 0.4 by default. */
+    minDuration?: number;
+    /** The window the level is measured on, in seconds: 0.02 by default, from 0.001 to 1. */
+    windowSeconds?: number;
+};
+
+/** The options of `silencesFromPeaks`. */
+export type SilencesFromPeaksOptions = {
+    /**
+     * Below this peak is quiet, on the peaks' own 0..1 scale, as given (not a share of the loudest
+     * peak, as `outlineSound`'s `threshold` is): 0.05 by default, from 0.001 to 0.45. A silence ends
+     * above twice it.
+     */
+    threshold?: number;
+    /** The shortest silence kept, in seconds: 0.4 by default. */
+    minDuration?: number;
+};
+
+/** What `peakLevel` gives: the loudest sample, in dB too, and whether (and how often) the sound clips. */
+export type PeakLevel = {
+    peak: number;
+    peakDb: number;
+    clipped: boolean;
+    clipRuns: number;
+};
 
 const MAX_WINDOWS = 200_000;
 const MAX_SILENCES = 10_000;
@@ -27,8 +69,8 @@ function amplitudeFromDb(db: number): number {
 export function levels(
     samples: ArrayLike<number>,
     sampleRate: number,
-    options: { windowSeconds?: number } = {},
-): { rms: number[]; peak: number[]; windowSeconds: number } {
+    options: LevelsOptions = {},
+): Levels {
     const wanted = Math.max(
         1,
         Math.round(sampleRate * finiteOr(options.windowSeconds, 0.05)),
@@ -67,18 +109,14 @@ export function levels(
 export function findSilences(
     samples: ArrayLike<number>,
     sampleRate: number,
-    options: {
-        thresholdDb?: number;
-        minDuration?: number;
-        windowSeconds?: number;
-    } = {},
+    options: FindSilencesOptions = {},
 ): Silence[] {
     const minDuration = finiteOr(options.minDuration, 0.4);
     const thresholdDb = finiteOr(options.thresholdDb, -45);
     const quiet = amplitudeFromDb(thresholdDb);
     const loud = amplitudeFromDb(thresholdDb + 6);
     const { rms, windowSeconds } = levels(samples, sampleRate, {
-        windowSeconds: finiteOr(options.windowSeconds, 0.02),
+        windowSeconds: within(options.windowSeconds, 0.02, 0.001, 1),
     });
     const silences: Silence[] = [];
     let open = false;
@@ -119,9 +157,10 @@ export function findSilences(
 export function silencesFromPeaks(
     peaks: ArrayLike<number>,
     duration: number,
-    options: { threshold?: number; minDuration?: number } = {},
+    options: SilencesFromPeaksOptions = {},
 ): Silence[] {
-    const threshold = finiteOr(options.threshold, 0.05);
+    // At most 0.45: a quiet stretch closes above twice the threshold, which the loudest peak (1) is.
+    const threshold = within(options.threshold, 0.05, 0.001, 0.45);
     const minDuration = finiteOr(options.minDuration, 0.4);
     const step = peaks.length > 0 ? duration / peaks.length : 0;
 
@@ -162,12 +201,7 @@ export function silencesFromPeaks(
 }
 
 /** The loudest sample and whether (and how often) the sound clips. */
-export function peakLevel(samples: ArrayLike<number>): {
-    peak: number;
-    peakDb: number;
-    clipped: boolean;
-    clipRuns: number;
-} {
+export function peakLevel(samples: ArrayLike<number>): PeakLevel {
     let peak = 0;
     let clipRuns = 0;
     let inClip = false;

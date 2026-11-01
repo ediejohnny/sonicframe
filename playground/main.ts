@@ -227,10 +227,12 @@ function wordsDemo(host: HTMLElement, sound: Sound): () => void {
             host,
             sound,
             {
-                label:
-                    lang === 'pt' ? 'A onda em palavras' : 'The wave in words',
                 a11y: {
                     lang,
+                    label:
+                        lang === 'pt'
+                            ? 'A onda em palavras'
+                            : 'The wave in words',
                     description: {
                         target: text,
                         keys: true,
@@ -315,7 +317,6 @@ function zoomDemo(host: HTMLElement, sound: Sound): () => void {
             host,
             sound,
             {
-                label: 'Zoom',
                 look: { waveHeight: 4.5 },
                 zoom: {
                     wheel: is('wheel'),
@@ -328,9 +329,9 @@ function zoomDemo(host: HTMLElement, sound: Sound): () => void {
                     edgeScroll: is('edgeScroll'),
                 },
                 minimap: is('minimap') ? { a11y: { keys: true } } : false,
-                a11y: { zoom: { announce: is('announce') } },
+                a11y: { label: 'Zoom', zoom: { announce: is('announce') } },
                 plugins: [
-                    timeline({ side: 'above' }),
+                    timeline({ placement: 'above' }),
                     regions({
                         items: [{ start: 5, end: 12, label: 'Verse' }],
                         scrollIntoView: true,
@@ -421,10 +422,10 @@ function setupLongSound(): void {
         frame = SonicFrame.create({
             container: host,
             peaks: wave,
-            label: 'An hour of peaks',
+            a11y: { label: 'An hour of peaks' },
             zoom: { wheel: true, scroll: true, pinch: true, keys: true },
             plugins: [
-                timeline({ side: 'above' }),
+                timeline({ placement: 'above' }),
                 minimap({ a11y: { keys: true } }),
             ],
         });
@@ -458,7 +459,7 @@ function clipCard(): PluginCard {
                 duration: sound.duration,
                 wave: 'line',
                 bar: { width: 2, gap: 1 },
-                label: 'Clip source',
+                a11y: { label: 'Clip source' },
             });
             const repaint = (): void => made.frame.refresh();
             painted.add(repaint);
@@ -534,7 +535,7 @@ function buttonsCard(): PluginCard {
                 media: audio,
                 peaks: sound.peaks,
                 duration: sound.duration,
-                label: 'Playback position',
+                a11y: { label: 'Playback position' },
                 rewindOnEnd: true,
             });
             const repaint = (): void => frame.refresh();
@@ -572,10 +573,10 @@ function pluginCards(): PluginCard[] {
             'Markers',
             'Labeled moments on the wave. Hover one to read it, click it to jump there.',
             () => ({
-                label: 'Markers',
+                a11y: { label: 'Markers' },
                 plugins: [
                     markers({
-                        marks: [
+                        items: [
                             { time: 4, label: 'The elf' },
                             { time: 21, label: 'His reply' },
                         ],
@@ -587,7 +588,7 @@ function pluginCards(): PluginCard[] {
             'Regions',
             'Shift-drag to mark a stretch and drag an edge to resize it. With the wave focused, R selects, Enter plays and L loops.',
             () => ({
-                label: 'Regions',
+                a11y: { label: 'Regions' },
                 plugins: [
                     regions({ items: [{ start: 5, end: 12, label: 'Verse' }] }),
                 ],
@@ -596,13 +597,13 @@ function pluginCards(): PluginCard[] {
         simple(
             'Timeline',
             'A ruler of minutes and seconds under the wave.',
-            () => ({ label: 'Timeline', plugins: [timeline()] }),
+            () => ({ a11y: { label: 'Timeline' }, plugins: [timeline()] }),
         ),
         simple(
             'Caption',
             'A line of text with badges, and the whole text in a tooltip on hover or tap.',
             () => ({
-                label: 'Caption',
+                a11y: { label: 'Caption' },
                 plugins: [
                     caption({
                         // "The Little Elf" by John Kendrick Bangs (public domain; see the page credits).
@@ -619,7 +620,7 @@ function pluginCards(): PluginCard[] {
             'Spectrogram',
             'Frequencies over time, computed in the browser and drawn in the player’s colors.',
             () => ({
-                label: 'Spectrogram',
+                a11y: { label: 'Spectrogram' },
                 spectrogram: true,
                 look: { waveHeight: 4 },
                 wave: 'line',
@@ -629,7 +630,7 @@ function pluginCards(): PluginCard[] {
             'Live frequency',
             'Press play: the bars follow the frequencies of what is playing.',
             () => ({
-                label: 'Live frequency',
+                a11y: { label: 'Live frequency' },
                 bar: { align: 'bottom' },
                 plugins: [liveFrequency()],
             }),
@@ -638,7 +639,7 @@ function pluginCards(): PluginCard[] {
             'Skip silences',
             'Quiet stretches are found from the peaks, dimmed, and skipped while playing.',
             (sound) => ({
-                label: 'Skip silences',
+                a11y: { label: 'Skip silences' },
                 plugins: [
                     skipSilences({
                         silences: silencesFromPeaks(
@@ -654,9 +655,9 @@ function pluginCards(): PluginCard[] {
             'Volume',
             'A speaker button and a volume bar, kept in step with the media. Off unless you turn it on.',
             () => ({
-                label: 'Volume',
+                a11y: { label: 'Volume' },
                 volume: true,
-                look: { volume: 'always' },
+                look: { volumeSlider: 'always' },
             }),
         ),
         clipCard(),
@@ -672,7 +673,7 @@ const DEMO_PLUGINS: Record<string, (sound: Sound) => PlayerPlugin> = {
     timeline: () => timeline(),
     markers: () =>
         markers({
-            marks: [
+            items: [
                 { time: 2.4, label: 'Title' },
                 { time: 9, label: 'Second line' },
                 { time: 21, label: 'Last lines' },
@@ -690,7 +691,7 @@ const DEMO_PLUGINS: Record<string, (sound: Sound) => PlayerPlugin> = {
             silences: silencesFromPeaks(sound.peaks, sound.duration),
             dim: true,
         }),
-    liveFrequency: () => liveFrequency({ bars: 48 }),
+    liveFrequency: () => liveFrequency({ bands: 48 }),
     minimap: () => minimap(),
 };
 
@@ -712,8 +713,11 @@ function setupDemos(): void {
 
         mount(host, (box, sound) =>
             player(box, sound, {
-                label: host.dataset.label ?? sound.name,
                 ...options,
+                a11y: {
+                    label: host.dataset.label ?? sound.name,
+                    ...options.a11y,
+                },
                 plugins: names.flatMap((name) =>
                     name in DEMO_PLUGINS ? [DEMO_PLUGINS[name](sound)] : [],
                 ),
@@ -766,7 +770,7 @@ function musicPlayer(host: HTMLElement): void {
             const created = createPlayer({
                 container: host,
                 media: audio,
-                label: 'Music',
+                a11y: { label: 'Music' },
                 peaks: waveform.peaks,
                 duration: waveform.duration ?? undefined,
                 look: {
@@ -838,7 +842,7 @@ function setupPage(): void {
             );
             mount(host, (box, sound) =>
                 player(box, sound, {
-                    label: `Drawn as ${drawing.name}`,
+                    a11y: { label: `Drawn as ${drawing.name}` },
                     wave: { style: drawing.name, ...drawing.wave },
                     bar: drawing.bar,
                 }),
@@ -850,7 +854,10 @@ function setupPage(): void {
         for (const [name, text] of THEME_PREVIEW) {
             const host = figure(themes, `theme: '${name}'`, text);
             mount(host, (box, sound) =>
-                player(box, sound, { label: `The ${name} theme`, theme: name }),
+                player(box, sound, {
+                    a11y: { label: `The ${name} theme` },
+                    theme: name,
+                }),
             );
         }
     });
@@ -889,7 +896,7 @@ function crowd(sound: Sound): () => void {
         container: playHost,
         media: audio,
         size: 40,
-        labels: { play: 'Play all sixty', pause: 'Pause all sixty' },
+        a11y: { words: { play: 'Play all sixty', pause: 'Pause all sixty' } },
     });
     const frames: SonicFrame[] = [];
 
@@ -903,7 +910,7 @@ function crowd(sound: Sound): () => void {
                 media: audio,
                 peaks: sound.peaks,
                 duration: sound.duration,
-                label: `Wave ${i + 1} of ${CROWD}`,
+                a11y: { label: `Wave ${i + 1} of ${CROWD}` },
                 rewindOnEnd: true,
             }),
         );

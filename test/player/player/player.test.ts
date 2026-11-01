@@ -100,6 +100,65 @@ describe('the player', () => {
         expect(root().querySelector('.sonicframe-volume')).not.toBeNull();
     });
 
+    it('shows and hides the volume control with showVolume, and still with its old name', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+        });
+
+        player.showVolume(true);
+        expect(root().querySelector('.sonicframe-volume')).not.toBeNull();
+
+        player.showVolume(false);
+        expect(root().querySelector('.sonicframe-volume')).toBeNull();
+
+        player.setVolume(true);
+        expect(root().querySelector('.sonicframe-volume')).not.toBeNull();
+    });
+
+    it('changes its accessible name with setLabel, and gives its own back with none', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+        });
+
+        player.setLabel('Episode 12');
+        expect(root().getAttribute('aria-label')).toBe('Episode 12');
+
+        player.setLabel();
+        expect(root().getAttribute('aria-label')).toBe('Audio player');
+    });
+
+    it('hands the wave new bars with setBar, and the theme’s back with none', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+        });
+        const setBar = vi.spyOn(player.frame, 'setBar');
+
+        player.setBar({ width: 6 });
+        expect(setBar).toHaveBeenLastCalledWith(
+            expect.objectContaining({ width: 6, gap: 2 }),
+        );
+
+        player.setBar();
+        expect(setBar).toHaveBeenLastCalledWith(
+            expect.objectContaining({ width: 3, gap: 2 }),
+        );
+    });
+
+    it('sizes its play button in rem when the look asks, with the page’s text', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            look: { button: { size: '2.5rem' } as never },
+        });
+
+        expect(
+            root().querySelector<HTMLElement>('.sonicframe-play')?.style.width,
+        ).toBe('40px');
+    });
+
     it('sets the palette as custom properties on the player', () => {
         player = createPlayer({
             container: container(),

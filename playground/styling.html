@@ -142,6 +142,159 @@
                 </section>
 
                 <section class="section">
+                    <h2>Classes you can style</h2>
+                    <p>
+                        These classes keep their names from one version to the
+                        next, so a stylesheet can rely on them. Any other class
+                        inside a player is the library's own and may change.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>What it is</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>.sonicframe-player</code></td>
+                                    <td>A player's outer box.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-play</code></td>
+                                    <td>The play button.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-time</code></td>
+                                    <td>
+                                        The time, whichever of
+                                        <code>time</code>, <code>elapsed</code>,
+                                        <code>remaining</code> and
+                                        <code>duration</code> it shows.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-speed</code>,
+                                        <code>.sonicframe-back</code>,
+                                        <code>.sonicframe-forward</code>,
+                                        <code>.sonicframe-volume</code>
+                                    </td>
+                                    <td>The speed, skip and volume buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-zoom-in</code>,
+                                        <code>.sonicframe-zoom-out</code>,
+                                        <code>.sonicframe-zoom-reset</code>
+                                    </td>
+                                    <td>The zoom buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-previous-chapter</code
+                                        >,
+                                        <code>.sonicframe-next-chapter</code>,
+                                        <code>.sonicframe-chapters-toggle</code>
+                                    </td>
+                                    <td>
+                                        The chapter buttons, and the one that
+                                        opens the list.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-chapter-now</code>
+                                    </td>
+                                    <td>The name of the chapter playing.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-listen</code></td>
+                                    <td>
+                                        The button that reads the description
+                                        aloud.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-under</code></td>
+                                    <td>The rows under the wave.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-background</code></td>
+                                    <td>The player's own background.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-chapters</code>,
+                                        <code>.sonicframe-chapter</code>
+                                    </td>
+                                    <td>
+                                        The list of chapters, and each chapter
+                                        in it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-chapter-name</code>
+                                    </td>
+                                    <td>
+                                        Each title in the chapters' strip
+                                        (<code>lane</code>).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-minimap</code></td>
+                                    <td>The minimap's strip.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>.sonicframe-recorder</code></td>
+                                    <td>The recorder's outer box.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-record</code>,
+                                        <code>.sonicframe-stop</code>,
+                                        <code>.sonicframe-pause</code>,
+                                        <code>.sonicframe-discard</code>,
+                                        <code>.sonicframe-send</code>
+                                    </td>
+                                    <td>The recorder's buttons.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-recorder-time</code>,
+                                        <code>.sonicframe-recorder-wave</code>,
+                                        <code>.sonicframe-recorder-player</code
+                                        >,
+                                        <code>.sonicframe-rec</code>
+                                    </td>
+                                    <td>
+                                        The time recorded, the live wave, the
+                                        player of the recording and the REC
+                                        badge.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>.sonicframe-action</code>,
+                                        <code
+                                            >.sonicframe-action-&lt;name&gt;</code
+                                        >
+                                    </td>
+                                    <td>Each of your own recorder buttons.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        The class <code>.sonicframe-prev-chapter</code> is still
+                        set beside <code>.sonicframe-previous-chapter</code>
+                        until 2.0.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>Safe colors</h2>
                     <p>
                         Colors only ever reach properties that accept nothing

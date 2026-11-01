@@ -7,20 +7,22 @@
 
 import type { RecorderWords } from '../../core/languages/words';
 import type { PlayerLook } from '../../core/player/look';
-import type { RecorderState } from '../../core/recording/recording';
+import type { RecorderScreenState } from '../../core/recording/recording';
+import { isOneOf } from '../../core/shared/checked';
 import type { LiveView } from './live-view';
 import { dressRec, recBadge } from './rec-badge';
 import { recordButton } from './record-button';
 import { actionButton, screenButton, setBusy } from './screen-buttons';
-import type {
-    RecPlace,
-    RecordStyle,
-    RecorderAction,
-    RecorderIcon,
-    RecorderPartName,
+import {
+    RECORDER_ICONS,
+    type RecPlace,
+    type RecordStyle,
+    type RecorderAction,
+    type RecorderIcon,
+    type RecorderPartName,
 } from './screen-options';
 
-/** The names the app's buttons may take. */
+/** The names the app's buttons may take, but for the screen's own icons (`RECORDER_ICONS`). */
 const ACTION_NAME = /^[a-z][a-z0-9-]{0,31}$/;
 
 /** What a part needs from its screen. */
@@ -43,7 +45,7 @@ export type PartHost = {
     readonly cancelable: boolean;
     readonly live: LiveView;
     /** The screen's state now. */
-    state(): RecorderState;
+    state(): RecorderScreenState;
     /** The seconds recorded so far. */
     seconds(): number;
     /** The player of the recording in review, or null. */
@@ -171,6 +173,7 @@ function appPart(
     if (
         actions === undefined ||
         !ACTION_NAME.test(name) ||
+        isOneOf(name, RECORDER_ICONS) ||
         !Object.hasOwn(actions, name)
     ) {
         return null;

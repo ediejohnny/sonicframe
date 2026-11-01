@@ -37,9 +37,15 @@ export type SoundOutline = {
 };
 
 export type OutlineOptions = {
-    /** Below this share of the loudest peak counts as quiet; 0.06 by default. */
+    /**
+     * Below this share of the loudest peak counts as quiet (the peaks are scaled so the loudest is 1
+     * first; `silencesFromPeaks`' `threshold` is not): 0.06 by default, from 0.001 to 0.45.
+     */
     threshold?: number;
-    /** The shortest quiet stretch that is a pause, in seconds; 3 % of the sound by default, from 0.75 to 5. */
+    /**
+     * The shortest quiet stretch that is a pause, in seconds (the `minDuration` of `silencesFromPeaks`);
+     * 3 % of the sound by default, from 0.75 to 5.
+     */
     minPause?: number;
 };
 
@@ -166,7 +172,7 @@ function levelOf(values: readonly number[], quiet: number): SoundLevel {
  * duration in seconds. Null without peaks or without a real duration.
  */
 export function outlineSound(
-    peaks: readonly number[],
+    peaks: ArrayLike<number>,
     duration: number,
     options: OutlineOptions = {},
 ): SoundOutline | null {
@@ -247,11 +253,14 @@ export function partAt(outline: SoundOutline, time: number): number {
     );
 }
 
+/** A quiet stretch inside the sound (a pause) or at its ends (silence). */
+export type SilenceKind = 'pause' | 'silence';
+
 /** Which silence `time` is in: a pause between two parts, the silence at an end, or none (null). */
 export function silenceAt(
     outline: SoundOutline,
     time: number,
-): 'pause' | 'silence' | null {
+): SilenceKind | null {
     if (partAt(outline, time) >= 0) {
         return null;
     }

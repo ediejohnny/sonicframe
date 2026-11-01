@@ -89,7 +89,15 @@ export class LiveView {
                 this.options.live === 'fit'
                     ? levels.levels
                     : scrolled(
-                          levels.last(within(this.options.window, 10, 2, 60)),
+                          levels.last(
+                              within(
+                                  this.options.liveSeconds ??
+                                      this.options.window,
+                                  10,
+                                  2,
+                                  60,
+                              ),
+                          ),
                           this.wave.bars(),
                       ),
             );

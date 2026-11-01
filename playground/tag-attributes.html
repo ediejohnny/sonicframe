@@ -107,7 +107,7 @@
                                 <tr>
                                     <td><code>label</code></td>
                                     <td>text</td>
-                                    <td><code>label</code></td>
+                                    <td><code>a11y.label</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>volume</code></td>
@@ -124,7 +124,7 @@
                                     <td>
                                         <code
                                             >wheel scroll pinch keys follow
-                                            center edges buttons</code
+                                            center edge-scroll buttons</code
                                         >
                                     </td>
                                     <td><code>zoom</code></td>
@@ -138,7 +138,7 @@
                                     <td><code>minimap</code></td>
                                     <td>
                                         present;
-                                        <code>above autohide wheel</code>
+                                        <code>above auto-hide wheel</code>
                                     </td>
                                     <td><code>minimap</code></td>
                                 </tr>
@@ -150,19 +150,19 @@
                                     <td><code>chapters: { src }</code></td>
                                 </tr>
                                 <tr>
-                                    <td><code>chapter-options</code></td>
+                                    <td><code>chapters-options</code></td>
                                     <td>
                                         <code
                                             >list popover drawer left backdrop
-                                            open stay animation slide swipe lane
-                                            above announce images links no-keys
-                                            no-lines readable</code
+                                            open stay-open animation slide swipe
+                                            lane above images links no-keys
+                                            no-lines</code
                                         >
                                     </td>
                                     <td>
                                         <code>chapters</code>
-                                        (<code>readable</code>:
-                                        <code>a11y.tooltip.readable</code>)
+                                        (<code>above</code>:
+                                        <code>lanePlacement: 'above'</code>)
                                     </td>
                                 </tr>
                                 <tr>
@@ -173,7 +173,8 @@
                                 <tr>
                                     <td><code>media-title</code></td>
                                     <td>
-                                        text; the <code>label</code> without it
+                                        text; the <code>a11y-label</code> or
+                                        <code>label</code> without it
                                     </td>
                                     <td><code>mediaSession.title</code></td>
                                 </tr>
@@ -198,12 +199,32 @@
                                     <td><code>a11y.lang</code></td>
                                 </tr>
                                 <tr>
+                                    <td><code>a11y-label</code></td>
+                                    <td>text; wins over <code>label</code></td>
+                                    <td><code>a11y.label</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-chapters</code></td>
+                                    <td>
+                                        <code
+                                            >announce readable
+                                            no-value-note</code
+                                        >
+                                    </td>
+                                    <td>
+                                        <code>chapters.a11y</code>
+                                        (<code>announce</code>,
+                                        <code>tooltip.readable</code>,
+                                        <code>valueNote: false</code>)
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>a11y-description</code></td>
                                     <td>
                                         present;
                                         <code
-                                            >keys pauses speech announce button
-                                            animation fade</code
+                                            >keys pause-in-value speech announce
+                                            button animation fade</code
                                         >
                                     </td>
                                     <td><code>a11y.description</code></td>
@@ -283,7 +304,7 @@
                                         <code>pan</code>, <code>zoom</code>,
                                         <code>pulse</code>, <code>hue</code>,
                                         <code>flow</code>, <code>always</code>,
-                                        <code>hover-pause</code>
+                                        <code>pause-on-hover</code>
                                     </td>
                                     <td>
                                         <code>look.backgroundAnimation</code>
@@ -305,6 +326,13 @@
                         Changing an attribute updates the player; the ones that
                         change what is built (the sound, its peaks, zoom, the
                         minimap, the chapters, the words) build it again.
+                    </p>
+                    <p>
+                        The words follow the options' names in kebab-case
+                        (<code>stay-open</code>, <code>edge-scroll</code>,
+                        <code>auto-hide</code>). The type
+                        <code>PlayerAttribute</code> names every attribute the
+                        tag reads.
                     </p>
                 </section>
             </div>

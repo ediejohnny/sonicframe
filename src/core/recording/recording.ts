@@ -8,7 +8,8 @@
 
 import { within } from '../shared/checked';
 
-export type RecorderState =
+/** Where the recorder's screen is (the `Recorder` without a screen has its own `RecorderPhase`). */
+export type RecorderScreenState =
     | 'idle'
     | 'asking'
     | 'recording'
@@ -34,16 +35,17 @@ export type RecorderEvent =
     | 'discard'
     | 'reset';
 
-export const RECORDER_STATES: readonly RecorderState[] = Object.freeze([
-    'idle',
-    'asking',
-    'recording',
-    'paused',
-    'review',
-    'sending',
-    'denied',
-    'error',
-]);
+export const RECORDER_SCREEN_STATES: readonly RecorderScreenState[] =
+    Object.freeze([
+        'idle',
+        'asking',
+        'recording',
+        'paused',
+        'review',
+        'sending',
+        'denied',
+        'error',
+    ]);
 
 export const RECORDER_EVENTS: readonly RecorderEvent[] = Object.freeze([
     'start',
@@ -64,7 +66,10 @@ export const RECORDER_EVENTS: readonly RecorderEvent[] = Object.freeze([
 
 /** Where each event takes each state; an event left out keeps the state. */
 const MOVES: Readonly<
-    Record<RecorderState, Partial<Record<RecorderEvent, RecorderState>>>
+    Record<
+        RecorderScreenState,
+        Partial<Record<RecorderEvent, RecorderScreenState>>
+    >
 > = {
     idle: { start: 'asking' },
     asking: {
@@ -100,9 +105,9 @@ const MOVES: Readonly<
 
 /** The state `event` takes `state` to (the same state when the event does not apply). */
 export function nextRecorderState(
-    state: RecorderState,
+    state: RecorderScreenState,
     event: RecorderEvent,
-): RecorderState {
+): RecorderScreenState {
     return MOVES[state][event] ?? state;
 }
 

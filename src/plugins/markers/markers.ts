@@ -19,6 +19,7 @@ import {
     type Mark,
 } from '../../core/marks/markers';
 import { finiteOr, within } from '../../core/shared/checked';
+import { letterKeys, letterStep } from '../../core/shared/keys';
 import { positive } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
@@ -37,16 +38,38 @@ import type {
     WavePoint,
 } from '../../types';
 
+/** The accessibility of the markers: the tooltip's text, and your own words over the language's. */
+export type MarkersA11y = TooltipA11y & {
+    /** What the markers say (the tooltip's `'and 3 more'`), over the frame's language. */
+    words?: Partial<MarkerWords>;
+};
+
+/** The markers' keys: M (or your own letter) to the next marker, with Shift to the one before. */
+export type MarkersKeys = {
+    /** The letter; `'m'` by default; false turns the keys off. */
+    letter?: string | false;
+    /**
+     * Seconds after a marker during which Shift+M skips it and goes to the one before, like a
+     * player's "previous track"; later, Shift+M returns to that marker. 1 by default; 0 always
+     * lands on it.
+     */
+    backGrace?: number;
+};
+
 export type MarkersOptions = {
-    /** Moments to mark, in seconds (the simple form). */
-    times?: readonly number[];
-    /** Moments to mark, with labels and colors (the richer form). */
+    /** The moments to mark, in seconds, each with a label and a color if you like. */
+    items?: readonly Mark[];
+    /** @deprecated Use `items`; `marks` goes in 2.0. */
     marks?: readonly Mark[];
+    /** @deprecated Use `items` (`{ time }` each); `times` goes in 2.0. */
+    times?: readonly number[];
     /** Any CSS color or `var(--name)` for a plain marker. */
     color?: string;
     /** Line width in CSS pixels. */
     width?: number;
-    /** Markers closer than this many CSS pixels become one pill with a count. */
+    /** Markers closer than this many CSS pixels become one pill with a count: 12. */
+    groupDistance?: number;
+    /** @deprecated Use `groupDistance`; `group` goes in 2.0. */
     group?: number;
     /** A click on a marker seeks to its exact moment. */
     snap?: boolean;
@@ -54,22 +77,25 @@ export type MarkersOptions = {
     tooltip?: boolean;
     /** The most markers kept. */
     max?: number;
-    /**
-     * Seconds after a marker during which Shift+M skips it and goes to the one before, like a
-     * player's "previous track"; later, Shift+M returns to that marker. 0 always lands on it.
-     */
+    /** M and Shift+M (or your own letter); true by default, false turns them off. */
+    keys?: boolean | MarkersKeys;
+    /** @deprecated Use `keys.backGrace`; `backGrace` goes in 2.0. */
     backGrace?: number;
     /** Called when a marker or a group is chosen (click or keyboard). */
     onSelect?: (marks: Mark[]) => void;
-    /** Your own words, over those of the frame's language. */
+    /** @deprecated Use `a11y.words`; `words` goes in 2.0. */
     words?: Partial<MarkerWords>;
-    a11y?: TooltipA11y;
+    a11y?: MarkersA11y;
 };
 
 export type MarkersPlugin = Plugin & {
-    readonly times: readonly number[];
+    /** The markers, in the order given. */
+    readonly items: readonly Mark[];
+    /** @deprecated Use `items`; `marks` goes in 2.0. */
     readonly marks: readonly Mark[];
-    /** Replaces the markers (plain moments or rich marks). */
+    /** The markers' moments, in seconds. */
+    readonly times: readonly number[];
+    /** Replaces the markers (marks, or plain moments in seconds). */
     set(next: readonly number[] | readonly Mark[]): void;
 };
 
@@ -80,30 +106,39 @@ const TOOLTIP_LINES = 5;
 const MAX_WORD = 120;
 
 export function markers(options: MarkersOptions = {}): MarkersPlugin {
-    const groupPx = within(options.group, 12, 0, Number.POSITIVE_INFINITY);
+    const groupPx = within(
+        options.groupDistance ?? options.group,
+        12,
+        0,
+        Number.POSITIVE_INFINITY,
+    );
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
     const max = within(options.max, MAX_MARKS, 0, MAX_MARKS);
-    // Never under a hundredth of a second, so a marker just landed on is never chosen again.
-    const backGrace = within(
-        options.backGrace,
-        1,
+    const own = typeof options.keys === 'object' ? options.keys : {};
+    const { letter, backGrace } = letterKeys(
+        options.keys === false
+            ? false
+            : { ...own, backGrace: own.backGrace ?? options.backGrace },
+        'm',
+        // Never under a hundredth of a second, so a marker just landed on is never chosen again.
         0.01,
-        Number.POSITIVE_INFINITY,
     );
     const defaultColor = options.color ?? 'var(--sonicframe-marker, #e5484d)';
     const width = finiteOr(options.width, 2);
 
-    let marks: Mark[] = toMarks(options.marks ?? options.times ?? []).slice(
-        0,
-        max,
-    );
+    let marks: Mark[] = toMarks(
+        options.items ?? options.marks ?? options.times ?? [],
+    ).slice(0, max);
     let host: PluginHost | null = null;
     let openedTooltip = false;
 
     /** The tooltip's last line, for `count` markers left out, in the frame's language. */
     function more(frame: PluginHost, count: number): string {
-        const own = options.words;
+        const own =
+            options.words === undefined && options.a11y?.words === undefined
+                ? undefined
+                : { ...options.words, ...options.a11y?.words };
         const words = mergeWords(wordsFor(frame.lang).markers, own, MAX_WORD);
         const locale = localeFor(frame.lang, own !== undefined);
 
@@ -197,6 +232,10 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
 
         get times(): readonly number[] {
             return marks.map((mark) => mark.time);
+        },
+
+        get items(): readonly Mark[] {
+            return marks.map((mark) => ({ ...mark }));
         },
 
         get marks(): readonly Mark[] {
@@ -304,29 +343,27 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
         },
 
         keyDown(key, modifiers): boolean {
-            if (modifiers.ctrlKey || modifiers.altKey || modifiers.metaKey) {
-                return false;
-            }
-
-            // Shift, not the letter's case, picks the direction: Caps Lock flips the case.
-            if (key.toLowerCase() !== 'm') {
-                return false;
-            }
-
+            const way = letterStep(key, modifiers, letter);
             const frame = host;
             const duration = frame?.duration ?? null;
 
-            if (frame === null || duration === null || duration <= 0) {
+            if (
+                way === null ||
+                frame === null ||
+                duration === null ||
+                duration <= 0
+            ) {
                 return false;
             }
 
             const order = sortedMarks(marks);
             const now = frame.progress * duration;
-            const next = modifiers.shiftKey
-                ? [...order]
-                      .reverse()
-                      .find((mark) => mark.time < now - backGrace)
-                : order.find((mark) => mark.time > now + 0.01);
+            const next =
+                way === -1
+                    ? [...order]
+                          .reverse()
+                          .find((mark) => mark.time < now - backGrace)
+                    : order.find((mark) => mark.time > now + 0.01);
 
             if (next === undefined) {
                 return false;

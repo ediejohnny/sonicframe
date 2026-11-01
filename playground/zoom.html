@@ -82,6 +82,21 @@
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                    <p>
+                        <code>a11y.zoom.announce</code> says the new view after
+                        a zoom by the keys, a button or two fingers ("Zoom 4×,
+                        0:25 to 0:50"). <code>a11y.zoom.words.view</code> puts
+                        it in your own words: a phrase with
+                        <code>{level}</code>, <code>{from}</code> and
+                        <code>{to}</code>, or a function
+                        <code>(level, from, to) =&gt; string</code>.
+                    </p>
+                    <div class="code">
+                        <pre><code>a11y: {
+    zoom: { announce: true, words: { view: 'Zoom {level}: {from} to {to}' } },
+},</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
 
                 <section class="section">

@@ -39,16 +39,19 @@
                                     <td>
                                         <code
                                             >levels(samples, sampleRate,
-                                            …)</code
+                                            options)</code
                                         >
                                     </td>
-                                    <td>Loudness over time.</td>
+                                    <td>
+                                        Loudness over time, as
+                                        <code>Levels</code>.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>peakLevel(samples)</code></td>
                                     <td>
-                                        The loudest sample, as
-                                        <code>{ peak, peakDb }</code>.
+                                        The loudest sample and its clipping, as
+                                        <code>PeakLevel</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -78,6 +81,18 @@
                                 </tr>
                                 <tr>
                                     <td>
+                                        <code>resamplePeaks(peaks, count)</code>
+                                    </td>
+                                    <td>
+                                        Peaks fitted to
+                                        <code>count</code> values, keeping the
+                                        loudest of each slice.
+                                        <code>normalizePeaks(peaks)</code>, on
+                                        the main entry, makes the loudest one 1.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
                                         <code>outlineSound</code>,
                                         <code>describeSound</code>
                                     </td>
@@ -94,6 +109,142 @@
                                         <a href="./waveform-files.html"
                                             >Ready-made peaks</a
                                         >.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Levels</h3>
+                    <p>
+                        <code>levels</code> takes <code>LevelsOptions</code>:
+                        <code>windowSeconds</code>, the window measured, 0.05 by
+                        default. It gives <code>Levels</code>:
+                        <code>rms</code> and <code>peak</code>, one value per
+                        window, and the <code>windowSeconds</code> it used.
+                    </p>
+
+                    <h3>Silences from samples</h3>
+                    <p>
+                        <code>findSilences</code> takes
+                        <code>FindSilencesOptions</code>:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>thresholdDb</code></td>
+                                    <td><code>-45</code></td>
+                                    <td>
+                                        Below this is quiet, in dB of each
+                                        window's RMS (0 dB is a full-scale
+                                        sample). A silence ends once the level
+                                        rises 6 dB above it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>minDuration</code></td>
+                                    <td><code>0.4</code></td>
+                                    <td>
+                                        The shortest silence kept, in seconds.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>windowSeconds</code></td>
+                                    <td><code>0.02</code></td>
+                                    <td>
+                                        The window the level is measured on, in
+                                        seconds, from 0.001 to 1.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>Silences from peaks</h3>
+                    <p>
+                        <code>silencesFromPeaks</code> takes
+                        <code>SilencesFromPeaksOptions</code>:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>threshold</code></td>
+                                    <td><code>0.05</code></td>
+                                    <td>
+                                        Below this peak is quiet, on the peaks'
+                                        own 0 to 1 scale, as given (not a share
+                                        of the loudest peak), from 0.001 to
+                                        0.45. A silence ends above twice it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>minDuration</code></td>
+                                    <td><code>0.4</code></td>
+                                    <td>
+                                        The shortest silence kept, in seconds.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Both give a list of <code>{ start, end }</code>, in
+                        seconds.
+                    </p>
+
+                    <h3>Peak level</h3>
+                    <p>
+                        <code>peakLevel</code> gives a <code>PeakLevel</code>:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>What it is</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>peak</code></td>
+                                    <td>
+                                        The loudest sample's size (1 is full
+                                        scale).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>peakDb</code></td>
+                                    <td>
+                                        The same in dB (0 dB is full scale;
+                                        <code>-Infinity</code> for silence).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>clipped</code></td>
+                                    <td>Whether the sound clips.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>clipRuns</code></td>
+                                    <td>
+                                        How many times it clips: each run of
+                                        samples at full scale (0.999 or more)
+                                        counts once.
                                     </td>
                                 </tr>
                             </tbody>
@@ -159,9 +310,40 @@
                                         default).
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>audio</code></td>
+                                    <td>
+                                        The sound: an address, a
+                                        <code>Blob</code> or an
+                                        <code>AudioBuffer</code>; the frame's
+                                        own media by default.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>mimeTypes</code></td>
+                                    <td>
+                                        The video types to try, in order (<code
+                                            >DEFAULT_CLIP_TYPES</code
+                                        >
+                                        by default); the first the browser can
+                                        record is used.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>onProgress</code></td>
+                                    <td>
+                                        Called with how far the clip got, from 0
+                                        to 1.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
+                    <p>
+                        The options are <code>ClipOptions</code>; the frame
+                        fills in its own peaks, bars, drawing and colors, and a
+                        page may give its own instead.
+                    </p>
                     <div class="callout warn">
                         <strong>Call it from a click</strong>
                         Browsers keep audio suspended until the person does
