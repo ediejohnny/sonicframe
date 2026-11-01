@@ -144,9 +144,10 @@ createRecorder({
                         <code>record</code>, <code>stop</code>,
                         <code>pause</code>, <code>discard</code>,
                         <code>send</code>, <code>time</code>, <code>wave</code>,
-                        <code>player</code> and <code>spacer</code>, and the
-                        names of your own <code>actions</code>. What went wrong,
-                        or what is under way, shows on a line under the parts.
+                        <code>player</code>, <code>rec</code> and
+                        <code>spacer</code>, and the names of your own
+                        <code>actions</code>. What went wrong, or what is under
+                        way, shows on a line under the parts.
                     </p>
                     <div
                         class="stage"
@@ -390,6 +391,114 @@ createRecorder({
                 </section>
 
                 <section class="section">
+                    <h2>The record button</h2>
+                    <p>
+                        <code>recordStyle</code> draws it as a red button
+                        (<code>'red'</code>, the default, as in the demos
+                        above), the dot in the player's button colors
+                        (<code>'dot'</code>), a microphone (<code>'mic'</code>)
+                        or a retro REC mark (<code>'rec'</code>): a red border,
+                        a red dot and red letters on a dark ground of its own,
+                        so the red reads on any page.
+                        <code>recordColor</code> sets the red, and your own
+                        <code>icons.record</code> is drawn in any style. Screen
+                        readers hear "Record" in every one.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"recordStyle":"dot"}'
+                    ></div>
+                    <p data-sent></p>
+                    <p>
+                        The microphone is drawn as its outline; with
+                        <code>micStyle: 'filled'</code>, its body is filled:
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"recordStyle":"mic"}'
+                    ></div>
+                    <p data-sent></p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"recordStyle":"mic","micStyle":"filled"}'
+                    ></div>
+                    <p data-sent></p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"recordStyle":"rec","recordBlink":true}'
+                    ></div>
+                    <p data-sent></p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><code>recPlace</code></th>
+                                    <th>Where REC shows while recording</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>'badge'</code> (default)</td>
+                                    <td>
+                                        A badge before the time, the third demo
+                                        above. It is only seen: the live region
+                                        already says "Recording".
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'stop'</code></td>
+                                    <td>
+                                        The stop button itself, as on a camera:
+                                        press REC again to stop.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'time'</code></td>
+                                    <td>
+                                        A badge holding the time, as in a
+                                        viewfinder; the time is still heard.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"recordStyle":"rec","recPlace":"stop","recordBlink":true}'
+                    ></div>
+                    <p data-sent></p>
+                    <div
+                        class="stage"
+                        data-demo="recorder"
+                        data-options='{"recordStyle":"rec","recPlace":"time","recordBlink":true}'
+                    ></div>
+                    <p data-sent></p>
+                    <div class="code">
+                        <pre><code>createRecorder({
+    container,
+    recordStyle: 'rec',
+    recPlace: 'time',
+    recordBlink: true,
+    onSend,
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>recordBlink</code> blinks the REC dot once a
+                        second while recording. It is off by default, never runs
+                        with reduced motion, and holds still, lit, while paused,
+                        while the pointer is over the screen or while the focus
+                        is in it. The <code>rec</code> part goes in any stage's
+                        list, in any style.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>Drawing it your way</h2>
                     <ul>
                         <li>
@@ -607,6 +716,19 @@ const recording = await recorder.stop();</code></pre>
                                 </tr>
                                 <tr>
                                     <td>
+                                        <code>record-style</code>,
+                                        <code>record-color</code>,
+                                        <code>mic-style</code>,
+                                        <code>rec-place</code>
+                                    </td>
+                                    <td>The record button and its REC mark.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>record-blink</code></td>
+                                    <td>Present: the REC dot blinks.</td>
+                                </tr>
+                                <tr>
+                                    <td>
                                         <code>a11y-lang</code>,
                                         <code>a11y-announce-every</code>
                                     </td>
@@ -762,6 +884,42 @@ const recording = await recorder.stop();</code></pre>
                                     <td><code>icons</code></td>
                                     <td>the screen's</td>
                                     <td>Your own SVG path for each button.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>recordStyle</code></td>
+                                    <td><code>'red'</code></td>
+                                    <td>
+                                        The record button: <code>'dot'</code>,
+                                        <code>'mic'</code> or
+                                        <code>'rec'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>micStyle</code></td>
+                                    <td><code>'outline'</code></td>
+                                    <td>
+                                        The microphone's body, or
+                                        <code>'filled'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>recordColor</code></td>
+                                    <td><code>'#f44336'</code></td>
+                                    <td>The red of the red and REC styles.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>recPlace</code></td>
+                                    <td><code>'badge'</code></td>
+                                    <td>
+                                        Where REC shows while recording:
+                                        <code>'stop'</code> or
+                                        <code>'time'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>recordBlink</code></td>
+                                    <td><code>false</code></td>
+                                    <td>The REC dot blinks while recording.</td>
                                 </tr>
                                 <tr>
                                     <td><code>actions</code></td>
