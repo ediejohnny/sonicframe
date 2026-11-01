@@ -4,8 +4,8 @@
  * side of the page, with a close button and, when asked, the page dimmed behind it. It lives on the
  * page's body, so no player box clips it, and wears the player's colors and font, copied into it as
  * it opens. Escape, a press outside, the focus leaving and, unless it stays open, a chapter chosen
- * close it; the focus goes to the chapter playing as it opens. The popover and the drawer stay one
- * class because they open, close and dress alike; the drawer's close button is `DrawerClose`.
+ * close it; the focus goes to the chapter playing as it opens. The drawer's close button is
+ * `DrawerClose`.
  */
 
 import { arrowOffset, placeTooltip } from '../../core/shared/place';

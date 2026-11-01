@@ -12,8 +12,7 @@
  * events. Its collaborators do the rest: the sound decoded once (`PlayerSound`), the plugins it adds
  * (`player-plugins`), the main line (`PlayerLayout`), the times (`TimeParts`), the buttons
  * (`part-buttons`, `listen-button`), the chapters (`ChapterParts`), the media controls
- * (`PlayerSession`) and the box and colors (`player-paint`). It stays one file because the build ties every collaborator to the player's
- * state; split further, that state would only be handed around.
+ * (`PlayerSession`) and the box and colors (`player-paint`).
  */
 
 import { PlayButton } from '../../controls/play/play-button';
