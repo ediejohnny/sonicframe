@@ -92,13 +92,13 @@ describe('LevelTrack', () => {
         track.add(0.1, 0.2);
         track.add(0.2, 0.3);
 
-        expect(track.window(0.5)).toEqual([0, 0, 0.1, 0.2, 0.3]);
+        expect(track.last(0.5)).toEqual([0, 0, 0.1, 0.2, 0.3]);
 
         for (let slice = 3; slice < 8; slice++) {
             track.add(slice / 10, slice / 10);
         }
 
-        expect(track.window(0.5)).toEqual([0.3, 0.4, 0.5, 0.6, 0.7]);
+        expect(track.last(0.5)).toEqual([0.3, 0.4, 0.5, 0.6, 0.7]);
     });
 
     it('starts again empty when cleared', () => {
@@ -107,7 +107,7 @@ describe('LevelTrack', () => {
         track.clear();
 
         expect(track.levels).toEqual([]);
-        expect(track.window(0.2)).toEqual([0, 0]);
+        expect(track.last(0.2)).toEqual([0, 0]);
     });
 
     it('takes a rate from 1 to 100 slices a second, 20 when it is not a number', () => {

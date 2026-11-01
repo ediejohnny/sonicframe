@@ -68,7 +68,7 @@ export class LevelTrack {
     }
 
     /** The last `seconds` of levels, with silence before the start while the recording is shorter. */
-    window(seconds: number): number[] {
+    last(seconds: number): number[] {
         const count = Math.max(0, Math.round(finiteOr(seconds, 0) * this.rate));
         const kept = this.values.slice(Math.max(0, this.values.length - count));
 
