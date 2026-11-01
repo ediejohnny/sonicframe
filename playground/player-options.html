@@ -121,11 +121,6 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>label</code></td>
-                                    <td>"Audio player"</td>
-                                    <td>The player's accessible name.</td>
-                                </tr>
-                                <tr>
                                     <td><code>volume</code></td>
                                     <td><code>false</code></td>
                                     <td>Show the volume control.</td>
@@ -167,8 +162,7 @@
                                         <a href="./chapters.html#options"
                                             >chapters options</a
                                         >
-                                        plus <code>list</code> and
-                                        <code>listOpen</code>.
+                                        plus <code>list</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -179,7 +173,7 @@
                                         true, or the
                                         <a href="./media-session.html#options"
                                             >media session options</a
-                                        >. Titled by <code>label</code>,
+                                        >. Titled by <code>a11y.label</code>,
                                         skipping <code>look.skip</code>.
                                     </td>
                                 </tr>
@@ -220,6 +214,79 @@
                             </tbody>
                         </table>
                     </div>
+                    <h3>When two options say the same thing</h3>
+                    <p>
+                        A few things can be given in two places. This is which
+                        one wins:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>What</th>
+                                    <th>Wins</th>
+                                    <th>Over</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>The zoom</td>
+                                    <td><code>zoom</code></td>
+                                    <td><code>frame.zoom</code></td>
+                                </tr>
+                                <tr>
+                                    <td>Saying the view after a zoom</td>
+                                    <td><code>a11y.zoom.announce</code></td>
+                                    <td>
+                                        <code>frame.a11y.zoom.announce</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>The minimap as a keyboard slider</td>
+                                    <td><code>a11y.minimap.keys</code></td>
+                                    <td><code>minimap.a11y.keys</code></td>
+                                </tr>
+                                <tr>
+                                    <td>The minimap's height and space</td>
+                                    <td>
+                                        <code>minimap.height</code>,
+                                        <code>minimap.gap</code>
+                                    </td>
+                                    <td>
+                                        The look's
+                                        <code>minimapHeight</code>,
+                                        <code>minimapGap</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Words of the zoom and the minimap</td>
+                                    <td>
+                                        <code>frame.a11y.zoom.words</code>,
+                                        <code>minimap.a11y.words</code>
+                                    </td>
+                                    <td>The player's language</td>
+                                </tr>
+                                <tr>
+                                    <td>The player's name</td>
+                                    <td><code>a11y.label</code></td>
+                                    <td>The player's language</td>
+                                </tr>
+                                <tr>
+                                    <td>The title on the lock screen</td>
+                                    <td><code>mediaSession.title</code></td>
+                                    <td><code>a11y.label</code></td>
+                                </tr>
+                                <tr>
+                                    <td>Any part of the look, the colors</td>
+                                    <td>
+                                        <code>look</code>, <code>palette</code>,
+                                        <code>wave</code>, <code>font</code>
+                                    </td>
+                                    <td>The theme's</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
 
                 <section class="section">
@@ -248,10 +315,20 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>labels</code></td>
+                                    <td><code>label</code></td>
+                                    <td><code>'Audio player'</code></td>
+                                    <td>
+                                        The player's accessible name, in its
+                                        language by default.
+                                        <code>setLabel(label)</code> changes it
+                                        later.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>words</code></td>
                                     <td>the language's</td>
                                     <td>
-                                        Your own names; see
+                                        Your own names and words; see
                                         <a
                                             href="./announcements.html#your-own-words"
                                             >Your own words</a
@@ -308,7 +385,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>peaks</code></td>
+                                    <td><code>peakCount</code></td>
                                     <td><code>1000</code></td>
                                     <td>
                                         Peaks a decoded sound gets (100 to

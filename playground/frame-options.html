@@ -121,24 +121,6 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>label</code></td>
-                                    <td><code>'Audio position'</code></td>
-                                    <td>
-                                        The accessible name, in the frame's
-                                        language.
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><code>valueText</code></td>
-                                    <td><code>0:12 / 0:45</code></td>
-                                    <td>
-                                        <code
-                                            >(time, ratio, duration) =&gt;
-                                            string</code
-                                        >, the position in words.
-                                    </td>
-                                </tr>
-                                <tr>
                                     <td><code>stepSeconds</code></td>
                                     <td><code>5</code></td>
                                     <td>
@@ -192,15 +174,52 @@
                                     <td><code>a11y</code></td>
                                     <td><code>{}</code></td>
                                     <td>
-                                        <code>a11y.lang</code> (the language of
-                                        the frame's words and its plugins':
-                                        <code>'en'</code>, <code>'pt'</code>,
-                                        <code>'pt-PT'</code>, <code>'es'</code>,
-                                        <code>'fr'</code>, a registered one or
-                                        <code>'auto'</code>; see
+                                        Everything a screen reader hears, in the
+                                        rows below.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.lang</code></td>
+                                    <td><code>'en'</code></td>
+                                    <td>
+                                        The language of the frame's words and
+                                        its plugins': <code>'en'</code>,
+                                        <code>'pt'</code>, <code>'pt-PT'</code>,
+                                        <code>'es'</code>, <code>'fr'</code>, a
+                                        registered one or <code>'auto'</code>;
+                                        see
                                         <a href="./languages.html">Languages</a
-                                        >), <code>a11y.zoom.announce</code> and
-                                        <code>a11y.zoom.words</code>.
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.label</code></td>
+                                    <td><code>'Audio position'</code></td>
+                                    <td>
+                                        The accessible name, in the frame's
+                                        language.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.valueText</code></td>
+                                    <td><code>0:12 / 0:45</code></td>
+                                    <td>
+                                        <code
+                                            >(time, ratio, duration) =&gt;
+                                            string</code
+                                        >, the position in words.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>a11y.zoom.announce</code>,
+                                        <code>a11y.zoom.words</code>
+                                    </td>
+                                    <td><code>false</code>, the language's</td>
+                                    <td>
+                                        Say the new view after a zoom, and in
+                                        which words; see
+                                        <a href="./zoom.html">Zoom</a>.
                                     </td>
                                 </tr>
                                 <tr>

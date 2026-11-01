@@ -79,7 +79,8 @@
     src,
     a11y: {
         lang: 'pt-BR', // the language of every word the player says
-        labels: { play: 'Ouvir' }, // your own names, over the language's
+        label: 'Nota de voz da Ana', // the player's accessible name
+        words: { play: 'Ouvir' }, // your own names, over the language's
         description: { keys: true, button: true }, // the wave in words
         zoom: { announce: true }, // say the new view after a zoom
         minimap: { keys: true }, // the minimap as a keyboard slider
@@ -112,7 +113,20 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>a11y.labels</code></td>
+                                    <td><code>a11y.label</code></td>
+                                    <td>
+                                        The player's accessible name;
+                                        <code>'Audio player'</code> in its
+                                        language by default.
+                                    </td>
+                                    <td>
+                                        <a href="./player-options.html"
+                                            >Player options</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y.words</code></td>
                                     <td>
                                         Your own accessible names for every
                                         control.
@@ -162,11 +176,18 @@
                         </table>
                     </div>
                     <p>
+                        Everything a screen reader hears lives in
+                        <code>a11y</code>, and your own words are always
+                        <code>a11y.words</code>: on the player, the play button,
+                        the volume control, the markers and the chapters alike.
+                    </p>
+                    <p>
                         On the tag, the same options are attributes that start
-                        with <code>a11y-</code>:
+                        with <code>a11y-</code>, from <code>a11y-label</code> to
+                        <code>a11y-chapters</code>:
                     </p>
                     <div class="code">
-                        <pre><code>&lt;sonic-player src="/note.ogg" a11y-lang="pt-BR" a11y-description="keys button"&gt;&lt;/sonic-player&gt;</code></pre>
+                        <pre><code>&lt;sonic-player src="/note.ogg" a11y-lang="pt-BR" a11y-label="Nota de voz da Ana" a11y-description="keys button"&gt;&lt;/sonic-player&gt;</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                 </section>
@@ -176,7 +197,10 @@
                     <ul>
                         <li>
                             <strong>Name each player.</strong>
-                            <code>label: 'Voice note from Ana, 0:42'</code>
+                            <code
+                                >a11y: { label: 'Voice note from Ana, 0:42'
+                                }</code
+                            >
                             tells a list of players apart.
                         </li>
                         <li>

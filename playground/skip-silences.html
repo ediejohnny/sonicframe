@@ -99,16 +99,20 @@ frame.use(
                                     <td>Shade the silences on the wave.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>dimColor</code></td>
+                                    <td><code>color</code></td>
                                     <td><code>var(--sonicframe-dim)</code></td>
-                                    <td>The shade's color.</td>
+                                    <td>
+                                        The shade's color: any CSS color or
+                                        <code>var(--name)</code>.
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td><code>snap</code></td>
+                                    <td><code>pixelSnap</code></td>
                                     <td><code>false</code></td>
                                     <td>
                                         The shade's edges on whole device
-                                        pixels.
+                                        pixels: a little crisper, each moved by
+                                        less than half a pixel.
                                     </td>
                                 </tr>
                             </tbody>

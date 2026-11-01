@@ -62,7 +62,7 @@ new SonicFrame({
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>side</code></td>
+                                    <td><code>placement</code></td>
                                     <td><code>'below'</code></td>
                                     <td>
                                         <code>'above'</code> or
@@ -73,16 +73,21 @@ new SonicFrame({
                                     <td><code>height</code></td>
                                     <td><code>24</code></td>
                                     <td>
-                                        The strip's height, in CSS pixels (the
-                                        player's <code>minimapHeight</code> in
-                                        rem).
+                                        The strip's height, at least 4: a number
+                                        in CSS pixels, or a length with its unit
+                                        (<code>'1.5rem'</code>,
+                                        <code>'24px'</code>). The player's
+                                        <code>minimapHeight</code> is in rem.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>gap</code></td>
                                     <td><code>4</code></td>
                                     <td>
-                                        Space between the strip and the wave.
+                                        Space between the strip and the wave, at
+                                        least 0: a number in CSS pixels, or a
+                                        length with its unit
+                                        (<code>'0.25rem'</code>).
                                     </td>
                                 </tr>
                                 <tr>
@@ -150,7 +155,7 @@ new SonicFrame({
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>a11y.label</code></td>
+                                    <td><code>a11y.words.label</code></td>
                                     <td><code>'Visible part'</code></td>
                                     <td>
                                         Its accessible name, in the frame's
@@ -158,11 +163,20 @@ new SonicFrame({
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>a11y.words</code></td>
+                                    <td><code>a11y.words.value</code></td>
                                     <td>the frame's language</td>
                                     <td>
-                                        <code>{ value(from, to, total) }</code>:
-                                        "0:25 to 0:50 of 1:40".
+                                        Its value: a phrase with
+                                        <code>{from}</code>,
+                                        <code>{to}</code> and
+                                        <code>{total}</code> (<code
+                                            >'{from} to {to} of {total}'</code
+                                        >, "0:25 to 0:50 of 1:40"), or a
+                                        function
+                                        <code
+                                            >(from, to, total) =&gt;
+                                            string</code
+                                        >.
                                     </td>
                                 </tr>
                             </tbody>
@@ -189,6 +203,17 @@ new SonicFrame({
                         the ends, and its value says the part in words. A press
                         on it also gives it the focus.
                     </p>
+                    <div class="code">
+                        <pre><code>minimap({
+    placement: 'above',
+    height: '1.5rem',
+    a11y: {
+        keys: true,
+        words: { label: 'Part in view', value: '{from} to {to} of {total}' },
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
                 </section>
             </div>
         </main>

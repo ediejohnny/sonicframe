@@ -32,7 +32,7 @@ function tell(demo: Element, text: string): void {
 function describe(recording: Recording): string {
     const size = Math.max(1, Math.round(recording.size / 1024));
 
-    return `${formatTime(recording.duration)} of ${recording.type || 'audio'}, ${size} KB, ${recording.peaks.length} peaks`;
+    return `${formatTime(recording.duration)} of ${recording.mimeType || 'audio'}, ${size} KB, ${recording.peaks.length} peaks`;
 }
 
 /** Writes what Send would hand over in the line that follows `demo`. */

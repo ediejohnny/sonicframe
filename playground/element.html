@@ -35,7 +35,7 @@
                         class="live-tag"
                         id="tag-player"
                         theme="card"
-                        label="The tag, live"
+                        a11y-label="The tag, live"
                     ></sonic-player>
                     <p>
                         <code>defineSonicPlayer('my-player')</code> registers it
@@ -99,8 +99,14 @@
                                     <td>A stack name, or a font you bring.</td>
                                 </tr>
                                 <tr>
-                                    <td><code>label</code></td>
-                                    <td>The player's accessible name.</td>
+                                    <td>
+                                        <code>a11y-label</code>,
+                                        <code>label</code>
+                                    </td>
+                                    <td>
+                                        The player's accessible name;
+                                        <code>a11y-label</code> wins.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -115,7 +121,7 @@
                                         Words turn on its ways:
                                         <code
                                             >wheel scroll pinch keys follow
-                                            center edges buttons</code
+                                            center edge-scroll buttons</code
                                         >.
                                     </td>
                                 </tr>
@@ -127,7 +133,7 @@
                                     <td><code>minimap</code></td>
                                     <td>
                                         The strip; words:
-                                        <code>above autohide wheel</code>.
+                                        <code>above auto-hide wheel</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -144,24 +150,35 @@
                                     <td>
                                         The wave in words; words:
                                         <code
-                                            >keys pauses speech announce button
-                                            animation fade</code
+                                            >keys pause-in-value speech announce
+                                            button animation fade</code
                                         >.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>
                                         <code>chapters</code>,
-                                        <code>chapter-options</code>
+                                        <code>chapters-options</code>
                                     </td>
                                     <td>
                                         A chapters file's address, and its
                                         extras:
                                         <code
                                             >list popover drawer left backdrop
-                                            open stay animation slide swipe lane
-                                            above announce images links no-keys
-                                            no-lines readable</code
+                                            open stay-open animation slide swipe
+                                            lane above images links no-keys
+                                            no-lines</code
+                                        >.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-chapters</code></td>
+                                    <td>
+                                        What a screen reader hears of the
+                                        chapters:
+                                        <code
+                                            >announce readable
+                                            no-value-note</code
                                         >.
                                     </td>
                                 </tr>
@@ -176,9 +193,44 @@
                                         slider.
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td>
+                                        <code>media-session</code>,
+                                        <code>media-title</code>,
+                                        <code>media-artist</code>,
+                                        <code>media-album</code>,
+                                        <code>media-artwork</code>
+                                    </td>
+                                    <td>
+                                        The lock screen and the media keys, and
+                                        what they show (<a
+                                            href="./media-session.html"
+                                            >Lock screen and media keys</a
+                                        >).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>background-color</code>,
+                                        <code>background-image</code>,
+                                        <code>background-animation</code> and
+                                        the other
+                                        <code>background-</code> attributes
+                                    </td>
+                                    <td>
+                                        The player's own background (<a
+                                            href="./backgrounds.html"
+                                            >Backgrounds</a
+                                        >).
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
+                    <p>
+                        Every attribute, with its values, is in
+                        <a href="./tag-attributes.html">Tag attributes</a>.
+                    </p>
                     <div class="code">
                         <pre><code>&lt;sonic-player
     src="/episodes/12.mp3"
@@ -226,8 +278,31 @@
                         <code>sonicframe:rangeend</code>,
                         <code>sonicframe:viewchange</code>,
                         <code>sonicframe:error</code>,
-                        <code>sonicframe:description</code> and
+                        <code>sonicframe:descriptionchange</code> and
                         <code>sonicframe:chapterchange</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>The player inside</h2>
+                    <p>
+                        The tag's <code>player</code> property gives the player
+                        it built, to reach what no attribute does. It is
+                        <code>null</code> while the tag is off the page.
+                    </p>
+                    <div class="code">
+                        <pre><code>const tag = document.querySelector('sonic-player');
+tag.player?.chapters?.go(2);
+tag.player?.setLook({ fontWeight: 600 });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        TypeScript knows the tag: the
+                        <code>SonicPlayerElement</code> type comes from
+                        <code>document.createElement('sonic-player')</code> and
+                        <code>querySelector</code>. The type
+                        <code>PlayerAttribute</code> names every attribute it
+                        reads.
                     </p>
                 </section>
             </div>

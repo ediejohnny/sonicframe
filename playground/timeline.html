@@ -25,7 +25,7 @@
                     <div class="code">
                         <pre><code>import { timeline } from 'sonicframe';
 
-frame.use(timeline({ side: 'above' }));</code></pre>
+frame.use(timeline({ placement: 'above', height: '1rem' }));</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <div
@@ -49,7 +49,7 @@ frame.use(timeline({ side: 'above' }));</code></pre>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>side</code></td>
+                                    <td><code>placement</code></td>
                                     <td><code>'below'</code></td>
                                     <td>
                                         <code>'above'</code> or
@@ -57,11 +57,14 @@ frame.use(timeline({ side: 'above' }));</code></pre>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><code>size</code></td>
+                                    <td><code>height</code></td>
                                     <td><code>14</code></td>
                                     <td>
-                                        The lane's height in CSS pixels, at
-                                        least 1; the wave gives up that room.
+                                        The lane's height, at least 1; the wave
+                                        gives up that room. A number counts in
+                                        CSS pixels; a length is written with its
+                                        unit (<code>'1rem'</code>,
+                                        <code>'14px'</code>).
                                     </td>
                                 </tr>
                                 <tr>

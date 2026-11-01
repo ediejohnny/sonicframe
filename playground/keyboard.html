@@ -77,11 +77,15 @@
                             <kbd>Shift</kbd> + <kbd>M</kbd> to the previous one
                         </li>
                         <li>
-                            Within <code>backGrace</code> seconds after a marker
-                            (1), <kbd>Shift</kbd> + <kbd>M</kbd> goes to the one
-                            before it, like a player's "previous track"
+                            Within <code>keys.backGrace</code> seconds after a
+                            marker (1), <kbd>Shift</kbd> + <kbd>M</kbd> goes to
+                            the one before it, like a player's "previous track"
                         </li>
                     </ul>
+                    <p>
+                        <code>keys: { letter: 'k' }</code> picks another letter,
+                        <code>keys: false</code> turns them off.
+                    </p>
                 </section>
 
                 <section class="section">
@@ -94,7 +98,7 @@
                             0:02")
                         </li>
                         <li>
-                            Within <code>backGrace</code> seconds after a
+                            Within <code>keys.backGrace</code> seconds after a
                             chapter's start (1), <kbd>Shift</kbd> +
                             <kbd>C</kbd> goes to the one before it
                         </li>
@@ -120,7 +124,19 @@
                             <kbd>[</kbd> <kbd>]</kbd> move its start,
                             <kbd>{</kbd> <kbd>}</kbd> move its end
                         </li>
+                        <li><kbd>Escape</kbd> stops it and lets it go</li>
                     </ul>
+                    <p>
+                        <code
+                            >keys: { select, loop, play, nudge, remove, release
+                            }</code
+                        >
+                        sets each one: <code>select</code> and
+                        <code>loop</code> take your own letter or
+                        <code>false</code>, the others <code>false</code> to
+                        turn them off. <code>keys: false</code> turns them all
+                        off.
+                    </p>
                 </section>
 
                 <section class="section">

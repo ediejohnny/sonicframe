@@ -74,17 +74,21 @@
                         Create a frame on the element and bind it to the audio.
                         <code>peaks</code> are the loudest points of the sound,
                         numbers from 0 to 1. Here they come from a small JSON
-                        file; <a href="./peaks.html">Peaks</a> shows every way
-                        to make them.
+                        file, a list of numbers or
+                        <code>{ peaks, duration }</code>.
+                        <code>loadWaveform</code> reads that, or a ready-made
+                        waveform file, and gives the peaks with their duration.
+                        <a href="./peaks.html">Peaks</a> shows every way to make
+                        them.
                     </p>
                     <div class="code">
-                        <pre><code>import { SonicFrame, loadPeaks } from 'sonicframe';
+                        <pre><code>import { SonicFrame, loadWaveform } from 'sonicframe';
 
 const frame = new SonicFrame({
     container: document.getElementById('wave'),
     media: document.getElementById('voice'),
-    peaks: () =&gt; loadPeaks('/voice.peaks.json'),
-    label: 'Voice note',
+    peaks: () =&gt; loadWaveform('/voice.peaks.json'),
+    a11y: { label: 'Voice note' },
 });</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>

@@ -66,8 +66,11 @@ createPlayer({ container, src, theme: 'pulse', palette: 'ocean' });</code></pre>
                     </p>
                     <p>
                         A palette is set as custom properties on the player, so
-                        plain CSS can still change one color. Or give your own,
-                        with all eleven colors:
+                        plain CSS can still change one color (<a
+                            href="./css-variables.html"
+                            >which properties each color sets</a
+                        >). Or give your own; a color you leave out comes from
+                        <code>light</code>:
                     </p>
                     <div class="code">
                         <pre><code>createPlayer({
@@ -135,6 +138,99 @@ registerTheme('brand-note', { extends: 'pill', wave: { knob: 14 } });
                         An address is used only when it is http(s) or a relative
                         path; your Content-Security-Policy decides the rest.
                     </p>
+                </section>
+
+                <section class="section">
+                    <h2>Lists to build a picker</h2>
+                    <p>
+                        <code>sonicframe/player</code> gives every name it
+                        knows, frozen, so a settings screen can list the choices
+                        without copying them:
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>What it holds</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <code>THEME_NAMES</code>,
+                                        <code>THEMES</code>
+                                    </td>
+                                    <td>
+                                        The built-in themes' names, and each
+                                        theme by name.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>findTheme(name)</code></td>
+                                    <td>
+                                        A built-in or registered theme by name,
+                                        or <code>null</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>PALETTE_NAMES</code>,
+                                        <code>PALETTES</code>,
+                                        <code>DEFAULT_PALETTE</code>
+                                    </td>
+                                    <td>
+                                        The palettes' names, each palette's
+                                        colors, and SonicFrame's own colors.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>FONT_NAMES</code>,
+                                        <code>FONT_STACKS</code>
+                                    </td>
+                                    <td>
+                                        The font stacks' names, and each stack.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>PART_NAMES</code>,
+                                        <code>DEFAULT_LOOK</code>
+                                    </td>
+                                    <td>
+                                        The parts a look can place, and the look
+                                        a player starts from.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>resolveLook(base, look)</code>
+                                    </td>
+                                    <td>
+                                        A look laid over another, checked as the
+                                        player checks it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>BACKGROUND_EFFECTS</code></td>
+                                    <td>The background's effects.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>PLAYER_ATTRIBUTES</code>,
+                                        <code>PLAYER_LABELS</code>,
+                                        <code>LANGUAGE_NAMES</code>
+                                    </td>
+                                    <td>
+                                        The tag's attributes, the player's
+                                        labels in each language, and the
+                                        built-in languages.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
             </div>
         </main>
