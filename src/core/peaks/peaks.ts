@@ -4,7 +4,13 @@
  * preview). Nothing here touches the page.
  */
 
-import { fetchOk, oncePerPage, readBody } from '../shared/fetch';
+import {
+    fetchOk,
+    oncePerPage,
+    readBody,
+    readCapped,
+    type Fetcher,
+} from '../shared/fetch';
 import { clamp01 } from '../shared/math';
 
 /** The most peaks accepted from a file: plenty for any screen, small enough to read quickly. */
@@ -13,7 +19,7 @@ export const MAX_PEAKS = 20_000;
 /** A peaks file larger than this is refused, and reading it stops there (it is never parsed). */
 const MAX_PEAKS_BYTES = 2_000_000;
 
-/** The part of a `fetch` response that `loadPeaks` reads. */
+/** @deprecated The response of a `PeaksFetcher`; goes in 2.0 with it. */
 export type PeaksResponse = {
     ok: boolean;
     status: number;
@@ -24,7 +30,7 @@ export type PeaksResponse = {
     text(): Promise<string>;
 };
 
-/** The part of `fetch` that `loadPeaks` uses, so tests and apps can bring their own. */
+/** @deprecated Give `loadPeaks` a `Fetcher` as `{ fetcher }`; goes in 2.0. */
 export type PeaksFetcher = (url: string) => Promise<PeaksResponse>;
 
 function tooLarge(): RangeError {
@@ -83,21 +89,51 @@ export function readPeaks(data: unknown, limit: number = MAX_PEAKS): number[] {
     });
 }
 
+export type LoadPeaksOptions = {
+    /** The same address is fetched once per page. On by default. */
+    shared?: boolean;
+    /** The app's own `fetch`. */
+    fetcher?: Fetcher;
+};
+
 const loading = new Map<string, Promise<number[]>>();
 
 /**
- * Fetches a peaks file (see `readPeaks`). Each address is fetched once per page however many frames
- * show it; a failed fetch is forgotten, so it can be tried again.
+ * Fetches a peaks file (see `readPeaks`). Unless `shared` is false, each address is fetched once per
+ * page however many frames show it; a failed fetch is forgotten, so it can be tried again.
  */
 export function loadPeaks(
     url: string,
-    fetcher: PeaksFetcher = (address) => fetch(address),
+    options?: LoadPeaksOptions,
+): Promise<number[]>;
+/** @deprecated Pass the fetcher as `{ fetcher }`; a fetcher in its place goes in 2.0. */
+export function loadPeaks(
+    url: string,
+    fetcher: PeaksFetcher,
+): Promise<number[]>;
+export function loadPeaks(
+    url: string,
+    options: LoadPeaksOptions | PeaksFetcher = {},
 ): Promise<number[]> {
-    return oncePerPage(loading, url, async () => {
-        const response = await fetchOk(fetcher, url, 'peaks');
+    if (typeof options === 'function') {
+        return oncePerPage(loading, url, async () =>
+            readPeaks(
+                JSON.parse(
+                    await readText(await fetchOk(options, url, 'peaks')),
+                ),
+            ),
+        );
+    }
 
-        return readPeaks(JSON.parse(await readText(response)));
-    });
+    const fetcher = options.fetcher ?? ((address: string) => fetch(address));
+    const load = async (): Promise<number[]> => {
+        const response = await fetchOk(fetcher, url, 'peaks');
+        const bytes = await readCapped(response, MAX_PEAKS_BYTES, tooLarge);
+
+        return readPeaks(JSON.parse(new TextDecoder().decode(bytes)));
+    };
+
+    return options.shared === false ? load() : oncePerPage(loading, url, load);
 }
 
 /**

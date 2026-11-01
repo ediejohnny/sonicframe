@@ -8,14 +8,27 @@
  */
 
 import { within } from '../../core/shared/checked';
+import type { CssLength } from '../../core/shared/length';
 import { cleanText, truncateWords } from '../../core/shared/text';
 import { addDescribedBy, removeDescribedBy } from '../../dom/a11y/describedby';
 import { css, VISUALLY_HIDDEN } from '../../dom/shared/css';
-import { readableColors, sharedTooltip } from '../../dom/shared/tooltip';
+import {
+    sharedTooltip,
+    tooltipColors,
+    type TooltipA11y,
+} from '../../dom/shared/tooltip';
+import { lengthPixels } from '../../dom/shared/units';
 import type { Lane, Plugin, PluginHost } from '../../types';
 
 /** One block of tooltip text: a `label` (e.g. "Auto-transcript") and the text, with its own cap. */
-export type TooltipSection = { label?: string; text: string; limit?: number };
+export type TooltipSection = {
+    label?: string;
+    text: string;
+    /** The most characters this section shows; the caption's `tooltipMax` by default. */
+    max?: number;
+    /** @deprecated Use `max`; `limit` goes in 2.0. */
+    limit?: number;
+};
 
 /** The tooltip's text: a single string, or several labelled sections. */
 export type TooltipContent = string | readonly TooltipSection[];
@@ -27,10 +40,19 @@ export type CaptionOptions = {
     badges?: readonly string[];
     /** What the tooltip shows; left out, it repeats the caption text, longer. */
     tooltip?: TooltipContent;
-    /** The most characters the tooltip shows before a word-boundary cut. */
+    /** The most characters the tooltip shows before a word-boundary cut: 280. */
+    tooltipMax?: number;
+    /** @deprecated Use `tooltipMax`; `tooltipLimit` goes in 2.0. */
     tooltipLimit?: number;
-    /** The lane's height in CSS pixels. */
+    /** The lane's height: a number in CSS pixels, or written with its unit (`'1.25rem'`). 20 by default. */
+    height?: number | CssLength;
+    /** @deprecated Use `height`; `size` goes in 2.0. */
     size?: number;
+    /**
+     * `tooltip.readable` writes the tooltip's text in black or white, whichever reads on its color
+     * (4.5:1). On by default; off, the page's color for text on the played color.
+     */
+    a11y?: TooltipA11y;
 };
 
 export type CaptionPlugin = Plugin & {
@@ -52,8 +74,15 @@ const FADE = 'linear-gradient(to right, #000 calc(100% - 24px), transparent)';
 let counter = 0;
 
 export function caption(options: CaptionOptions = {}): CaptionPlugin {
-    const laneSize = within(options.size, 20, 1, Number.POSITIVE_INFINITY);
-    const tooltipLimit = within(options.tooltipLimit, 280, 0, MAX_TOOLTIP);
+    const tooltipMax = within(
+        options.tooltipMax ?? options.tooltipLimit,
+        280,
+        0,
+        MAX_TOOLTIP,
+    );
+    const readable: TooltipA11y = {
+        tooltip: { readable: options.a11y?.tooltip?.readable !== false },
+    };
     const describedId = `sonicframe-caption-${++counter}`;
 
     let host: PluginHost | null = null;
@@ -90,22 +119,24 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
         if (tooltipContent === null) {
             return text === null || text === ''
                 ? []
-                : [truncateWords(text, tooltipLimit)];
+                : [truncateWords(text, tooltipMax)];
         }
 
         if (typeof tooltipContent === 'string') {
             return [
-                truncateWords(
-                    cleanText(tooltipContent, MAX_TEXT),
-                    tooltipLimit,
-                ),
+                truncateWords(cleanText(tooltipContent, MAX_TEXT), tooltipMax),
             ];
         }
 
         return tooltipContent.map((section) => {
             const body = truncateWords(
                 cleanText(section.text, MAX_TEXT),
-                within(section.limit, tooltipLimit, 0, MAX_TOOLTIP),
+                within(
+                    section.max ?? section.limit,
+                    tooltipMax,
+                    0,
+                    MAX_TOOLTIP,
+                ),
             );
 
             return section.label === undefined
@@ -128,7 +159,7 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
             return;
         }
 
-        sharedTooltip().show(anchor, lines, readableColors(current));
+        sharedTooltip().show(anchor, lines, tooltipColors(current, readable));
     }
 
     function closeNow(): void {
@@ -164,7 +195,15 @@ export function caption(options: CaptionOptions = {}): CaptionPlugin {
             return;
         }
 
-        lane = current.addLane('below', laneSize);
+        lane = current.addLane(
+            'below',
+            within(
+                lengthPixels(options.height ?? options.size, 'px'),
+                20,
+                1,
+                Number.POSITIVE_INFINITY,
+            ),
+        );
         const root = lane.element;
         css(root, [
             ['display', 'flex'],

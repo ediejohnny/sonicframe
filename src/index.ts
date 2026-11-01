@@ -160,6 +160,7 @@ export {
     peaksFromChannel,
     readPeaks,
     resample as resamplePeaks,
+    type LoadPeaksOptions,
     type PeaksFetcher,
 } from './core/peaks/peaks';
 export type { FetchedResponse, Fetcher } from './core/shared/fetch';
@@ -191,6 +192,7 @@ export {
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export { safeUrl } from './core/shared/url';
+export type { CssLength } from './core/shared/length';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/wave/shapes';
 export type { View, ViewState } from './core/view/view';
 export {

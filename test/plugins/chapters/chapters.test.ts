@@ -6,7 +6,11 @@
 
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { sharedTooltip } from '../../../src/dom/shared/tooltip';
-import { chapters, type Fetcher } from '../../../src/index';
+import {
+    chapters,
+    type ChaptersOptions,
+    type Fetcher,
+} from '../../../src/index';
 import { firePointer, playTo, pressKey } from '../../support/events';
 import { recordingOf } from '../../support/fakes';
 import {
@@ -387,5 +391,94 @@ describe('where the chapters come from', () => {
         expect(own.previous()).toBe(true);
         expect(media.currentTime).toBe(25);
         expect(own.go(9)).toBe(false);
+    });
+});
+
+describe('the names of 0.7, with the old ones kept until 2.0', () => {
+    it('tells onChapterChange every change, and only it when the old onChange is given too', () => {
+        const fresh: number[] = [];
+        const old: number[] = [];
+        const media = fakeMedia({ duration: 100, paused: false });
+        showFrame(
+            [
+                plugin({
+                    onChapterChange: (_chapter, index) => fresh.push(index),
+                    onChange: (_chapter, index) => old.push(index),
+                }),
+            ],
+            media,
+        );
+        playTo(media, 30);
+
+        expect(fresh).toEqual([0, 1]);
+        expect(old).toEqual([]);
+    });
+
+    it('gives the chapters shown as items, and the same list as chapters', () => {
+        const own = plugin();
+        showFrame([own]);
+
+        expect(own.items.map((chapter) => chapter.start)).toEqual([0, 25, 50]);
+        expect(own.chapters).toBe(own.items);
+    });
+
+    it('puts the strip under the wave with lane on, over it by lanePlacement, and reads the old strings', () => {
+        // The canvas's top and height in a 200 × 120 frame beside a 20 px strip (1.25 rem of 16 px).
+        const under = ['0px', 'calc(100% - 20px)'];
+        const over = ['20px', 'calc(100% - 20px)'];
+        const none = ['0px', '100%'];
+        const cases: [ChaptersOptions, string[]][] = [
+            [{ lane: true }, under],
+            [{ lane: true, lanePlacement: 'above' }, over],
+            [{ lane: true, lanePlacement: 'left' as 'above' }, under],
+            [{ lane: 'above' }, over],
+            [{ lane: 'below' }, under],
+            [{ lane: 'above', lanePlacement: 'below' }, under],
+            [{ lane: false, lanePlacement: 'above' }, none],
+        ];
+
+        for (const [options, [top, height]] of cases) {
+            const shown = mountShown(
+                {
+                    media: fakeMedia({ duration: 100 }),
+                    plugins: [plugin(options)],
+                    animate: false,
+                },
+                { left: 0, top: 0, width: 200, height: 120 },
+            );
+
+            expect([
+                shown.canvas.style.getPropertyValue('top'),
+                shown.canvas.style.getPropertyValue('height'),
+            ]).toEqual([top, height]);
+            takeOff(shown);
+        }
+    });
+
+    it("takes the strip's height in rem as a number, or written in rem or px, kept from 0.5 to 4 rem", () => {
+        const cases: [ChaptersOptions['laneHeight'], number][] = [
+            [2, 32],
+            ['2rem', 32],
+            ['24px', 24],
+            ['99px', 64],
+            ['0.1rem', 8],
+            ['wide' as '1rem', 20],
+        ];
+
+        for (const [laneHeight, pixels] of cases) {
+            const shown = mountShown(
+                {
+                    media: fakeMedia({ duration: 100 }),
+                    plugins: [plugin({ lane: true, laneHeight })],
+                    animate: false,
+                },
+                { left: 0, top: 0, width: 200, height: 120 },
+            );
+
+            expect(shown.canvas.style.getPropertyValue('height')).toBe(
+                `calc(100% - ${pixels}px)`,
+            );
+            takeOff(shown);
+        }
     });
 });

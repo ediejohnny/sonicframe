@@ -55,6 +55,28 @@ describe('the description on the slider', () => {
         expect(plugin.text).toBe(ENGLISH);
     });
 
+    it('gives the positions as a clock with timeFormat, over the old times', () => {
+        const clock =
+            '33 seconds. Sound until 0:20, a pause of 4 seconds, then sound to the end. ' +
+            'Loudest at 0:12.';
+        const cases: [SoundDescriptionOptions, string][] = [
+            [{ timeFormat: 'clock' }, clock],
+            [{ timeFormat: 'words', times: 'clock' }, ENGLISH],
+            [{ times: 'clock' }, clock],
+        ];
+
+        for (const [options, text] of cases) {
+            const plugin = soundDescription(options);
+            mounted = mount({
+                media: fakeMedia({ duration: 33 }),
+                peaks: NOTE,
+                plugins: [plugin],
+            });
+
+            expect(plugin.text).toBe(text);
+        }
+    });
+
     it("keeps the page's own ids and takes only its own out", () => {
         const help = document.createElement('p');
         help.id = 'page-help';

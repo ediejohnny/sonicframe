@@ -7,15 +7,18 @@
  */
 
 import { wordsFor } from '../../core/languages/language';
-import { within } from '../../core/shared/checked';
+import { oneOf, within } from '../../core/shared/checked';
+import type { CssLength } from '../../core/shared/length';
 import { fillTemplate } from '../../core/shared/text';
 import { ratioText } from '../../core/shared/timing';
 import { PROGRESS, REGION, WAVE } from '../../core/shared/variables';
 import { isFullView } from '../../core/view/view';
 import { DEFAULT_WAVE, resolveWave } from '../../core/wave/shapes';
+import { lengthPixels } from '../../dom/shared/units';
 import type {
     BarStyle,
     Lane,
+    Placement,
     Plugin,
     PluginHost,
     WaveName,
@@ -42,12 +45,17 @@ type SpokenMinimap = {
 };
 
 export type MinimapOptions = {
-    /** Above or below the wave: `'below'`. */
-    side?: 'above' | 'below';
-    /** The strip's height, in CSS pixels: 24. */
-    height?: number;
-    /** Space between the strip and the wave (or the lane next to it), in CSS pixels: 4. */
-    gap?: number;
+    /** Where the strip sits: `'below'` the wave (the default) or `'above'` it. */
+    placement?: Placement;
+    /** @deprecated Use `placement`; `side` goes in 2.0. */
+    side?: Placement;
+    /** The strip's height: a number in CSS pixels, or written with its unit (`'1.5rem'`). 24 by default. */
+    height?: number | CssLength;
+    /**
+     * Space between the strip and the wave (or the lane next to it): a number in CSS pixels, or
+     * written with its unit. 4 by default.
+     */
+    gap?: number | CssLength;
     /** How the sound is drawn in the strip: thin bars by default. */
     wave?: WaveName | Partial<WaveStyle>;
     bar?: Partial<BarStyle>;
@@ -131,13 +139,27 @@ export function minimapSize(options: Pick<MinimapOptions, 'height' | 'gap'>): {
     gap: number;
 } {
     return {
-        height: within(options.height, 24, 4, Number.POSITIVE_INFINITY),
-        gap: within(options.gap, 4, 0, Number.POSITIVE_INFINITY),
+        height: within(
+            lengthPixels(options.height, 'px'),
+            24,
+            4,
+            Number.POSITIVE_INFINITY,
+        ),
+        gap: within(
+            lengthPixels(options.gap, 'px'),
+            4,
+            0,
+            Number.POSITIVE_INFINITY,
+        ),
     };
 }
 
 export function minimap(options: MinimapOptions = {}): Plugin {
-    const side = options.side === 'above' ? 'above' : 'below';
+    const side = oneOf(
+        options.placement,
+        ['above', 'below'],
+        options.side === 'above' ? 'above' : 'below',
+    );
     const { height, gap } = minimapSize(options);
     /** The lane's room: the strip and the space on its wave side. */
     const laneSize = height + gap;

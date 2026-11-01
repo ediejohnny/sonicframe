@@ -8,8 +8,9 @@ import type {
 } from '../../core/chapters/chapters';
 import { EN } from '../../core/languages/en';
 import type { ChapterWords } from '../../core/languages/words';
+import type { CssLength } from '../../core/shared/length';
 import type { TooltipA11y } from '../../dom/shared/tooltip';
-import type { Plugin } from '../../types';
+import type { Placement, Plugin } from '../../types';
 import type { ChapterListLook } from './chapter-list-look';
 
 export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
@@ -43,10 +44,18 @@ export type ChaptersOptions = {
     tooltip?: boolean;
     /** A click on a line goes to its chapter's start. On by default. */
     snap?: boolean;
-    /** A strip with the chapters' titles over (`'above'`) or under (`'below'`) the wave; off by default. */
-    lane?: false | 'above' | 'below';
-    /** The strip's height, in rem. 1.25 by default. */
-    laneHeight?: number;
+    /**
+     * A strip with the chapters' titles beside the wave; off by default. The strings `'above'` and
+     * `'below'` turn it on there (deprecated: use `lanePlacement`; they go in 2.0).
+     */
+    lane?: boolean | Placement;
+    /** Where the strip sits: `'below'` the wave (the default) or `'above'` it. */
+    lanePlacement?: Placement;
+    /**
+     * The strip's height: a number in rem, or written with its unit (`'1.25rem'`, `'20px'`). 1.25 rem
+     * by default, kept from 0.5 to 4 rem.
+     */
+    laneHeight?: number | CssLength;
     /** C and Shift+C (or your own letter); true by default, false turns them off. */
     keys?: boolean | ChaptersKeys;
     /** @deprecated Use `a11y.valueNote`; `valueNote` goes in 2.0. */
@@ -69,6 +78,8 @@ export type ChaptersOptions = {
     /** @deprecated Use `a11y.words`; `words` goes in 2.0. */
     words?: Partial<ChapterWords>;
     /** Called when the chapter playing changes (null and -1 outside every chapter). */
+    onChapterChange?: (chapter: Chapter | null, index: number) => void;
+    /** @deprecated Use `onChapterChange`; `onChange` goes in 2.0. */
     onChange?: (chapter: Chapter | null, index: number) => void;
     /** Called with the chapters shown whenever they change (set, loaded, cleared). */
     onChapters?: (chapters: readonly Chapter[]) => void;
@@ -87,6 +98,8 @@ export type ChaptersA11y = TooltipA11y & {
 
 export type ChaptersPlugin = Plugin & {
     /** The chapters shown (those in the table of contents), in order. */
+    readonly items: readonly Chapter[];
+    /** @deprecated Use `items`; `chapters` goes in 2.0. */
     readonly chapters: readonly Chapter[];
     /** The index of the chapter playing, or -1. */
     readonly index: number;

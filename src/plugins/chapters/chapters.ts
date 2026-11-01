@@ -20,11 +20,12 @@ import {
 } from '../../core/chapters/chapters';
 import { wordsFor } from '../../core/languages/language';
 import { mergeWords } from '../../core/languages/merge-words';
-import { finiteOr, within } from '../../core/shared/checked';
+import { finiteOr, oneOf, within } from '../../core/shared/checked';
 import { keyLetter } from '../../core/shared/keys';
 import { clamp01, positive } from '../../core/shared/math';
 import { fillTemplate } from '../../core/shared/text';
 import { formatTime } from '../../core/shared/timing';
+import { lengthPixels, remPixels } from '../../dom/shared/units';
 import type { PluginHost, SeekSource } from '../../types';
 import { ChapterLane, type LaneHost } from './chapter-lane';
 import { ChapterLines } from './chapter-lines';
@@ -56,7 +57,16 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         Number.POSITIVE_INFINITY,
     );
     const color = options.color ?? 'var(--sonicframe-chapter, #6b7280)';
-    const laneHeight = within(options.laneHeight, 1.25, 0.5, 4);
+    const onChapterChange = options.onChapterChange ?? options.onChange;
+    const laneOn =
+        options.lane === true ||
+        options.lane === 'above' ||
+        options.lane === 'below';
+    const lanePlacement = oneOf(
+        options.lanePlacement,
+        ['above', 'below'],
+        options.lane === 'above' ? 'above' : 'below',
+    );
 
     let all: Chapter[] = [];
     let shown: Chapter[] = [];
@@ -119,7 +129,7 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             current.announce(label(next));
         }
 
-        options.onChange?.(shown[next] ?? null, next);
+        onChapterChange?.(shown[next] ?? null, next);
     }
 
     /** The share of the chapter playing already played, from 0 to 1, or null when unknown. */
@@ -258,6 +268,10 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         name: 'chapters',
         layer: 'over',
 
+        get items(): readonly Chapter[] {
+            return shown;
+        },
+
         get chapters(): readonly Chapter[] {
             return shown;
         },
@@ -294,11 +308,16 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
             host = frame;
             words = mergeWords(wordsFor(frame.lang).chapters, own, MAX_WORD);
 
-            if (options.lane === 'above' || options.lane === 'below') {
+            if (laneOn) {
                 lane = new ChapterLane(
                     frame,
-                    options.lane,
-                    laneHeight,
+                    lanePlacement,
+                    within(
+                        lengthPixels(options.laneHeight, 'rem'),
+                        remPixels(1.25),
+                        remPixels(0.5),
+                        remPixels(4),
+                    ),
                     color,
                     parts,
                 );

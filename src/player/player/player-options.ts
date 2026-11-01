@@ -159,6 +159,7 @@ export type PlayerChapters = Omit<
     ChaptersOptions,
     | 'list'
     | 'words'
+    | 'onChapterChange'
     | 'onChange'
     | 'onChapters'
     | 'header'

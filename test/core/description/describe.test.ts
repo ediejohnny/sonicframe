@@ -342,6 +342,15 @@ describe('moving between the parts', () => {
         expect(soundWords().part(1, 4, 8.9)).toBe('Part 2 of 4, 8 seconds.');
     });
 
+    it('takes the clock from timeFormat, over the old times', () => {
+        expect(soundWords({ timeFormat: 'clock' }).part(1, 4, 8.9)).toBe(
+            'Part 2 of 4, 0:08.',
+        );
+        expect(
+            soundWords({ timeFormat: 'words', times: 'clock' }).part(1, 4, 8.9),
+        ).toBe('Part 2 of 4, 8 seconds.');
+    });
+
     it('finds the next part and, like a previous track, the start of this one', () => {
         expect(outline && nextPart(outline, 10, 1)).toBe(1);
         expect(outline && nextPart(outline, 25, 1)).toBeNull();

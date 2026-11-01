@@ -45,6 +45,18 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   `false` (`keys: { select, loop, play, nudge, remove, release }`); `regions()` and `skipSilences()` snap their
   edges with `pixelSnap`; `skipSilences()` takes its shade as `color`. The types `MarkersKeys` and
   `RegionsKeys` name the keys.
+- `chapters()` tells `onChapterChange`, gives the chapters as `items`, and turns its strip of titles on with
+  `lane: true`, placed by `lanePlacement` (`'below'` by default, or `'above'`).
+- Heights take their unit: `height` on `timeline()` and `caption()`, `height` and `gap` on `minimap()` and
+  `laneHeight` on `chapters()` take `'1.5rem'` or `'20px'` as well as a number (in pixels, and in rem for
+  `laneHeight`, as before). The type `CssLength` names them.
+- `timeline()` and `minimap()` sit over the wave with `placement: 'above'`.
+- `caption()` cuts its tooltip at `tooltipMax` and a section at its `max`, and its tooltip's colors follow
+  `a11y.tooltip.readable` (on by default, as it always was; off, the page's color for text on the played color).
+- `timeFormat` on `soundDescription()` and `describeSound()`, `bands` on `liveFrequency()`, and `channel:
+  'all' | 'each'` on `writeWaveform()`.
+- `loadPeaks(url, { fetcher, shared })` takes the same `Fetcher` as the other loaders, and `shared: false`
+  fetches every time. The type `LoadPeaksOptions` names them.
 
 ### Changed
 
@@ -79,7 +91,13 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   getter `marks` (`items`), `group` (`groupDistance`) and `backGrace` (`keys.backGrace`); `regions()`' `list()`
   (`items`) and `create: 'shift-drag' | 'drag'` (`createGesture`); `snap` on `regions()` and `skipSilences()`
   (`pixelSnap`; the `snap` of markers and chapters, a click going to the exact moment, stays); `skipSilences()`'
-  `dimColor` (`color`).
+  `dimColor` (`color`); `chapters()`' `onChange` (`onChapterChange`), its getter `chapters` (`items`) and `lane:
+  'above' | 'below'` (`lane: true` and `lanePlacement`); `size` on `timeline()` and `caption()` (`height`);
+  `side` on `timeline()` and `minimap()` (`placement`; `side` keeps meaning left or right); `caption()`'
+  `tooltipLimit` and a section's `limit` (`tooltipMax`, `max`); `times` on `soundDescription()` and
+  `describeSound()` (`timeFormat`); `liveFrequency()`'s `bars` (`bands`); `writeWaveform()`'s `channels: 'mix'
+  | 'each'` (`channel: 'all' | 'each'`); a fetcher as `loadPeaks`' second argument, and its type `PeaksFetcher`
+  (`{ fetcher }`, a `Fetcher`).
 - The tag's older words: `chapter-options` (`chapters-options`), `stay`, `edges`, `autohide`, `pauses` and
   `hover-pause` (`stay-open`, `edge-scroll`, `auto-hide`, `pause-in-value`, `pause-on-hover`).
 - Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,

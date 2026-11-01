@@ -19,6 +19,7 @@ export type { MinimapOptions } from '../../plugins/minimap/minimap';
 export type {
     BarStyle,
     PeaksSource,
+    Placement,
     Plugin,
     WaveName,
     WaveStyle,

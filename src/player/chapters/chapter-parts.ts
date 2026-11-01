@@ -206,7 +206,7 @@ export class ChapterParts {
                     link: labels.chapterLink,
                 },
             },
-            onChange: (chapter, index) => {
+            onChapterChange: (chapter, index) => {
                 this.showChapter();
                 this.host.changed(chapter, index);
             },

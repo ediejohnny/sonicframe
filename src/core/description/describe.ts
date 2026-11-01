@@ -27,6 +27,8 @@ export type DescribeOptions = {
     /** Your own phrases, over the built-in ones; their language follows `lang`. */
     words?: Partial<DescriptionWords>;
     /** Positions as words (`'words'`, the default: "12 seconds") or as a clock (`'clock'`: "0:12"). */
+    timeFormat?: 'words' | 'clock';
+    /** @deprecated Use `timeFormat`; `times` goes in 2.0. */
     times?: 'words' | 'clock';
 };
 
@@ -124,7 +126,7 @@ export function soundWords(options: DescribeOptions = {}): SoundWords {
         options.words,
         MAX_WORD,
     );
-    const clock = options.times === 'clock';
+    const clock = (options.timeFormat ?? options.times) === 'clock';
     const length = (seconds: number): string => spoken(seconds, locale, true);
     const at = (seconds: number): string =>
         clock ? formatTime(seconds) : spoken(seconds, locale, false);

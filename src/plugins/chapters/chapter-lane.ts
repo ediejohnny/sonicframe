@@ -8,8 +8,7 @@ import { chapterEnds, type Chapter } from '../../core/chapters/chapters';
 import { clamp01 } from '../../core/shared/math';
 import { viewX } from '../../core/view/view';
 import { css } from '../../dom/shared/css';
-import { remPixels } from '../../dom/shared/units';
-import type { Lane, PluginHost, SeekSource } from '../../types';
+import type { Lane, Placement, PluginHost, SeekSource } from '../../types';
 
 /** What the strip needs from its plugin. */
 export type LaneHost = {
@@ -27,15 +26,15 @@ export type LaneHost = {
 export class ChapterLane {
     private readonly lane: Lane;
 
-    /** Adds the strip on `side` of `frame`, `height` rem tall, each box's edge in `color`. */
+    /** Adds the strip on `side` of `frame`, `height` CSS pixels tall, each box's edge in `color`. */
     constructor(
         frame: PluginHost,
-        side: 'above' | 'below',
+        side: Placement,
         private readonly height: number,
         private readonly color: string,
         private readonly host: LaneHost,
     ) {
-        this.lane = frame.addLane(side, remPixels(height));
+        this.lane = frame.addLane(side, height);
         this.lane.element.setAttribute('aria-hidden', 'true');
         css(this.lane.element, [['overflow', 'hidden']]);
     }
@@ -92,7 +91,7 @@ export class ChapterLane {
                 ['border-left-width', '1px'],
                 ['border-left-color', this.color],
                 ['font-size', '0.75rem'],
-                ['line-height', `${this.height}rem`],
+                ['line-height', `${this.height}px`],
                 ['cursor', 'pointer'],
                 ['pointer-events', 'auto'],
             ]);

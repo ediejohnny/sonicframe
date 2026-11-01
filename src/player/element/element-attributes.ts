@@ -147,11 +147,8 @@ function chaptersOf(
                   swipe: words.has('swipe'),
               }
             : false,
-        lane: words.has('above')
-            ? 'above'
-            : words.has('lane')
-              ? 'below'
-              : false,
+        lane: words.has('lane') || words.has('above'),
+        lanePlacement: words.has('above') ? 'above' : 'below',
         images: words.has('images'),
         links: words.has('links'),
         keys: !words.has('no-keys'),

@@ -226,6 +226,21 @@ describe('the minimap on the player', () => {
         );
     });
 
+    it("adds the app's own strip height and space, written with their unit, to the wave's room", () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 60 }),
+            peaks: PEAKS,
+            zoom: true,
+            minimap: { height: '1rem', gap: '4px' },
+        });
+
+        // 16 px of strip and 4 px of space.
+        expect(player.frame.container.style.getPropertyValue('height')).toBe(
+            'calc(2.5rem + 20px)',
+        );
+    });
+
     it('is a slider named in the player language with a11y.minimap.keys', () => {
         player = createPlayer({
             container: container(),

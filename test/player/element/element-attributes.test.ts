@@ -83,6 +83,19 @@ describe('the words the tag reads', () => {
         expect((read.chapters as PlayerChapters).list).not.toBe(false);
         expect((read.chapters as PlayerChapters).lane).toBe(false);
     });
+
+    it('turns the strip of titles on with lane, under the wave, or over it with above', () => {
+        for (const [words, lanePlacement] of [
+            ['lane', 'below'],
+            ['above', 'above'],
+            ['lane above', 'above'],
+        ]) {
+            expect(
+                options({ chapters: '/talk.vtt', 'chapters-options': words })
+                    .chapters,
+            ).toMatchObject({ lane: true, lanePlacement });
+        }
+    });
 });
 
 describe('a11y-chapters', () => {

@@ -7,6 +7,7 @@ import {
     resample,
     type PeaksFetcher,
 } from '../../../src/core/peaks/peaks';
+import type { Fetcher } from '../../../src/core/shared/fetch';
 
 function respond(body: unknown, status = 200, length?: number): PeaksFetcher {
     return () =>
@@ -119,6 +120,68 @@ describe('loadPeaks', () => {
         await expect(
             loadPeaks('/huge.json', respond([0.5], 200, 5_000_000)),
         ).rejects.toThrow(RangeError);
+    });
+
+    describe('with options', () => {
+        /** A fetcher as the other loaders take it, counting its calls, answering `body` as bytes. */
+        function counted(
+            body: string,
+            calls: { count: number },
+            length?: number,
+        ): Fetcher {
+            return () => {
+                calls.count++;
+
+                return Promise.resolve({
+                    ok: true,
+                    status: 200,
+                    headers: {
+                        get: (name: string) =>
+                            name === 'content-length' && length !== undefined
+                                ? String(length)
+                                : null,
+                    },
+                    arrayBuffer: () =>
+                        Promise.resolve(new TextEncoder().encode(body).buffer),
+                });
+            };
+        }
+
+        it('reads through the app fetcher, once per page unless shared is off', async () => {
+            const calls = { count: 0 };
+            const fetcher = counted('{"peaks":[0.2,-0.4]}', calls);
+
+            const [a, b] = await Promise.all([
+                loadPeaks('/options.json', { fetcher }),
+                loadPeaks('/options.json', { fetcher }),
+            ]);
+            expect(a).toEqual([0.2, 0.4]);
+            expect(calls.count).toBe(1);
+
+            await loadPeaks('/options.json', { fetcher, shared: false });
+            await loadPeaks('/options.json', { fetcher, shared: false });
+            expect(calls.count).toBe(3);
+            expect(b).toBe(a);
+        });
+
+        it('refuses a file announced as too large, and a failed request with its status', async () => {
+            await expect(
+                loadPeaks('/huge-options.json', {
+                    fetcher: counted('[0.5]', { count: 0 }, 5_000_000),
+                }),
+            ).rejects.toThrow('too large');
+            await expect(
+                loadPeaks('/missing-options.json', {
+                    fetcher: () =>
+                        Promise.resolve({
+                            ok: false,
+                            status: 404,
+                            arrayBuffer: () =>
+                                Promise.resolve(new ArrayBuffer(0)),
+                        }),
+                }),
+            ).rejects.toThrow('404');
+        });
     });
 });
 

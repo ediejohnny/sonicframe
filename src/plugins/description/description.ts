@@ -46,6 +46,8 @@ export type SoundDescriptionOptions = OutlineOptions & {
     /** Your own phrases, over the built-in ones. */
     words?: Partial<DescriptionWords>;
     /** Positions as words (`'words'`, the default) or as a clock (`'clock'`). */
+    timeFormat?: 'words' | 'clock';
+    /** @deprecated Use `timeFormat`; `times` goes in 2.0. */
     times?: 'words' | 'clock';
     /** Describe the slider through its `aria-describedby`; true by default. */
     describedBy?: boolean;
@@ -142,7 +144,11 @@ export function soundDescription(
                 ? pageLanguage(current.container)
                 : (options.lang ?? current.lang);
 
-        return soundWords({ lang, words: options.words, times: options.times });
+        return soundWords({
+            lang,
+            words: options.words,
+            timeFormat: options.timeFormat ?? options.times,
+        });
     }
 
     function update(): void {

@@ -32,6 +32,7 @@ export type {
     ChaptersOptions,
     MinimapOptions,
     PeaksSource,
+    Placement,
     PlayButton,
     Plugin,
     SonicFrame,
@@ -81,6 +82,7 @@ export {
     type RemSize,
 } from './core/player/look';
 export { resolveLook } from './core/player/resolve-look';
+export type { CssLength } from './core/shared/length';
 export {
     BACKGROUND_EFFECTS,
     type Background,
