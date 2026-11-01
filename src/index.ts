@@ -34,6 +34,7 @@ export type { Mark } from './core/marks/markers';
 export {
     markers,
     type MarkersA11y,
+    type MarkersKeys,
     type MarkersOptions,
     type MarkersPlugin,
 } from './plugins/markers/markers';
@@ -46,6 +47,7 @@ export {
 } from './plugins/caption/caption';
 export {
     regions,
+    type RegionsKeys,
     type RegionsOptions,
     type RegionsPlugin,
 } from './plugins/regions/regions';

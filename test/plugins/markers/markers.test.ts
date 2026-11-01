@@ -109,12 +109,42 @@ describe('markers on the page', () => {
         expect(media.currentTime).toBe(20);
     });
 
-    it('lands on the marker just left when backGrace is 0', () => {
-        const { container, media } = marked({ backGrace: 0 });
+    it('lands on the marker just left when backGrace is 0, under keys or its old place', () => {
+        for (const options of [{ keys: { backGrace: 0 } }, { backGrace: 0 }]) {
+            const { container, media } = marked(options);
 
-        playTo(media, 20.5);
-        pressKey(container, 'm', { shiftKey: true });
-        expect(media.currentTime).toBe(20);
+            playTo(media, 20.5);
+            pressKey(container, 'm', { shiftKey: true });
+            expect(media.currentTime, JSON.stringify(options)).toBe(20);
+        }
+    });
+
+    it('takes a letter of its own, or no key at all', () => {
+        const own = marked({ keys: { letter: 'k' } });
+        pressKey(own.container, 'm');
+        expect(own.media.currentTime).toBe(0);
+        pressKey(own.container, 'k');
+        expect(own.media.currentTime).toBe(10);
+
+        const none = marked({ keys: false });
+        pressKey(none.container, 'm');
+        expect(none.media.currentTime).toBe(0);
+    });
+
+    it('takes its marks as items, and gives them back as items', () => {
+        const plugin = markers({
+            items: [
+                { time: 20, label: 'B' },
+                { time: 10, label: 'A' },
+            ],
+            marks: [{ time: 30 }],
+        });
+
+        expect(plugin.items.map((mark) => mark.label)).toEqual(['B', 'A']);
+        expect(plugin.marks).toEqual(plugin.items);
+
+        plugin.set([5, 6]);
+        expect(plugin.items.map((mark) => mark.time)).toEqual([5, 6]);
     });
 
     it('shows a tooltip for crowded markers on hover', () => {
@@ -157,12 +187,20 @@ describe('markers on the page', () => {
         // The count is written as the language writes numbers.
         expect(lastLine(undefined, {}, 1008)).toBe('and 1,003 more');
         expect(lastLine('pt-BR', {}, 1008)).toBe('e mais 1.003');
+        // A language SonicFrame does not speak falls back to English, numbers and all.
+        expect(lastLine('de', {}, 1008)).toBe('and 1,003 more');
     });
 
     it('groups markers by the usual 12 px when group is not a number', () => {
         for (const group of [Number.NaN, '0' as unknown as number]) {
             expect(crowdedLines({ group })).toBe(2);
         }
+    });
+
+    it('groups markers closer than groupDistance, which wins over its old name group', () => {
+        expect(crowdedLines({ groupDistance: 1 })).toBe(1);
+        expect(crowdedLines({ groupDistance: 1, group: 30 })).toBe(1);
+        expect(crowdedLines({ group: 1 })).toBe(1);
     });
 
     it("writes the tooltip in the page's color for text on the played color, or in black or white that reads when asked", () => {

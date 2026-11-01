@@ -39,6 +39,13 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   attributes. Its words follow the options' names in kebab-case: `chapters-options`, `stay-open`, `edge-scroll`,
   `auto-hide`, `pause-in-value` and `pause-on-hover`.
 
+- Plugins: `markers()` takes `items`, gives them back as `items`, groups by `groupDistance` and takes its keys
+  as `keys` (your own letter, or `false`; `keys.backGrace`); `regions()` gives `items`, replaces them all with
+  `set(items)`, creates by `create` (on or off) and `createGesture`, and takes each key as your own letter or
+  `false` (`keys: { select, loop, play, nudge, remove, release }`); `regions()` and `skipSilences()` snap their
+  edges with `pixelSnap`; `skipSilences()` takes its shade as `color`. The types `MarkersKeys` and
+  `RegionsKeys` name the keys.
+
 ### Changed
 
 - `lang` offers the built-in tags and `'auto'` as you type, `theme` and `extends` the theme names, and
@@ -68,6 +75,11 @@ keeps working, marked `@deprecated` with what to use instead, until 2.0.
   class `.sonicframe-prev-chapter` (`previousChapter`), `decode.peaks` (`decode.peakCount`), the chapter list's
   `style` (`box`), the `description` event (`descriptionchange`) and the type `ButtonAnimation`
   (`ListenButtonAnimation`). A resolved look gives each old name back with the same value.
+- The plugins' names that meant two things or said nothing: `markers()`' `marks` and `times` (`items`), its
+  getter `marks` (`items`), `group` (`groupDistance`) and `backGrace` (`keys.backGrace`); `regions()`' `list()`
+  (`items`) and `create: 'shift-drag' | 'drag'` (`createGesture`); `snap` on `regions()` and `skipSilences()`
+  (`pixelSnap`; the `snap` of markers and chapters, a click going to the exact moment, stays); `skipSilences()`'
+  `dimColor` (`color`).
 - The tag's older words: `chapter-options` (`chapters-options`), `stay`, `edges`, `autohide`, `pauses` and
   `hover-pause` (`stay-open`, `edge-scroll`, `auto-hide`, `pause-in-value`, `pause-on-hover`).
 - Names that were the library's own pieces: `markerSpans`, `pickMimeType`, `clipPlan`, `MediaLike`,
