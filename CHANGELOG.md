@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- The package names its donation campaign (`funding`), so `npm fund` and the npm page show where to support
+  SonicFrame.
+
 ## [0.8.0] - 2026-11-01
 
 ### Added

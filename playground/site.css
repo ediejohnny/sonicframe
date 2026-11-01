@@ -434,6 +434,19 @@ p {
     fill: #ffffff;
 }
 
+/* The support link's heart fills in under the pointer or with the focus, without motion. */
+.support:hover .icon,
+.support:focus-visible .icon {
+    fill: currentColor;
+}
+
+/* On the narrowest screens the header has no room for the heart; the footer keeps the link. */
+@media (max-width: 22rem) {
+    .elsewhere .support {
+        display: none;
+    }
+}
+
 /* The scheme switch shows the scheme a press brings: a moon on the light page, a sun on the dark. */
 .scheme .moon {
     display: var(--moon);
@@ -1356,6 +1369,22 @@ html {
     max-width: 40rem;
     margin-top: 1rem;
     font-size: 1.1875rem;
+}
+
+/* The invitation to donate under the introduction's lede: the button, then a line saying what it is for. */
+.support-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.875rem;
+    align-items: center;
+    margin-top: 1.25rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+}
+
+.support-row .icon {
+    width: 1.125rem;
+    height: 1.125rem;
 }
 
 /*

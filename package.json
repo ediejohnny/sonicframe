@@ -21,6 +21,10 @@
         "type": "git",
         "url": "git+https://github.com/ediejohnny/sonicframe.git"
     },
+    "funding": {
+        "type": "individual",
+        "url": "https://www.doativa.com/support-sonicframe"
+    },
     "files": [
         "dist",
         "CHANGELOG.md"
