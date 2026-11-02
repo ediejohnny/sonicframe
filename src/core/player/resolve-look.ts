@@ -5,6 +5,7 @@
  */
 
 import { isOneOf, oneOf, within } from '../shared/checked';
+import { CLOCK_HOURS, CLOCK_PRECISIONS } from '../shared/clock';
 import { backgroundOver } from './background';
 import { animationOver } from './background-animation';
 import { isFontName } from './fonts';
@@ -164,6 +165,18 @@ export function resolveLook(
             given.timeAlign,
             ['auto', 'start', 'center', 'end'] as const,
             base.timeAlign,
+        ),
+        timePrecision: oneOf(
+            given.timePrecision,
+            CLOCK_PRECISIONS,
+            base.timePrecision,
+        ),
+        timeFps: within(given.timeFps, base.timeFps, 1, 120),
+        timeHours: oneOf(given.timeHours, CLOCK_HOURS, base.timeHours),
+        timeDecimal: oneOf(
+            given.timeDecimal,
+            ['.', ',', 'auto'] as const,
+            base.timeDecimal,
         ),
         underStart: oneOf(
             given.underStart,

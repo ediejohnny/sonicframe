@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- A precise clock, off by default: the look's `timePrecision` (`time-precision` on `<sonic-player>`) adds
+  `'tenths'`, `'hundredths'` or `'milliseconds'` to the player's time, rounded to the nearest, or a timecode's
+  `'frames'` at `timeFps` frames a second (`time-fps`, 1 to 120). `timeHours` (`time-hours`) shows the hours always
+  or always in two digits, and `timeDecimal` (`time-decimal`) picks the decimal mark, a point by default or the
+  player's language's with `'auto'`. While the sound plays, the time changes as often as its last digit does, and no
+  more; paused, nothing runs. The time played and the time left add up to the length shown, each time keeps the room
+  of its longest text, and the slider still speaks whole seconds. `formatClock` writes a time the same way, with the
+  types `ClockFormat`, `ClockPrecision` and `ClockHours`.
+
 ## [1.0.0] - 2026-11-01
 
 SonicFrame leaves the beta. 1.0 is 0.8 with a promise: from here on it follows Semantic Versioning, so a 1.x

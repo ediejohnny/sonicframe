@@ -6,6 +6,7 @@
  */
 
 import type { ButtonFill, ButtonShape } from '../controls/button';
+import type { ClockHours, ClockPrecision } from '../shared/clock';
 import type { Background } from './background';
 import type { BackgroundAnimation } from './background-animation';
 import type { FontName } from './fonts';
@@ -62,6 +63,18 @@ export type PlayerLook = {
      * group under a voice note's wave; to the start everywhere else.
      */
     timeAlign: 'auto' | 'start' | 'center' | 'end';
+    /**
+     * What the time shows after the seconds: nothing (`'seconds'`), tenths, hundredths, milliseconds
+     * (rounded to the nearest), or the frame of a timecode (`'frames'`, at `timeFps`). While the
+     * sound plays, the time changes as often as its last digit does, and no more.
+     */
+    timePrecision: ClockPrecision;
+    /** With `'frames'`, the frames in a second, 1 to 120; 29.97 counts 30 frames in each second. */
+    timeFps: number;
+    /** The hours: from one hour on (`'auto'`), always (`0:01:05`), or always in two digits (`00:01:05`). */
+    timeHours: ClockHours;
+    /** The mark before tenths, hundredths and milliseconds: a point, a comma, or the player's language's (`'auto'`). */
+    timeDecimal: '.' | ',' | 'auto';
     /**
      * Where the rows under a wave in the line start (the small line, a voice note's time, a list):
      * at the wave's left edge (`'wave'`, the default) or at the line's, under the play button
@@ -207,6 +220,10 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     wavePlace: 'inline',
     time: 'both',
     timeAlign: 'auto',
+    timePrecision: 'seconds',
+    timeFps: 30,
+    timeHours: 'auto',
+    timeDecimal: '.',
     underStart: 'wave',
     button: { shape: 'circle', fill: 'solid', size: 36 },
     waveHeight: 2.5,

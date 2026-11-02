@@ -5,7 +5,7 @@
  * place or by the look's `timeAlign`. Before the sound loads, it tells where a seek will start it.
  */
 
-import { describe, expect, it } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import type { Part } from '../../../src/core/player/look';
 import { createPlayer } from '../../../src/player';
 import { triggerResize } from '../../support/fakes';
@@ -16,6 +16,8 @@ import {
     pageHost,
 } from '../../support/helpers';
 import { STEPS } from '../../support/sounds';
+
+type Media = ReturnType<typeof fakeMedia>;
 
 let host: HTMLElement | null = null;
 
@@ -206,5 +208,135 @@ describe('the time before the sound loads', () => {
         host?.querySelector<HTMLButtonElement>('.sonicframe-forward')?.click();
 
         expect(read(times()[0]).text).toBe('0:15 / 1:17');
+    });
+});
+
+describe('a precise clock', () => {
+    it('reads hundredths, its room kept by a mold of the same precision', () => {
+        const media = make({ timePrecision: 'hundredths' });
+        media.currentTime = 7.256;
+        media.fire('timeupdate');
+
+        expect(read(times()[0])).toMatchObject({
+            text: '0:07.26 / 2:03.00',
+            mold: '0:00.00 / 0:00.00',
+        });
+    });
+
+    it('reads a timecode, the hours in two digits, in every kind of time', () => {
+        const media = make(
+            {
+                line: ['play', 'wave', 'elapsed', 'remaining'],
+                timePrecision: 'frames',
+                timeFps: 25,
+                timeHours: 'padded',
+            },
+            3725,
+        );
+        media.currentTime = 65.5;
+        media.fire('timeupdate');
+
+        expect(times().map((time) => read(time))).toMatchObject([
+            { text: '00:01:05:12', mold: '00:00:00:00' },
+            { text: '-01:00:59:13', mold: '-00:00:00:00' },
+        ]);
+    });
+
+    it('writes the decimal mark of the player’s language when the look says `auto`', () => {
+        host = pageHost({ left: 0, top: 0, width: 640, height: 48 });
+        const media = fakeMedia({ duration: 123 });
+        afterTest(
+            createPlayer({
+                container: host,
+                media,
+                peaks: STEPS,
+                a11y: { lang: 'pt-BR' },
+                look: { timePrecision: 'tenths', timeDecimal: 'auto' },
+            }),
+        );
+        media.currentTime = 7.25;
+        media.fire('timeupdate');
+
+        expect(read(times()[0]).text).toBe('0:07,3 / 2:03,0');
+    });
+
+    it('keeps the slider’s words in whole seconds', () => {
+        const media = make({ timePrecision: 'milliseconds' }, 33);
+        media.currentTime = 14.998;
+        media.fire('timeupdate');
+
+        expect(read(times()[0]).text).toBe('0:14.998 / 0:33.000');
+        expect(
+            host
+                ?.querySelector('[role="slider"]')
+                ?.getAttribute('aria-valuetext'),
+        ).toBe('0:15 / 0:33');
+    });
+
+    /**
+     * A 123-second sound playing in a player with a tenths clock, under a hand-moved clock; the
+     * player goes and the real clock comes back after `check`.
+     */
+    function playingTenths(check: (media: Media) => void): void {
+        vi.useFakeTimers({
+            toFake: [
+                'setTimeout',
+                'clearTimeout',
+                'requestAnimationFrame',
+                'cancelAnimationFrame',
+                'performance',
+            ],
+        });
+
+        try {
+            host = pageHost({ left: 0, top: 0, width: 640, height: 48 });
+            const media = fakeMedia({ duration: 123, paused: false });
+            const player = createPlayer({
+                container: host,
+                media,
+                peaks: STEPS,
+                look: { timePrecision: 'tenths' },
+            });
+            check(media);
+            player.destroy();
+            vi.runOnlyPendingTimers();
+        } finally {
+            vi.useRealTimers();
+        }
+    }
+
+    it('touches the page only when the text changes, though it reads the time again and again', () => {
+        playingTenths((media) => {
+            media.currentTime = 4.5;
+            media.fire('playing');
+            vi.advanceTimersByTime(60);
+            const text = times()[0].querySelector(
+                '.sonicframe-time-text',
+            ) as HTMLElement;
+            const watch = new MutationObserver(() => {});
+            watch.observe(text, {
+                childList: true,
+                characterData: true,
+                subtree: true,
+            });
+
+            // The sound waits on 4.5 s: the clock looks again every 51 ms for the tenth to turn,
+            // and the text reads the same each time, so it stays.
+            vi.advanceTimersByTime(300);
+
+            expect(watch.takeRecords()).toHaveLength(0);
+            expect(text.textContent).toBe('0:04.5 / 2:03.0');
+            watch.disconnect();
+        });
+    });
+
+    it('moves while the sound plays, between the media’s own reports', () => {
+        playingTenths((media) => {
+            media.fire('playing');
+            media.currentTime = 1.26;
+            vi.advanceTimersByTime(100);
+
+            expect(read(times()[0]).text).toBe('0:01.3 / 2:03.0');
+        });
     });
 });
