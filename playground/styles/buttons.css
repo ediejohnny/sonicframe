@@ -1,0 +1,46 @@
+/* Buttons: one solid kind for the main action, one quiet kind for the rest. */
+
+.button {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.375rem 1rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button:hover {
+    border-color: var(--brand);
+}
+
+.button.main {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.button.small {
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.button[aria-pressed='true'] {
+    border-color: var(--brand);
+    background: var(--sunken);
+    color: var(--link);
+}
+
+.button:disabled {
+    cursor: default;
+    opacity: 0.6;
+}

@@ -1,0 +1,38 @@
+/* Keys and gestures: one per line, each key as a cap. */
+
+.keys,
+.next {
+    display: grid;
+    gap: 0.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.keys {
+    color: var(--muted);
+}
+
+.keys kbd {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0 0.375em;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    text-align: center;
+}
+
+.lede {
+    max-width: 42rem;
+    margin-top: 0.625rem;
+    color: var(--muted);
+    font-size: 1.0625rem;
+}
+
+.section > .lede + * {
+    margin-top: 1.75rem;
+}

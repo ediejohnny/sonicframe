@@ -1,0 +1,49 @@
+/*
+ * Keyboard focus is one ring. Around words (a link in a sentence) it keeps a little room; a control
+ * takes it on its own edge, so a border and the ring never stand side by side; on a control painted
+ * in the brand color it runs inside, in the color written on the brand.
+ */
+:focus-visible {
+    outline: 0.125rem solid var(--brand);
+    outline-offset: 0.125rem;
+}
+
+:is(button, input, select, textarea, .button, .pager a, .side a):focus-visible {
+    outline-offset: -0.0625rem;
+}
+
+:is(
+    .button.main,
+    .tabs .button[aria-pressed='true'],
+    .side a[aria-current='page']
+):focus-visible {
+    outline-color: var(--on-brand);
+    outline-offset: -0.25rem;
+}
+
+code,
+pre {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+}
+
+h1,
+h2,
+h3 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
+p {
+    margin: 0;
+}
+
+.wrap {
+    width: 100%;
+    max-width: 90rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
