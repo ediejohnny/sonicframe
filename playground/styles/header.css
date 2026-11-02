@@ -1,0 +1,240 @@
+/* The header: the mark, the name and version, the search, and icons without borders. */
+
+.top {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    border-bottom: 0.0625rem solid var(--line);
+    background: var(--panel);
+}
+
+/* One line, 3.75rem tall: the sidebar and the drawer sit right under it. */
+.top .wrap {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    height: 3.75rem;
+}
+
+/*
+ * Narrower screens keep the one line by dropping words, never controls: first the version, then the
+ * search's words, then the name beside the mark (still read by screen readers), then the spaces
+ * between.
+ */
+@media (max-width: 50rem) {
+    .top .version {
+        display: none;
+    }
+}
+
+@media (max-width: 32rem) {
+    .top .brand-name {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 24rem) {
+    .top .wrap {
+        gap: 0.25rem;
+        padding: 0 0.75rem;
+    }
+
+    .top .brand img {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+}
+
+.brand {
+    display: inline-flex;
+    gap: 0.625rem;
+    align-items: center;
+    color: inherit;
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.brand img {
+    width: 2rem;
+    height: 2rem;
+}
+
+.version {
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+/*
+ * The header's icons: one size, no border and no fill, the word that names each one kept for screen
+ * readers only. They are drawn on a 24-unit grid (docs/plugin.ts): strokes 2 units wide with round
+ * ends, the marks of other sites filled.
+ */
+.icon-button {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.125rem;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+/* A soft tile under the pointer or while its panel is open: the icons keep their colors. */
+.icon-button:hover,
+.icon-button[aria-expanded='true'] {
+    background: var(--sunken);
+}
+
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.icon.solid {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* The marks of other sites in their own colors: GitHub's in the text's (black or white), npm's red. */
+.icon.npm .npm-box {
+    fill: #cb3837;
+}
+
+.icon.npm .npm-n {
+    fill: #ffffff;
+}
+
+/* The support link's heart fills in under the pointer or with the focus, without motion. */
+.support:hover .icon,
+.support:focus-visible .icon {
+    fill: currentColor;
+}
+
+/* On the narrowest screens the header has no room for the heart; the footer keeps the link. */
+@media (max-width: 22rem) {
+    .elsewhere .support {
+        display: none;
+    }
+}
+
+/* The scheme switch shows the scheme a press brings: a moon on the light page, a sun on the dark. */
+.scheme .moon {
+    display: var(--moon);
+}
+
+.scheme .sun {
+    display: var(--sun);
+}
+
+/* Words that name a control for screen readers, out of the eye's way. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* The search: an input-like box with a magnifying glass, opening the search dialog. */
+.search-open {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    min-width: 15rem;
+    min-height: 2.25rem;
+    margin-left: 1.5rem;
+    padding: 0.25rem 0.375rem 0.25rem 0.625rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--page);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.search-open .icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.search-open kbd {
+    margin-left: auto;
+}
+
+.search-open:hover {
+    border-color: var(--brand);
+    color: var(--ink);
+}
+
+kbd {
+    padding: 0.0625rem 0.375rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 59.99rem) {
+    .search-open {
+        min-width: 0;
+        margin-left: 0;
+    }
+
+    .search-open kbd {
+        display: none;
+    }
+}
+
+/* On a small screen the search is a lone magnifying glass like the other icons; its words stay for screen readers. */
+@media (max-width: 36rem) {
+    .search-open {
+        flex-shrink: 0;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--ink);
+    }
+
+    .search-open:hover {
+        background: var(--sunken);
+    }
+
+    .search-open .icon {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .search-word {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}

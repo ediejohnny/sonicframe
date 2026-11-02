@@ -1,0 +1,211 @@
+/*
+ * The page itself: its colors in the light and dark schemes, with SonicFrame's own variables, the
+ * font the reader picked, the body, the fade between pages and the link that skips to the content.
+ */
+
+:root {
+    color-scheme: light;
+    --page: #eef1f5;
+    --panel: #ffffff;
+    --sunken: #e4e9f0;
+    --ink: #18202c;
+    --muted: #556173;
+    --line: #d2d9e3;
+    --brand: #1f4fbf;
+    --on-brand: #ffffff;
+    --link: #1f4fbf;
+    --code: #f5f7fa;
+    --thumb: #b9c3d0;
+    --thumb-hover: #8e9aac;
+    --accent: #0b8f78;
+    --deck: #111820;
+    --deck-ink: #dfe7f1;
+    --deck-muted: #8d9bb0;
+    --sans: var(--stack-system);
+    --display: var(--stack-industrial);
+    --mono: var(--stack-mono);
+    /* The scheme switch's icon: the scheme a press brings. */
+    --moon: block;
+    --sun: none;
+
+    /* The library's own font stacks (src/core/player/fonts.ts); the reader picks one in the header. */
+    --stack-system:
+        system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+        sans-serif;
+    --stack-industrial:
+        Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium',
+        'Nimbus Sans Narrow', var(--stack-system);
+    --stack-humanist:
+        Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', sans-serif;
+    --stack-geometric: Avenir, Montserrat, Corbel, 'URW Gothic', sans-serif;
+    --stack-serif:
+        Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+    --stack-rounded:
+        ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Quicksand,
+        Comfortaa, Manjari, 'Arial Rounded MT', Calibri, sans-serif;
+    --stack-mono:
+        ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+        'DejaVu Sans Mono', monospace;
+
+    --sonicframe-surface: #ffffff;
+    --sonicframe-text: #18202c;
+    --sonicframe-muted: #556173;
+    --sonicframe-border: #d2d9e3;
+    --sonicframe-wave: #c2cad6;
+    --sonicframe-progress: #1f4fbf;
+    --sonicframe-knob: #1f4fbf;
+    --sonicframe-button: #1f4fbf;
+    --sonicframe-button-icon: #ffffff;
+    --sonicframe-on-progress: #ffffff;
+    --sonicframe-marker: #c2410c;
+    --sonicframe-timeline: #556173;
+    --sonicframe-region: rgba(31, 79, 191, 0.16);
+    --sonicframe-dim: rgba(24, 32, 44, 0.1);
+    --sonicframe-badge: rgba(24, 32, 44, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        color-scheme: dark;
+        --moon: none;
+        --sun: block;
+        --page: #0f141b;
+        --panel: #161d27;
+        --sunken: #1c2531;
+        --ink: #e3e9f1;
+        --muted: #95a3b5;
+        --line: #2a3442;
+        --brand: #8fb6ff;
+        --on-brand: #0f141b;
+        --link: #8fb6ff;
+        --code: #121922;
+        --accent: #3ee6c1;
+        --deck: #0b1016;
+        --thumb: #364252;
+        --thumb-hover: #4d5c70;
+
+        --sonicframe-surface: #161d27;
+        --sonicframe-text: #e3e9f1;
+        --sonicframe-muted: #95a3b5;
+        --sonicframe-border: #2a3442;
+        --sonicframe-wave: #3d4b60;
+        --sonicframe-progress: #8fb6ff;
+        --sonicframe-knob: #8fb6ff;
+        --sonicframe-button: #8fb6ff;
+        --sonicframe-button-icon: #0f141b;
+        --sonicframe-on-progress: #0f141b;
+        --sonicframe-marker: #f0883e;
+        --sonicframe-timeline: #95a3b5;
+        --sonicframe-region: rgba(143, 182, 255, 0.2);
+        --sonicframe-dim: rgba(255, 255, 255, 0.08);
+        --sonicframe-badge: rgba(255, 255, 255, 0.08);
+    }
+}
+
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --moon: none;
+    --sun: block;
+    --page: #0f141b;
+    --panel: #161d27;
+    --sunken: #1c2531;
+    --ink: #e3e9f1;
+    --muted: #95a3b5;
+    --line: #2a3442;
+    --brand: #8fb6ff;
+    --on-brand: #0f141b;
+    --link: #8fb6ff;
+    --code: #121922;
+    --accent: #3ee6c1;
+    --deck: #0b1016;
+    --thumb: #364252;
+    --thumb-hover: #4d5c70;
+
+    --sonicframe-surface: #161d27;
+    --sonicframe-text: #e3e9f1;
+    --sonicframe-muted: #95a3b5;
+    --sonicframe-border: #2a3442;
+    --sonicframe-wave: #3d4b60;
+    --sonicframe-progress: #8fb6ff;
+    --sonicframe-knob: #8fb6ff;
+    --sonicframe-button: #8fb6ff;
+    --sonicframe-button-icon: #0f141b;
+    --sonicframe-on-progress: #0f141b;
+    --sonicframe-marker: #f0883e;
+    --sonicframe-timeline: #95a3b5;
+    --sonicframe-region: rgba(143, 182, 255, 0.2);
+    --sonicframe-dim: rgba(255, 255, 255, 0.08);
+    --sonicframe-badge: rgba(255, 255, 255, 0.08);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* The font the reader picked: the display stack for headings, the text stack for the rest. */
+:root[data-font='system'] {
+    --display: var(--stack-system);
+}
+
+:root[data-font='humanist'] {
+    --sans: var(--stack-humanist);
+    --display: var(--stack-humanist);
+}
+
+:root[data-font='geometric'] {
+    --sans: var(--stack-geometric);
+    --display: var(--stack-geometric);
+}
+
+:root[data-font='serif'] {
+    --sans: var(--stack-serif);
+    --display: var(--stack-serif);
+}
+
+:root[data-font='rounded'] {
+    --sans: var(--stack-rounded);
+    --display: var(--stack-rounded);
+}
+
+body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 1rem/1.65 var(--sans);
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Moving between pages fades the page body only; the header and sidebar stay put. */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    .content {
+        view-transition-name: page;
+    }
+
+    ::view-transition-old(page),
+    ::view-transition-new(page) {
+        animation-duration: 0.18s;
+    }
+}
+
+.skip {
+    position: absolute;
+    z-index: 50;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.125rem;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+
+.skip:focus {
+    transform: none;
+}

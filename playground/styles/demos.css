@@ -1,0 +1,236 @@
+/*
+ * Each page's own demo: the wave in words, regions as a file, zoom, a long sound, rows of players
+ * and drawings, themes one per row, plugins and the load test.
+ */
+
+/* The wave in words: the player, then its description as a quote. */
+
+.words {
+    max-width: 42rem;
+}
+
+.words-text {
+    margin-top: 1rem;
+    padding: 0.875rem 1rem;
+    border-left: 0.25rem solid var(--brand);
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    font-size: 1.0625rem;
+}
+
+.words-text:empty {
+    display: none;
+}
+
+/* The regions as a file: the text a format writes, scrolled when long. */
+
+.files-text {
+    max-height: 14rem;
+    margin: 1rem 0;
+    overflow: auto;
+    white-space: pre;
+}
+
+/* Zoom: the switches in two named rows, a roomy player, what is in view, then the gestures. */
+
+.zoom {
+    max-width: 52rem;
+    margin-top: 1rem;
+}
+
+.zoom-switches {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.zoom-group {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: baseline;
+}
+
+.zoom-group .buttons {
+    margin-bottom: 0;
+}
+
+.zoom-group-name {
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 36rem) {
+    .zoom-group {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.375rem;
+    }
+}
+
+.zoom-view {
+    margin-top: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9375rem;
+}
+
+/* A long sound: a bare wave with a ruler above and a minimap below, no player. */
+
+.long-wave {
+    position: relative;
+    height: 7rem;
+    margin-top: 1rem;
+}
+
+.long-wave:empty {
+    display: none;
+}
+
+/* Rows of players with a short name under each. */
+
+/* Two columns at most: the ten drawings fill five whole rows, with no empty place. */
+.shelf {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem 1.25rem;
+}
+
+@media (min-width: 48rem) {
+    .shelf {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.shelf figure {
+    min-width: 0;
+    margin: 0;
+}
+
+.shelf figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.125rem 0.625rem;
+    align-items: baseline;
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.shelf figcaption code {
+    color: var(--ink);
+}
+
+/* Themes one per row: the player at a natural width, what it is beside it. */
+
+.theme-list {
+    display: grid;
+    gap: 1.75rem;
+}
+
+.theme-list figure {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 0.75rem 2.5rem;
+    align-items: center;
+    margin: 0;
+}
+
+.theme-list figure > div {
+    min-width: 0;
+    max-width: 36rem;
+}
+
+.theme-list figcaption {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--muted);
+}
+
+.theme-list figcaption code {
+    color: var(--ink);
+    font-size: 1rem;
+}
+
+.more {
+    margin-top: 1.75rem;
+}
+
+/* Plugins: a demo and what it does. */
+
+.plugins {
+    display: grid;
+    margin-top: 2.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+    gap: 1.25rem;
+}
+
+.plugin {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1.125rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.plugin h2 {
+    font-size: 1.0625rem;
+}
+
+.plugin p {
+    color: var(--muted);
+    font-size: 0.9375rem;
+}
+
+.plugin .demo {
+    min-width: 0;
+    margin-top: auto;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem 0.5rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.bare-wave {
+    height: 2.5rem;
+}
+
+/* The load test: sixty waves on one sound, with a frame-rate readout. */
+
+.load {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: center;
+}
+
+.fps {
+    min-width: 6rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.875rem;
+}
+
+.crowd {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    gap: 0.5rem 1rem;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.crowd:empty {
+    display: none;
+}
+
+.crowd .bare-wave {
+    height: 2rem;
+}

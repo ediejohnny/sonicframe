@@ -1,0 +1,151 @@
+/*
+ * Around the demos: a player's place while it loads, the phone-width stage, the source line, code
+ * with its copy button, the install box, live tags and status notes.
+ */
+
+/*
+ * Where a player is coming: its height kept, and five square bars rising and falling in the logo's
+ * blue until the sound's peaks arrive. Still under reduced motion.
+ */
+.loading {
+    position: relative;
+    min-height: 3.5rem;
+}
+
+.loading::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.25rem;
+    height: 1.25rem;
+    background:
+        linear-gradient(var(--brand) 0 0) 0% 100%,
+        linear-gradient(var(--brand) 0 0) 25% 100%,
+        linear-gradient(var(--brand) 0 0) 50% 100%,
+        linear-gradient(var(--brand) 0 0) 75% 100%,
+        linear-gradient(var(--brand) 0 0) 100% 100%;
+    background-repeat: no-repeat;
+    background-size:
+        0.3125rem 40%,
+        0.3125rem 70%,
+        0.3125rem 100%,
+        0.3125rem 70%,
+        0.3125rem 40%;
+    content: '';
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .loading::before {
+        animation: loading-bars 0.9s ease-in-out infinite;
+    }
+}
+
+@keyframes loading-bars {
+    0%,
+    100% {
+        background-size:
+            0.3125rem 40%,
+            0.3125rem 70%,
+            0.3125rem 100%,
+            0.3125rem 70%,
+            0.3125rem 40%;
+    }
+
+    50% {
+        background-size:
+            0.3125rem 100%,
+            0.3125rem 50%,
+            0.3125rem 30%,
+            0.3125rem 90%,
+            0.3125rem 100%;
+    }
+}
+
+.stage {
+    margin-top: 2.25rem;
+    padding: 1rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+/* A player shown at phone width, so the voice note can be seen on any screen. */
+.narrow-demo {
+    max-width: 20rem;
+}
+
+.doc .stage {
+    margin-top: 1.25rem;
+}
+
+.source {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 0.9375rem;
+}
+
+/* Code with a copy button. */
+
+.snippets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+    gap: 1.25rem;
+}
+
+.snippet h3 {
+    margin-bottom: 0.625rem;
+    font-size: 1rem;
+}
+
+/*
+ * Code sits on a dark deck in both schemes, like a console. The copy button has a column of its
+ * own beside the code, so the code never runs under it, scrolled or not.
+ */
+.code {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    border: 0.0625rem solid var(--deck);
+    border-radius: 0.125rem;
+    background: var(--deck);
+}
+
+.code pre {
+    margin: 0;
+    padding: 1rem 1.125rem;
+    overflow-x: auto;
+    color: var(--deck-ink);
+    line-height: 1.65;
+}
+
+.code .button {
+    margin: 0.625rem 0.625rem 0 0;
+    border-color: #2a3442;
+    background: #1c2531;
+    color: var(--deck-ink);
+}
+
+.install {
+    max-width: 26rem;
+}
+
+.live-tag {
+    display: block;
+    margin-top: 1rem;
+}
+
+.note {
+    margin-top: 0.625rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+/* A status note waiting for its words keeps its place, so a screen reader hears them, but no room. */
+.note:empty {
+    margin-top: 0;
+}
