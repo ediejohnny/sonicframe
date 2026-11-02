@@ -1081,6 +1081,7 @@ html {
 }
 
 .doc :is(ul, ol):not([class], .sonicframe-player *) {
+    margin-bottom: 0;
     padding-left: 1.25rem;
 }
 
@@ -1527,6 +1528,11 @@ html {
     margin-top: 0.625rem;
     color: var(--muted);
     font-size: 0.875rem;
+}
+
+/* A status note waiting for its words keeps its place, so a screen reader hears them, but no room. */
+.note:empty {
+    margin-top: 0;
 }
 
 /* The wave in words: the player, then its description as a quote. */
