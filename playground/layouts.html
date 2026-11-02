@@ -158,26 +158,31 @@
                         time as it always was.
                     </p>
                     <div class="code">
-                        <pre><code>look: { timePrecision: 'hundredths' }</code></pre>
+                        <pre><code>look: { timePrecision: 'hundredths', underStart: 'line' }</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"look":{"timePrecision":"hundredths"}}'
+                        data-options='{"look":{"timePrecision":"hundredths","underStart":"line"}}'
                     ></div>
                     <p>
                         A timecode, the hours in two digits, as video tools
                         write it:
                     </p>
                     <div class="code">
-                        <pre><code>look: { timePrecision: 'frames', timeFps: 25, timeHours: 'padded' }</code></pre>
+                        <pre><code>look: {
+    timePrecision: 'frames',
+    timeFps: 25,
+    timeHours: 'padded',
+    underStart: 'line',
+}</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
                     <div
                         class="stage"
                         data-demo="player"
-                        data-options='{"look":{"timePrecision":"frames","timeFps":25,"timeHours":"padded"}}'
+                        data-options='{"look":{"timePrecision":"frames","timeFps":25,"timeHours":"padded","underStart":"line"}}'
                     ></div>
                     <p>
                         While the sound plays, the time changes as often as its
