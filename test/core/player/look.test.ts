@@ -7,6 +7,7 @@ import {
 } from '../../../src/core/player/look';
 import { resolveLook } from '../../../src/core/player/resolve-look';
 import {
+    clockOf,
     nextSpeed,
     speedText,
     timeMold,
@@ -143,6 +144,43 @@ describe('resolveLook', () => {
         expect(
             resolveLook(DEFAULT_LOOK, { timeAlign: 'left' as never }).timeAlign,
         ).toBe('auto');
+    });
+
+    it('keeps the plain clock by default, and reads a precise one only from known names and a frame rate in range', () => {
+        expect(DEFAULT_LOOK).toMatchObject({
+            timePrecision: 'seconds',
+            timeFps: 30,
+            timeHours: 'auto',
+            timeDecimal: '.',
+        });
+
+        const precise = resolveLook(DEFAULT_LOOK, {
+            timePrecision: 'frames',
+            timeFps: 29.97,
+            timeHours: 'padded',
+            timeDecimal: 'auto',
+        });
+        expect(precise).toMatchObject({
+            timePrecision: 'frames',
+            timeFps: 29.97,
+            timeHours: 'padded',
+            timeDecimal: 'auto',
+        });
+
+        const odd = resolveLook(DEFAULT_LOOK, {
+            timePrecision: 'minutes' as never,
+            timeFps: Number.NaN,
+            timeHours: 'never' as never,
+            timeDecimal: ';' as never,
+        });
+        expect(odd).toMatchObject({
+            timePrecision: 'seconds',
+            timeFps: 30,
+            timeHours: 'auto',
+            timeDecimal: '.',
+        });
+        expect(resolveLook(DEFAULT_LOOK, { timeFps: 0 }).timeFps).toBe(1);
+        expect(resolveLook(DEFAULT_LOOK, { timeFps: 500 }).timeFps).toBe(120);
     });
 
     it('starts the rows under the wave at the wave by default, at the line when asked, and nowhere else', () => {
@@ -473,5 +511,35 @@ describe('speeds', () => {
         expect(speedText(1)).toBe('1×');
         expect(speedText(1.5)).toBe('1.5×');
         expect(speedText(1.25)).toBe('1.25×');
+    });
+});
+
+describe('clockOf', () => {
+    it('is null for the plain clock, so the time reads as it always has', () => {
+        expect(clockOf(DEFAULT_LOOK, 'en-US')).toBeNull();
+    });
+
+    it('is the precise clock the look asks for, its decimal mark from the language when `auto`', () => {
+        const look = resolveLook(DEFAULT_LOOK, {
+            timePrecision: 'hundredths',
+            timeDecimal: 'auto',
+        });
+
+        expect(clockOf(look, 'pt-BR')).toEqual({
+            precision: 'hundredths',
+            fps: 30,
+            hours: 'auto',
+            decimal: ',',
+        });
+        expect(clockOf(look, 'en-US')?.decimal).toBe('.');
+    });
+
+    it('is a clock for whole seconds when only the hours change', () => {
+        const look = resolveLook(DEFAULT_LOOK, { timeHours: 'always' });
+
+        expect(clockOf(look, 'en-US')).toMatchObject({
+            precision: 'seconds',
+            hours: 'always',
+        });
     });
 });

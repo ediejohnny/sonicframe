@@ -13,9 +13,10 @@
  * words turn on its ways, and `minimap` adds the strip. The `peaks-` attributes say how the peaks
  * file is read.
  * `chapters` takes the address of a chapters file, and `chapters-options` its extras; the
- * `background-` attributes give the player a background and its animation; `media-session` turns
- * on the system's media controls, which show the `media-` attributes. Each attribute is read in
- * `element-attributes.ts` (the background's in `background-attributes.ts`).
+ * `background-` attributes give the player a background and its animation, and the `time-` ones a
+ * precise clock; `media-session` turns on the system's media controls, which show the `media-`
+ * attributes. Each attribute is read in `element-attributes.ts` (the background's in
+ * `background-attributes.ts`, the clock's in `clock-attributes.ts`).
  */
 
 import { canDefine } from '../../dom/shared/custom-element';
@@ -26,6 +27,7 @@ import {
     BACKGROUND_ATTRIBUTES,
     type BackgroundAttribute,
 } from './background-attributes';
+import { CLOCK_ATTRIBUTES, type ClockAttribute } from './clock-attributes';
 import { optionsOf, sessionDetailsOf } from './element-attributes';
 
 /** A `<sonic-player>` element: the tag, with the player it built while it is on the page. */
@@ -83,7 +85,8 @@ export type PlayerAttribute =
     | 'a11y-minimap'
     | 'a11y-keys'
     | 'a11y-remember'
-    | BackgroundAttribute;
+    | BackgroundAttribute
+    | ClockAttribute;
 
 /** What the system's media controls show: changed, they show at once, the player kept. */
 const SESSION_DETAILS: readonly SessionDetail[] = [
@@ -130,6 +133,7 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'a11y-keys',
     'a11y-remember',
     ...BACKGROUND_ATTRIBUTES,
+    ...CLOCK_ATTRIBUTES,
 ]);
 
 /** The attributes the player changes as it is: every other one needs a new player (its sound kept). */

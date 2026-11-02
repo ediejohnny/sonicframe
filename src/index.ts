@@ -218,6 +218,12 @@ export {
     type ZoomWords,
 } from './core/view/zoom';
 export { formatPosition, formatTime } from './core/shared/timing';
+export {
+    formatClock,
+    type ClockFormat,
+    type ClockHours,
+    type ClockPrecision,
+} from './core/shared/clock';
 export type { ValueText } from './core/frame/controller';
 export type { KeyModifiers } from './core/frame/keys';
 export type { TooltipA11y } from './dom/shared/tooltip';
