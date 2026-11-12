@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-12
+
 ### Added
 
 - A player can know the tracks around its sound, off by default: `tracks` (`previous`, `next`, `hasPrevious`,
