@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   picks the letter or turns it off) and the media controls' previous and next track. `mediaSession.previousNext`
   picks what those controls step through: the tracks or the chapters (`'auto'`, the default), only one, or nothing.
   At an end of the list a track button is marked unavailable and keeps its place in the tab order.
+- `readTracks` and `writeTracks` in `sonicframe/analysis` read and write the tracks of a list: a list of
+  `TrackInput`, SonicFrame's JSON or an M3U/M3U8 playlist (`#EXTINF`, `#EXTART`, `#EXTALB`, `#EXTIMG`), with the
+  relative addresses of a list pointing beside it (`base`). Every address passes the same check as the rest of
+  SonicFrame (only http, https or relative), every name is cleaned to one safe line of at most 120 characters, a
+  list keeps at most 1000 tracks (`MAX_TRACKS`) and a text over 512 KB is refused.
 
 ## [1.1.0] - 2026-11-11
 
