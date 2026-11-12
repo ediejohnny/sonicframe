@@ -75,7 +75,7 @@ export {
     type ChaptersOptions,
     type ChaptersPlugin,
 } from './plugins/chapters/chapters-options';
-export type { ChapterListLook } from './plugins/chapters/chapter-list-look';
+export type { ChapterListLook, MediaListLook } from './dom/list/list-look';
 export type {
     ChapterWords,
     DescriptionWords,
