@@ -18,15 +18,23 @@ describe('languageProblems', () => {
         ).toEqual([]);
     });
 
-    it('says each phrase that is missing', () => {
+    it('says each phrase that is missing, but for the ten added after 1.0', () => {
         const phrases = Object.values(EN).flatMap((group) =>
             Object.keys(group),
         );
         const problems = languageProblems(undefined);
 
-        expect(problems).toHaveLength(phrases.length);
+        expect(problems).toHaveLength(phrases.length - 10);
         expect(problems).toContain('frame.position is missing');
         expect(problems).toContain('markers.more is missing');
+        expect(problems).toContain('player.player is missing');
+        expect(problems).not.toContain('player.nextTrack is missing');
+        expect(
+            languageProblems({
+                ...EN,
+                playlist: { ...EN.playlist, shuffle: 3 },
+            }),
+        ).toEqual(['playlist.shuffle is missing']);
         expect(
             languageProblems({ ...EN, playButton: { play: 'Play', pause: 3 } }),
         ).toEqual(['playButton.pause is missing']);

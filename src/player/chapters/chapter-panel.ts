@@ -57,6 +57,28 @@ const ENTER_MS = 180;
 /** Over every page element; just under the shared tooltip. */
 const LAYER = '2147483645';
 
+/** Copies a player's colors and font (`source`) onto `target`, as they are now. */
+export function carryLook(source: HTMLElement, target: HTMLElement): void {
+    const style = getComputedStyle(source);
+
+    for (const name of CARRIED) {
+        const value =
+            style.getPropertyValue(name).trim() ||
+            source.style.getPropertyValue(name).trim();
+
+        if (value === '') {
+            target.style.removeProperty(name);
+        } else {
+            target.style.setProperty(name, value);
+        }
+    }
+
+    css(target, [
+        ['font-family', style.getPropertyValue('font-family') || 'inherit'],
+        ['font-size', style.getPropertyValue('font-size') || 'inherit'],
+    ]);
+}
+
 export class FloatingList {
     private readonly arrow: HTMLElement | null = null;
     private readonly backdrop: HTMLElement | null = null;
@@ -222,24 +244,7 @@ export class FloatingList {
 
     /** The player's colors and font, read now, so a palette changed later still shows. */
     private carry(): void {
-        const style = getComputedStyle(this.source);
-
-        for (const name of CARRIED) {
-            const value =
-                style.getPropertyValue(name).trim() ||
-                this.source.style.getPropertyValue(name).trim();
-
-            if (value === '') {
-                this.box.style.removeProperty(name);
-            } else {
-                this.box.style.setProperty(name, value);
-            }
-        }
-
-        css(this.box, [
-            ['font-family', style.getPropertyValue('font-family') || 'inherit'],
-            ['font-size', style.getPropertyValue('font-size') || 'inherit'],
-        ]);
+        carryLook(this.source, this.box);
     }
 
     /** A popover goes under its button (or over it), inside the window, its arrow at the button. */
@@ -328,9 +333,10 @@ export class FloatingList {
         const chosen = (event: Event): void => {
             const target = event.target as Element | null;
 
+            // An item of the list is a button in its `ol`; the head and the close button are not.
             if (
                 !this.settings.stayOpen &&
-                target?.closest('.sonicframe-chapter') !== null
+                target?.closest('nav ol button') !== null
             ) {
                 this.onClose(true);
             }

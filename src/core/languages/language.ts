@@ -12,7 +12,7 @@ import { FR } from './fr';
 import { languageProblems, MAX_PHRASE } from './language-check';
 import { PT } from './pt';
 import { PT_PT } from './pt-pt';
-import type { Words } from './words';
+import type { CompleteWords, Words } from './words';
 
 /** The built-in languages: `en` is the English of the United States, `pt` the Portuguese of Brazil. */
 export type Language = 'en' | 'pt' | 'pt-PT' | 'es' | 'fr';
@@ -35,13 +35,14 @@ function frozen<T extends object>(value: T): Readonly<T> {
 }
 
 /** Each built-in language's words, one line each. */
-const LANGUAGES: Readonly<Record<Language, Readonly<Words>>> = Object.freeze({
-    en: frozen(EN),
-    pt: frozen(PT),
-    'pt-PT': frozen(PT_PT),
-    es: frozen(ES),
-    fr: frozen(FR),
-});
+const LANGUAGES: Readonly<Record<Language, Readonly<CompleteWords>>> =
+    Object.freeze({
+        en: frozen(EN),
+        pt: frozen(PT),
+        'pt-PT': frozen(PT_PT),
+        es: frozen(ES),
+        fr: frozen(FR),
+    });
 
 export const LANGUAGE_NAMES: readonly Language[] = Object.freeze(
     Object.keys(LANGUAGES) as Language[],
@@ -61,7 +62,7 @@ const MAX_TAG = 35;
 const MAX_REGISTERED = 100;
 
 /** A language found for a tag: its own tag and its words. */
-type Found = { readonly tag: string; readonly words: Readonly<Words> };
+type Found = { readonly tag: string; readonly words: Readonly<CompleteWords> };
 
 /** The registered languages, by their tag in lowercase. */
 const registry = new Map<string, Found>();
@@ -119,13 +120,15 @@ export function resolveLanguage(tag: string | null | undefined): string {
 }
 
 /** Every word in the language a tag gets. */
-export function wordsFor(tag: string | null | undefined): Readonly<Words> {
+export function wordsFor(
+    tag: string | null | undefined,
+): Readonly<CompleteWords> {
     return find(tag).words;
 }
 
 /** One group of words in every built-in language, each a frozen copy. */
 export function byLanguage<T extends object>(
-    pick: (words: Readonly<Words>) => T,
+    pick: (words: Readonly<CompleteWords>) => T,
 ): Readonly<Record<Language, Readonly<T>>> {
     const all = {} as Record<Language, Readonly<T>>;
 
@@ -160,28 +163,33 @@ export function localeFor(
     return ownWords || primary(valid) === primary(language) ? valid : language;
 }
 
-/** A frozen copy of complete words, each phrase one safe line. */
-function cleanWords(words: Words): Readonly<Words> {
+/** A frozen copy of checked words, each phrase one safe line; a phrase left out is English's. */
+function cleanWords(words: Words): Readonly<CompleteWords> {
     const copy: Record<string, Readonly<Record<string, string>>> = {};
 
     for (const [group, phrases] of Object.entries(EN)) {
-        const own = (words as Record<string, Record<string, string>>)[group];
+        const english = phrases as Readonly<Record<string, string>>;
+        const own =
+            (words as Record<string, Record<string, string> | undefined>)[
+                group
+            ] ?? {};
         const clean: Record<string, string> = {};
 
-        for (const name of Object.keys(phrases)) {
-            clean[name] = cleanText(own[name], MAX_PHRASE);
+        for (const name of Object.keys(english)) {
+            clean[name] = cleanText(own[name] ?? english[name], MAX_PHRASE);
         }
 
         copy[group] = Object.freeze(clean);
     }
 
-    return Object.freeze(copy) as unknown as Readonly<Words>;
+    return Object.freeze(copy) as unknown as Readonly<CompleteWords>;
 }
 
 /**
  * Gives SonicFrame a whole language under a BCP 47 tag (`registerLanguage('ja', words)`): every piece
  * whose language tag finds it speaks it, `ja-JP` too. The words must be complete, with English's
- * marks (`languageProblems` says what is wrong), and each phrase is cleaned to one safe line. The
+ * marks (`languageProblems` says what is wrong), except the phrases added after 1.0, which are said
+ * in English when left out; each phrase is cleaned to one safe line. The
  * built-in languages (`en`, `en-US`, `pt`, `pt-BR`, `pt-PT`, `es`, `fr`) cannot be replaced; returns
  * false for one of them, a malformed tag, words with a problem, or past the limit of languages.
  */

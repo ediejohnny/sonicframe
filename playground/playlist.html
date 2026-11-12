@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Playlist · SonicFrame</title>
+        <meta
+            name="description"
+            content="Play a list of tracks one after the other: one player and the list of tracks, or a player for each track, with shuffle, repeat, a list from JSON or M3U, and a tag."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Playlist</h1>
+                <p class="lede">
+                    Play a list of tracks one after the other. The list is the
+                    same one the player's chapters use: a number or the playing
+                    bars, the picture with its length, the title and the artist,
+                    in the playlist or floating over the page.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Try it</h2>
+                    <div
+                        class="stage"
+                        data-demo="playlist"
+                        data-options='{"player":{"look":{"line":["previousTrack","play","nextTrack","wave","time"]}}}'
+                    ></div>
+                    <p data-track></p>
+                    <p>
+                        Choose a track, or let one end: the next one plays. The
+                        buttons over the list turn the shuffle on and step the
+                        repeat through off, all and one.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Adding it</h2>
+                    <div class="code">
+                        <pre><code>import { createPlaylist } from 'sonicframe/playlist';
+
+const playlist = createPlaylist({
+    container: document.querySelector('#episodes'),
+    tracks: [
+        { src: 'ep1.mp3', title: 'Pilot', artist: 'The Show', peaks: 'ep1.dat' },
+        { src: 'ep2.mp3', title: 'Second', artist: 'The Show', duration: 1830 },
+    ],
+});
+
+playlist.on('trackchange', (track, index) => console.log(index, track.title));</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>sonicframe/playlist</code> is an entry of its own:
+                        an app without a list never loads it. A track takes
+                        <code>src</code> and, when you have them,
+                        <code>title</code>, <code>artist</code>,
+                        <code>album</code>, <code>artwork</code>,
+                        <code>peaks</code> (the numbers, or the address of a
+                        waveform file), <code>duration</code>,
+                        <code>chapters</code> (the address of a chapters file)
+                        and <code>id</code>.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>One player, or a player for each track</h2>
+                    <p>
+                        With <code>layout: 'one'</code> (the default) the
+                        playlist keeps one media element and makes a new player
+                        for each track; the volume, the mute and the speed carry
+                        on. Give your own <code>&lt;audio&gt;</code> or
+                        <code>&lt;video&gt;</code> as <code>media</code>, or the
+                        playlist makes one.
+                    </p>
+                    <p>
+                        With <code>layout: 'each'</code> every track has its own
+                        player, one under the other, like a feed of voice
+                        messages. One plays at a time: the one that starts
+                        pauses the others and takes their volume and speed.
+                        There is no list then: the players are the list.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="playlist"
+                        data-options='{"layout":"each"}'
+                    ></div>
+                    <p data-track></p>
+                </section>
+
+                <section class="section">
+                    <h2>The list over the page</h2>
+                    <p>
+                        <code>list</code> takes the same options as the player's
+                        list of chapters:
+                        <code>type</code> (<code>'inline'</code>,
+                        <code>'popover'</code> or <code>'drawer'</code>),
+                        <code>placement</code>, <code>side</code>,
+                        <code>width</code>, <code>maxHeight</code>,
+                        <code>header</code>, <code>stayOpen</code>,
+                        <code>backdrop</code>, <code>animation</code>,
+                        <code>look</code>, <code>palette</code>,
+                        <code>font</code> and <code>box</code>; plus
+                        <code>place</code>, <code>'below'</code> (the default)
+                        or <code>'above'</code> the player. A list that floats
+                        adds its button over the list's place.
+                    </p>
+                    <div
+                        class="stage"
+                        data-demo="playlist"
+                        data-options='{"list":{"type":"popover"}}'
+                    ></div>
+                    <p data-track></p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>tracks</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        A list of tracks, or the text of a JSON
+                                        or M3U list.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>src</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        The address of a JSON or M3U list,
+                                        fetched when <code>tracks</code> is left
+                                        out; relative addresses in it point
+                                        beside it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>fetch</code></td>
+                                    <td>cookies to the page's own site only</td>
+                                    <td>
+                                        <code>credentials</code> and
+                                        <code>referrerPolicy</code> of the
+                                        request for <code>src</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>start</code></td>
+                                    <td><code>0</code></td>
+                                    <td>The track to start on.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>player</code></td>
+                                    <td><code>{}</code></td>
+                                    <td>
+                                        The options of every track's player
+                                        (theme, look, keys, remember...); the
+                                        track's address, title, peaks and
+                                        chapters win. With
+                                        <code>mediaSession</code>, the lock
+                                        screen shows each track's title, artist
+                                        and picture.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>layout</code></td>
+                                    <td><code>'one'</code></td>
+                                    <td>
+                                        <code>'one'</code> or
+                                        <code>'each'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>advance</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Goes on to the next track when one ends.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>repeat</code></td>
+                                    <td><code>'none'</code></td>
+                                    <td>
+                                        <code>'all'</code> starts the list over;
+                                        <code>'one'</code> starts the track over
+                                        when it ends by itself.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>shuffle</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Plays every track once in a shuffled
+                                        order, the one playing first.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>random</code></td>
+                                    <td><code>Math.random</code></td>
+                                    <td>
+                                        The shuffle's numbers, from 0 up to 1.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>previousRestarts</code></td>
+                                    <td><code>3</code></td>
+                                    <td>
+                                        "Previous" starts the track over once it
+                                        has played more than these seconds, from
+                                        0 (always goes back) to 30.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>playOnSelect</code></td>
+                                    <td><code>true</code></td>
+                                    <td>A track chosen in the list plays.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>gap</code></td>
+                                    <td><code>0</code></td>
+                                    <td>
+                                        Seconds of pause between two tracks,
+                                        from 0 to 10; choosing a track ends it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>list</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The list: <code>true</code>,
+                                        <code>false</code> or its options (see
+                                        above).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>buttons</code></td>
+                                    <td><code>['shuffle', 'repeat']</code></td>
+                                    <td>
+                                        The buttons over the list;
+                                        <code>[]</code> for none.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>remember</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Keeps the track, the shuffle and the
+                                        repeat for the next visit:
+                                        <code>true</code> or
+                                        <code>{ key, store }</code>, kept under
+                                        <code>sonicframe:playlist</code> (or
+                                        <code
+                                            >sonicframe:playlist:&lt;key&gt;</code
+                                        >). Each track's position is the
+                                        player's own <code>remember</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y</code></td>
+                                    <td></td>
+                                    <td>
+                                        <code>label</code>,
+                                        <code>announce</code> (on),
+                                        <code>lang</code> and
+                                        <code>words</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Driving it from your code</h2>
+                    <ul>
+                        <li>
+                            <code>play(index?)</code>, <code>pause()</code>,
+                            <code>select(index)</code> (current, without
+                            playing), <code>next()</code> and
+                            <code>previous()</code>.
+                        </li>
+                        <li>
+                            <code>add(tracks, at?)</code>,
+                            <code>remove(index)</code>,
+                            <code>move(from, to)</code> and
+                            <code>setTracks(tracks)</code>: the track playing
+                            goes on.
+                        </li>
+                        <li>
+                            <code>setShuffle(on)</code>,
+                            <code>setRepeat(repeat)</code>,
+                            <code>forget()</code> and <code>destroy()</code>.
+                        </li>
+                        <li>
+                            <code>player</code>, <code>tracks</code>,
+                            <code>index</code>, <code>order</code>,
+                            <code>shuffle</code> and <code>repeat</code> say
+                            where it is.
+                        </li>
+                        <li>
+                            Events: <code>trackchange (track, index)</code>,
+                            <code>listend</code>,
+                            <code>trackschange (tracks)</code> and
+                            <code>error (error)</code>.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>Lists in files</h2>
+                    <p>
+                        <code>readTracks</code> reads a list of tracks,
+                        SonicFrame's JSON or an M3U/M3U8 playlist;
+                        <code>writeTracks(tracks, 'json' | 'm3u')</code> writes
+                        one, so an app can keep the list a person made; and
+                        <code>loadTracks(url)</code> fetches one. All three are
+                        in <code>sonicframe/playlist</code>, and the first two
+                        in <code>sonicframe/analysis</code> too, for servers.
+                    </p>
+                    <div class="code">
+                        <pre><code>#EXTM3U
+#EXTINF:1830,The Show - Pilot
+#EXTIMG:covers/ep1.jpg
+ep1.mp3</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>On the tag</h2>
+                    <div class="code">
+                        <pre><code>&lt;sonic-playlist repeat="all" buttons="shuffle repeat" list-place="above"&gt;
+    &lt;a href="ep1.mp3" data-artist="The Show" data-peaks="ep1.dat"&gt;Pilot&lt;/a&gt;
+    &lt;a href="ep2.mp3" data-artist="The Show" data-duration="1830"&gt;Second&lt;/a&gt;
+&lt;/sonic-playlist&gt;
+
+&lt;script type="module"&gt;
+    import { defineSonicPlaylist } from 'sonicframe/playlist';
+    defineSonicPlaylist();
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        The links work as plain links where scripts never run;
+                        once the playlist stands they are hidden. Or give
+                        <code>src</code> with the address of a list. The
+                        attributes are <code>start</code>, <code>layout</code>,
+                        <code>advance</code>, <code>repeat</code>,
+                        <code>shuffle</code>, <code>gap</code>,
+                        <code>previous-restarts</code>,
+                        <code>play-on-select</code>, <code>list</code> (its
+                        type, or <code>false</code>) and the
+                        <code>list-</code> ones, <code>buttons</code>,
+                        <code>remember</code> with <code>remember-key</code>,
+                        <code>fetch-credentials</code> and the
+                        <code>a11y-</code> ones; every attribute of
+                        <code>&lt;sonic-player&gt;</code> but the sound's own
+                        sets each track's player. Events reach the page as
+                        <code>sonicframe:trackchange</code> and the others.
+                    </p>
+                    <sonic-playlist>
+                        <a
+                            href="sounds/music/november-snow.mp3"
+                            data-artist="cynicmusic"
+                            data-peaks="sounds/music/november-snow.dat"
+                            >November Snow</a
+                        >
+                        <a
+                            href="sounds/music/glory-hotel.mp3"
+                            data-artist="migfus20"
+                            data-peaks="sounds/music/glory-hotel.dat"
+                            >Glory Hotel (lofi)</a
+                        >
+                    </sonic-playlist>
+                </section>
+
+                <section class="section">
+                    <h2>For screen readers and the keyboard</h2>
+                    <ul>
+                        <li>
+                            The playlist is a named group, and the list a named
+                            navigation with a button per track; the one playing
+                            is marked <code>aria-current</code>.
+                        </li>
+                        <li>
+                            The list is one stop in the tab order: the arrows,
+                            Home and End move through it, and Enter or Space
+                            plays.
+                        </li>
+                        <li>
+                            The live region says "Playing: Title, 3 of 12" at
+                            each change (<code>a11y.announce</code>).
+                        </li>
+                        <li>
+                            Shuffle says its state with
+                            <code>aria-pressed</code>; repeat says its mode in
+                            words: "Repeat: off", "Repeat: all", "Repeat: one".
+                        </li>
+                        <li>
+                            Each player's track buttons, N and Shift+N (with its
+                            <code>keys</code> on) and the lock screen's previous
+                            and next (with its <code>mediaSession</code> on) go
+                            through the list.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>What it trusts</h2>
+                    <ul>
+                        <li>
+                            Titles, artists and names go in as text, never as
+                            HTML; a list from anywhere cannot add elements to
+                            your page.
+                        </li>
+                        <li>
+                            Every address (the sound, the picture, the peaks,
+                            the chapters, the list itself) must be http, https
+                            or relative; a <code>javascript:</code> one leaves
+                            the track out.
+                        </li>
+                        <li>
+                            A list keeps at most 1000 tracks; a list over 512 KB
+                            is refused, and names are cut to 120 characters.
+                        </li>
+                        <li>
+                            What <code>remember</code> kept is read back as
+                            outside input: a value that is not what it should be
+                            is left out.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+        <script type="module" src="./playlist-demo.ts"></script>
+    </body>
+</html>

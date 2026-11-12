@@ -83,6 +83,8 @@ export type {
     RecorderWords,
     RegionWords,
     Words,
+    CompleteWords,
+    PlaylistWords,
 } from './core/languages/words';
 export {
     LANGUAGE_NAMES,

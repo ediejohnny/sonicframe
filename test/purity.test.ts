@@ -39,9 +39,10 @@ function imports(file: string): string[] {
 
 /**
  * The layers each layer of src/ may import, besides itself and the package's types (src/types.ts):
- * core <- dom <- controls and plugins <- player <- record <- the entries. A layer never reaches up or
- * sideways, so the core runs anywhere, a plugin never needs the player, and only the recorder (which
- * plays back what it recorded on a player) reaches the player.
+ * core <- dom <- controls and plugins <- player <- record and playlist <- the entries. A layer never
+ * reaches up or sideways, so the core runs anywhere, a plugin never needs the player, and only the
+ * recorder (which plays back what it recorded on a player) and the playlist (a player for each track)
+ * reach the player.
  */
 const LAYERS: Readonly<Record<string, readonly string[]>> = {
     core: [],
@@ -50,6 +51,7 @@ const LAYERS: Readonly<Record<string, readonly string[]>> = {
     plugins: ['core', 'dom'],
     player: ['core', 'dom', 'controls', 'plugins'],
     record: ['core', 'dom', 'controls', 'plugins', 'player'],
+    playlist: ['core', 'dom', 'controls', 'plugins', 'player'],
 };
 
 /** The folders under `folder`, by name. */
@@ -137,7 +139,7 @@ describe('package boundaries', () => {
 
     it('keeps every test where a test project runs it', () => {
         // vite.config.ts runs test/*.test.ts and test/core/ in Node, and test/dom, controls, plugins,
-        // player, record and site under happy-dom: a test anywhere else would never run.
+        // player, record, playlist and site under happy-dom: a test anywhere else would never run.
         const stray = sources('test')
             .map((file) =>
                 relative(join(root, 'test'), file).split(sep).join('/'),
@@ -146,7 +148,7 @@ describe('package boundaries', () => {
                 (file) =>
                     file.endsWith('.test.ts') &&
                     file.includes('/') &&
-                    !/^(core|dom|controls|plugins|player|record|site)\//.test(
+                    !/^(core|dom|controls|plugins|player|record|playlist|site)\//.test(
                         file,
                     ),
             );
@@ -181,6 +183,15 @@ describe('package boundaries', () => {
         for (const target of imports(join(root, 'src/record.ts'))) {
             expect(target, 'src/record.ts').toMatch(
                 /^\.\/(record|core)\/[\w-]+\/[\w-]+$/,
+            );
+        }
+    });
+
+    it('keeps the playlist entry to the playlist and the core', () => {
+        // src/playlist.ts is the `sonicframe/playlist` subpath: an app without a list never loads it.
+        for (const target of imports(join(root, 'src/playlist.ts'))) {
+            expect(target, 'src/playlist.ts').toMatch(
+                /^\.\/(playlist|core)\/[\w-]+\/[\w-]+$/,
             );
         }
     });

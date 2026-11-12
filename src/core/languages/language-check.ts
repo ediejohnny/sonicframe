@@ -1,7 +1,7 @@
 /**
  * What makes a language complete: every phrase English has, under the same group and name, with the
- * same `{name}` marks, and nothing English does not have. A language file and a registered language
- * both pass this check.
+ * same `{name}` marks, and nothing English does not have; the phrases added after 1.0 may be left
+ * out. A language file and a registered language both pass this check.
  */
 
 import { isRecord } from '../shared/checked';
@@ -11,6 +11,21 @@ import { EN } from './en';
 export const MAX_PHRASE = 200;
 
 const MARK = /\{(\w+)\}/g;
+
+/** The phrases added after 1.0, by group: a language may leave them out, and they are said in English. */
+const LATER: Readonly<Record<string, readonly string[]>> = {
+    player: ['previousTrack', 'nextTrack'],
+    playlist: [
+        'playlist',
+        'close',
+        'shuffle',
+        'repeatNone',
+        'repeatAll',
+        'repeatOne',
+        'playing',
+        'untitled',
+    ],
+};
 
 /** The marks of a phrase, each once, in order of name: `'{from} {to}'`. */
 function marksOf(phrase: string): string {
@@ -49,6 +64,10 @@ export function languageProblems(words: unknown): string[] {
         )) {
             const phrase = record[name];
             const place = `${group}.${name}`;
+
+            if (phrase === undefined && LATER[group]?.includes(name)) {
+                continue;
+            }
 
             if (typeof phrase !== 'string') {
                 problems.push(`${place} is missing`);

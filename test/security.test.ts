@@ -153,6 +153,10 @@ const CHECKED_ADDRESSES: Readonly<
         places: 1,
         why: "the app's own `src` on its own `<audio>`: a media element fetches, it never runs script",
     },
+    'src/playlist/stage/one-stage.ts': {
+        places: 1,
+        why: "a track's address on the playlist's media: kept only through `safeUrl` by `readTracks` (core/playlist/tracks.ts), and a media element never runs script",
+    },
 };
 
 describe('security guards', () => {

@@ -29,14 +29,14 @@ export type ListHost = PartHost & {
     readonly reportError: (error: unknown) => void;
 };
 
-/** The list of chapters, as an icon. */
-const LIST_ICON =
+/** A list, as an icon. */
+export const LIST_ICON =
     'M4 6h2v2H4zm4 0h12v2H8zM4 11h2v2H4zm4 0h12v2H8zM4 16h2v2H4zm4 0h12v2H8z';
 
 let chapterLists = 0;
 
-/** The list's options checked: unknown names fall back, sizes stay in range. */
-function listSettings(list: true | PlayerChapterList): ListSettings {
+/** A list's options checked: unknown names fall back, sizes stay in range. */
+export function listSettings(list: true | PlayerChapterList): ListSettings {
     const own: PlayerChapterList = list === true ? {} : list;
     const type = oneOf(own.type, ['inline', 'popover', 'drawer'], 'inline');
 
