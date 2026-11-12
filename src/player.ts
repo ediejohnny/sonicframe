@@ -7,6 +7,7 @@
 
 export { createPlayer, Player } from './player/player/player';
 export { currentPlayer } from './player/player/player-registry';
+export { SoundError, type SoundErrorReason } from './core/player/sound-error';
 export type {
     ChapterListLook,
     ChaptersPlugin,

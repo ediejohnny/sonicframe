@@ -85,6 +85,10 @@ export const PT: CompleteWords = {
         nextTrack: 'Próxima faixa',
         closeChapters: 'Fechar os capítulos',
         resume: 'Continuando de {time}',
+        soundFailed: 'Não foi possível carregar o som',
+        soundUnsupported: 'O formato deste som não toca aqui',
+        soundDecode: 'O arquivo do som está danificado',
+        soundAborted: 'O som parou de carregar',
     },
     recorder: {
         recorder: 'Gravador de voz',

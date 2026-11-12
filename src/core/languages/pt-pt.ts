@@ -37,6 +37,7 @@ export const PT_PT: CompleteWords = {
         nextChapter: 'Capítulo seguinte',
         nextTrack: 'Faixa seguinte',
         resume: 'A continuar a partir de {time}',
+        soundDecode: 'O ficheiro do som está danificado',
     },
     recorder: {
         ...PT.recorder,

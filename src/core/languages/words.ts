@@ -63,6 +63,14 @@ export type PlayerLabels = {
     closeChapters: string;
     /** Said at the first play of a sound that resumes where it was left: `{time}`. */
     resume: string;
+    /** Shown and said when the sound cannot be fetched (the network, the address). */
+    soundFailed: string;
+    /** Shown and said when the browser cannot play the sound's format. */
+    soundUnsupported: string;
+    /** Shown and said when the sound's file is damaged and cannot be decoded. */
+    soundDecode: string;
+    /** Shown and said when the sound stopped loading before it could play. */
+    soundAborted: string;
 };
 
 /** The phrases of a description. `{name}` marks are filled in; a mark that is not known is dropped. */
@@ -234,7 +242,13 @@ export type NowPlayingWords = {
 };
 
 /** The player's labels added after 1.0. */
-type LaterPlayer = 'previousTrack' | 'nextTrack';
+type LaterPlayer =
+    | 'previousTrack'
+    | 'nextTrack'
+    | 'soundFailed'
+    | 'soundUnsupported'
+    | 'soundDecode'
+    | 'soundAborted';
 
 /**
  * Every word of SonicFrame in one language, as a language given to `registerLanguage` is written:

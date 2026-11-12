@@ -99,6 +99,8 @@ export type PlayerAttribute =
     | 'a11y-minimap'
     | 'a11y-keys'
     | 'a11y-remember'
+    | 'load-error'
+    | 'a11y-load-error'
     | BackgroundAttribute
     | ClockAttribute;
 
@@ -138,6 +140,8 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'a11y-minimap',
     'a11y-keys',
     'a11y-remember',
+    'load-error',
+    'a11y-load-error',
     ...BACKGROUND_ATTRIBUTES,
     ...CLOCK_ATTRIBUTES,
 ]);

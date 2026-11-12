@@ -231,6 +231,24 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>loadError</code></td>
+                                    <td>on</td>
+                                    <td>
+                                        When the sound cannot load, a message
+                                        over the wave says why, in the player's
+                                        language: <code>false</code> or
+                                        <code>{ show: false }</code> turns it
+                                        off. The <code>error</code> event goes
+                                        out either way, with a
+                                        <code>SoundError</code> whose
+                                        <code>reason</code> is
+                                        <code>'network'</code>,
+                                        <code>'unsupported'</code>,
+                                        <code>'decode'</code> or
+                                        <code>'aborted'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>plugins</code></td>
                                     <td><code>[]</code></td>
                                     <td>Plugins on the wave.</td>
@@ -420,6 +438,15 @@
                                     <td>
                                         Say where a sound resumes, at its first
                                         play ("Resuming at 12:30").
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>loadError.announce</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Say why the sound cannot load ("Could
+                                        not load the sound"), so a person who
+                                        cannot see the player learns it too.
                                     </td>
                                 </tr>
                             </tbody>

@@ -211,6 +211,7 @@ function a11yOf(element: Element): PlayerA11y {
     const strip = element.getAttribute('a11y-minimap');
     const keys = element.getAttribute('a11y-keys');
     const remember = element.getAttribute('a11y-remember');
+    const loadError = element.getAttribute('a11y-load-error');
 
     return {
         lang: element.getAttribute('a11y-lang') ?? undefined,
@@ -230,6 +231,9 @@ function a11yOf(element: Element): PlayerA11y {
             remember === null
                 ? undefined
                 : { announce: wordsOf(remember).has('announce') },
+        // On by default: only `false` turns the announcement off.
+        loadError:
+            loadError?.trim() === 'false' ? { announce: false } : undefined,
     };
 }
 
@@ -298,6 +302,11 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         mediaSession: sessionOf(element),
         keys: keysOf(element.getAttribute('keys')),
         remember: rememberOf(element),
+        // On by default: only `false` turns the message off.
+        loadError:
+            element.getAttribute('load-error')?.trim() === 'false'
+                ? false
+                : undefined,
         a11y: a11yOf(element),
         look: lookOf(element),
     };

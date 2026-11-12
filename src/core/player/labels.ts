@@ -55,6 +55,10 @@ function playerLabels(words: Readonly<CompleteWords>): PlayerLabels {
         nextTrack: player.nextTrack,
         closeChapters: player.closeChapters,
         resume: player.resume,
+        soundFailed: player.soundFailed,
+        soundUnsupported: player.soundUnsupported,
+        soundDecode: player.soundDecode,
+        soundAborted: player.soundAborted,
     };
 }
 

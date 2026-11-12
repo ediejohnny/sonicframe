@@ -95,6 +95,7 @@ import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, followPalette, wearPalette } from './player-paint';
 import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
 import { PlayerSession } from './player-session';
+import { SoundNotice } from './sound-notice';
 import { PlayerSound } from './player-sound';
 
 /** The zoom buttons the player adds at the end of the line when the look places none. */
@@ -147,6 +148,8 @@ export class Player {
     private readonly backdrop: PlayerBackdrop;
     private readonly chapterParts: ChapterParts;
     private readonly session: PlayerSession;
+    /** The message and the announcement of a sound that cannot load. */
+    private readonly notice: SoundNotice;
     private readonly times = new TimeParts();
     private partCleanups: (() => void)[] = [];
     private layout: PlayerLayout | null = null;
@@ -235,6 +238,18 @@ export class Player {
             this.media,
             this.abort.signal,
         );
+        const loadError = options.loadError;
+        this.notice = new SoundNotice({
+            media: this.media,
+            words: this.words,
+            signal: this.abort.signal,
+            show:
+                loadError !== false &&
+                (typeof loadError !== 'object' || loadError.show !== false),
+            announce: a11y.loadError?.announce !== false,
+            report: this.reportError,
+            say: (text) => this.frameRef?.announce(text),
+        });
 
         if (this.ownMedia && this.media !== null) {
             this.element.append(this.media);
@@ -672,6 +687,7 @@ export class Player {
             ['height', boxHeight(this.options, look)],
             ['min-width', '0'],
         ]);
+        this.notice.place(box);
 
         const frame = new SonicFrame(this.frameOptions(box, peaks));
         this.frameRef = frame;
