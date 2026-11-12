@@ -86,8 +86,7 @@ export const ES: CompleteWords = {
         closeChapters: 'Cerrar los capítulos',
         resume: 'Continuando desde {time}',
         soundFailed: 'No se pudo cargar el sonido',
-        soundUnsupported:
-            'El formato de este sonido no se puede reproducir aquí',
+        soundUnsupported: 'Este sonido no se puede reproducir aquí',
         soundDecode: 'El archivo del sonido está dañado',
         soundAborted: 'El sonido dejó de cargarse',
     },

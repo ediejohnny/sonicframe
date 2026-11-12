@@ -65,7 +65,10 @@ export type PlayerLabels = {
     resume: string;
     /** Shown and said when the sound cannot be fetched (the network, the address). */
     soundFailed: string;
-    /** Shown and said when the browser cannot play the sound's format. */
+    /**
+     * Shown and said when the browser cannot play the sound (`MediaError` code 4): its format, or a
+     * missing file, which browsers report the same way.
+     */
     soundUnsupported: string;
     /** Shown and said when the sound's file is damaged and cannot be decoded. */
     soundDecode: string;

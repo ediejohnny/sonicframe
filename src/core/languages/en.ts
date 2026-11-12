@@ -89,7 +89,7 @@ export const EN: CompleteWords = {
         closeChapters: 'Close the chapters',
         resume: 'Resuming at {time}',
         soundFailed: 'Could not load the sound',
-        soundUnsupported: 'This sound’s format cannot be played here',
+        soundUnsupported: 'This sound cannot be played here',
         soundDecode: 'The sound’s file is damaged',
         soundAborted: 'The sound stopped loading',
     },
