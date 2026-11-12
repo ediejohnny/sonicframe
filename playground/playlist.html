@@ -362,7 +362,10 @@ ep1.mp3</code></pre>
                         type, or <code>false</code>) and the
                         <code>list-</code> ones, <code>buttons</code>,
                         <code>remember</code> with <code>remember-key</code>,
-                        <code>fetch-credentials</code> and the
+                        <code>fetch-credentials</code> (<code>same-origin</code>
+                        or <code>omit</code>: a tag never sends cookies to
+                        another site; your code can, with
+                        <code>fetch.credentials</code>) and the
                         <code>a11y-</code> ones; every attribute of
                         <code>&lt;sonic-player&gt;</code> but the sound's own
                         sets each track's player. Events reach the page as

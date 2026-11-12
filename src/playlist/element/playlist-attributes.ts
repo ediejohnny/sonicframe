@@ -7,6 +7,7 @@
  */
 
 import type { TrackInput } from '../../core/playlist/tracks';
+import { oneOf } from '../../core/shared/checked';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { optionsOf } from '../../player/element/element-attributes';
 import { PLAYER_ATTRIBUTES } from '../../player/element/element';
@@ -151,9 +152,14 @@ export function playlistOptionsOf(
     return {
         tracks: src === null ? linkTracks(element) : undefined,
         src: src ?? undefined,
+        // A tag's words may come from whoever writes a page's content: it may keep cookies home or leave
+        // them out, never send them to another site (an app's code can, with `fetch.credentials`).
         fetch: {
-            credentials: (get('fetch-credentials') ??
-                undefined) as RequestCredentials,
+            credentials: oneOf(
+                get('fetch-credentials'),
+                ['same-origin', 'omit'] as const,
+                'same-origin',
+            ),
         },
         start: attributeNumber(get('start')),
         layout: (get('layout') ?? undefined) as PlaylistOptions['layout'],

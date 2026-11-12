@@ -93,7 +93,12 @@ describe('loadTracks', () => {
             signal: stop.signal,
         });
 
+        await loadTracks('https://site.test/a.m3u', {
+            credentials: 'everything' as RequestCredentials,
+        });
+
         expect(asked[0].credentials).toBe('same-origin');
+        expect(asked[2].credentials).toBe('same-origin');
         expect(asked[1]).toMatchObject({
             credentials: 'include',
             referrerPolicy: 'no-referrer',

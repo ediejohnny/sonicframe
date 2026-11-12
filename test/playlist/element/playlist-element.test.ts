@@ -115,6 +115,29 @@ describe('<sonic-playlist>', () => {
         ).toBe('Two');
     });
 
+    it('never lets the tag send cookies to another site, only keep them home or leave them out', () => {
+        const asked: RequestInit[] = [];
+        vi.stubGlobal(
+            'fetch',
+            vi.fn((_url: string, init: RequestInit) => {
+                asked.push(init);
+
+                return Promise.reject(new Error('offline'));
+            }),
+        );
+
+        tag({
+            src: 'https://lists.test/a.m3u',
+            'fetch-credentials': 'include',
+        });
+        tag({ src: 'https://lists.test/a.m3u', 'fetch-credentials': 'omit' });
+
+        expect(asked.map((init) => init.credentials)).toEqual([
+            'same-origin',
+            'omit',
+        ]);
+    });
+
     it('hides the list with list="false"', () => {
         tag({ list: 'false' });
 

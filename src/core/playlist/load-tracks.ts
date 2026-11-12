@@ -5,7 +5,7 @@
  */
 
 import { fetchOk, readCapped, type FetchedResponse } from '../shared/fetch';
-import { within } from '../shared/checked';
+import { oneOf, within } from '../shared/checked';
 import { safeUrl } from '../shared/url';
 import { readTracks, type Track } from './tracks';
 
@@ -15,7 +15,7 @@ export type LoadTracksOptions = {
      * absolute (the playlist hands the page's resolved one).
      */
     base?: string;
-    /** Whether the request carries cookies: `'same-origin'` by default, as `fetch` takes it. */
+    /** Whether the request carries cookies: `'same-origin'` (the default, for any other value), `'omit'` or `'include'`. */
     credentials?: RequestCredentials;
     /** What the request tells the server of the page: the browser's default when left out. */
     referrerPolicy?: ReferrerPolicy;
@@ -52,7 +52,11 @@ export async function loadTracks(
         options.fetcher ??
         ((address: string) =>
             fetch(address, {
-                credentials: options.credentials ?? 'same-origin',
+                credentials: oneOf(
+                    options.credentials,
+                    ['same-origin', 'omit', 'include'] as const,
+                    'same-origin',
+                ),
                 referrerPolicy: options.referrerPolicy,
                 signal: options.signal,
             }));
