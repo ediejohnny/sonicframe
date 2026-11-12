@@ -60,7 +60,7 @@ describe('a sound that cannot load', () => {
         [1, 'aborted', 'The sound stopped loading'],
         [2, 'network', 'Could not load the sound'],
         [3, 'decode', 'The sound’s file is damaged'],
-        [4, 'unsupported', 'This sound’s format cannot be played here'],
+        [4, 'unsupported', 'This sound cannot be played here'],
         [9, 'network', 'Could not load the sound'],
     ])(
         'code %i: says it over the wave and in the live region, and hands a SoundError (%s)',
@@ -83,6 +83,21 @@ describe('a sound that cannot load', () => {
         expect(message(player)).toBe('Não foi possível carregar o som');
         expect(said()).toBe('Não foi possível carregar o som');
     });
+
+    it.each([
+        ['pt', 'Este som não toca aqui'],
+        ['pt-PT', 'Este som não toca aqui'],
+        ['es', 'Este sonido no se puede reproducir aquí'],
+        ['fr', 'Ce son ne peut pas être lu ici'],
+    ])(
+        'in %s, a sound the browser cannot play (code 4, also a missing file) never blames its format',
+        (lang, words) => {
+            const { player, media } = make({ a11y: { lang } });
+            failWith(media, 4);
+
+            expect(message(player)).toBe(words);
+        },
+    );
 
     it('takes the message away when a sound loads, and keeps it through a new look', () => {
         const { player, media } = make();

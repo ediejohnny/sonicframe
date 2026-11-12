@@ -54,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - A sound that cannot load no longer leaves the player silent about it at "0:00 / 0:00": a message over the wave
-  says why ("Could not load the sound", "This sound's format cannot be played here"…) in the player's language, the
+  says why ("Could not load the sound", "This sound cannot be played here"…) in the player's language, the
   live region says it, and the `error` event goes out with a `SoundError` (`sonicframe/player`) whose `reason` is
   `'network'`, `'unsupported'`, `'decode'` or `'aborted'`. The message and the announcement are on by default, so a
   person who cannot see the player learns it too; `loadError: false` and `a11y.loadError.announce: false` (the tag's
