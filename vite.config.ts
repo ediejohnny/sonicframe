@@ -1,6 +1,20 @@
 import { defineConfig } from 'vite-plus';
 import { docsSite } from './playground/docs/plugin';
 
+/** What both builds of the package share: the entries and the output they target. */
+const PACK = {
+    entry: [
+        'src/index.ts',
+        'src/analysis.ts',
+        'src/player.ts',
+        'src/record.ts',
+        'src/playlist.ts',
+    ],
+    format: 'esm',
+    platform: 'neutral',
+    target: 'es2022',
+} as const;
+
 export default defineConfig({
     // The docs site (playground/index.html and its pages) runs on the dev server; the plugin draws the
     // parts every page shares. IPv4 on purpose: browsers ignore an IPv6 address in a
@@ -38,20 +52,18 @@ export default defineConfig({
             },
         ],
     },
-    pack: {
-        entry: [
-            'src/index.ts',
-            'src/analysis.ts',
-            'src/player.ts',
-            'src/record.ts',
-            'src/playlist.ts',
-        ],
-        format: 'esm',
-        platform: 'neutral',
-        target: 'es2022',
-        dts: true,
-        clean: true,
-    },
+    // Two builds of the same entries: the readable one with its types, and a minified copy beside it
+    // (`player.min.js` and its own `.min.js` chunks) for pages without a bundler.
+    pack: [
+        { ...PACK, dts: true, clean: true },
+        {
+            ...PACK,
+            dts: false,
+            clean: false,
+            minify: true,
+            outExtensions: () => ({ js: '.min.js' }),
+        },
+    ],
     lint: {
         ignorePatterns: ['dist/**', 'node_modules/**', 'coverage/**'],
         options: {

@@ -1,7 +1,8 @@
 # Guards the built package: no runtime dependency leaked into the bundle, no test-only code shipped,
 # and each entry within its gzip budget (scripts/size-budget.json). An entry is measured together with
 # every chunk it imports (concatenated, then gzipped), so code the bundler moves into a shared chunk is
-# still counted. Run after a build (vp pack).
+# still counted. Each entry's minified twin (`player.min.js`) is measured the same way, for information
+# only, and must import minified chunks alone. Run after a build (vp pack).
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts\size.ps1
 
@@ -94,6 +95,31 @@ foreach ($property in $budget.PSObject.Properties) {
     Write-Host ("  {0,-24} gzip {1,7} / {2,7}  {3}  (entry + {4} chunk(s))" -f $property.Name, $gzip, $ceiling, $status, ($closure.Count - 1))
     if ($gzip -gt $ceiling) {
         $problems += "$($property.Name): gzip $gzip (with its chunks) exceeds budget $ceiling"
+    }
+
+    # The minified twin (player.min.js), shown for information: it must exist and import only minified chunks.
+    $minName = $property.Name -replace '\.js$', '.min.js'
+    $minEntry = $scripts | Where-Object { $_.Name -eq $minName } | Select-Object -First 1
+    if ($null -eq $minEntry) {
+        $problems += "${minName}: was not built"
+        continue
+    }
+    $minClosure = Get-Closure $minEntry
+    $readable = @($minClosure | Where-Object { $_ -notmatch '\.min\.js$' })
+    if ($readable.Count -gt 0) {
+        $problems += "${minName}: imports a chunk that is not minified ($(Split-Path -Leaf $readable[0]))"
+    }
+    Write-Host ("  {0,-24} gzip {1,7}  (information, entry + {2} chunk(s))" -f $minName, (Get-GzipSize $minClosure), ($minClosure.Count - 1))
+}
+
+# Every file the package's `exports` names was built.
+$exports = (Get-Content (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json).exports
+foreach ($subpath in $exports.PSObject.Properties) {
+    $targets = if ($subpath.Value -is [string]) { @($subpath.Value) } else { @($subpath.Value.PSObject.Properties | ForEach-Object { $_.Value }) }
+    foreach ($target in $targets) {
+        if (-not (Test-Path (Join-Path $projectRoot $target))) {
+            $problems += "exports '$($subpath.Name)': $target was not built"
+        }
     }
 }
 

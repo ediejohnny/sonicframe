@@ -39,6 +39,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `a11y.sliderName` (the tag's `a11y-slider-name`) names the wave's slider by its sound: `'label'` the sound's
   name, `'both'` the name and the slider's word ("Little Elf, Playback position"), so a page of many players tells
   their sliders apart. The default stays `'position'`, the word alone; `setLabel` updates it, and `frame.label` wins.
+- Minified files beside the readable ones, for pages without a bundler: `dist/player.min.js` and each other entry,
+  with their own minified chunks, in about half the bytes. From npm they are `sonicframe/min`,
+  `sonicframe/min/player`, `sonicframe/min/record`, `sonicframe/min/playlist` and `sonicframe/min/analysis`. The
+  readable files are unchanged.
 
 ### Changed
 
