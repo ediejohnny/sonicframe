@@ -10,6 +10,7 @@
  */
 
 import { RECORDER_ATTRIBUTES } from '../../core/tags/tag-attributes';
+import { TAG_RECORDING_SECONDS } from '../../core/recording/recording';
 import type { RecorderUpload } from '../../core/recording/upload';
 import {
     attributeNumber,
@@ -104,9 +105,14 @@ export function recorderOptionsOf(
 ): Omit<RecorderScreenOptions, 'container'> {
     const get = (name: string): string | null => element.getAttribute(name);
     const afterSend = get('after-send');
+    const seconds = attributeNumber(get('max-seconds') ?? get('max'));
 
     return {
-        maxSeconds: attributeNumber(get('max-seconds') ?? get('max')),
+        // A tag keeps to the hour it always had; longer is for an app's code.
+        maxSeconds:
+            seconds === undefined
+                ? undefined
+                : Math.min(seconds, TAG_RECORDING_SECONDS),
         live: get('live') === 'fit' ? 'fit' : 'scroll',
         liveSeconds: attributeNumber(get('live-seconds') ?? get('window')),
         theme: get('theme') ?? undefined,

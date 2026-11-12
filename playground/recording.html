@@ -769,7 +769,9 @@ const recording = await recorder.stop();</code></pre>
                                     <td><code>max-seconds</code></td>
                                     <td>
                                         Seconds before it stops on its own, from
-                                        1 to 3600 (300 by default).
+                                        1 to 3600 (300 by default). Longer, up
+                                        to 6 hours, is for your code
+                                        (<code>maxSeconds</code>).
                                     </td>
                                 </tr>
                                 <tr>
@@ -930,7 +932,7 @@ const recording = await recorder.stop();</code></pre>
                                     <td><code>300</code></td>
                                     <td>
                                         Seconds before it stops on its own, from
-                                        1 to 3600.
+                                        1 to 21,600 (6 hours).
                                     </td>
                                 </tr>
                                 <tr>
@@ -980,8 +982,11 @@ const recording = await recorder.stop();</code></pre>
                                     <td><code>maxBytes</code></td>
                                     <td>100 MiB</td>
                                     <td>
-                                        The largest recording; only lowers the
-                                        default.
+                                        The largest recording, up to 1 GiB. The
+                                        browser keeps it in memory until it
+                                        stops, and a phone has far less room
+                                        than a desktop: keep long recordings for
+                                        desktops, or send them in parts.
                                     </td>
                                 </tr>
                                 <tr>

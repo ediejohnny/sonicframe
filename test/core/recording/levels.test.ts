@@ -86,6 +86,21 @@ describe('LevelTrack', () => {
         expect(track.levels.at(-1)).toBe(0.5);
     });
 
+    it('keeps levels for a recording of up to 6 hours, and an hour unless told', () => {
+        const long = new LevelTrack(1, 1e9);
+        long.add(21_599.5, 0.5);
+        long.add(21_600.5, 0.8);
+
+        expect(long.levels.length).toBe(21_600);
+        expect(long.levels.at(-1)).toBe(0.5);
+
+        const plain = new LevelTrack(1);
+        plain.add(3599.5, 0.5);
+        plain.add(3600.5, 0.8);
+
+        expect(plain.levels.length).toBe(3600);
+    });
+
     it('gives the last seconds, with silence before the start while it is shorter', () => {
         const track = new LevelTrack(10);
         track.add(0, 0.1);

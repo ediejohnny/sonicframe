@@ -164,11 +164,13 @@ describe('recording formats and length', () => {
         ).toBe('audio/mp4');
     });
 
-    it('records 300 seconds by default, from 1 to 3600', () => {
+    it('records 300 seconds by default, from 1 to 21 600 (6 hours); past that, 6 hours until 2.0', () => {
         expect(recordSeconds(undefined)).toBe(300);
         expect(recordSeconds(Number.NaN)).toBe(300);
         expect(recordSeconds(0)).toBe(1);
         expect(recordSeconds(90)).toBe(90);
-        expect(recordSeconds(10_000)).toBe(3600);
+        expect(recordSeconds(10_000)).toBe(10_000);
+        expect(recordSeconds(21_600)).toBe(21_600);
+        expect(recordSeconds(1e9)).toBe(21_600);
     });
 });

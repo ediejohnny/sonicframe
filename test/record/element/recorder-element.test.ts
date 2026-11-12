@@ -281,6 +281,16 @@ describe('the <sonic-recorder> tag', () => {
         );
     });
 
+    it('takes a time limit up to 3600 seconds from the tag, as before: longer is for the app’s code', () => {
+        expect(
+            recorderOptionsOf(tag({ 'max-seconds': '1800' })).maxSeconds,
+        ).toBe(1800);
+        expect(
+            recorderOptionsOf(tag({ 'max-seconds': '20000' })).maxSeconds,
+        ).toBe(3600);
+        expect(recorderOptionsOf(tag({ max: '99999' })).maxSeconds).toBe(3600);
+    });
+
     it('falls back on a time limit that is empty, not 0 seconds', async () => {
         stubMicrophone();
         const element = tag({ max: ' ' });

@@ -93,6 +93,11 @@ export class FakeRecorder {
     give(bytes: number): void {
         this.ondataavailable?.({ data: new Blob([new Uint8Array(bytes)]) });
     }
+
+    /** Hands a chunk said to be `bytes` bytes, never held in memory (for the size caps of long recordings). */
+    announce(bytes: number): void {
+        this.ondataavailable?.({ data: { size: bytes } as Blob });
+    }
 }
 
 /** An analyser that hears `level` on its first sample, and remembers where it was connected. */

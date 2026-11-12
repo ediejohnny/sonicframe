@@ -12,10 +12,11 @@ import { peaksFromChannel } from '../../core/peaks/peaks';
 import { LevelTrack, levelOf } from '../../core/recording/levels';
 import {
     DEFAULT_RECORD_TYPES,
-    MAX_RECORDING_BYTES,
+    RECORDING_BYTES,
     recordSeconds,
 } from '../../core/recording/recording';
 import { within } from '../../core/shared/checked';
+import { heldLimit } from '../../core/shared/limits';
 import { Emitter } from '../../core/shared/emitter';
 import { pickMimeType } from '../../core/wave/clip';
 import { tapStream, type StreamTap } from '../../dom/audio/audio-graph';
@@ -43,7 +44,10 @@ export type Recording = {
 };
 
 export type RecorderOptions = {
-    /** Seconds before the recording stops on its own: 300 by default, from 1 to 3600. */
+    /**
+     * Seconds before the recording stops on its own: 300 by default, from 1 to 21 600 (6 hours). A long
+     * recording needs memory: see `maxBytes`.
+     */
     maxSeconds?: number;
     /** The microphone's settings, over echo, noise and gain control (all on). */
     constraints?: MediaTrackConstraints;
@@ -61,7 +65,10 @@ export type RecorderOptions = {
     levelsPerSecond?: number;
     /** @deprecated Use `levelsPerSecond`; `rate` goes in 2.0. */
     rate?: number;
-    /** The largest recording, in bytes; only lowers 104 857 600 (100 MiB). */
+    /**
+     * The largest recording, in bytes: 104 857 600 (100 MiB), up to 1 073 741 824 (1 GiB). The browser
+     * keeps it in memory until it stops; a phone has far less room than a desktop.
+     */
     maxBytes?: number;
 };
 
@@ -115,12 +122,7 @@ export class Recorder {
     constructor(options: RecorderOptions = {}) {
         this.options = options;
         this.limit = recordSeconds(options.maxSeconds);
-        this.maxBytes = within(
-            options.maxBytes,
-            MAX_RECORDING_BYTES,
-            1,
-            MAX_RECORDING_BYTES,
-        );
+        this.maxBytes = heldLimit(options.maxBytes, RECORDING_BYTES);
         this.levels = new LevelTrack(
             options.levelsPerSecond ?? options.rate,
             this.limit,
