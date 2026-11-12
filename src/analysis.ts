@@ -51,6 +51,8 @@ export type {
     DescriptionWords,
     RecorderWords,
     Words,
+    CompleteWords,
+    PlaylistWords,
 } from './core/languages/words';
 export {
     LANGUAGE_NAMES,

@@ -183,6 +183,16 @@ createPlayer({ container, src, a11y: { lang: 'ja-JP' } });</code></pre>
                         <code>Words</code> type; the English file,
                         <code>src/core/languages/en.ts</code>, is the model.
                     </p>
+                    <p>
+                        A language written for 1.0 keeps working: the phrases
+                        added since (the player's <code>previousTrack</code> and
+                        <code>nextTrack</code>, and the
+                        <code>playlist</code> group) may be left out, and are
+                        then said in English until you add them; a phrase you do
+                        give is checked like the others.
+                        <code>wordsFor(tag)</code> gives every phrase, as the
+                        <code>CompleteWords</code> type.
+                    </p>
                 </section>
 
                 <section class="section">

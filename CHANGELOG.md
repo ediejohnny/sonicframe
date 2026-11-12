@@ -19,6 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   relative addresses of a list pointing beside it (`base`). Every address passes the same check as the rest of
   SonicFrame (only http, https or relative), every name is cleaned to one safe line of at most 120 characters, a
   list keeps at most 1000 tracks (`MAX_TRACKS`) and a text over 512 KB is refused.
+- `sonicframe/playlist`, a new entry: `createPlaylist` plays a list of tracks one after the other, with one player
+  on one media element (the volume, the mute and the speed carry on) or a player for each track (`layout: 'each'`).
+  The list is the same one the player's chapters use (inline, popover or drawer, with every look option), with
+  shuffle and repeat buttons, `advance`, `repeat`, `shuffle`, `gap`, `previousRestarts`, `playOnSelect`, and
+  `remember` for the track, the shuffle and the repeat. The list is one stop in the tab order (arrows, Home, End),
+  the track playing is `aria-current`, and each change is said ("Playing: Title, 3 of 12"). `<sonic-playlist>` is
+  the same as a tag, its tracks from its own links or from `src`. `loadTracks` fetches a JSON or M3U list, sending
+  cookies only to the page's own site unless asked.
+- `registerLanguage` takes a language written for an earlier version: the phrases added since 1.0 may be left out
+  and are said in English. `wordsFor` gives every phrase, as the new `CompleteWords` type.
 
 ### Changed
 

@@ -31,7 +31,7 @@ export default defineConfig({
                     name: 'dom',
                     environment: 'happy-dom',
                     include: [
-                        'test/{dom,controls,plugins,player,record,site}/**/*.test.ts',
+                        'test/{dom,controls,plugins,player,record,playlist,site}/**/*.test.ts',
                     ],
                     setupFiles: ['./test/support/setup.ts'],
                 },
@@ -44,6 +44,7 @@ export default defineConfig({
             'src/analysis.ts',
             'src/player.ts',
             'src/record.ts',
+            'src/playlist.ts',
         ],
         format: 'esm',
         platform: 'neutral',

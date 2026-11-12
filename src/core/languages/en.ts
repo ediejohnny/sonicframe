@@ -3,9 +3,9 @@
  * says unless the app picks another language, and the model every other language file follows.
  */
 
-import type { Words } from './words';
+import type { CompleteWords } from './words';
 
-export const EN: Words = {
+export const EN: CompleteWords = {
     frame: {
         position: 'Audio position',
     },
@@ -117,5 +117,15 @@ export const EN: Words = {
         failed: 'The recording failed.',
         tooLarge: 'The recording grew too large.',
         elapsed: '{time} recorded',
+    },
+    playlist: {
+        playlist: 'Playlist',
+        close: 'Close the playlist',
+        shuffle: 'Shuffle',
+        repeatNone: 'Repeat: off',
+        repeatAll: 'Repeat: all',
+        repeatOne: 'Repeat: one',
+        playing: 'Playing: {title}, {place} of {count}',
+        untitled: 'Track {place}',
     },
 };

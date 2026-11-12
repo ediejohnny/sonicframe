@@ -13,6 +13,8 @@ import {
     resolveLanguage,
     wordsFor,
 } from '../../../src/core/languages/language';
+import { languageProblems } from '../../../src/core/languages/language-check';
+import { PT } from '../../../src/core/languages/pt';
 import type { Words } from '../../../src/core/languages/words';
 import { playerWords } from '../../../src/core/player/labels';
 
@@ -87,6 +89,40 @@ describe('registering a language', () => {
         expect(registerLanguage('ko', marks)).toBe(false);
         expect(registerLanguage('ko', extra)).toBe(false);
         expect(wordsFor('ko').playButton.play).toBe('Play');
+    });
+
+    it('takes a language written for 1.0, saying the phrases added later in English', () => {
+        // Portuguese as 1.1 had it: no track buttons, no playlist.
+        const { previousTrack, nextTrack, ...player } = PT.player;
+        const { playlist, ...older } = PT;
+        const words: Words = { ...older, player };
+
+        expect([previousTrack, nextTrack, playlist.shuffle]).not.toContain(
+            undefined,
+        );
+        expect(languageProblems(words)).toEqual([]);
+        expect(registerLanguage('gl', words)).toBe(true);
+
+        const found = wordsFor('gl');
+
+        expect(found.playButton.play).toBe('Reproduzir');
+        expect(found.player.previousTrack).toBe('Previous track');
+        expect(found.player.nextTrack).toBe('Next track');
+        expect(found.playlist.shuffle).toBe('Shuffle');
+        expect(found.playlist.playing).toBe(
+            'Playing: {title}, {place} of {count}',
+        );
+    });
+
+    it('still checks the marks of a later phrase a language does give', () => {
+        const words = language('Marks', {
+            playlist: { playing: 'Now: {title}' },
+        });
+
+        expect(languageProblems(words)).toEqual([
+            'playlist.playing must have the marks {count} {place} {title}',
+        ]);
+        expect(registerLanguage('eu', words)).toBe(false);
     });
 
     it('replaces a language registered before under the same tag', () => {

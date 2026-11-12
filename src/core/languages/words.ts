@@ -207,8 +207,38 @@ type Borrowed =
     | 'noChapter'
     | 'chapterLink';
 
-/** Every word of SonicFrame in one language. */
-export type Words = {
+/** A playlist (`sonicframe/playlist`). */
+export type PlaylistWords = {
+    /** The list's name, and the button that opens a list floating over the page. */
+    playlist: string;
+    /** The drawer's close button. */
+    close: string;
+    shuffle: string;
+    /** The repeat button while off, on the whole list, and on one track. */
+    repeatNone: string;
+    repeatAll: string;
+    repeatOne: string;
+    /** Said when a track starts: `{title}`, `{place}`, `{count}`. */
+    playing: string;
+    /** The title of a track that has none: `{place}`. */
+    untitled: string;
+};
+
+/** The player's labels added after 1.0. */
+type LaterPlayer = 'previousTrack' | 'nextTrack';
+
+/**
+ * Every word of SonicFrame in one language, as a language given to `registerLanguage` is written:
+ * the phrases added after 1.0 may be left out, and are then said in English.
+ */
+export type Words = Omit<CompleteWords, 'player' | 'playlist'> & {
+    player: Omit<PlayerLabels, Borrowed | LaterPlayer> &
+        Partial<Pick<PlayerLabels, LaterPlayer>>;
+    playlist?: Partial<PlaylistWords>;
+};
+
+/** Every word of SonicFrame in one language, each phrase there: the words a language gives (`wordsFor`). */
+export type CompleteWords = {
     /** A wave on its own (`SonicFrame`). */
     frame: {
         /** Its accessible name, as a slider of the playback position. */
@@ -246,4 +276,5 @@ export type Words = {
     /** The ready-made player's own words; it borrows the rest of its labels from the pieces above. */
     player: Omit<PlayerLabels, Borrowed>;
     recorder: RecorderWords;
+    playlist: PlaylistWords;
 };
