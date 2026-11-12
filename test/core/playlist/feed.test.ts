@@ -116,14 +116,24 @@ describe('readFeed', () => {
         expect(() => readFeed(sized(1100), { maxSize: 1024 })).toThrow(
             'too large',
         );
-        expect(readFeed(feed(TWO), { maxSize: 10 }).tracks).toHaveLength(1);
         expect(() => readFeed(sized(5_242_880))).toThrow('too large');
         expect(
-            readFeed(sized(5_242_880), { maxSize: 1e9 }).tracks,
+            readFeed(sized(5_242_880), { maxSize: 20_971_520 }).tracks,
         ).toHaveLength(1);
         expect(() =>
-            readFeed(' '.repeat(20_971_521), { maxSize: 1e9 }),
+            readFeed(' '.repeat(20_971_521), { maxSize: 20_971_520 }),
         ).toThrow('too large');
+    });
+
+    it('refuses a maxSize past 20 MB or under 1 KB, naming it', () => {
+        expect(() => readFeed(feed(TWO), { maxSize: 20_971_521 })).toThrow(
+            new RangeError(
+                'sonicframe: maxSize goes past its most, 20971520 (20971521)',
+            ),
+        );
+        expect(() => readFeed(feed(TWO), { maxSize: 10 })).toThrow(
+            'maxSize goes under its least, 1024',
+        );
     });
 
     it('passes the reader’s ceilings on to it', () => {

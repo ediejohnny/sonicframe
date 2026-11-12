@@ -2,11 +2,11 @@
  * The ceilings of the XML reader, each an option. The defaults are the ones the most used XML readers
  * settled on after years of attacks (Java's JAXP, tuned down in 2024: depth 100, attributes 200,
  * names 1000); an app's code may raise each up to the most open of them (libxml2's depth 256 and name
- * 50000, JAXP's former attributes 10000), never past it, and lower it to 1. Going past one throws a
- * `RangeError` that names the option and the value used.
+ * 50000, JAXP's former attributes 10000), never past it, and lower it to 1 (see `limitOf`). A text
+ * that goes past one throws a `RangeError` that names the option and the value used.
  */
 
-import { within } from '../shared/checked';
+import { limitOf, type Limit } from '../shared/limits';
 
 export type ReadXmlOptions = {
     /** The deepest nesting read: 100, from 1 to 256. */
@@ -19,29 +19,18 @@ export type ReadXmlOptions = {
     maxNameLength?: number;
 };
 
-/** Each ceiling's default and the most it may be raised to. */
-export const XML_LIMITS: Readonly<
-    Record<
-        keyof ReadXmlOptions,
-        { readonly value: number; readonly most: number }
-    >
-> = {
-    maxDepth: { value: 100, most: 256 },
-    maxElements: { value: 200_000, most: 1_000_000 },
-    maxAttributes: { value: 200, most: 10_000 },
-    maxNameLength: { value: 1000, most: 50_000 },
+/** Each ceiling's default, and the least and the most it may be set to. */
+export const XML_LIMITS: Readonly<Record<keyof ReadXmlOptions, Limit>> = {
+    maxDepth: { value: 100, least: 1, most: 256, whole: true },
+    maxElements: { value: 200_000, least: 1, most: 1_000_000, whole: true },
+    maxAttributes: { value: 200, least: 1, most: 10_000, whole: true },
+    maxNameLength: { value: 1000, least: 1, most: 50_000, whole: true },
 };
 
-/** The ceilings `options` asks for, each kept from 1 to the most it may be. */
+/** The ceilings `options` asks for; one past its ends throws a `RangeError` (see `limitOf`). */
 export function xmlLimits(options: ReadXmlOptions): Required<ReadXmlOptions> {
     const limit = (name: keyof ReadXmlOptions): number =>
-        within(
-            options[name],
-            XML_LIMITS[name].value,
-            1,
-            XML_LIMITS[name].most,
-            Math.floor,
-        );
+        limitOf(name, options[name], XML_LIMITS[name]);
 
     return {
         maxDepth: limit('maxDepth'),

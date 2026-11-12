@@ -87,8 +87,9 @@
                             attributes and names of the XML capped at the
                             defaults the most used XML readers settled on (see
                             <a href="./playlist.html">Playlist</a>); your code
-                            may raise each up to a fixed most, a tag only lower
-                            it.
+                            may raise each up to a fixed most (past it, the
+                            option is refused with a <code>RangeError</code>),
+                            and a tag may only lower it.
                         </li>
                         <li>
                             The lock screen and the media keys: words in one

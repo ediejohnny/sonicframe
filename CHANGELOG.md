@@ -23,8 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   SonicFrame's own small XML reader, not the browser's, so it works under a strict Content-Security-Policy with
   Trusted Types and in Node. One that declares entities is refused, and its ceilings are options: `maxSize` (5 MB,
   up to 20 MB), `maxDepth` (100, up to 256), `maxElements` (200000, up to 1000000), `maxAttributes` (200, up to 10000) and `maxNameLength` (1000, up to 50000). The defaults are the ones the most used XML readers settled on;
-  an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. Past one,
-  a `RangeError` names the option.
+  an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. A feed past
+  one, or an option past its most or under its least, throws a `RangeError` that names the option.
 - `SONIC_TAGS`, in `sonicframe` and `sonicframe/analysis`: each tag with the attributes it reads, its children that
   count (a playlist's links) and the starts of names it also reads, for a CMS's HTML filter (WordPress's KSES,
   DOMPurify) to let authors place players. None is an event handler; `upload-url`, which sends a visitor's recording

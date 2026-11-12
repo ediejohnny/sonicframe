@@ -9,6 +9,7 @@
  */
 
 import { within } from '../shared/checked';
+import { limitOf, type Limit } from '../shared/limits';
 import { loadText, type LoadTextOptions } from '../shared/load-text';
 import { cleanText } from '../shared/text';
 import {
@@ -47,14 +48,16 @@ export type Feed = {
     tracks: Track[];
 };
 
-/** The longest feed read by default, in characters (and the largest fetched, in bytes): 5 MB. */
-export const FEED_SIZE = 5_242_880;
-
-/** The most `maxSize` may be raised to: 20 MB. */
-const MOST_FEED_SIZE = 20_971_520;
+/** The longest feed read, in characters (and the largest fetched, in bytes): 5 MB, from 1 KB to 20 MB. */
+export const FEED_SIZE: Limit = {
+    value: 5_242_880,
+    least: 1024,
+    most: 20_971_520,
+    whole: true,
+};
 
 function maxSizeOf(options: ReadFeedOptions): number {
-    return within(options.maxSize, FEED_SIZE, 1024, MOST_FEED_SIZE, Math.floor);
+    return limitOf('maxSize', options.maxSize, FEED_SIZE);
 }
 
 /** The longest show name kept, in characters, as a track's. */
