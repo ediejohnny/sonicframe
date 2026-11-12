@@ -5,6 +5,7 @@
  */
 
 import { finiteOr, within } from '../shared/checked';
+import { limitOf, type Limit } from '../shared/limits';
 
 /** A structural stand-in for an `AudioBuffer`, so the core never names a DOM type. */
 export type ChannelSource = {
@@ -20,6 +21,11 @@ export type Silence = { start: number; end: number };
 export type LevelsOptions = {
     /** The window, in seconds: 0.05 by default. */
     windowSeconds?: number;
+    /**
+     * The most windows measured; a longer sound widens them: 200 000, from 1 to 2 000 000 (10 hours
+     * in windows of 20 ms is 1 800 000). Past either end, a `RangeError`.
+     */
+    maxWindows?: number;
 };
 
 /** What `levels` gives: the RMS and the peak of each window, and the window used, in seconds. */
@@ -36,6 +42,10 @@ export type FindSilencesOptions = {
     minDuration?: number;
     /** The window the level is measured on, in seconds: 0.02 by default, from 0.001 to 1. */
     windowSeconds?: number;
+    /** The most windows measured (see `LevelsOptions`). */
+    maxWindows?: number;
+    /** The most silences kept: 10 000, from 1 to 100 000; past either end, a `RangeError`. */
+    maxSilences?: number;
 };
 
 /** The options of `silencesFromPeaks`. */
@@ -48,6 +58,8 @@ export type SilencesFromPeaksOptions = {
     threshold?: number;
     /** The shortest silence kept, in seconds: 0.4 by default. */
     minDuration?: number;
+    /** The most silences kept: 10 000, from 1 to 100 000; past either end, a `RangeError`. */
+    maxSilences?: number;
 };
 
 /** What `peakLevel` gives: the loudest sample, in dB too, and whether (and how often) the sound clips. */
@@ -58,8 +70,13 @@ export type PeakLevel = {
     clipRuns: number;
 };
 
-const MAX_WINDOWS = 200_000;
-const MAX_SILENCES = 10_000;
+const WINDOWS: Limit = {
+    value: 200_000,
+    least: 1,
+    most: 2_000_000,
+    whole: true,
+};
+const SILENCES: Limit = { value: 10_000, least: 1, most: 100_000, whole: true };
 
 function amplitudeFromDb(db: number): number {
     return 10 ** (db / 20);
@@ -75,7 +92,8 @@ export function levels(
         1,
         Math.round(sampleRate * finiteOr(options.windowSeconds, 0.05)),
     );
-    const size = Math.max(wanted, Math.ceil(samples.length / MAX_WINDOWS));
+    const most = limitOf('maxWindows', options.maxWindows, WINDOWS);
+    const size = Math.max(wanted, Math.ceil(samples.length / most));
     const rms: number[] = [];
     const peak: number[] = [];
 
@@ -113,10 +131,12 @@ export function findSilences(
 ): Silence[] {
     const minDuration = finiteOr(options.minDuration, 0.4);
     const thresholdDb = finiteOr(options.thresholdDb, -45);
+    const most = limitOf('maxSilences', options.maxSilences, SILENCES);
     const quiet = amplitudeFromDb(thresholdDb);
     const loud = amplitudeFromDb(thresholdDb + 6);
     const { rms, windowSeconds } = levels(samples, sampleRate, {
         windowSeconds: within(options.windowSeconds, 0.02, 0.001, 1),
+        maxWindows: options.maxWindows,
     });
     const silences: Silence[] = [];
     let open = false;
@@ -130,7 +150,7 @@ export function findSilences(
 
         if (
             silence.end - silence.start >= minDuration &&
-            silences.length < MAX_SILENCES
+            silences.length < most
         ) {
             silences.push(silence);
         }
@@ -162,6 +182,7 @@ export function silencesFromPeaks(
     // At most 0.45: a quiet stretch closes above twice the threshold, which the loudest peak (1) is.
     const threshold = within(options.threshold, 0.05, 0.001, 0.45);
     const minDuration = finiteOr(options.minDuration, 0.4);
+    const most = limitOf('maxSilences', options.maxSilences, SILENCES);
     const step = peaks.length > 0 ? duration / peaks.length : 0;
 
     if (step <= 0) {
@@ -177,7 +198,7 @@ export function silencesFromPeaks(
 
         if (
             silence.end - silence.start >= minDuration &&
-            silences.length < MAX_SILENCES
+            silences.length < most
         ) {
             silences.push(silence);
         }

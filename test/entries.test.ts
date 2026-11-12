@@ -121,6 +121,7 @@ describe('the names an app or a plugin needs', () => {
     it('names the options and results of the analysis functions', () => {
         expectTypeOf<LevelsOptions>().toEqualTypeOf<{
             windowSeconds?: number;
+            maxWindows?: number;
         }>();
         expectTypeOf<Levels>().toEqualTypeOf<{
             rms: number[];
@@ -130,6 +131,7 @@ describe('the names an app or a plugin needs', () => {
         expectTypeOf<SilencesFromPeaksOptions>().toEqualTypeOf<{
             threshold?: number;
             minDuration?: number;
+            maxSilences?: number;
         }>();
         expectTypeOf<FindSilencesOptions>().toHaveProperty('thresholdDb');
         expectTypeOf<PeakLevel>().toEqualTypeOf<{

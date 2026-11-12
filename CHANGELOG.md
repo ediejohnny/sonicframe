@@ -60,7 +60,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   feed's `limit` goes up to 10 000. Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems`
   (2000, up to 20 000) and `maxText` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000. The
   player's `remember.sounds` goes up to 5000. A clip's `width` and `height` go up to 3840 × 2160, and `exportClip`
-  takes `maxSeconds` (120, up to 600), `bitrate` (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB). New
+  takes `maxSeconds` (120, up to 600), `bitrate` (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB). The
+  spectrogram's `fftSize` goes up to 32 768 (the Web Audio standard's own most), its `columns` up to 16 384 and its
+  `rows` up to 4096, and its job gives the `fftSize` it used; `levels` and `findSilences` take `maxWindows` (200 000,
+  up to 2 000 000), and `findSilences` and `silencesFromPeaks` take `maxSilences` (10 000, up to 100 000). New
   options `maxPeaks` and `maxBytes` on `loadPeaks` (20 000 and 2 MB, up to 1 000 000 and 64 MB) refuse a value past
   either end with a `RangeError` that names them.
 

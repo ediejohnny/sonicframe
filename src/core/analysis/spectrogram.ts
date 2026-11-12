@@ -9,17 +9,20 @@ import { finiteOr, within } from '../shared/checked';
 import { powerOfTwo } from '../shared/math';
 import { fft } from './fft';
 
+/** The window sizes the Web Audio standard allows an analyser: 32 to 32 768. */
 const MIN_FFT = 32;
-const MAX_FFT = 8192;
-const MAX_COLUMNS = 4096;
-const MAX_ROWS = 1024;
+const MAX_FFT = 32_768;
+/** The most columns: a canvas past 16 384 a side may not draw in every browser. */
+const MAX_COLUMNS = 16_384;
+/** The most rows: half the largest window's bins is 16 384; 4096 is past what a screen tells apart. */
+const MAX_ROWS = 4096;
 
 export type SpectrogramOptions = {
-    /** Window size (a power of two, 32..8192). */
+    /** Window size (a power of two): 1024, from 32 to 32 768. */
     fftSize?: number;
-    /** Columns across (time). */
+    /** Columns across (time): 512, from 1 to 16 384. */
     columns?: number;
-    /** Rows down (frequency). */
+    /** Rows down (frequency): 256, from 1 to 4096. */
     rows?: number;
     /** Decibels mapped to black and to the brightest color. */
     minDb?: number;
@@ -29,6 +32,8 @@ export type SpectrogramOptions = {
 };
 
 export type SpectrogramJob = {
+    /** The window size used. */
+    readonly fftSize: number;
     readonly columns: number;
     readonly rows: number;
     readonly sampleRate: number;
@@ -109,6 +114,7 @@ export function createSpectrogram(
     }
 
     return {
+        fftSize,
         columns,
         rows,
         sampleRate,

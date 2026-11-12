@@ -169,3 +169,50 @@ describe('next skip', () => {
         expect(nextSkip(1.2, [{ start: 1, end: 2 }], -0.5)).toBe(2);
     });
 });
+
+describe('the ceilings of the analysis', () => {
+    it('measures at most 200 000 windows, or maxWindows up to 2 000 000, refusing past it', () => {
+        // A window of one sample: the count is how many windows are measured.
+        const samples = new Float32Array(300_000);
+        const count = (maxWindows?: number): number =>
+            levels(samples, 1000, { windowSeconds: 0.001, maxWindows }).rms
+                .length;
+
+        expect(count()).toBe(150_000);
+        expect(count(2_000_000)).toBe(300_000);
+        expect(count(10)).toBe(10);
+        expect(() => count(2_000_001)).toThrow(
+            new RangeError(
+                'sonicframe: maxWindows goes past its most, 2000000 (2000001)',
+            ),
+        );
+    });
+
+    it('keeps at most 10 000 silences, or maxSilences up to 100 000, refusing past it', () => {
+        // Quiet and loud by turns: every quiet peak is a silence of its own.
+        const peaks = Array.from({ length: 50_000 }, (_, at) => at % 2);
+        const count = (maxSilences?: number): number =>
+            silencesFromPeaks(peaks, peaks.length, {
+                minDuration: 0,
+                maxSilences,
+            }).length;
+        // Two quiet samples, two loud ones: 60 000 samples hold 15 000 silences.
+        const samples = new Float32Array(60_000).map((_, at) =>
+            at % 4 < 2 ? 0 : 1,
+        );
+        const found = (maxSilences?: number): number =>
+            findSilences(samples, 1000, {
+                windowSeconds: 0.001,
+                minDuration: 0,
+                maxSilences,
+            }).length;
+
+        expect(count()).toBe(10_000);
+        expect(count(100_000)).toBe(25_000);
+        expect(found()).toBe(10_000);
+        expect(found(100_000)).toBe(15_000);
+        expect(() => count(100_001)).toThrow(
+            'maxSilences goes past its most, 100000',
+        );
+    });
+});
