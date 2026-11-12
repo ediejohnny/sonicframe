@@ -141,13 +141,13 @@ const CHECKED_ADDRESSES: Readonly<
         places: 1,
         why: '`resolveFont` takes a stylesheet only through `safeFontUrl` (core/player/fonts.ts)',
     },
-    'src/plugins/chapters/chapter-item.ts': {
+    'src/dom/list/media-item.ts': {
         places: 1,
-        why: "`readChapters` keeps a chapter's picture only through `safeUrl` (core/chapters/chapters.ts)",
+        why: "a media list's picture: a chapter's kept only through `safeUrl` by `readChapters` (core/chapters/chapters.ts), a track's by `readTracks` (core/playlist/tracks.ts)",
     },
-    'src/plugins/chapters/chapter-list.ts': {
+    'src/dom/list/media-list.ts': {
         places: 1,
-        why: "`readChapters` keeps a chapter's link only through `safeUrl`",
+        why: "a media list's link: a chapter's kept only through `safeUrl` by `readChapters`",
     },
     'src/player/player/player-media.ts': {
         places: 1,

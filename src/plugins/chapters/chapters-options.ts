@@ -11,7 +11,7 @@ import type { ChapterWords } from '../../core/languages/words';
 import type { CssLength } from '../../core/shared/length';
 import type { TooltipA11y } from '../../dom/shared/tooltip';
 import type { Placement, Plugin } from '../../types';
-import type { ChapterListLook } from './chapter-list-look';
+import type { ChapterListLook } from '../../dom/list/list-look';
 
 export const CHAPTER_WORDS: Readonly<ChapterWords> = Object.freeze({
     ...EN.chapters,

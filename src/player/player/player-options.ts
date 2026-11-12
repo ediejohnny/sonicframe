@@ -12,7 +12,7 @@ import type { ThemeInput } from '../../core/player/theme';
 import type { ThemeName } from '../../core/player/themes';
 import type { ZoomOptions } from '../../core/view/zoom';
 import type { SonicFrameOptions } from '../../dom/frame/frame-options';
-import type { ChapterListLook } from '../../plugins/chapters/chapter-list-look';
+import type { ChapterListLook } from '../../dom/list/list-look';
 import type {
     ChaptersA11y,
     ChaptersOptions,
