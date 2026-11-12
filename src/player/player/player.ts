@@ -744,10 +744,10 @@ export class Player {
             ['height', boxHeight(this.options, look)],
             ['min-width', '0'],
         ]);
-        this.notice.place(box);
-
         const frame = new SonicFrame(this.frameOptions(box, peaks));
         this.frameRef = frame;
+        // After the wave, so a failed sound's message covers what the wave drew.
+        this.notice.place(box);
 
         for (const name of FORWARDED) {
             this.partCleanups.push(

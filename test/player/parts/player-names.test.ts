@@ -97,6 +97,36 @@ describe('the title and artist parts', () => {
         expect(textOf(make({ media }), 'title')).toBe('Night walk');
     });
 
+    it('leave the line while they have no text, and come back with one', () => {
+        const player = make({ look: { ...LINE, titleFromFile: false } });
+        const title = (): HTMLElement | null =>
+            player.element.querySelector('.sonicframe-title');
+
+        expect(title()?.hidden).toBe(true);
+        expect(
+            player.element.querySelector<HTMLElement>('.sonicframe-artist')
+                ?.hidden,
+        ).toBe(true);
+
+        player.setLabel('Little Elf');
+
+        expect(title()?.hidden).toBe(false);
+    });
+
+    it('take the look’s widest, `nameMaxWidth`, and give their room to the wave first', () => {
+        const player = make({
+            a11y: { label: 'Little Elf' },
+            look: { ...LINE, nameMaxWidth: 20 },
+        });
+        const style =
+            player.element.querySelector<HTMLElement>(
+                '.sonicframe-title',
+            )?.style;
+
+        expect(style?.getPropertyValue('max-width')).toBe('20rem');
+        expect(style?.getPropertyValue('flex')).toBe('0 1 auto');
+    });
+
     it('follow `setLabel`, back to the file’s name when the name goes', () => {
         const player = make({
             src: '/sounds/little-elf.mp3',

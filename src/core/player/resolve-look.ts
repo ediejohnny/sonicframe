@@ -257,6 +257,7 @@ export function resolveLook(
             typeof given.titleFromFile === 'boolean'
                 ? given.titleFromFile
                 : base.titleFromFile,
+        nameMaxWidth: within(given.nameMaxWidth, base.nameMaxWidth, 2, 40),
         marquee:
             typeof given.marquee === 'boolean' ? given.marquee : base.marquee,
         marqueeType: oneOf(

@@ -32,7 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   filter ready to paste and how a shortcode or block escapes the tag on the server.
 - The `title` and `artist` parts, off unless the look places them: the sound's name (the player's `a11y.label`, or
   without one its file's name, "little-elf.mp3" as "Little elf", which `look.titleFromFile: false` turns off) and
-  the new `artist` option, as text that screen readers skip (they hear the name on the player itself). `artist` is
+  the new `artist` option, as text that screen readers skip (they hear the name on the player itself). Each
+  takes its text's width up to `look.nameMaxWidth` (12 rem) and gives up its room before the wave. `artist` is
   also the media controls' artist when `mediaSession` names none, and a playlist's track brings its own. On
   `<sonic-player>`, the `artist` attribute, and `line` and `meta` (part names by spaces, `"play wave title"`) place
   the parts as `look.line` and `look.meta` do.

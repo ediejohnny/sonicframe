@@ -96,6 +96,27 @@ describe('a sound that cannot load', () => {
         expect(message(player)).toBeNull();
     });
 
+    it('hides what the wave drew under the message, through a new look, and keeps the slider', () => {
+        const { player, media } = make();
+        const drawn = (): string | undefined =>
+            player.element.querySelector('canvas')?.style.visibility;
+        const slider = (): HTMLElement | null =>
+            player.element.querySelector('[role="slider"]');
+
+        expect(drawn()).toBe('');
+
+        failWith(media, 2);
+        expect(drawn()).toBe('hidden');
+
+        player.setLook({ waveHeight: 3 });
+        expect(drawn()).toBe('hidden');
+        expect(slider()?.style.visibility).toBe('');
+        expect(slider()?.tabIndex).toBe(0);
+
+        media.fire('loadedmetadata');
+        expect(drawn()).toBe('');
+    });
+
     it('keeps quiet about a media element the app left without a source', () => {
         const { player, media, heard } = make();
         Object.defineProperty(media, 'currentSrc', { value: '' });

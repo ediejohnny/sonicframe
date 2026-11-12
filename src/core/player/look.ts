@@ -178,6 +178,11 @@ export type PlayerLook = {
     /** The `title` part of a player without a name shows its file's name ("little-elf.mp3" as "Little elf"). */
     titleFromFile: boolean;
     /**
+     * The widest the `title` and `artist` parts grow, in rem (2 to 40). Each takes its text's width up
+     * to this, and gives up its room before the wave does.
+     */
+    nameMaxWidth: number;
+    /**
      * A chapter's name too long for its room walks across it, pauses at its end and starts over;
      * off, it stays still and ends as `nameOverflow` says. Never with reduced motion.
      */
@@ -285,6 +290,7 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     nameFadeStart: true,
     nameTooltip: false,
     titleFromFile: true,
+    nameMaxWidth: 12,
     marquee: false,
     marqueeType: 'loop',
     marqueeGap: 2.5,

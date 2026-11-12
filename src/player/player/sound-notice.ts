@@ -44,7 +44,7 @@ export class SoundNotice {
         css(this.message, [
             ['position', 'absolute'],
             ['inset', '0'],
-            // Over the wave's canvas, which the wave adds after it.
+            // Over the wave's canvas and any layer a plugin adds to the box later.
             ['z-index', '1'],
             ['display', 'flex'],
             ['align-items', 'center'],
@@ -99,12 +99,31 @@ export class SoundNotice {
 
     private clear(): void {
         this.failed = null;
+        this.cover(false);
         this.message.remove();
     }
 
     private render(): void {
         if (this.failed !== null && this.host.show && this.box !== null) {
             this.box.append(this.message);
+            this.cover(true);
+        }
+    }
+
+    /**
+     * Hides what the wave drew in its box (the flat line of a sound with no peaks) while the message
+     * stands, so the message never reads struck through on a see-through surface. The box itself stays:
+     * it is the slider, kept in the page's order and named.
+     */
+    private cover(on: boolean): void {
+        for (const child of this.box?.children ?? []) {
+            if (child !== this.message && child instanceof HTMLElement) {
+                if (on) {
+                    css(child, [['visibility', 'hidden']]);
+                } else {
+                    child.style.removeProperty('visibility');
+                }
+            }
         }
     }
 }
