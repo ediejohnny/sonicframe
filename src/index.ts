@@ -209,6 +209,7 @@ export {
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export { safeUrl } from './core/shared/url';
+export { SONIC_TAGS, type SonicTag } from './core/tags/sonic-tags';
 export type { CssLength } from './core/shared/length';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/wave/shapes';
 export type { View, ViewState } from './core/view/view';

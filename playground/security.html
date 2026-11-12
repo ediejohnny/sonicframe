@@ -141,6 +141,90 @@ link.href = safeUrl(fromDatabase) ?? '#';</code></pre>
                 </section>
 
                 <section class="section">
+                    <h2>Players on pages other people write</h2>
+                    <p>
+                        On a CMS, the people who write the pages can place
+                        players with the tags, and anything they type (a title,
+                        a label, a playlist's links) is shown as text. A
+                        playlist's own links are hidden and inert while the
+                        playlist stands, so a link it refused
+                        (<code>javascript:</code>) cannot be clicked or focused
+                        even when the page's CSS shows hidden elements. Your
+                        HTML filter decides which tags an author may write:
+                        <code>SONIC_TAGS</code> lists them, and
+                        <a href="./cms.html">On a CMS or WordPress</a> gives the
+                        filter ready to paste.
+                    </p>
+                    <p>
+                        The flaws known in other audio players, and what keeps
+                        each out of SonicFrame (each is guarded by a test that
+                        puts XSS payloads through every view):
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>The flaw</th>
+                                    <th>In SonicFrame</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        A title read from the sound file shown
+                                        as HTML in a playlist (CVE-2017-6814,
+                                        WordPress's own playlist).
+                                    </td>
+                                    <td>
+                                        Every name, from a file, a list, a feed
+                                        or a tag, goes in as text; there is no
+                                        template that builds HTML.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A shortcode's attribute written into the
+                                        page unescaped, so a contributor runs a
+                                        script (CVE-2022-4699, CVE-2024-11881,
+                                        CVE-2025-7963).
+                                    </td>
+                                    <td>
+                                        A tag's attributes are read as text and
+                                        words it knows; a plugin that writes the
+                                        tag escapes them on the server (see
+                                        <a href="./cms.html"
+                                            >On a CMS or WordPress</a
+                                        >).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A shortcode's <code>src</code> taken as
+                                        it came (CVE-2026-1909).
+                                    </td>
+                                    <td>
+                                        Every address goes through
+                                        <code>safeUrl</code>: only http, https
+                                        or relative.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A plugin part that runs script from its
+                                        address (CVE-2016-4567, a Flash part).
+                                    </td>
+                                    <td>
+                                        No Flash, no frames, no code read from
+                                        text: no <code>eval</code>, and it works
+                                        under Trusted Types.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
                     <h2>Never silences your page</h2>
                     <p>
                         Live frequency refuses media it cannot read without

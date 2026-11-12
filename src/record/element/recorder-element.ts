@@ -9,6 +9,7 @@
  * `sonicframe:send` and counts as sent, or with `upload-url` sends it to that address first.
  */
 
+import { RECORDER_ATTRIBUTES } from '../../core/tags/tag-attributes';
 import type { RecorderUpload } from '../../core/recording/upload';
 import {
     attributeNumber,
@@ -24,49 +25,7 @@ import type {
     RecorderScreenOptions,
 } from '../screen/screen-options';
 
-/** The attributes the tag reads (the old names `max`, `window`, `keep` and `record-blink` too, until 2.0). */
-export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
-    'max-seconds',
-    'max',
-    'live',
-    'live-seconds',
-    'window',
-    'theme',
-    'palette',
-    'wave',
-    'font',
-    'font-src',
-    'font-stylesheet',
-    'hold',
-    'after-send',
-    'keep',
-    'idle-parts',
-    'recording-parts',
-    'review-parts',
-    'actions',
-    'after-stop',
-    'align',
-    'icon-record',
-    'icon-stop',
-    'icon-pause',
-    'icon-resume',
-    'icon-discard',
-    'icon-send',
-    'icon-cancel',
-    'upload-url',
-    'upload-method',
-    'upload-field',
-    'cancel-send',
-    'record-style',
-    'record-color',
-    'rec-place',
-    'rec-blink',
-    'record-blink',
-    'mic-style',
-    'mic-color',
-    'a11y-lang',
-    'a11y-announce-every',
-]);
+export { RECORDER_ATTRIBUTES };
 
 const ICONS: readonly RecorderIcon[] = [
     'record',

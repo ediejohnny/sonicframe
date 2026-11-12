@@ -78,6 +78,7 @@ export {
     type MarksFormat,
     type MarksWriteOptions,
 } from './core/marks/write-marks';
+export { SONIC_TAGS, type SonicTag } from './core/tags/sonic-tags';
 export {
     loadFeed,
     readFeed,

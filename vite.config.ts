@@ -31,7 +31,7 @@ export default defineConfig({
                     name: 'dom',
                     environment: 'happy-dom',
                     include: [
-                        'test/{dom,controls,plugins,player,record,playlist,site}/**/*.test.ts',
+                        'test/{dom,controls,plugins,player,record,playlist,site,security}/**/*.test.ts',
                     ],
                     setupFiles: ['./test/support/setup.ts'],
                 },

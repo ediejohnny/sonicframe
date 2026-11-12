@@ -139,7 +139,7 @@ describe('package boundaries', () => {
 
     it('keeps every test where a test project runs it', () => {
         // vite.config.ts runs test/*.test.ts and test/core/ in Node, and test/dom, controls, plugins,
-        // player, record, playlist and site under happy-dom: a test anywhere else would never run.
+        // player, record, playlist, site and security under happy-dom: a test anywhere else would never run.
         const stray = sources('test')
             .map((file) =>
                 relative(join(root, 'test'), file).split(sep).join('/'),
@@ -148,7 +148,7 @@ describe('package boundaries', () => {
                 (file) =>
                     file.endsWith('.test.ts') &&
                     file.includes('/') &&
-                    !/^(core|dom|controls|plugins|player|record|playlist|site)\//.test(
+                    !/^(core|dom|controls|plugins|player|record|playlist|site|security)\//.test(
                         file,
                     ),
             );

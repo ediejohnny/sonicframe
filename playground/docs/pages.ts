@@ -110,6 +110,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'plugin-api.html', name: 'Plugin API' },
             { file: 'css-variables.html', name: 'CSS variables' },
             { file: 'security.html', name: 'Security' },
+            { file: 'cms.html', name: 'On a CMS or WordPress' },
         ],
     },
 ];
