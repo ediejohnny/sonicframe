@@ -142,6 +142,19 @@ describe('the names an app or a plugin needs', () => {
         expectTypeOf<analysis.RecorderWords>().toEqualTypeOf<RecorderWords>();
     });
 
+    it('gives a server the playlist and podcast feed readers', () => {
+        const read = analysis.readFeed(
+            '<rss><channel><title>Show</title><item><enclosure url="https://cdn.test/a.mp3"/></item></channel></rss>',
+        );
+
+        expect(read.title).toBe('Show');
+        expect(read.tracks.map((track) => track.src)).toEqual([
+            'https://cdn.test/a.mp3',
+        ]);
+        expect(typeof analysis.loadFeed).toBe('function');
+        expect(typeof analysis.readTracks).toBe('function');
+    });
+
     it('names the recorder screen choices, with their lists', () => {
         expectTypeOf<RecorderAfterSend>().toEqualTypeOf<'reset' | 'keep'>();
         expectTypeOf<RecorderLive>().toEqualTypeOf<'scroll' | 'fit'>();

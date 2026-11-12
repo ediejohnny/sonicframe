@@ -79,6 +79,13 @@ export {
     type MarksWriteOptions,
 } from './core/marks/write-marks';
 export {
+    loadFeed,
+    readFeed,
+    type Feed,
+    type LoadFeedOptions,
+    type ReadFeedOptions,
+} from './core/playlist/feed';
+export {
     MAX_TRACKS,
     readTracks,
     writeTracks,

@@ -19,7 +19,7 @@ import {
     type Repeat,
 } from '../../core/playlist/order';
 import { loadTracks } from '../../core/playlist/load-tracks';
-import { loadFeed } from '../feed/feed';
+import { loadFeed } from '../../core/playlist/feed';
 import {
     MAX_TRACKS,
     readTracks,
@@ -360,11 +360,10 @@ export class Playlist {
         const loading =
             feed === undefined
                 ? loadTracks(address, load)
-                : loadFeed(address, {
-                      ...load,
-                      order: feed.order,
-                      limit: feed.limit,
-                  }).then((read) => read.tracks);
+                : // The feed's own options (order, limit, ceilings); how it is fetched comes from `load`.
+                  loadFeed(address, { ...feed, ...load }).then(
+                      (read) => read.tracks,
+                  );
 
         loading.then(
             (tracks) => {

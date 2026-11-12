@@ -6,6 +6,7 @@
 import type { LanguageTag } from '../../core/languages/language';
 import type { PlaylistWords } from '../../core/languages/words';
 import type { RememberStore } from '../../core/player/remember';
+import type { ReadFeedOptions } from '../../core/playlist/feed';
 import type { Repeat } from '../../core/playlist/order';
 import type { Track, TrackInput } from '../../core/playlist/tracks';
 import type { NowPlayingOptions } from '../now-playing/now-playing-options';
@@ -67,11 +68,11 @@ export type PlaylistOptions = {
     src?: string;
     /**
      * The address of a podcast feed (RSS), fetched when `tracks` is left out: its episodes, newest first.
-     * Or `{ src, order, limit }`: `order` `'newest'` or `'oldest'`, `limit` at most 1000.
+     * Or `{ src, ...options }`, with the options of `readFeed`: `order` `'newest'` or `'oldest'`,
+     * `limit` at most 1000, and the reader's ceilings (`maxSize`, `maxDepth`, `maxElements`,
+     * `maxAttributes`, `maxNameLength`).
      */
-    feed?:
-        | string
-        | { src: string; order?: 'newest' | 'oldest'; limit?: number };
+    feed?: string | ({ src: string } & Omit<ReadFeedOptions, 'base'>);
     /** How `src` and `feed` are fetched: cookies only to the page's own site by default. */
     fetch?: {
         credentials?: RequestCredentials;

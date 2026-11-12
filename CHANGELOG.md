@@ -19,7 +19,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   Players also have a `tracks` getter.
 - A podcast's feed as a playlist: `feed` (or the tag's `feed`, `feed-order`, `feed-limit`) reads each episode's
   sound, length, picture, chapters and transcript, newest first by default, with a limit. `readFeed` and `loadFeed`
-  read one by themselves. The feed is read as XML; one that declares entities, or over 5 MB, is refused.
+  read one by themselves, in `sonicframe/playlist` and in `sonicframe/analysis` for servers. The feed is read by
+  SonicFrame's own small XML reader, not the browser's, so it works under a strict Content-Security-Policy with
+  Trusted Types and in Node. One that declares entities is refused, and its ceilings are options: `maxSize` (5 MB,
+  up to 20 MB), `maxDepth` (100, up to 256), `maxElements` (200000, up to 1000000), `maxAttributes` (200, up to 10000) and `maxNameLength` (1000, up to 50000). The defaults are the ones the most used XML readers settled on;
+  an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. Past one,
+  a `RangeError` names the option.
+
+### Fixed
+
+- A WebVTT file's character reference named like a property every object has (`&constructor;`) was read as the
+  text of a JavaScript function in a chapter's or a cue's title; it now stays as written, like any unknown
+  reference.
 
 ## [1.2.0] - 2026-11-12
 
