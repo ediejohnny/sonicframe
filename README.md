@@ -10,7 +10,7 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 [![MIT license](https://img.shields.io/badge/license-MIT-1f4fbf)](LICENSE)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-1f4fbf)](package.json)
 [![Unpacked size](https://img.shields.io/npm/unpacked-size/sonicframe?color=1f4fbf)](https://www.npmjs.com/package/sonicframe)
-[![Support SonicFrame: buy me a coffee][coffee-badge]](https://www.doativa.com/support-sonicframe)
+[![Support SonicFrame: buy me a coffee][coffee-badge]](https://buymeacoffee.com/ediejohnny)
 
 **[Docs](https://ediejohnny.github.io/sonicframe/)** ·
 [Quickstart](https://ediejohnny.github.io/sonicframe/quickstart.html) ·
@@ -198,7 +198,7 @@ repository's GitHub workflow, with npm provenance. More in
 ## Support SonicFrame
 
 SonicFrame is free, and it stays free. If it saves you time, you can
-[buy me a coffee](https://www.doativa.com/support-sonicframe): every donation goes into the work behind new releases,
+[buy me a coffee](https://buymeacoffee.com/ediejohnny): every donation goes into the work behind new releases,
 their tests and the docs.
 
 ## License
