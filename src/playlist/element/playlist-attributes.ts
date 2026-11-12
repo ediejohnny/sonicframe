@@ -7,6 +7,7 @@
  */
 
 import type { TrackInput } from '../../core/playlist/tracks';
+import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf } from '../../core/shared/checked';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { optionsOf } from '../../player/element/element-attributes';
@@ -42,6 +43,7 @@ const OWN_ATTRIBUTES = [
     'list-palette',
     'buttons',
     'remember-key',
+    'now-playing',
     'fetch-credentials',
     'a11y-label',
     'a11y-announce',
@@ -176,6 +178,12 @@ export function playlistOptionsOf(
                 : (buttons.split(/\s+/) as PlaylistButton[]),
         remember: remember
             ? { key: get('remember-key') ?? undefined }
+            : undefined,
+        nowPlaying: element.hasAttribute('now-playing')
+            ? {
+                  when: (get('now-playing') ||
+                      undefined) as NowPlayingOptions['when'],
+              }
             : undefined,
         player: playerOf(element),
         a11y: {

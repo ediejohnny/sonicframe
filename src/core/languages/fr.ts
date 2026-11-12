@@ -125,4 +125,9 @@ export const FR: CompleteWords = {
         playing: 'Lecture : {title}, {place} sur {count}',
         untitled: 'Piste {place}',
     },
+    nowPlaying: {
+        bar: 'Lecture en cours',
+        close: 'Fermer la barre',
+        back: 'Revenir au lecteur',
+    },
 };

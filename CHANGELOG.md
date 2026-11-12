@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- The now-playing bar, `nowPlaying` in `sonicframe/playlist`: a small bar fixed to the window that follows the
+  player that started playing last, so the sound can be controlled while the page scrolls. It shows while that
+  player plays out of view (`when`: also `'playing'` or `'always'`), at the bottom or the top (`place`, `align`,
+  `offset`, `width`, `zIndex`), holds the `parts` asked for (play, title, time, progress, close, the tracks
+  around the sound, back to the player, speed), wears the player's colors or its own, and is a named region that
+  Escape closes. `<sonic-now-playing>` is the same as a tag, a playlist brings one with `nowPlaying` (or the
+  `now-playing` attribute), and `currentPlayer()` in `sonicframe/player` gives the player that played last.
+  Players also have a `tracks` getter.
+
 ## [1.2.0] - 2026-11-12
 
 ### Added

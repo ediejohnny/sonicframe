@@ -37,6 +37,7 @@ import type {
     PlayerTracks,
 } from '../../player/player/player-options';
 import { TrackList } from '../list/track-list';
+import { NowPlaying } from '../now-playing/now-playing';
 import { EachStage } from '../stage/each-stage';
 import { OneStage } from '../stage/one-stage';
 import type { Stage } from '../stage/stage';
@@ -65,6 +66,7 @@ export class Playlist {
     private readonly ownMedia: HTMLMediaElement | null = null;
     private readonly stage: Stage;
     private readonly list: TrackList | null = null;
+    private readonly bar: NowPlaying | null;
     private trackList: Track[] = [];
     private orderList: number[] = [];
     private current = -1;
@@ -154,6 +156,12 @@ export class Playlist {
         }
 
         options.container.append(this.element);
+        this.bar =
+            options.nowPlaying === undefined || options.nowPlaying === false
+                ? null
+                : new NowPlaying(
+                      options.nowPlaying === true ? {} : options.nowPlaying,
+                  );
         this.start(options);
     }
 
@@ -317,6 +325,7 @@ export class Playlist {
         this.abort.abort();
         this.stage.destroy();
         this.list?.destroy();
+        this.bar?.destroy();
         this.ownMedia?.pause();
         this.element.remove();
     }

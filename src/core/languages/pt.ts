@@ -125,4 +125,9 @@ export const PT: CompleteWords = {
         playing: 'Tocando: {title}, {place} de {count}',
         untitled: 'Faixa {place}',
     },
+    nowPlaying: {
+        bar: 'Tocando agora',
+        close: 'Fechar a barra',
+        back: 'Voltar ao player',
+    },
 };

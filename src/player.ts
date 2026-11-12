@@ -6,6 +6,7 @@
  */
 
 export { createPlayer, Player } from './player/player/player';
+export { currentPlayer } from './player/player/player-registry';
 export type {
     ChapterListLook,
     ChaptersPlugin,
