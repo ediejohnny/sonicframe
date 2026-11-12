@@ -4,9 +4,9 @@
  */
 
 import { PT } from './pt';
-import type { Words } from './words';
+import type { CompleteWords } from './words';
 
-export const PT_PT: Words = {
+export const PT_PT: CompleteWords = {
     ...PT,
     chapters: {
         ...PT.chapters,
@@ -35,6 +35,7 @@ export const PT_PT: Words = {
         zoomOut: 'Reduzir',
         zoomReset: 'Mostrar o som completo',
         nextChapter: 'Capítulo seguinte',
+        nextTrack: 'Faixa seguinte',
         resume: 'A continuar a partir de {time}',
     },
     recorder: {
@@ -50,5 +51,11 @@ export const PT_PT: Words = {
         denied: 'O microfone está bloqueado. Permita-o na barra de endereço.',
         insecure: 'Gravar requer uma página segura (HTTPS).',
         tooLarge: 'A gravação ficou demasiado grande.',
+    },
+    playlist: {
+        ...PT.playlist,
+        playlist: 'Lista de reprodução',
+        close: 'Fechar a lista de reprodução',
+        playing: 'A reproduzir: {title}, {place} de {count}',
     },
 };

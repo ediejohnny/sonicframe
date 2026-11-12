@@ -1,8 +1,8 @@
 /** Spanish: `es` and every tag that starts with it (`es-ES`, `es-MX`). */
 
-import type { Words } from './words';
+import type { CompleteWords } from './words';
 
-export const ES: Words = {
+export const ES: CompleteWords = {
     frame: {
         position: 'Posición en el audio',
     },
@@ -81,6 +81,8 @@ export const ES: Words = {
         zoomReset: 'Mostrar todo el sonido',
         previousChapter: 'Capítulo anterior',
         nextChapter: 'Capítulo siguiente',
+        previousTrack: 'Pista anterior',
+        nextTrack: 'Pista siguiente',
         closeChapters: 'Cerrar los capítulos',
         resume: 'Continuando desde {time}',
     },
@@ -112,5 +114,15 @@ export const ES: Words = {
         failed: 'La grabación falló.',
         tooLarge: 'La grabación es demasiado grande.',
         elapsed: '{time} de grabación',
+    },
+    playlist: {
+        playlist: 'Lista de reproducción',
+        close: 'Cerrar la lista de reproducción',
+        shuffle: 'Orden aleatorio',
+        repeatNone: 'Repetir: desactivado',
+        repeatAll: 'Repetir: todas',
+        repeatOne: 'Repetir: una',
+        playing: 'Reproduciendo: {title}, {place} de {count}',
+        untitled: 'Pista {place}',
     },
 };

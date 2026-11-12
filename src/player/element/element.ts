@@ -19,7 +19,11 @@
  * `background-attributes.ts`, the clock's in `clock-attributes.ts`).
  */
 
-import { canDefine } from '../../dom/shared/custom-element';
+import {
+    canDefine,
+    forwardEvents,
+    showAsBlock,
+} from '../../dom/shared/custom-element';
 import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { Player } from '../player/player';
 import { makeAudio, releaseMedia } from '../player/player-media';
@@ -241,10 +245,7 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                     return;
                 }
 
-                if (this.style.getPropertyValue('display') === '') {
-                    this.style.setProperty('display', 'block');
-                }
-
+                showAsBlock(this);
                 const options = optionsOf(this);
                 const player = new Player({
                     container: this,
@@ -253,15 +254,7 @@ export function defineSonicPlayer(name: string = 'sonic-player'): boolean {
                 });
 
                 this.built = player;
-                this.stops = EVENTS.map((event) =>
-                    player.on(event, (...args: unknown[]) => {
-                        this.dispatchEvent(
-                            new CustomEvent(`sonicframe:${event}`, {
-                                detail: args,
-                            }),
-                        );
-                    }),
-                );
+                this.stops = forwardEvents(this, player, EVENTS);
             }
 
             private unmount(): void {

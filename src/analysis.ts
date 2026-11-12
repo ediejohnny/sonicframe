@@ -51,6 +51,8 @@ export type {
     DescriptionWords,
     RecorderWords,
     Words,
+    CompleteWords,
+    PlaylistWords,
 } from './core/languages/words';
 export {
     LANGUAGE_NAMES,
@@ -76,6 +78,15 @@ export {
     type MarksFormat,
     type MarksWriteOptions,
 } from './core/marks/write-marks';
+export {
+    MAX_TRACKS,
+    readTracks,
+    writeTracks,
+    type ReadTracksOptions,
+    type Track,
+    type TrackInput,
+    type TracksFormat,
+} from './core/playlist/tracks';
 export {
     loadWaveform,
     readWaveform,

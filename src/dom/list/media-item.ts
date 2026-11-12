@@ -1,17 +1,16 @@
 /**
- * The pieces of a chapters list's item: a span of text, the chapter's picture with its length on it,
- * the still mark of the chapter playing, and the thin bar it fills as it plays. Text only ever goes
- * in as text, and every color through a `--sonicframe-*` variable.
+ * The pieces of a media list's item: a span of text, the item's picture with its length on it, the
+ * still mark of the item playing, and the thin bar it fills as it plays. Class names start with the
+ * list's own prefix (`sonicframe-chapter-…`, `sonicframe-track-…`). Text only ever goes in as text,
+ * and every color through a `--sonicframe-*` variable.
  */
 
-import type { Chapter } from '../../core/chapters/chapters';
-import { formatTime } from '../../core/shared/timing';
 import { PROGRESS, REGION } from '../../core/shared/variables';
-import { css } from '../../dom/shared/css';
-import { iconElement, iconPath } from '../../dom/shared/icon';
-import type { ListLook } from './chapter-list-look';
+import { css } from '../shared/css';
+import { iconElement, iconPath } from '../shared/icon';
+import type { ListLook } from './list-look';
 
-/** Three bars of different heights, the mark of the chapter playing (on a 12 × 12 grid). */
+/** Three bars of different heights, the mark of the item playing (on a 12 × 12 grid). */
 const PLAYING = 'M1 5h2v6H1zM5 1h2v10H5zM9 4h2v7H9z';
 
 export function textSpan(className: string, text: string): HTMLSpanElement {
@@ -22,16 +21,20 @@ export function textSpan(className: string, text: string): HTMLSpanElement {
     return element;
 }
 
-/** The chapter's picture, square or wide, with its length on it (said already by its stretch). */
-export function chapterThumb(
-    chapter: Chapter,
-    end: number | null,
+/**
+ * The item's picture (an address already checked), square or wide, with its length on it when one
+ * is given (said already by the line under the title, so hidden from screen readers).
+ */
+export function itemThumb(
+    prefix: string,
+    image: string,
+    length: string | null,
     look: ListLook,
 ): HTMLElement {
     const { thumbWidth, thumbShape, thumbCorner } = look;
     const height = thumbShape === 'wide' ? (thumbWidth * 9) / 16 : thumbWidth;
     const box = document.createElement('span');
-    box.className = 'sonicframe-chapter-thumb';
+    box.className = `${prefix}-thumb`;
     css(box, [
         ['position', 'relative'],
         ['flex', `0 0 ${thumbWidth}rem`],
@@ -41,28 +44,25 @@ export function chapterThumb(
         ['border-radius', `${thumbCorner}rem`],
         ['background-color', REGION],
     ]);
-    const image = document.createElement('img');
-    image.alt = '';
-    image.loading = 'lazy';
-    image.decoding = 'async';
-    image.src = chapter.image ?? '';
-    css(image, [
+    const picture = document.createElement('img');
+    picture.alt = '';
+    picture.loading = 'lazy';
+    picture.decoding = 'async';
+    picture.src = image;
+    css(picture, [
         ['display', 'block'],
         ['width', '100%'],
         ['height', '100%'],
         ['object-fit', 'cover'],
     ]);
-    box.append(image);
+    box.append(picture);
 
-    if (end !== null && look.length) {
-        const length = textSpan(
-            'sonicframe-chapter-length',
-            formatTime(end - chapter.start),
-        );
+    if (length !== null && look.length) {
+        const badge = textSpan(`${prefix}-length`, length);
         const cover = document.createElement('span');
         cover.setAttribute('aria-hidden', 'true');
-        cover.append(length);
-        css(length, [
+        cover.append(badge);
+        css(badge, [
             ['position', 'absolute'],
             ['right', '0.25rem'],
             ['bottom', '0.25rem'],
@@ -83,10 +83,10 @@ export function chapterThumb(
     return box;
 }
 
-/** The still mark of the chapter playing: three sound bars in the played color. */
-export function playingMark(): SVGSVGElement {
+/** The still mark of the item playing: three sound bars in the played color. */
+export function playingMark(prefix: string): SVGSVGElement {
     const icon = iconElement(12);
-    icon.setAttribute('class', 'sonicframe-chapter-playing');
+    icon.setAttribute('class', `${prefix}-playing`);
     icon.append(iconPath({ d: PLAYING, fill: 'currentColor' }));
     css(icon, [
         ['width', '0.75rem'],
@@ -98,8 +98,9 @@ export function playingMark(): SVGSVGElement {
     return icon;
 }
 
-/** The thin bar along the bottom of `button`, the chapter playing; returns its fill. */
+/** The thin bar along the bottom of `button`, the item playing; returns its fill. */
 export function progressBar(
+    prefix: string,
     button: HTMLButtonElement | undefined,
 ): HTMLElement | null {
     if (button === undefined) {
@@ -109,7 +110,7 @@ export function progressBar(
     const track = document.createElement('span');
     const fill = document.createElement('span');
     track.setAttribute('aria-hidden', 'true');
-    fill.className = 'sonicframe-chapter-progress';
+    fill.className = `${prefix}-progress`;
     css(track, [
         ['position', 'absolute'],
         ['left', '0'],

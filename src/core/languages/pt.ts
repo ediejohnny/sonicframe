@@ -1,8 +1,8 @@
 /** Portuguese as spoken in Brazil: `pt`, `pt-BR` and every other `pt-` tag but `pt-PT`. */
 
-import type { Words } from './words';
+import type { CompleteWords } from './words';
 
-export const PT: Words = {
+export const PT: CompleteWords = {
     frame: {
         position: 'Posição no áudio',
     },
@@ -81,6 +81,8 @@ export const PT: Words = {
         zoomReset: 'Mostrar o som inteiro',
         previousChapter: 'Capítulo anterior',
         nextChapter: 'Próximo capítulo',
+        previousTrack: 'Faixa anterior',
+        nextTrack: 'Próxima faixa',
         closeChapters: 'Fechar os capítulos',
         resume: 'Continuando de {time}',
     },
@@ -112,5 +114,15 @@ export const PT: Words = {
         failed: 'A gravação falhou.',
         tooLarge: 'A gravação ficou grande demais.',
         elapsed: '{time} de gravação',
+    },
+    playlist: {
+        playlist: 'Playlist',
+        close: 'Fechar a playlist',
+        shuffle: 'Ordem aleatória',
+        repeatNone: 'Repetir: desligado',
+        repeatAll: 'Repetir: todas',
+        repeatOne: 'Repetir: uma',
+        playing: 'Tocando: {title}, {place} de {count}',
+        untitled: 'Faixa {place}',
     },
 };

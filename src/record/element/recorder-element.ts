@@ -10,7 +10,12 @@
  */
 
 import type { RecorderUpload } from '../../core/recording/upload';
-import { attributeNumber, canDefine } from '../../dom/shared/custom-element';
+import {
+    attributeNumber,
+    canDefine,
+    forwardEvents,
+    showAsBlock,
+} from '../../dom/shared/custom-element';
 import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { RecorderScreen } from '../screen/recorder-screen';
 import type {
@@ -266,25 +271,13 @@ export function defineSonicRecorder(name: string = 'sonic-recorder'): boolean {
                     return;
                 }
 
-                if (this.style.getPropertyValue('display') === '') {
-                    this.style.setProperty('display', 'block');
-                }
-
+                showAsBlock(this);
                 const screen = new RecorderScreen({
                     container: this,
                     ...recorderOptionsOf(this),
                 });
                 this.screen = screen;
-
-                for (const event of EVENTS) {
-                    screen.on(event, (...args: unknown[]) => {
-                        this.dispatchEvent(
-                            new CustomEvent(`sonicframe:${event}`, {
-                                detail: args,
-                            }),
-                        );
-                    });
-                }
+                forwardEvents(this, screen, EVENTS);
             }
 
             private unmount(): void {

@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "sonicframe",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Audio visualization and interaction framework for the web.",
     "keywords": [
         "audio",
@@ -23,7 +23,7 @@
     },
     "funding": {
         "type": "individual",
-        "url": "https://www.doativa.com/support-sonicframe"
+        "url": "https://buymeacoffee.com/ediejohnny"
     },
     "files": [
         "dist",
@@ -48,6 +48,10 @@
         "./record": {
             "types": "./dist/record.d.ts",
             "default": "./dist/record.js"
+        },
+        "./playlist": {
+            "types": "./dist/playlist.d.ts",
+            "default": "./dist/playlist.js"
         },
         "./package.json": "./package.json"
     },

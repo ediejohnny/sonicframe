@@ -12,13 +12,13 @@ import {
     type Language,
 } from '../languages/language';
 import { mergeWords } from '../languages/merge-words';
-import type { PlayerLabels, Words } from '../languages/words';
+import type { CompleteWords, PlayerLabels } from '../languages/words';
 import { clamp01 } from '../shared/math';
 import { cleanText, fillTemplate } from '../shared/text';
 import { formatPosition, formatTime } from '../shared/timing';
 
 /** The player's labels in one language: its own words, and those of the pieces it is built of. */
-function playerLabels(words: Readonly<Words>): PlayerLabels {
+function playerLabels(words: Readonly<CompleteWords>): PlayerLabels {
     const { player, playButton, volume, zoom, minimap, chapters } = words;
 
     return {
@@ -51,6 +51,8 @@ function playerLabels(words: Readonly<Words>): PlayerLabels {
         chapterLink: chapters.link,
         previousChapter: player.previousChapter,
         nextChapter: player.nextChapter,
+        previousTrack: player.previousTrack,
+        nextTrack: player.nextTrack,
         closeChapters: player.closeChapters,
         resume: player.resume,
     };

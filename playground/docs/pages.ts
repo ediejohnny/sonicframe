@@ -45,6 +45,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'backgrounds.html', name: 'Backgrounds' },
             { file: 'themes.html', name: 'Theme gallery' },
             { file: 'media-session.html', name: 'Lock screen and media keys' },
+            { file: 'playlist.html', name: 'Playlist' },
             { file: 'element.html', name: 'The HTML tag' },
         ],
     },

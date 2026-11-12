@@ -1,8 +1,8 @@
 /** French: `fr` and every tag that starts with it (`fr-FR`, `fr-CA`). */
 
-import type { Words } from './words';
+import type { CompleteWords } from './words';
 
-export const FR: Words = {
+export const FR: CompleteWords = {
     frame: {
         position: 'Position dans l’audio',
     },
@@ -81,6 +81,8 @@ export const FR: Words = {
         zoomReset: 'Afficher tout le son',
         previousChapter: 'Chapitre précédent',
         nextChapter: 'Chapitre suivant',
+        previousTrack: 'Piste précédente',
+        nextTrack: 'Piste suivante',
         closeChapters: 'Fermer les chapitres',
         resume: 'Reprise à {time}',
     },
@@ -112,5 +114,15 @@ export const FR: Words = {
         failed: 'L’enregistrement a échoué.',
         tooLarge: 'L’enregistrement est devenu trop volumineux.',
         elapsed: '{time} d’enregistrement',
+    },
+    playlist: {
+        playlist: 'Liste de lecture',
+        close: 'Fermer la liste de lecture',
+        shuffle: 'Lecture aléatoire',
+        repeatNone: 'Répéter : désactivé',
+        repeatAll: 'Répéter : tout',
+        repeatOne: 'Répéter : une',
+        playing: 'Lecture : {title}, {place} sur {count}',
+        untitled: 'Piste {place}',
     },
 };

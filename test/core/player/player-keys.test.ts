@@ -24,7 +24,19 @@ describe('resolvePlayerKeys', () => {
             volumeStep: 0.05,
             faster: ['>'],
             slower: ['<'],
+            track: 'n',
         });
+    });
+
+    it('takes your own letter for the tracks, or none', () => {
+        expect(resolvePlayerKeys({ track: 'J' })?.track).toBe('j');
+        expect(resolvePlayerKeys({ track: false })?.track).toBeNull();
+        // A word is no letter: the tracks get none, as the other letters of SonicFrame do.
+        expect(resolvePlayerKeys({ track: 'Enter' })?.track).toBeNull();
+        // Anything else is no choice at all: the default stays.
+        expect(
+            resolvePlayerKeys({ track: 7 as unknown as string })?.track,
+        ).toBe('n');
     });
 
     it('takes your own keys, switches one off, and keeps its numbers in range', () => {
@@ -100,6 +112,45 @@ describe('playerKeyAction', () => {
             'volumeUp',
         );
         expect(playerKeyAction('>', { repeat: true }, settings)).toBe('faster');
+    });
+
+    it('goes to the next track with N and the one before with Shift+N, whatever the case', () => {
+        expect(playerKeyAction('n', {}, settings)).toBe('nextTrack');
+        expect(playerKeyAction('N', {}, settings)).toBe('nextTrack');
+        expect(playerKeyAction('N', { shiftKey: true }, settings)).toBe(
+            'previousTrack',
+        );
+        // Caps Lock gives a lower-case letter with Shift held: Shift still picks the way.
+        expect(playerKeyAction('n', { shiftKey: true }, settings)).toBe(
+            'previousTrack',
+        );
+    });
+
+    it('changes track once for a held key, never with Ctrl, Alt or ⌘, and not at all without a letter', () => {
+        expect(playerKeyAction('n', { repeat: true }, settings)).toBeNull();
+        expect(playerKeyAction('n', { ctrlKey: true }, settings)).toBeNull();
+        expect(
+            playerKeyAction('n', { metaKey: true, shiftKey: true }, settings),
+        ).toBeNull();
+
+        const off = resolvePlayerKeys({ track: false });
+
+        if (off === null) {
+            throw new Error('test: the keys are off');
+        }
+
+        expect(playerKeyAction('n', {}, off)).toBeNull();
+    });
+
+    it("lets a key the app gave another action keep it over the tracks' letter", () => {
+        const own = resolvePlayerKeys({ mute: 'n' });
+
+        if (own === null) {
+            throw new Error('test: the keys are off');
+        }
+
+        expect(playerKeyAction('n', {}, own)).toBe('mute');
+        expect(playerKeyAction('m', {}, own)).toBeNull();
     });
 });
 

@@ -75,7 +75,7 @@ export {
     type ChaptersOptions,
     type ChaptersPlugin,
 } from './plugins/chapters/chapters-options';
-export type { ChapterListLook } from './plugins/chapters/chapter-list-look';
+export type { ChapterListLook, MediaListLook } from './dom/list/list-look';
 export type {
     ChapterWords,
     DescriptionWords,
@@ -83,6 +83,8 @@ export type {
     RecorderWords,
     RegionWords,
     Words,
+    CompleteWords,
+    PlaylistWords,
 } from './core/languages/words';
 export {
     LANGUAGE_NAMES,
@@ -249,7 +251,7 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '1.1.0';
+export const VERSION: string = '1.2.0';
 
 // Names kept until 2.0: each works as before, and its note says what to use instead.
 

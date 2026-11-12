@@ -25,6 +25,7 @@ export type {
     PlayerListenButton,
     PlayerMediaSession,
     PlayerOptions,
+    PlayerTracks,
     PlayerZoom,
 } from './player/player/player-options';
 export type {
@@ -67,7 +68,11 @@ export {
     type PlayerAttribute,
     type SonicPlayerElement,
 } from './player/element/element';
-export type { PlayerLabels, Words } from './core/languages/words';
+export type {
+    CompleteWords,
+    PlayerLabels,
+    Words,
+} from './core/languages/words';
 export {
     LANGUAGE_NAMES,
     registerLanguage,

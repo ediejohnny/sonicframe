@@ -35,6 +35,9 @@ export type Part =
     | 'previousChapter'
     | 'nextChapter'
     | 'chapters'
+    /** The track before and after, shown only for a player the app gives `tracks`. */
+    | 'previousTrack'
+    | 'nextTrack'
     | 'slot'
     | 'spacer'
     /** The old name of `previousChapter`, read as it until 2.0. */
@@ -225,6 +228,8 @@ export const PART_NAMES: readonly Part[] = Object.freeze([
     'previousChapter',
     'nextChapter',
     'chapters',
+    'previousTrack',
+    'nextTrack',
     'slot',
     'spacer',
 ] as const);

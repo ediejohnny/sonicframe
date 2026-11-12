@@ -101,10 +101,12 @@
                                 <tr>
                                     <td>Previous, next track</td>
                                     <td>
-                                        The chapter before and after, or your
-                                        own <code>onPrevious</code> and
-                                        <code>onNext</code>. Without them, the
-                                        controls leave these buttons out.
+                                        The player's <code>tracks</code>,
+                                        otherwise the chapter before and after,
+                                        or your own <code>onPrevious</code> and
+                                        <code>onNext</code>. Without any of
+                                        them, the controls leave these buttons
+                                        out.
                                     </td>
                                 </tr>
                             </tbody>
@@ -296,6 +298,21 @@ frame.use(controls);</code></pre>
                                         On a player: hand its chapters to the
                                         controls. On the plugin: the chapters
                                         themselves.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>previousNext</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        On a player: what previous and next
+                                        track step through.
+                                        <code>'auto'</code> takes the
+                                        <code>tracks</code> when the player is
+                                        made with them, otherwise its chapters;
+                                        <code>'tracks'</code> or
+                                        <code>'chapters'</code> only one of
+                                        them; <code>false</code> leaves the two
+                                        buttons out.
                                     </td>
                                 </tr>
                             </tbody>
