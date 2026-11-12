@@ -1,8 +1,9 @@
 /**
- * A chapter's name in the player, in a room that may be too short for it. It ends as the look says
- * (an ellipsis, a fade or a cut), can walk across its room (an endless strip, back to its start, or
- * back and forth) and can show in full in the page's tooltip under the mouse. It is hidden from
- * screen readers: the slider's value says the chapter.
+ * A name in the player (a chapter's, the sound's, its artist's), in a room that may be too short for
+ * it. It ends as the look says (an ellipsis, a fade or a cut), can walk across its room (an endless
+ * strip, back to its start, or back and forth) and can show in full in the page's tooltip under the
+ * mouse. It is hidden from screen readers: the slider's value says the chapter, and the player's own
+ * name says the sound.
  */
 
 import type { PlayerLook } from '../../core/player/look';
@@ -56,16 +57,20 @@ export class LongName {
     private walk: { key: string; animations: Animation[] } | null = null;
     private tipShown = false;
 
-    /** `colors` gives the tooltip's colors when it opens, so a palette changed later shows. */
+    /**
+     * `colors` gives the tooltip's colors when it opens, so a palette changed later shows; `className`
+     * names the part (a chapter's, by default).
+     */
     constructor(
         private readonly look: LongNameLook,
         private readonly colors: () => TooltipColors,
+        className: string = 'sonicframe-chapter-now',
     ) {
         this.element = document.createElement('span');
         this.strip = document.createElement('span');
         this.label = document.createElement('span');
         this.copy = document.createElement('span');
-        this.element.className = 'sonicframe-chapter-now';
+        this.element.className = className;
         this.element.setAttribute('aria-hidden', 'true');
         this.element.setAttribute('dir', 'auto');
         this.strip.append(this.label, this.copy);

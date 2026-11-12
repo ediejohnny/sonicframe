@@ -30,6 +30,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   DOMPurify) to let authors place players. None is an event handler; `upload-url`, which sends a visitor's recording
   to the address an author picks, is marked `trustedOnly`. The docs' new page "On a CMS or WordPress" gives the
   filter ready to paste and how a shortcode or block escapes the tag on the server.
+- The `title` and `artist` parts, off unless the look places them: the sound's name (the player's `a11y.label`, or
+  without one its file's name, "little-elf.mp3" as "Little elf", which `look.titleFromFile: false` turns off) and
+  the new `artist` option, as text that screen readers skip (they hear the name on the player itself). Each
+  takes its text's width up to `look.nameMaxWidth` (12 rem) and gives up its room before the wave. `artist` is
+  also the media controls' artist when `mediaSession` names none, and a playlist's track brings its own. On
+  `<sonic-player>`, the `artist` attribute, and `line` and `meta` (part names by spaces, `"play wave title"`) place
+  the parts as `look.line` and `look.meta` do.
+- `a11y.sliderName` (the tag's `a11y-slider-name`) names the wave's slider by its sound: `'label'` the sound's
+  name, `'both'` the name and the slider's word ("Little Elf, Playback position"), so a page of many players tells
+  their sliders apart. The default stays `'position'`, the word alone; `setLabel` updates it, and `frame.label` wins.
+- Minified files beside the readable ones, for pages without a bundler: `dist/player.min.js` and each other entry,
+  with their own minified chunks, in about half the bytes. From npm they are `sonicframe/min`,
+  `sonicframe/min/player`, `sonicframe/min/record`, `sonicframe/min/playlist` and `sonicframe/min/analysis`. The
+  readable files are unchanged.
 
 ### Changed
 
@@ -39,6 +53,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A sound that cannot load no longer leaves the player silent about it at "0:00 / 0:00": a message over the wave
+  says why ("Could not load the sound", "This sound's format cannot be played here"…) in the player's language, the
+  live region says it, and the `error` event goes out with a `SoundError` (`sonicframe/player`) whose `reason` is
+  `'network'`, `'unsupported'`, `'decode'` or `'aborted'`. The message and the announcement are on by default, so a
+  person who cannot see the player learns it too; `loadError: false` and `a11y.loadError.announce: false` (the tag's
+  `load-error="false"` and `a11y-load-error="false"`) turn them off. A language registered for 1.1 says the four new
+  phrases in English until it gives its own.
 - A WebVTT file's character reference named like a property every object has (`&constructor;`) was read as the
   text of a JavaScript function in a chapter's or a cue's title; it now stays as written, like any unknown
   reference.

@@ -126,6 +126,17 @@ export type PlayerOptions = {
      * it. Off by default.
      */
     remember?: boolean | PlayerRemember;
+    /**
+     * When the sound cannot load, a message over the wave says why ("Could not load the sound"), in
+     * the player's language. On by default (`false` turns it off); the `error` event goes out either
+     * way, with a `SoundError` whose `reason` says why.
+     */
+    loadError?: boolean | { show?: boolean };
+    /**
+     * Who made the sound: shown by the `artist` part (off the line by default) and given to the
+     * system's media controls when `mediaSession` names no artist.
+     */
+    artist?: string;
     /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */
@@ -146,7 +157,10 @@ export type PlayerOptions = {
     >;
 };
 
-/** The player's accessibility options, grouped by place; everything that adds behaviour is off by default. */
+/**
+ * The player's accessibility options, grouped by place; everything that adds behaviour is off by
+ * default but the load error's announcement, which tells of a sound that cannot play.
+ */
 export type PlayerA11y = {
     /**
      * The language of the accessible names, the wave's value in words, the description and the
@@ -180,7 +194,22 @@ export type PlayerA11y = {
     keys?: { announce?: boolean };
     /** `announce` says where a sound resumes, at its first play ("Resuming at 12:30"). Off by default. */
     remember?: { announce?: boolean };
+    /**
+     * `announce` says, when the sound cannot load, why ("Could not load the sound"). On by default,
+     * so a person who cannot see the player learns it too.
+     */
+    loadError?: { announce?: boolean };
+    /**
+     * The wave's slider's name: `'position'` (the default) its `position` word ("Playback position"),
+     * `'label'` the sound's name, `'both'` the two ("Little Elf, Playback position"). The sound's name
+     * is the one the `title` part shows; without one, the slider keeps its word. An unknown value is
+     * `'position'`, and the app's own `frame.label` wins.
+     */
+    sliderName?: SliderName;
 };
+
+/** What names the wave's slider (see `PlayerA11y.sliderName`). */
+export type SliderName = 'position' | 'label' | 'both';
 
 /**
  * The player's chapters: the plugin's options (its words come from the player's language and

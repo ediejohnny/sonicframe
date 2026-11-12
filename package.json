@@ -53,6 +53,26 @@
             "types": "./dist/playlist.d.ts",
             "default": "./dist/playlist.js"
         },
+        "./min": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.min.js"
+        },
+        "./min/analysis": {
+            "types": "./dist/analysis.d.ts",
+            "default": "./dist/analysis.min.js"
+        },
+        "./min/player": {
+            "types": "./dist/player.d.ts",
+            "default": "./dist/player.min.js"
+        },
+        "./min/record": {
+            "types": "./dist/record.d.ts",
+            "default": "./dist/record.min.js"
+        },
+        "./min/playlist": {
+            "types": "./dist/playlist.d.ts",
+            "default": "./dist/playlist.min.js"
+        },
         "./package.json": "./package.json"
     },
     "scripts": {

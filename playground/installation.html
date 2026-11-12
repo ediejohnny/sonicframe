@@ -172,6 +172,37 @@ import { writeWaveform } from 'sonicframe/analysis';</code></pre>
                         <a href="./versions.html">Versions and support</a>
                         explains.
                     </p>
+
+                    <h3 id="cdn-minified">
+                        Smaller files, for pages without a bundler
+                    </h3>
+                    <p>
+                        Every entry also comes minified, beside the readable
+                        one: <code>dist/player.min.js</code> brings the same
+                        player in about half the bytes, without the comments.
+                    </p>
+                    <div class="code">
+                        <pre><code>import { createPlayer } from 'https://unpkg.com/sonicframe@x.y.z/dist/player.min.js';</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        From npm they are <code>sonicframe/min</code>,
+                        <code>sonicframe/min/player</code>,
+                        <code>sonicframe/min/record</code>,
+                        <code>sonicframe/min/playlist</code> and
+                        <code>sonicframe/min/analysis</code>, with the same
+                        types. A bundler minifies on its own, so with one, keep
+                        the readable entries.
+                    </p>
+                    <div class="callout warn">
+                        <strong>Pick one set per page</strong>
+                        The minified files and the readable ones are separate
+                        copies. Loading <code>player.js</code> and
+                        <code>player.min.js</code> on the same page runs two
+                        SonicFrames that know nothing of each other: the second
+                        cannot register the tags the first did, and the
+                        now-playing bar follows one set only.
+                    </div>
                 </section>
 
                 <section class="section">

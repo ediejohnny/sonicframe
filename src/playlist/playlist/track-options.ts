@@ -1,6 +1,6 @@
 /**
  * A track as its player's options and as an item of the list: the playlist's player options with the
- * track's address, title, peaks, length and chapters over them. The title names the player and the
+ * track's address, title, artist, peaks, length and chapters over them. The title names the player and the
  * media controls; a track without one is "Track 3".
  */
 
@@ -90,6 +90,7 @@ export function trackOptions(
         duration: track.duration,
         chapters: chaptersOf(own.chapters, track.chapters),
         a11y: { ...own.a11y, label: own.a11y?.label ?? title },
+        artist: track.artist || own.artist,
         mediaSession:
             session === undefined || session === false
                 ? session

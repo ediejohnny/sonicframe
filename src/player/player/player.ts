@@ -17,6 +17,7 @@
 
 import { PlayButton } from '../../controls/play/play-button';
 import { VolumeControl } from '../../controls/volume/volume';
+import { fileTitle } from '../../core/player/file-title';
 import type { FontChoice } from '../../core/player/fonts';
 import { playerWords, type PlayerWords } from '../../core/player/labels';
 import { clockOf } from '../../core/player/part-text';
@@ -39,7 +40,7 @@ import {
     type Theme,
     type ThemeInput,
 } from '../../core/player/theme';
-import { unknownName } from '../../core/shared/checked';
+import { oneOf, unknownName } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import {
     joinPlayers,
@@ -81,6 +82,7 @@ import { playerKeyboard, type PlayerKeyboard } from '../keys/player-keys';
 import { playerMemory, type PlayerMemory } from '../remember/player-remember';
 import { tickClock } from '../parts/clock-ticker';
 import { listenPart } from '../parts/listen-button';
+import { NameParts } from '../parts/name-parts';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
 import { hasTrackWay, trackPart } from '../parts/track-buttons';
@@ -90,12 +92,17 @@ import type {
     PlayerEvents,
     PlayerOptions,
     PlayerTracks,
+    SliderName,
 } from './player-options';
 import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, followPalette, wearPalette } from './player-paint';
 import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
 import { PlayerSession } from './player-session';
+import { SoundNotice } from './sound-notice';
 import { PlayerSound } from './player-sound';
+
+/** What may name the wave's slider. */
+const SLIDER_NAMES: readonly SliderName[] = ['position', 'label', 'both'];
 
 /** The zoom buttons the player adds at the end of the line when the look places none. */
 const ZOOM_PARTS: readonly Part[] = ['zoomOut', 'zoomReset', 'zoomIn'];
@@ -147,6 +154,12 @@ export class Player {
     private readonly backdrop: PlayerBackdrop;
     private readonly chapterParts: ChapterParts;
     private readonly session: PlayerSession;
+    /** The message and the announcement of a sound that cannot load. */
+    private readonly notice: SoundNotice;
+    /** The `title` and `artist` parts. */
+    private readonly names: NameParts;
+    /** The player's own name, as the app gave it; undefined while it has none. */
+    private name: string | undefined;
     private readonly times = new TimeParts();
     private partCleanups: (() => void)[] = [];
     private layout: PlayerLayout | null = null;
@@ -235,6 +248,25 @@ export class Player {
             this.media,
             this.abort.signal,
         );
+        this.name = a11y.label ?? options.label;
+        this.names = new NameParts({
+            look: () => this.look,
+            frame: () => this.frameRef,
+            title: () => this.titleText(),
+            artist: () => cleanText(options.artist ?? '', 120),
+        });
+        const loadError = options.loadError;
+        this.notice = new SoundNotice({
+            media: this.media,
+            words: this.words,
+            signal: this.abort.signal,
+            show:
+                loadError !== false &&
+                (typeof loadError !== 'object' || loadError.show !== false),
+            announce: a11y.loadError?.announce !== false,
+            report: this.reportError,
+            say: (text) => this.frameRef?.announce(text),
+        });
 
         if (this.ownMedia && this.media !== null) {
             this.element.append(this.media);
@@ -284,6 +316,7 @@ export class Player {
         this.arrange();
         this.alignToBars();
         this.chapterParts.fitNames();
+        this.names.fit();
         this.backdrop.resize();
     };
 
@@ -403,11 +436,50 @@ export class Player {
     /** Changes the player's accessible name; with no name, its `player` word comes back. */
     setLabel(label?: string): void {
         if (!this.destroyed) {
+            this.name = label;
             this.element.setAttribute(
                 'aria-label',
                 cleanText(label ?? this.words.labels.player, 120),
             );
+            this.names.show();
+
+            if (this.options.frame?.label === undefined) {
+                this.frameRef?.setLabel(this.sliderLabel());
+            }
         }
+    }
+
+    /** The wave's slider's name, as `a11y.sliderName` says; its `position` word without a sound's name. */
+    private sliderLabel(): string {
+        const position = this.words.labels.position;
+        const way = oneOf(
+            this.options.a11y?.sliderName,
+            SLIDER_NAMES,
+            'position',
+        );
+        const name = way === 'position' ? '' : this.titleText();
+
+        if (name === '') {
+            return position;
+        }
+
+        return way === 'label' ? name : `${name}, ${position}`;
+    }
+
+    /** The sound's name for the `title` part: the player's own, or its file's when the look allows. */
+    private titleText(): string {
+        if (this.name !== undefined) {
+            return cleanText(this.name, 120);
+        }
+
+        const media = this.media;
+        const address =
+            this.options.src ??
+            ((media ? media.currentSrc || media.src : '') || '');
+
+        return this.look.titleFromFile && address !== ''
+            ? fileTitle(address)
+            : '';
     }
 
     /**
@@ -617,7 +689,7 @@ export class Player {
         const frameA11y = this.options.frame?.a11y;
 
         return {
-            label: words.labels.position,
+            label: this.sliderLabel(),
             valueText: words.valueText,
             ...this.options.frame,
             zoom: this.options.zoom ?? this.options.frame?.zoom,
@@ -672,9 +744,10 @@ export class Player {
             ['height', boxHeight(this.options, look)],
             ['min-width', '0'],
         ]);
-
         const frame = new SonicFrame(this.frameOptions(box, peaks));
         this.frameRef = frame;
+        // After the wave, so a failed sound's message covers what the wave drew.
+        this.notice.place(box);
 
         for (const name of FORWARDED) {
             this.partCleanups.push(
@@ -884,6 +957,7 @@ export class Player {
         this.partCleanups = [];
         this.times.clear();
         this.chapterParts.clearParts();
+        this.names.clear();
         this.layout = null;
         this.buttonRef?.destroy();
         this.volumeRef?.destroy();
@@ -973,6 +1047,10 @@ export class Player {
                 break;
             case 'chapter':
                 target.append(this.chapterParts.namePart());
+                break;
+            case 'title':
+            case 'artist':
+                target.append(this.names.part(part));
                 break;
             case 'previousChapter':
             case 'nextChapter':

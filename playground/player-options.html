@@ -195,6 +195,18 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>artist</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        Who made the sound, shown by the
+                                        <code>artist</code> part, and the media
+                                        controls' artist when
+                                        <code>mediaSession</code> names none.
+                                        Shown as text, one line, up to 120
+                                        characters.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>decode</code></td>
                                     <td>see below</td>
                                     <td>
@@ -228,6 +240,24 @@
                                         Remember where each sound was left, the
                                         volume and the speed between visits:
                                         <code>true</code>, or the options below.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>loadError</code></td>
+                                    <td>on</td>
+                                    <td>
+                                        When the sound cannot load, a message
+                                        over the wave says why, in the player's
+                                        language: <code>false</code> or
+                                        <code>{ show: false }</code> turns it
+                                        off. The <code>error</code> event goes
+                                        out either way, with a
+                                        <code>SoundError</code> whose
+                                        <code>reason</code> is
+                                        <code>'network'</code>,
+                                        <code>'unsupported'</code>,
+                                        <code>'decode'</code> or
+                                        <code>'aborted'</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -420,6 +450,29 @@
                                     <td>
                                         Say where a sound resumes, at its first
                                         play ("Resuming at 12:30").
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>loadError.announce</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Say why the sound cannot load ("Could
+                                        not load the sound"), so a person who
+                                        cannot see the player learns it too.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>sliderName</code></td>
+                                    <td><code>'position'</code></td>
+                                    <td>
+                                        What names the wave's slider: its word
+                                        ("Playback position"),
+                                        <code>'label'</code> the sound's name,
+                                        or <code>'both'</code> ("Little Elf,
+                                        Playback position"). The sound's name is
+                                        the one the <code>title</code> part
+                                        shows; without one, the slider keeps its
+                                        word. <code>frame.label</code> wins.
                                     </td>
                                 </tr>
                             </tbody>

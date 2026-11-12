@@ -78,6 +78,9 @@ export type PlayerAttribute =
     | 'font-src'
     | 'font-stylesheet'
     | 'label'
+    | 'artist'
+    | 'line'
+    | 'meta'
     | 'volume'
     | 'spectrogram'
     | 'zoom'
@@ -99,6 +102,9 @@ export type PlayerAttribute =
     | 'a11y-minimap'
     | 'a11y-keys'
     | 'a11y-remember'
+    | 'load-error'
+    | 'a11y-load-error'
+    | 'a11y-slider-name'
     | BackgroundAttribute
     | ClockAttribute;
 
@@ -117,6 +123,9 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'font-src',
     'font-stylesheet',
     'label',
+    'artist',
+    'line',
+    'meta',
     'volume',
     'spectrogram',
     'zoom',
@@ -138,6 +147,9 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'a11y-minimap',
     'a11y-keys',
     'a11y-remember',
+    'load-error',
+    'a11y-load-error',
+    'a11y-slider-name',
     ...BACKGROUND_ATTRIBUTES,
     ...CLOCK_ATTRIBUTES,
 ]);
@@ -187,6 +199,7 @@ const SOUND_ATTRIBUTES: ReadonlySet<string> = new Set([
     'preload',
     'peaks',
     'label',
+    'artist',
     'chapters',
 ]);
 
