@@ -253,6 +253,10 @@ export function resolveLook(
             typeof given.nameTooltip === 'boolean'
                 ? given.nameTooltip
                 : base.nameTooltip,
+        titleFromFile:
+            typeof given.titleFromFile === 'boolean'
+                ? given.titleFromFile
+                : base.titleFromFile,
         marquee:
             typeof given.marquee === 'boolean' ? given.marquee : base.marquee,
         marqueeType: oneOf(

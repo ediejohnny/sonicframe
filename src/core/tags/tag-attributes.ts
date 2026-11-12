@@ -78,6 +78,9 @@ export type PlayerAttribute =
     | 'font-src'
     | 'font-stylesheet'
     | 'label'
+    | 'artist'
+    | 'line'
+    | 'meta'
     | 'volume'
     | 'spectrogram'
     | 'zoom'
@@ -119,6 +122,9 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'font-src',
     'font-stylesheet',
     'label',
+    'artist',
+    'line',
+    'meta',
     'volume',
     'spectrogram',
     'zoom',
@@ -191,6 +197,7 @@ const SOUND_ATTRIBUTES: ReadonlySet<string> = new Set([
     'preload',
     'peaks',
     'label',
+    'artist',
     'chapters',
 ]);
 

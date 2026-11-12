@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { sharedTooltip } from '../../src/dom/shared/tooltip';
 import { markers, regions } from '../../src/index';
-import { createPlayer } from '../../src/player';
+import { createPlayer, type PlayerOptions } from '../../src/player';
 import { defineSonicPlaylist, nowPlaying } from '../../src/playlist';
 import { firePointer, playTo } from '../support/events';
 import { triggerResize, triggerVisible } from '../support/fakes';
@@ -112,6 +112,52 @@ describe('text from outside, through every view', () => {
             artist: SECOND,
             album: THIRD,
         });
+    });
+
+    it("shows the player's title, its file's name and its artist as text in the line", () => {
+        const look = (): PlayerOptions['look'] => ({
+            line: ['play', 'wave', 'title', 'artist'],
+        });
+        const named = afterTest(
+            createPlayer({
+                container: pageHost({
+                    left: 0,
+                    top: 0,
+                    width: 480,
+                    height: 48,
+                }),
+                media: fakeMedia(),
+                label: THIRD,
+                artist: FOURTH,
+                look: look(),
+            }),
+        );
+        const media = document.createElement('audio');
+        media.src = `https://site.test/${encodeURIComponent(FIFTH)}.mp3`;
+        const unnamed = afterTest(
+            createPlayer({
+                container: pageHost({
+                    left: 0,
+                    top: 0,
+                    width: 480,
+                    height: 48,
+                }),
+                media,
+                look: look(),
+            }),
+        );
+
+        expect(
+            named.element.querySelector('.sonicframe-title')?.textContent,
+        ).toBe(THIRD);
+        expect(
+            named.element.querySelector('.sonicframe-artist')?.textContent,
+        ).toBe(FOURTH);
+        expect(
+            unnamed.element.querySelector('.sonicframe-title')?.textContent,
+        ).toBe(FIFTH);
+        expectNothingInjected(named.element);
+        expectNothingInjected(unnamed.element);
     });
 
     it("shows a marker's label as text in the tooltip", () => {

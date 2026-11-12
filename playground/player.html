@@ -166,6 +166,24 @@ const player = createPlayer({
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>title</code></td>
+                                    <td>
+                                        The sound's name: the player's
+                                        <code>a11y.label</code>, or without one
+                                        its file's name (the look's
+                                        <code>titleFromFile</code>). Screen
+                                        readers hear it on the player already,
+                                        so they skip the part.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>artist</code></td>
+                                    <td>
+                                        The player's <code>artist</code>, as
+                                        text; skipped by screen readers too.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>slot</code></td>
                                     <td>
                                         Your own element (an avatar, say), given

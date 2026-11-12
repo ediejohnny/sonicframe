@@ -17,6 +17,7 @@
 
 import { PlayButton } from '../../controls/play/play-button';
 import { VolumeControl } from '../../controls/volume/volume';
+import { fileTitle } from '../../core/player/file-title';
 import type { FontChoice } from '../../core/player/fonts';
 import { playerWords, type PlayerWords } from '../../core/player/labels';
 import { clockOf } from '../../core/player/part-text';
@@ -81,6 +82,7 @@ import { playerKeyboard, type PlayerKeyboard } from '../keys/player-keys';
 import { playerMemory, type PlayerMemory } from '../remember/player-remember';
 import { tickClock } from '../parts/clock-ticker';
 import { listenPart } from '../parts/listen-button';
+import { NameParts } from '../parts/name-parts';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
 import { hasTrackWay, trackPart } from '../parts/track-buttons';
@@ -150,6 +152,10 @@ export class Player {
     private readonly session: PlayerSession;
     /** The message and the announcement of a sound that cannot load. */
     private readonly notice: SoundNotice;
+    /** The `title` and `artist` parts. */
+    private readonly names: NameParts;
+    /** The player's own name, as the app gave it; undefined while it has none. */
+    private name: string | undefined;
     private readonly times = new TimeParts();
     private partCleanups: (() => void)[] = [];
     private layout: PlayerLayout | null = null;
@@ -238,6 +244,13 @@ export class Player {
             this.media,
             this.abort.signal,
         );
+        this.name = a11y.label ?? options.label;
+        this.names = new NameParts({
+            look: () => this.look,
+            frame: () => this.frameRef,
+            title: () => this.titleText(),
+            artist: () => cleanText(options.artist ?? '', 120),
+        });
         const loadError = options.loadError;
         this.notice = new SoundNotice({
             media: this.media,
@@ -299,6 +312,7 @@ export class Player {
         this.arrange();
         this.alignToBars();
         this.chapterParts.fitNames();
+        this.names.fit();
         this.backdrop.resize();
     };
 
@@ -418,11 +432,29 @@ export class Player {
     /** Changes the player's accessible name; with no name, its `player` word comes back. */
     setLabel(label?: string): void {
         if (!this.destroyed) {
+            this.name = label;
             this.element.setAttribute(
                 'aria-label',
                 cleanText(label ?? this.words.labels.player, 120),
             );
+            this.names.show();
         }
+    }
+
+    /** The sound's name for the `title` part: the player's own, or its file's when the look allows. */
+    private titleText(): string {
+        if (this.name !== undefined) {
+            return cleanText(this.name, 120);
+        }
+
+        const media = this.media;
+        const address =
+            this.options.src ??
+            ((media ? media.currentSrc || media.src : '') || '');
+
+        return this.look.titleFromFile && address !== ''
+            ? fileTitle(address)
+            : '';
     }
 
     /**
@@ -900,6 +932,7 @@ export class Player {
         this.partCleanups = [];
         this.times.clear();
         this.chapterParts.clearParts();
+        this.names.clear();
         this.layout = null;
         this.buttonRef?.destroy();
         this.volumeRef?.destroy();
@@ -989,6 +1022,10 @@ export class Player {
                 break;
             case 'chapter':
                 target.append(this.chapterParts.namePart());
+                break;
+            case 'title':
+            case 'artist':
+                target.append(this.names.part(part));
                 break;
             case 'previousChapter':
             case 'nextChapter':

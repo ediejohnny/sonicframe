@@ -132,6 +132,11 @@ export type PlayerOptions = {
      * way, with a `SoundError` whose `reason` says why.
      */
     loadError?: boolean | { show?: boolean };
+    /**
+     * Who made the sound: shown by the `artist` part (off the line by default) and given to the
+     * system's media controls when `mediaSession` names no artist.
+     */
+    artist?: string;
     /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */

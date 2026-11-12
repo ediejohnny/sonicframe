@@ -5,6 +5,7 @@
  */
 
 import { loadWaveform } from '../../core/peaks/read-waveform';
+import { PART_NAMES, type Part } from '../../core/player/look';
 import type { ReadWaveformOptions } from '../../core/peaks/waveform';
 import type { MinimapOptions } from '../../plugins/minimap/minimap';
 import type {
@@ -175,7 +176,10 @@ export function sessionDetailsOf(
             element.getAttribute('a11y-label') ??
             element.getAttribute('label') ??
             '',
-        artist: element.getAttribute('media-artist') ?? '',
+        artist:
+            element.getAttribute('media-artist') ??
+            element.getAttribute('artist') ??
+            '',
         album: element.getAttribute('media-album') ?? '',
         artwork: element.getAttribute('media-artwork') ?? [],
     };
@@ -286,6 +290,7 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         wave: waveOf(element),
         font: fontOf(element),
         label: element.getAttribute('label') ?? undefined,
+        artist: element.getAttribute('artist') ?? undefined,
         volume: element.hasAttribute('volume'),
         spectrogram: element.hasAttribute('spectrogram'),
         zoom: zoomOf(
@@ -312,12 +317,33 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
     };
 }
 
-/** The look from the `background-` and `time-` attributes, or undefined when the tag has none. */
+/**
+ * The look from the `line` and `meta` attributes (part names, by spaces: `"play wave title"`) and the
+ * `background-` and `time-` ones, or undefined when the tag has none. A word that names no part is left out.
+ */
 function lookOf(element: Element): PlayerOptions['look'] {
+    const line = partsOf(element.getAttribute('line'));
+    const meta = partsOf(element.getAttribute('meta'));
     const background = backgroundLookOf(element);
     const clock = clockLookOf(element);
 
-    return background === undefined && clock === undefined
+    return [line, meta, background, clock].every((given) => given === undefined)
         ? undefined
-        : { ...background, ...clock };
+        : {
+              ...(line === undefined ? {} : { line }),
+              ...(meta === undefined ? {} : { meta }),
+              ...background,
+              ...clock,
+          };
+}
+
+/** The part names in `value`, in order; undefined without the attribute. */
+function partsOf(value: string | null): Part[] | undefined {
+    return value === null
+        ? undefined
+        : value
+              .split(/\s+/)
+              .filter((word): word is Part =>
+                  (PART_NAMES as readonly string[]).includes(word),
+              );
 }
