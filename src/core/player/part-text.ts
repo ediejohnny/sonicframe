@@ -3,7 +3,12 @@
  * precise clock the look may ask for, and the speed.
  */
 
-import { decimalMark, type ClockFormat } from '../shared/clock';
+import {
+    DEFAULT_CLOCK_DIGITS,
+    decimalMark,
+    type ClockDigits,
+    type ClockFormat,
+} from '../shared/clock';
 import { formatPosition, formatTime } from '../shared/timing';
 import type { PlayerLook } from './look';
 
@@ -52,10 +57,21 @@ export function timeMold(
 
 /**
  * The clock the look's time options ask for, its decimal mark from `locale` when `'auto'`; null for
- * the plain one (whole seconds, the hours from one hour on), which `timeText` writes.
+ * the plain one (whole seconds, the hours from one hour on, the default digits, no mask), which
+ * `timeText` writes.
  */
 export function clockOf(look: PlayerLook, locale: string): ClockFormat | null {
-    if (look.timePrecision === 'seconds' && look.timeHours === 'auto') {
+    const digits = look.timeDigits;
+    const plainDigits = (
+        Object.keys(DEFAULT_CLOCK_DIGITS) as (keyof ClockDigits)[]
+    ).every((field) => digits[field] === DEFAULT_CLOCK_DIGITS[field]);
+
+    if (
+        look.timePrecision === 'seconds' &&
+        look.timeHours !== 'always' &&
+        plainDigits &&
+        look.timeFormat === null
+    ) {
         return null;
     }
 
@@ -67,6 +83,8 @@ export function clockOf(look: PlayerLook, locale: string): ClockFormat | null {
             look.timeDecimal === 'auto'
                 ? decimalMark(locale)
                 : look.timeDecimal,
+        digits,
+        format: look.timeFormat,
     };
 }
 

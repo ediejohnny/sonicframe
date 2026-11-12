@@ -152,19 +152,23 @@ describe('resolveLook', () => {
             timeFps: 30,
             timeHours: 'auto',
             timeDecimal: '.',
+            timeDigits: { hours: 1, minutes: 1, seconds: 2, frames: 2 },
+            timeFormat: null,
         });
 
         const precise = resolveLook(DEFAULT_LOOK, {
             timePrecision: 'frames',
             timeFps: 29.97,
-            timeHours: 'padded',
+            timeHours: 'needed',
             timeDecimal: 'auto',
+            timeFormat: 'hh[h]mm[m]ss[s]',
         });
         expect(precise).toMatchObject({
             timePrecision: 'frames',
             timeFps: 29.97,
-            timeHours: 'padded',
+            timeHours: 'needed',
             timeDecimal: 'auto',
+            timeFormat: 'hh[h]mm[m]ss[s]',
         });
 
         const odd = resolveLook(DEFAULT_LOOK, {
@@ -172,15 +176,51 @@ describe('resolveLook', () => {
             timeFps: Number.NaN,
             timeHours: 'never' as never,
             timeDecimal: ';' as never,
+            timeFormat: 'hh:mm' as never,
         });
         expect(odd).toMatchObject({
             timePrecision: 'seconds',
             timeFps: 30,
             timeHours: 'auto',
             timeDecimal: '.',
+            timeFormat: null,
         });
         expect(resolveLook(DEFAULT_LOOK, { timeFps: 0 }).timeFps).toBe(1);
         expect(resolveLook(DEFAULT_LOOK, { timeFps: 500 }).timeFps).toBe(120);
+    });
+
+    it('changes only the digits given, each kept in its range', () => {
+        expect(
+            resolveLook(DEFAULT_LOOK, {
+                timeDigits: { minutes: 2, seconds: 9 } as never,
+            }).timeDigits,
+        ).toEqual({ hours: 1, minutes: 2, seconds: 4, frames: 2 });
+        expect(
+            resolveLook(DEFAULT_LOOK, {
+                timeDigits: { hours: 0, frames: 1 } as never,
+            }).timeDigits,
+        ).toEqual({ hours: 1, minutes: 1, seconds: 2, frames: 2 });
+    });
+
+    it('keeps the digits a look already had when another changes one of them', () => {
+        const two = resolveLook(DEFAULT_LOOK, {
+            timeDigits: { hours: 2 } as never,
+        });
+
+        expect(
+            resolveLook(two, { timeDigits: { minutes: 3 } as never })
+                .timeDigits,
+        ).toEqual({ hours: 2, minutes: 3, seconds: 2, frames: 2 });
+    });
+
+    it('takes the mask off with null, and keeps the one it had for a mask it cannot read', () => {
+        const masked = resolveLook(DEFAULT_LOOK, { timeFormat: 'mm:ss' });
+
+        expect(resolveLook(masked, { timeFormat: null }).timeFormat).toBeNull();
+        expect(resolveLook(masked, { timeFormat: 'ss:mm' }).timeFormat).toBe(
+            'mm:ss',
+        );
+        expect(resolveLook(masked, {}).timeFormat).toBe('mm:ss');
     });
 
     it('starts the rows under the wave at the wave by default, at the line when asked, and nowhere else', () => {
@@ -530,16 +570,33 @@ describe('clockOf', () => {
             fps: 30,
             hours: 'auto',
             decimal: ',',
+            digits: { hours: 1, minutes: 1, seconds: 2, frames: 2 },
+            format: null,
         });
         expect(clockOf(look, 'en-US')?.decimal).toBe('.');
     });
 
-    it('is a clock for whole seconds when only the hours change', () => {
-        const look = resolveLook(DEFAULT_LOOK, { timeHours: 'always' });
+    it('is a clock for whole seconds when only the hours, a digit or the mask change', () => {
+        for (const given of [
+            { timeHours: 'always' },
+            { timeDigits: { minutes: 2 } },
+            { timeFormat: 'mm:ss' },
+        ] as const) {
+            const look = resolveLook(DEFAULT_LOOK, given as never);
 
-        expect(clockOf(look, 'en-US')).toMatchObject({
-            precision: 'seconds',
-            hours: 'always',
-        });
+            expect(clockOf(look, 'en-US'), JSON.stringify(given)).toMatchObject(
+                {
+                    precision: 'seconds',
+                },
+            );
+        }
+
+        // Hours as needed are the plain clock's own.
+        expect(
+            clockOf(
+                resolveLook(DEFAULT_LOOK, { timeHours: 'needed' }),
+                'en-US',
+            ),
+        ).toBeNull();
     });
 });

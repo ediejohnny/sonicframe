@@ -229,8 +229,8 @@ describe('a precise clock', () => {
                 line: ['play', 'wave', 'elapsed', 'remaining'],
                 timePrecision: 'frames',
                 timeFps: 25,
-                timeHours: 'padded',
-            },
+                timeDigits: { hours: 2 },
+            } as Record<string, unknown>,
             3725,
         );
         media.currentTime = 65.5;
@@ -240,6 +240,17 @@ describe('a precise clock', () => {
             { text: '00:01:05:12', mold: '00:00:00:00' },
             { text: '-01:00:59:13', mold: '-00:00:00:00' },
         ]);
+    });
+
+    it('writes the time with the look’s mask, its room kept', () => {
+        const media = make({ timeFormat: 'hh[h]mm[m]ss[s]' }, 2246);
+        media.currentTime = 65;
+        media.fire('timeupdate');
+
+        expect(read(times()[0])).toMatchObject({
+            text: '00h01m05s / 00h37m26s',
+            mold: '00h00m00s / 00h00m00s',
+        });
     });
 
     it('writes the decimal mark of the player’s language when the look says `auto`', () => {

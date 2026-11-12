@@ -1,8 +1,9 @@
 /**
  * The `time-` attributes of `<sonic-player>` read into the look's precise clock. Untrusted like
- * every attribute: a name is passed in lower case and the look keeps it only when it knows it, and
- * a frame rate counts only when it is a number, which the look keeps in range; anything else leaves
- * the plain clock.
+ * every attribute: a name is passed in lower case and the look keeps it only when it knows it, a
+ * frame rate counts only when it is a number, which the look keeps in range, and a mask
+ * (`time-format`) goes as written, its letters' case kept, for the look to read or drop; anything
+ * else leaves the plain clock.
  */
 
 import type { PlayerLook } from '../../core/player/look';
@@ -13,7 +14,8 @@ export type ClockAttribute =
     | 'time-precision'
     | 'time-fps'
     | 'time-hours'
-    | 'time-decimal';
+    | 'time-decimal'
+    | 'time-format';
 
 /** The tag's attributes for the clock. */
 export const CLOCK_ATTRIBUTES: readonly ClockAttribute[] = Object.freeze([
@@ -21,6 +23,7 @@ export const CLOCK_ATTRIBUTES: readonly ClockAttribute[] = Object.freeze([
     'time-fps',
     'time-hours',
     'time-decimal',
+    'time-format',
 ]);
 
 /** An attribute's word, trimmed and in lower case; null without the attribute. */
@@ -35,6 +38,7 @@ export function clockLookOf(element: Element): Partial<PlayerLook> | undefined {
     const fps = attributeNumber(element.getAttribute('time-fps'));
     const hours = word(element, 'time-hours');
     const decimal = word(element, 'time-decimal');
+    const format = element.getAttribute('time-format');
 
     // Each word goes in as written; `resolveLook` keeps a known one and drops the rest.
     if (precision !== null) {
@@ -51,6 +55,10 @@ export function clockLookOf(element: Element): Partial<PlayerLook> | undefined {
 
     if (decimal !== null) {
         look.timeDecimal = decimal as PlayerLook['timeDecimal'];
+    }
+
+    if (format !== null) {
+        look.timeFormat = format;
     }
 
     return Object.keys(look).length > 0 ? look : undefined;
