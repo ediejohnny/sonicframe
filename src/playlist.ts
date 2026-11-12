@@ -35,6 +35,16 @@ export {
     type LoadTracksOptions,
 } from './core/playlist/load-tracks';
 export { REPEATS, type Repeat } from './core/playlist/order';
-export type { PlaylistWords } from './core/languages/words';
+export { nowPlaying, NowPlaying } from './playlist/now-playing/now-playing';
+export {
+    defineSonicNowPlaying,
+    NOW_PLAYING_ATTRIBUTES,
+} from './playlist/element/now-playing-element';
+export {
+    NOW_PLAYING_PARTS,
+    type NowPlayingOptions,
+    type NowPlayingPart,
+} from './playlist/now-playing/now-playing-options';
+export type { NowPlayingWords, PlaylistWords } from './core/languages/words';
 export type { RememberStore } from './core/player/remember';
 export type { LanguageTag } from './core/languages/language';

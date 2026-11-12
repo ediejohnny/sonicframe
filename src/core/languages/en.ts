@@ -128,4 +128,9 @@ export const EN: CompleteWords = {
         playing: 'Playing: {title}, {place} of {count}',
         untitled: 'Track {place}',
     },
+    nowPlaying: {
+        bar: 'Now playing',
+        close: 'Close the bar',
+        back: 'Back to the player',
+    },
 };

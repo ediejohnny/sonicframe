@@ -58,4 +58,9 @@ export const PT_PT: CompleteWords = {
         close: 'Fechar a lista de reprodução',
         playing: 'A reproduzir: {title}, {place} de {count}',
     },
+    nowPlaying: {
+        bar: 'A reproduzir',
+        close: 'Fechar a barra',
+        back: 'Voltar ao leitor',
+    },
 };

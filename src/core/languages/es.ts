@@ -125,4 +125,9 @@ export const ES: CompleteWords = {
         playing: 'Reproduciendo: {title}, {place} de {count}',
         untitled: 'Pista {place}',
     },
+    nowPlaying: {
+        bar: 'Reproduciendo ahora',
+        close: 'Cerrar la barra',
+        back: 'Volver al reproductor',
+    },
 };

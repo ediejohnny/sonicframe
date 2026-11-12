@@ -8,6 +8,7 @@ import type { PlaylistWords } from '../../core/languages/words';
 import type { RememberStore } from '../../core/player/remember';
 import type { Repeat } from '../../core/playlist/order';
 import type { Track, TrackInput } from '../../core/playlist/tracks';
+import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf, within } from '../../core/shared/checked';
 import type {
     PlayerChapterList,
@@ -95,6 +96,8 @@ export type PlaylistOptions = {
     list?: boolean | PlaylistList;
     /** The buttons over the list: shuffle and repeat by default; `[]` for none. */
     buttons?: readonly PlaylistButton[];
+    /** The now-playing bar for the playlist's player: true or its options. Off by default. */
+    nowPlaying?: boolean | NowPlayingOptions;
     /** Remembers the track, the shuffle and the repeat between visits. Off by default. */
     remember?: boolean | PlaylistRemember;
     a11y?: PlaylistA11y;

@@ -41,6 +41,12 @@ import {
 } from '../../core/player/theme';
 import { unknownName } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
+import {
+    joinPlayers,
+    leavePlayers,
+    playerStarted,
+    playerStopped,
+} from './player-registry';
 import { cleanText } from '../../core/shared/text';
 import { MUTED, PROGRESS } from '../../core/shared/variables';
 import { resolveZoom } from '../../core/view/zoom';
@@ -151,7 +157,7 @@ export class Player {
     private readonly keyboard: PlayerKeyboard | null;
     private readonly memory: PlayerMemory | null;
     /** The tracks around the sound, from the options or `setTracks`. */
-    private tracks: PlayerTracks | undefined;
+    private trackWays: PlayerTracks | undefined;
     private destroyed = false;
 
     constructor(options: PlayerOptions) {
@@ -160,7 +166,7 @@ export class Player {
         }
 
         this.options = options;
-        this.tracks = options.tracks;
+        this.trackWays = options.tracks;
         this.own = {
             look: options.look,
             palette: options.palette,
@@ -222,7 +228,7 @@ export class Player {
         this.session = new PlayerSession(options, {
             look: () => this.look,
             chapters: this.chapterParts.plugin,
-            tracks: () => this.tracks,
+            tracks: () => this.trackWays,
         });
         this.backdrop = new PlayerBackdrop(
             this.element,
@@ -250,8 +256,19 @@ export class Player {
 
         this.keyboard = playerKeyboard(options, {
             ...this.host,
-            tracks: () => this.tracks,
+            tracks: () => this.trackWays,
         });
+        joinPlayers(this);
+        this.media?.addEventListener('play', () => playerStarted(this), {
+            signal: this.abort.signal,
+        });
+
+        for (const stop of ['pause', 'ended']) {
+            this.media?.addEventListener(stop, playerStopped, {
+                signal: this.abort.signal,
+            });
+        }
+
         this.memory = playerMemory(options, {
             media: this.media,
             words: this.words,
@@ -293,6 +310,11 @@ export class Player {
     /** The chapters plugin (to set, load or step through the chapters), or null while they are off. */
     get chapters(): ChaptersPlugin | null {
         return this.chapterParts.plugin;
+    }
+
+    /** The tracks around the sound (from the options or `setTracks`), or undefined without any. */
+    get tracks(): PlayerTracks | undefined {
+        return this.trackWays;
     }
 
     /** The system's media controls (to change what they show), or null while they are off. */
@@ -394,7 +416,7 @@ export class Player {
      */
     setTracks(tracks?: PlayerTracks): void {
         if (!this.destroyed) {
-            this.tracks = tracks;
+            this.trackWays = tracks;
             this.build();
         }
     }
@@ -438,6 +460,7 @@ export class Player {
         }
 
         this.element.remove();
+        leavePlayers(this);
         this.events.emit('destroy');
         this.events.clear();
     }
@@ -507,7 +530,7 @@ export class Player {
         }
 
         if (part === 'previousTrack' || part === 'nextTrack') {
-            return hasTrackWay(this.tracks, part);
+            return hasTrackWay(this.trackWays, part);
         }
 
         return ZOOM_PARTS.includes(part) ? this.zoomButtons() : true;
@@ -967,8 +990,8 @@ export class Player {
             case 'previousTrack':
             case 'nextTrack':
                 // Placed only when allowed, so the tracks are there.
-                if (this.tracks !== undefined) {
-                    target.append(trackPart(this.host, part, this.tracks));
+                if (this.trackWays !== undefined) {
+                    target.append(trackPart(this.host, part, this.trackWays));
                 }
                 break;
             case 'slot':

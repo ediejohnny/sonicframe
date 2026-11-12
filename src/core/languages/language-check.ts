@@ -25,6 +25,7 @@ const LATER: Readonly<Record<string, readonly string[]>> = {
         'playing',
         'untitled',
     ],
+    nowPlaying: ['bar', 'close', 'back'],
 };
 
 /** The marks of a phrase, each once, in order of name: `'{from} {to}'`. */
