@@ -26,7 +26,7 @@ export type MarksReadOptions = {
     /** The most regions or markers kept: 2000, from 1 to 20 000; past either end, a `RangeError`. */
     maxItems?: number;
     /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
-    maxText?: number;
+    maxSize?: number;
 };
 
 /** The longest text read, in characters: 512 KB, up to 5 MB. */
@@ -220,11 +220,11 @@ function rowsOf(
         throw notMarks();
     }
 
-    const maxText = limitOf('maxText', options.maxText, MARKS_TEXT);
+    const maxSize = limitOf('maxSize', options.maxSize, MARKS_TEXT);
 
-    if (input.length > maxText) {
+    if (input.length > maxSize) {
         throw new RangeError(
-            `sonicframe: the text is over maxText (${maxText} characters)`,
+            `sonicframe: the text is over maxSize (${maxSize} characters)`,
         );
     }
 
@@ -273,7 +273,7 @@ function textsOf(row: Row): { label?: string; color?: string; id?: string } {
 /**
  * Regions from a file of any format (see `MarksReadOptions`); a line without an end is a region of
  * no length, which the regions plugin keeps to its shortest. A text that is no such file throws a
- * `TypeError`, and one over `maxText` a `RangeError`.
+ * `TypeError`, and one over `maxSize` a `RangeError`.
  */
 export function readRegions(
     text: string,
@@ -302,7 +302,7 @@ export function readRegions(
 /**
  * Markers from a file of any format, each at the start of its line (a region file gives its
  * starts); a plain moment in a JSON list counts too. A text that is no such file throws a
- * `TypeError`, and one over `maxText` a `RangeError`.
+ * `TypeError`, and one over `maxSize` a `RangeError`.
  */
 export function readMarkers(
     text: string,

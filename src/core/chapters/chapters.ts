@@ -48,7 +48,7 @@ export type ReadChaptersOptions = {
     /** The most chapters kept: 1000, from 1 to 10 000; past either end, a `RangeError`. */
     maxChapters?: number;
     /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
-    maxText?: number;
+    maxSize?: number;
 };
 
 export type LoadChaptersOptions = {
@@ -212,14 +212,14 @@ function readJson(value: unknown, most: number): Chapter[] {
  * Reads chapters from WebVTT text, Podcasting 2.0 JSON (as text or already parsed) or a list of
  * `ChapterInput`. They come back in order of their starts, at most `maxChapters`, with a cue or an
  * item that has no usable start (or a WebVTT cue that ends before it starts) left out. Anything
- * else throws a `TypeError`; a text over `maxText` throws a `RangeError`.
+ * else throws a `TypeError`; a text over `maxSize` throws a `RangeError`.
  */
 export function readChapters(
     input: unknown,
     options: ReadChaptersOptions = {},
 ): Chapter[] {
     const most = limitOf('maxChapters', options.maxChapters, CHAPTER_COUNT);
-    const maxText = limitOf('maxText', options.maxText, CHAPTER_TEXT);
+    const maxSize = limitOf('maxSize', options.maxSize, CHAPTER_TEXT);
 
     if (Array.isArray(input)) {
         return collect(
@@ -241,7 +241,7 @@ export function readChapters(
         return readJson(input, most);
     }
 
-    if (input.length > maxText) {
+    if (input.length > maxSize) {
         throw tooLarge();
     }
 
@@ -344,7 +344,7 @@ export function chapterLimits(
 ): Required<ReadChaptersOptions> {
     return {
         maxChapters: limitOf('maxChapters', options.maxChapters, CHAPTER_COUNT),
-        maxText: heldLimit(options.maxBytes, CHAPTER_TEXT),
+        maxSize: heldLimit(options.maxBytes, CHAPTER_TEXT),
     };
 }
 
@@ -361,7 +361,7 @@ export function loadChapters(
     const fetcher = options.fetcher ?? ((address: string) => fetch(address));
     const load = async (): Promise<Chapter[]> => {
         const response = await fetchOk(fetcher, url, 'chapters');
-        const bytes = await readCapped(response, read.maxText, tooLarge);
+        const bytes = await readCapped(response, read.maxSize, tooLarge);
 
         return readChapters(new TextDecoder('utf-8').decode(bytes), read);
     };
@@ -372,7 +372,7 @@ export function loadChapters(
 
     return oncePerPage(
         loading,
-        JSON.stringify([url, read.maxText, read.maxChapters]),
+        JSON.stringify([url, read.maxSize, read.maxChapters]),
         load,
     );
 }

@@ -35,6 +35,6 @@ export async function loadTracks(
             options.base ??
             (/^https?:/i.test(loaded.url) ? loaded.url : undefined),
         maxTracks: options.maxTracks,
-        maxText: maxBytes,
+        maxSize: maxBytes,
     });
 }

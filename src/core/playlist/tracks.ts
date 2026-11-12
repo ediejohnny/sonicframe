@@ -55,7 +55,7 @@ export type ReadTracksOptions = {
     /** The most tracks kept: 1000, from 1 to 10 000; past either end, a `RangeError`. */
     maxTracks?: number;
     /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
-    maxText?: number;
+    maxSize?: number;
 };
 
 /** The formats `writeTracks` writes. */
@@ -335,7 +335,7 @@ function titled(
  * Reads tracks from a list of `TrackInput`, SonicFrame's JSON (`{ tracks: [...] }` or a list, as text
  * or already parsed) or an M3U/M3U8 text. They come back in the order written, at most
  * `maxTracks`, each one cleaned (see `Track`); one without a usable address is left out. Anything
- * else throws a `TypeError`; a text over `maxText` throws a `RangeError`.
+ * else throws a `TypeError`; a text over `maxSize` throws a `RangeError`.
  */
 export function readTracks(
     input: unknown,
@@ -350,7 +350,7 @@ export function readTracks(
         return readJson(input, reading);
     }
 
-    if (input.length > limitOf('maxText', options.maxText, TRACK_TEXT)) {
+    if (input.length > limitOf('maxSize', options.maxSize, TRACK_TEXT)) {
         throw tooLarge();
     }
 

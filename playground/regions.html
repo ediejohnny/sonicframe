@@ -432,7 +432,7 @@ parts.set(readRegions(await file.text())); // any of the four formats</code></pr
                     <p>
                         Reading refuses a text over 512 KB and keeps at most
                         2000 regions or markers; your code may raise them up to
-                        5 MB and 20,000 with <code>maxText</code> and
+                        5 MB and 20,000 with <code>maxSize</code> and
                         <code>maxItems</code> (past either, a
                         <code>RangeError</code>). It leaves out one whose time
                         is not a number from zero or whose end comes before its

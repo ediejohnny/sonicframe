@@ -198,7 +198,7 @@ describe('readRegions', () => {
             { length: count },
             (_, at) => `${at}\t${at}\tL`,
         ).join('\n');
-        const most = { maxItems: 20_000, maxText: 5_242_880 };
+        const most = { maxItems: 20_000, maxSize: 5_242_880 };
 
         for (const text of [json, csv, audacity]) {
             expect(readRegions(text, most)).toHaveLength(20_000);
@@ -211,8 +211,8 @@ describe('readRegions', () => {
                 'sonicframe: maxItems goes past its most, 20000 (20001)',
             ),
         );
-        expect(() => readMarkers(csv, { maxText: 5_242_881 })).toThrow(
-            'maxText goes past its most, 5242880',
+        expect(() => readMarkers(csv, { maxSize: 5_242_881 })).toThrow(
+            'maxSize goes past its most, 5242880',
         );
     });
 

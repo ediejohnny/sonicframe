@@ -192,14 +192,14 @@ describe('readChapters: limits and other input', () => {
             10_000,
         );
         expect(readChapters(many, { maxChapters: 3 })).toHaveLength(3);
-        expect(readChapters(text, { maxText: 5_242_880 })).toEqual([]);
+        expect(readChapters(text, { maxSize: 5_242_880 })).toEqual([]);
         expect(() => readChapters(many, { maxChapters: 10_001 })).toThrow(
             new RangeError(
                 'sonicframe: maxChapters goes past its most, 10000 (10001)',
             ),
         );
-        expect(() => readChapters(text, { maxText: 5_242_881 })).toThrow(
-            'maxText goes past its most, 5242880',
+        expect(() => readChapters(text, { maxSize: 5_242_881 })).toThrow(
+            'maxSize goes past its most, 5242880',
         );
         expect(() => readChapters(many, { maxChapters: 0 })).toThrow(
             'maxChapters goes under its least, 1',

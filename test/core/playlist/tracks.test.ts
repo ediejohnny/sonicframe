@@ -173,7 +173,7 @@ describe('readTracks against a hostile list', () => {
         expect(readTracks(m3u, { maxTracks: 2 })).toHaveLength(2);
         expect(
             readTracks(`#EXTM3U\nt.mp3\n#${'a'.repeat(524_288)}`, {
-                maxText: 5_242_880,
+                maxSize: 5_242_880,
             }),
         ).toHaveLength(1);
         expect(() => readTracks(many, { maxTracks: 10_001 })).toThrow(
@@ -181,8 +181,8 @@ describe('readTracks against a hostile list', () => {
                 'sonicframe: maxTracks goes past its most, 10000 (10001)',
             ),
         );
-        expect(() => readTracks(m3u, { maxText: 5_242_881 })).toThrow(
-            'maxText goes past its most, 5242880',
+        expect(() => readTracks(m3u, { maxSize: 5_242_881 })).toThrow(
+            'maxSize goes past its most, 5242880',
         );
     });
 

@@ -55,10 +55,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   hours), `readPeaks`'s limit (20 000, up to 1 000 000), and a recording's `maxSeconds` (300, up to 6 hours, from 3600) and `maxBytes` (100 MiB, up to 1 GiB); `<sonic-recorder max-seconds>` keeps to 3600, as before. A larger
   value is kept at the most until 2.0. Chapters: `loadChapters`'s `maxBytes` goes up to 5 MB, and the new
   `maxChapters` (1000, up to 10 000) is also taken by `readChapters` and by the chapters plugin's `load` for chapters
-  given as a list or a text. Tracks: `readTracks` takes `maxTracks` (1000, up to 10 000) and `maxText` (512 KB, up
+  given as a list or a text. Tracks: `readTracks` takes `maxTracks` (1000, up to 10 000) and `maxSize` (512 KB, up
   to 5 MB), `loadTracks` takes `maxTracks` and its `maxBytes` goes up to 5 MB, the playlist takes `maxTracks`, and a
   feed's `limit` goes up to 10 000. Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems`
-  (2000, up to 20 000) and `maxText` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000. The
+  (2000, up to 20 000) and `maxSize` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000. The
   player's `remember.sounds` goes up to 5000. A clip's `width` and `height` go up to 3840 × 2160, and `exportClip`
   takes `maxSeconds` (120, up to 600), `bitrate` (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB). The
   spectrogram's `fftSize` goes up to 32 768 (the Web Audio standard's own most), its `columns` up to 16 384 and its
