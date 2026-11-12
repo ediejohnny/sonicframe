@@ -82,7 +82,10 @@ function name(value: unknown): string {
 }
 
 /** An address that passes `safeUrl`, pointing beside `base` when it is relative and a base is given. */
-function address(value: unknown, base: string | undefined): string | null {
+export function address(
+    value: unknown,
+    base: string | undefined,
+): string | null {
     if (typeof value !== 'string') {
         return null;
     }

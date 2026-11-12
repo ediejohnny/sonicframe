@@ -13,6 +13,7 @@ import {
 } from '../../../src/playlist';
 import { afterTest, pageHost } from '../../support/helpers';
 import { PlayableMedia } from '../../support/media-session';
+import { serve } from '../../support/responses';
 
 export let host: HTMLElement | null = null;
 
@@ -129,6 +130,21 @@ export function barButton(
     }
 
     return button;
+}
+
+/** Makes the page's `fetch` answer `text`; returns what each request asked for. */
+export function serveText(text: string): RequestInit[] {
+    const asked: RequestInit[] = [];
+    vi.stubGlobal(
+        'fetch',
+        vi.fn((_url: string, init: RequestInit) => {
+            asked.push(init);
+
+            return serve(new TextEncoder().encode(text))('');
+        }),
+    );
+
+    return asked;
 }
 
 /** Lets the promises waiting now run. */
