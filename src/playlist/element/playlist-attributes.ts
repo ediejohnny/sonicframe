@@ -6,7 +6,9 @@
  * list at `src`. Every attribute of `<sonic-player>` but the sound's own sets each track's player.
  */
 
+import { FEED_SIZE } from '../../core/playlist/feed';
 import type { TrackInput } from '../../core/playlist/tracks';
+import { XML_LIMITS } from '../../core/playlist/xml-limits';
 import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf } from '../../core/shared/checked';
 import { attributeNumber } from '../../dom/shared/custom-element';
@@ -25,6 +27,11 @@ const OWN_ATTRIBUTES = [
     'feed',
     'feed-order',
     'feed-limit',
+    'feed-max-size',
+    'feed-max-depth',
+    'feed-max-elements',
+    'feed-max-attributes',
+    'feed-max-name-length',
     'start',
     'layout',
     'advance',
@@ -146,6 +153,40 @@ function playerOf(element: Element): PlaylistPlayer {
 }
 
 /** Everything the tag says, as the playlist's options (all but the container). */
+/** A ceiling a tag may only lower: past `most`, it is `most`. Raising one is for an app's code. */
+function atMost(value: number | undefined, most: number): number | undefined {
+    return value === undefined ? undefined : Math.min(value, most);
+}
+
+/** The tag's feed: its address, order and limit, and its reader's ceilings, which only go down. */
+function feedOf(get: (name: string) => string | null): PlaylistOptions['feed'] {
+    const src = get('feed');
+    const ceiling = (name: string, most: number): number | undefined =>
+        atMost(attributeNumber(get(`feed-${name}`)), most);
+
+    return src === null
+        ? undefined
+        : {
+              src,
+              order: (get('feed-order') ?? undefined) as 'newest' | 'oldest',
+              limit: attributeNumber(get('feed-limit')),
+              maxSize: ceiling('max-size', FEED_SIZE),
+              maxDepth: ceiling('max-depth', XML_LIMITS.maxDepth.value),
+              maxElements: ceiling(
+                  'max-elements',
+                  XML_LIMITS.maxElements.value,
+              ),
+              maxAttributes: ceiling(
+                  'max-attributes',
+                  XML_LIMITS.maxAttributes.value,
+              ),
+              maxNameLength: ceiling(
+                  'max-name-length',
+                  XML_LIMITS.maxNameLength.value,
+              ),
+          };
+}
+
 export function playlistOptionsOf(
     element: Element,
 ): Omit<PlaylistOptions, 'container'> {
@@ -160,16 +201,7 @@ export function playlistOptionsOf(
                 ? linkTracks(element)
                 : undefined,
         src: src ?? undefined,
-        feed:
-            get('feed') === null
-                ? undefined
-                : {
-                      src: get('feed') ?? '',
-                      order: (get('feed-order') ?? undefined) as
-                          | 'newest'
-                          | 'oldest',
-                      limit: attributeNumber(get('feed-limit')),
-                  },
+        feed: feedOf(get),
         // A tag's words may come from whoever writes a page's content: it may keep cookies home or leave
         // them out, never send them to another site (an app's code can, with `fetch.credentials`).
         fetch: {

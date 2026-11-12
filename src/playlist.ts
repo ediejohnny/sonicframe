@@ -41,7 +41,7 @@ export {
     type Feed,
     type LoadFeedOptions,
     type ReadFeedOptions,
-} from './playlist/feed/feed';
+} from './core/playlist/feed';
 export { nowPlaying, NowPlaying } from './playlist/now-playing/now-playing';
 export {
     defineSonicNowPlaying,

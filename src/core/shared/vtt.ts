@@ -6,6 +6,8 @@
  * Nothing here touches the page.
  */
 
+import { characterReference } from './character-reference';
+
 /** A cue, in seconds, with its text on one line and its identifier when it has one. */
 export type VttCue = { start: number; end: number; title: string; id?: string };
 
@@ -91,13 +93,6 @@ const ENTITIES: Readonly<Record<string, string>> = {
     rlm: '\u200f',
 };
 
-/** A code point as text, or the replacement character when it is not a character. */
-function character(code: number): string {
-    return code > 0 && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff)
-        ? String.fromCodePoint(code)
-        : '\ufffd';
-}
-
 /**
  * A cue's text on one line, without its tags and the spaces left at its ends, with its character
  * references decoded (after, so `&lt;b&gt;` stays text).
@@ -108,18 +103,9 @@ function cueText(lines: readonly string[]): string {
         .replace(/<[^>]*>/g, '')
         .trim()
         .replace(
-            /&(?:#x([0-9a-f]{1,6})|#(\d{1,7})|([a-z]+));/gi,
-            (whole, hex?: string, decimal?: string, name?: string) => {
-                if (hex !== undefined) {
-                    return character(parseInt(hex, 16));
-                }
-
-                if (decimal !== undefined) {
-                    return character(Number(decimal));
-                }
-
-                return ENTITIES[(name ?? '').toLowerCase()] ?? whole;
-            },
+            /&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]+);/gi,
+            (whole, name: string) =>
+                characterReference(name.toLowerCase(), ENTITIES) ?? whole,
         );
 }
 

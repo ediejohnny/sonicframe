@@ -27,7 +27,13 @@
                         through <code>textContent</code> (with control and
                         direction-changing characters removed, and a length
                         cap), and icons are built element by element. Nothing
-                        uses <code>innerHTML</code> or <code>eval</code>.
+                        uses <code>innerHTML</code>, <code>eval</code> or the
+                        browser's <code>DOMParser</code>: a podcast feed is read
+                        by SonicFrame's own small XML reader, as text only. So a
+                        page that requires Trusted Types (<code
+                            >require-trusted-types-for 'script'</code
+                        >, even with <code>trusted-types 'none'</code>) keeps
+                        working.
                     </p>
                 </section>
 
@@ -74,6 +80,16 @@
                             that do not match their header are refused.
                         </li>
                         <li>Captions and tooltips: text only, capped.</li>
+                        <li>
+                            Playlists: 1000 tracks, 512 KB of JSON or M3U, names
+                            of 120 characters. Podcast feeds: 5 MB, with no
+                            entity declarations and the nesting, elements,
+                            attributes and names of the XML capped at the
+                            defaults the most used XML readers settled on (see
+                            <a href="./playlist.html">Playlist</a>); your code
+                            may raise each up to a fixed most, a tag only lower
+                            it.
+                        </li>
                         <li>
                             The lock screen and the media keys: words in one
                             line of 120 characters, at most eight pictures from

@@ -58,6 +58,14 @@ describe('vttText', () => {
 });
 
 describe('readVtt', () => {
+    it('leaves a reference that names no character as written, never reading a name off the object prototype', () => {
+        const [cue] = readVtt(
+            'WEBVTT\n\n00:00.000 --> 00:01.000\n&constructor; &tostring; &#0; &#xD800; &NBSP;x\n',
+        );
+
+        expect(cue.title).toBe('&constructor; &tostring; � �  x');
+    });
+
     it("gives a cue's identifier when it has one, without the spaces at its ends", () => {
         const cues = readVtt(
             'WEBVTT\n\nverse 1 \n00:00:01.000 --> 00:00:02.000\nOne\n\n00:00:03.000 --> 00:00:04.000\nTwo\n\n \n00:00:05.000 --> 00:00:06.000\nThree\n',
