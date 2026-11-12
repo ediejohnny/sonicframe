@@ -35,6 +35,13 @@ export {
     type LoadTracksOptions,
 } from './core/playlist/load-tracks';
 export { REPEATS, type Repeat } from './core/playlist/order';
+export {
+    loadFeed,
+    readFeed,
+    type Feed,
+    type LoadFeedOptions,
+    type ReadFeedOptions,
+} from './playlist/feed/feed';
 export { nowPlaying, NowPlaying } from './playlist/now-playing/now-playing';
 export {
     defineSonicNowPlaying,

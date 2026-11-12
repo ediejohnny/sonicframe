@@ -22,6 +22,9 @@ import type {
 /** The playlist's own attributes. */
 const OWN_ATTRIBUTES = [
     'src',
+    'feed',
+    'feed-order',
+    'feed-limit',
     'start',
     'layout',
     'advance',
@@ -152,8 +155,21 @@ export function playlistOptionsOf(
     const remember = element.hasAttribute('remember');
 
     return {
-        tracks: src === null ? linkTracks(element) : undefined,
+        tracks:
+            src === null && get('feed') === null
+                ? linkTracks(element)
+                : undefined,
         src: src ?? undefined,
+        feed:
+            get('feed') === null
+                ? undefined
+                : {
+                      src: get('feed') ?? '',
+                      order: (get('feed-order') ?? undefined) as
+                          | 'newest'
+                          | 'oldest',
+                      limit: attributeNumber(get('feed-limit')),
+                  },
         // A tag's words may come from whoever writes a page's content: it may keep cookies home or leave
         // them out, never send them to another site (an app's code can, with `fetch.credentials`).
         fetch: {

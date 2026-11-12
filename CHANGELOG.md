@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   Escape closes. `<sonic-now-playing>` is the same as a tag, a playlist brings one with `nowPlaying` (or the
   `now-playing` attribute), and `currentPlayer()` in `sonicframe/player` gives the player that played last.
   Players also have a `tracks` getter.
+- A podcast's feed as a playlist: `feed` (or the tag's `feed`, `feed-order`, `feed-limit`) reads each episode's
+  sound, length, picture, chapters and transcript, newest first by default, with a limit. `readFeed` and `loadFeed`
+  read one by themselves. The feed is read as XML; one that declares entities, or over 5 MB, is refused.
 
 ## [1.2.0] - 2026-11-12
 

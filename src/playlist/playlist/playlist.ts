@@ -19,6 +19,7 @@ import {
     type Repeat,
 } from '../../core/playlist/order';
 import { loadTracks } from '../../core/playlist/load-tracks';
+import { loadFeed } from '../feed/feed';
 import {
     MAX_TRACKS,
     readTracks,
@@ -338,26 +339,34 @@ export class Playlist {
             return;
         }
 
-        if (typeof options.src !== 'string') {
+        const feed =
+            typeof options.feed === 'string'
+                ? { src: options.feed }
+                : options.feed;
+        const address = feed?.src ?? options.src;
+
+        if (typeof address !== 'string') {
             this.first([]);
 
             return;
         }
 
-        const base = (): string | undefined => {
-            try {
-                return new URL(options.src ?? '', document.baseURI).href;
-            } catch {
-                return undefined;
-            }
-        };
-
-        loadTracks(options.src, {
-            base: base(),
+        const load = {
+            base: pageAddress(address),
             credentials: options.fetch?.credentials,
             referrerPolicy: options.fetch?.referrerPolicy,
             signal: this.abort.signal,
-        }).then(
+        };
+        const loading =
+            feed === undefined
+                ? loadTracks(address, load)
+                : loadFeed(address, {
+                      ...load,
+                      order: feed.order,
+                      limit: feed.limit,
+                  }).then((read) => read.tracks);
+
+        loading.then(
             (tracks) => {
                 if (!this.destroyed) {
                     this.first(tracks);
@@ -366,7 +375,6 @@ export class Playlist {
             (error: unknown) => this.fail(error),
         );
     }
-
     /** Takes the first tracks: the current one is the remembered one, or `start`. */
     private first(tracks: Track[]): void {
         const kept = this.store?.read();
@@ -544,6 +552,15 @@ export class Playlist {
                 error instanceof Error ? error : new Error(String(error)),
             );
         }
+    }
+}
+
+/** `address` resolved against the page, or undefined when it cannot be. */
+function pageAddress(address: string): string | undefined {
+    try {
+        return new URL(address, document.baseURI).href;
+    } catch {
+        return undefined;
     }
 }
 

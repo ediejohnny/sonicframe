@@ -65,7 +65,14 @@ export type PlaylistOptions = {
     tracks?: readonly TrackInput[] | string;
     /** The address of a JSON or M3U list, fetched when `tracks` is left out. */
     src?: string;
-    /** How `src` is fetched: cookies only to the page's own site by default. */
+    /**
+     * The address of a podcast feed (RSS), fetched when `tracks` is left out: its episodes, newest first.
+     * Or `{ src, order, limit }`: `order` `'newest'` or `'oldest'`, `limit` at most 1000.
+     */
+    feed?:
+        | string
+        | { src: string; order?: 'newest' | 'oldest'; limit?: number };
+    /** How `src` and `feed` are fetched: cookies only to the page's own site by default. */
     fetch?: {
         credentials?: RequestCredentials;
         referrerPolicy?: ReferrerPolicy;
