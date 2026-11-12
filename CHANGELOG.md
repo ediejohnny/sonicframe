@@ -59,7 +59,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   to 5 MB), `loadTracks` takes `maxTracks` and its `maxBytes` goes up to 5 MB, the playlist takes `maxTracks`, and a
   feed's `limit` goes up to 10 000. Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems`
   (2000, up to 20 000) and `maxText` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000. The
-  player's `remember.sounds` goes up to 5000. New
+  player's `remember.sounds` goes up to 5000. A clip's `width` and `height` go up to 3840 × 2160, and `exportClip`
+  takes `maxSeconds` (120, up to 600), `bitrate` (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB). New
   options `maxPeaks` and `maxBytes` on `loadPeaks` (20 000 and 2 MB, up to 1 000 000 and 64 MB) refuse a value past
   either end with a `RangeError` that names them.
 
@@ -75,6 +76,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A WebVTT file's character reference named like a property every object has (`&constructor;`) was read as the
   text of a JavaScript function in a chapter's or a cue's title; it now stays as written, like any unknown
   reference.
+- A clip's `maxSourceSeconds: Infinity` lifted every limit on the source decoded whole in memory, so a long
+  enough sound could take the tab down; it now goes up to 2 hours (about 2.7 GB of decoded stereo), `Infinity`
+  included.
 
 ## [1.2.0] - 2026-11-12
 

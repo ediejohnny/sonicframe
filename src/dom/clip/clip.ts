@@ -9,6 +9,7 @@
  */
 
 import { within } from '../../core/shared/checked';
+import { limitOf, type Limit } from '../../core/shared/limits';
 import { cleanText } from '../../core/shared/text';
 import {
     clipPlan,
@@ -21,13 +22,30 @@ import { DEFAULT_WAVE } from '../../core/wave/shapes';
 import type { BarStyle, WaveStyle } from '../../types';
 import { drawingOf, type Drawing } from '../shared/paint';
 import { CAPTION_HEIGHT, paintClipFrame, type ClipScene } from './clip-picture';
-import { isDecoded, MAX_BYTES, toBuffer, tooLong } from './clip-source';
+import { CLIP_BYTES, isDecoded, toBuffer, tooLong } from './clip-source';
 
-const MAX_WIDTH = 1920;
-const MAX_HEIGHT = 1080;
+/** The widest and tallest video, in pixels: 4K, well inside a canvas's 32 767 a side. */
+const MAX_WIDTH = 3840;
+const MAX_HEIGHT = 2160;
 const MAX_FPS = 60;
-const MAX_BITRATE = 8_000_000;
 const MAX_CAPTION = 200;
+
+/** The longest clip, in seconds: 2 minutes, up to 10 (the longest of the short-video networks). */
+const CLIP_SECONDS: Limit = { value: 120, least: 1, most: 600, whole: false };
+
+/** The video's bits a second: 8 Mbps, up to 50 (4K at 60 frames). */
+const CLIP_BITRATE: Limit = {
+    value: 8_000_000,
+    least: 100_000,
+    most: 50_000_000,
+    whole: true,
+};
+
+/**
+ * The longest source decoded, in seconds: 2 hours at the most (about 2.7 GB of decoded stereo), also
+ * for an `Infinity` that once lifted the limit.
+ */
+const MOST_SOURCE_SECONDS = 7200;
 
 /** A clip made by `exportClip`: the file, its media type and its length in seconds. */
 export type ClipResult = { blob: Blob; mimeType: string; duration: number };
@@ -46,16 +64,28 @@ export type ClipOptions = {
     caption?: string;
     start?: number;
     end?: number;
+    /** The video's width in pixels: 1280, from 16 to 3840. */
     width?: number;
+    /** The video's height in pixels: 720, from 16 to 2160. */
     height?: number;
     fps?: number;
+    /** The longest clip, in seconds: 120, from 1 to 600; past either end, a `RangeError`. */
+    maxSeconds?: number;
+    /** The video's bits a second: 8 000 000, from 100 000 to 50 000 000; past either end, a `RangeError`. */
+    bitrate?: number;
+    /**
+     * The largest source downloaded and the largest clip, in bytes: 104 857 600 (100 MiB), from 1 to
+     * 1 073 741 824 (1 GiB); past either end, a `RangeError`.
+     */
+    maxBytes?: number;
     /** Container/codec candidates, most wanted first. */
     mimeTypes?: readonly string[];
     /**
-     * The longest source to decode, in seconds: 10 minutes unless set (`Infinity` lifts it). The whole
-     * source is decoded before the clip is cut, about 23 MB of memory per minute of stereo audio, so a
-     * longer one is refused — before the download when `sourceSeconds` is given, otherwise right after
-     * decoding. An `AudioBuffer` is never refused: its memory is already spent.
+     * The longest source to decode, in seconds: 10 minutes unless set, up to 2 hours (a larger value,
+     * `Infinity` too, is 2 hours). The whole source is decoded before the clip is cut, about 23 MB of
+     * memory per minute of stereo audio, so a longer one is refused — before the download when
+     * `sourceSeconds` is given, otherwise right after decoding. An `AudioBuffer` is never refused: its
+     * memory is already spent.
      */
     maxSourceSeconds?: number;
     /**
@@ -82,10 +112,14 @@ export async function exportClip(options: ClipOptions): Promise<ClipResult> {
         throw new Error('sonicframe: this browser cannot record a clip');
     }
 
+    const asked = options.maxSourceSeconds;
     const limit =
-        options.maxSourceSeconds !== undefined && options.maxSourceSeconds > 0
-            ? options.maxSourceSeconds
+        asked !== undefined && asked > 0
+            ? Math.min(asked, MOST_SOURCE_SECONDS)
             : DEFAULT_MAX_SOURCE_SECONDS;
+    const maxSeconds = limitOf('maxSeconds', options.maxSeconds, CLIP_SECONDS);
+    const bitrate = limitOf('bitrate', options.bitrate, CLIP_BITRATE);
+    const maxBytes = limitOf('maxBytes', options.maxBytes, CLIP_BYTES);
     const decodes = !isDecoded(options.audio);
 
     if (
@@ -123,7 +157,12 @@ export async function exportClip(options: ClipOptions): Promise<ClipResult> {
     const wave = options.wave ?? DEFAULT_WAVE;
 
     try {
-        const buffer = await toBuffer(context, options.audio, options.signal);
+        const buffer = await toBuffer(
+            context,
+            options.audio,
+            options.signal,
+            maxBytes,
+        );
 
         // Its length was unknown until now: an over-long source is refused before any recording.
         if (decodes && buffer.duration > limit) {
@@ -133,6 +172,7 @@ export async function exportClip(options: ClipOptions): Promise<ClipResult> {
             options.start ?? 0,
             options.end ?? buffer.duration,
             buffer.duration,
+            maxSeconds,
         );
 
         stream = canvas.captureStream(fps);
@@ -152,8 +192,8 @@ export async function exportClip(options: ClipOptions): Promise<ClipResult> {
         recorder = new MediaRecorder(
             stream,
             mimeType === ''
-                ? { videoBitsPerSecond: MAX_BITRATE }
-                : { mimeType, videoBitsPerSecond: MAX_BITRATE },
+                ? { videoBitsPerSecond: bitrate }
+                : { mimeType, videoBitsPerSecond: bitrate },
         );
 
         drawing = drawingOf(
@@ -287,7 +327,7 @@ export async function exportClip(options: ClipOptions): Promise<ClipResult> {
                 size += event.data.size;
                 chunks.push(event.data);
 
-                if (size > MAX_BYTES) {
+                if (size > maxBytes) {
                     fail(
                         new Error(
                             'sonicframe: the clip grew past the size cap',

@@ -52,6 +52,7 @@ export class FakeRecorder {
         readonly options: {
             mimeType?: string;
             audioBitsPerSecond?: number;
+            videoBitsPerSecond?: number;
         } = {},
     ) {
         this.mimeType = options.mimeType ?? '';
