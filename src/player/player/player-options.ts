@@ -103,6 +103,13 @@ export type PlayerOptions = {
      * `label` and a skip moves the look's `skip` seconds, unless given. Off by default.
      */
     mediaSession?: boolean | PlayerMediaSession;
+    /**
+     * The tracks around this sound, for a player inside a list (a playlist gives them; see
+     * `PlayerTracks`). With them, the look can place the `previousTrack` and `nextTrack` buttons, the
+     * keys go from track to track (N, Shift+N) and the media controls step through the tracks. Off by
+     * default; `setTracks` changes them later.
+     */
+    tracks?: PlayerTracks;
     /** How a sound is decoded for its peaks, when none are given. */
     decode?: PlayerDecode;
     /** Your own element for the `slot` part (an avatar, say); it is given back on destroy. */
@@ -271,6 +278,33 @@ export type PlayerMediaSession = Omit<MediaSessionOptions, 'chapters'> & {
      * leaves the chapters out.
      */
     chapters?: boolean;
+    /**
+     * What the previous and next track buttons of the controls step through: the player's `tracks`
+     * when it has them, otherwise its chapters (`'auto'`, the default); only the `'tracks'` or only
+     * the `'chapters'`; or nothing (`false`, the buttons left out). A button shows only when the
+     * player is made with tracks that go its way, or with chapters, and then follows `setTracks`.
+     * The app's `onPrevious` and `onNext` win over all of these.
+     */
+    previousNext?: 'auto' | 'tracks' | 'chapters' | false;
+};
+
+/**
+ * The tracks around a player's sound, as a list of tracks gives them. A way left out has no button,
+ * no key and no media control.
+ */
+export type PlayerTracks = {
+    /** Plays the track before. */
+    previous?: () => void;
+    /** Plays the track after. */
+    next?: () => void;
+    /**
+     * Whether there is a track before, asked when the player builds and on `setTracks`; true when
+     * left out. Without one, the button is marked unavailable (`aria-disabled`), keeps its place in
+     * the tab order and does nothing, and the key goes on to the page.
+     */
+    hasPrevious?: () => boolean;
+    /** Whether there is a track after; as `hasPrevious`. */
+    hasNext?: () => boolean;
 };
 
 /** The player's zoom: the wave's zoom options, plus its buttons. */

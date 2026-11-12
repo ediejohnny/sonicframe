@@ -77,9 +77,14 @@ import { tickClock } from '../parts/clock-ticker';
 import { listenPart } from '../parts/listen-button';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
+import { hasTrackWay, trackPart } from '../parts/track-buttons';
 import { farGroup, placeOf, PlayerLayout, type Piece } from './player-layout';
 import { makeAudio, releaseMedia } from './player-media';
-import type { PlayerEvents, PlayerOptions } from './player-options';
+import type {
+    PlayerEvents,
+    PlayerOptions,
+    PlayerTracks,
+} from './player-options';
 import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, followPalette, wearPalette } from './player-paint';
 import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
@@ -145,6 +150,8 @@ export class Player {
     private stopScheme: (() => void) | null = null;
     private readonly keyboard: PlayerKeyboard | null;
     private readonly memory: PlayerMemory | null;
+    /** The tracks around the sound, from the options or `setTracks`. */
+    private tracks: PlayerTracks | undefined;
     private destroyed = false;
 
     constructor(options: PlayerOptions) {
@@ -153,6 +160,7 @@ export class Player {
         }
 
         this.options = options;
+        this.tracks = options.tracks;
         this.own = {
             look: options.look,
             palette: options.palette,
@@ -214,6 +222,7 @@ export class Player {
         this.session = new PlayerSession(options, {
             look: () => this.look,
             chapters: this.chapterParts.plugin,
+            tracks: () => this.tracks,
         });
         this.backdrop = new PlayerBackdrop(
             this.element,
@@ -239,7 +248,10 @@ export class Player {
             outsideSizeReport(this.settle);
         });
 
-        this.keyboard = playerKeyboard(options, this.host);
+        this.keyboard = playerKeyboard(options, {
+            ...this.host,
+            tracks: () => this.tracks,
+        });
         this.memory = playerMemory(options, {
             media: this.media,
             words: this.words,
@@ -376,6 +388,17 @@ export class Player {
         }
     }
 
+    /**
+     * Changes the tracks around the sound (see `PlayerTracks`), and rebuilds the player so its track
+     * buttons follow them; with none, the buttons, the keys and the media controls of tracks go.
+     */
+    setTracks(tracks?: PlayerTracks): void {
+        if (!this.destroyed) {
+            this.tracks = tracks;
+            this.build();
+        }
+    }
+
     /** Shows or hides the volume control. */
     showVolume(show: boolean): void {
         if (!this.destroyed && show !== this.volumeShown) {
@@ -471,7 +494,8 @@ export class Player {
 
     /**
      * A part the options allow: the volume and the zoom buttons only when they are on, the chapter
-     * parts only with chapters, and the list's button only with the list.
+     * parts only with chapters, the list's button only with the list, and a track button only for a
+     * way the tracks give.
      */
     private allowed(part: Part): boolean {
         if (part === 'volume') {
@@ -480,6 +504,10 @@ export class Player {
 
         if (CHAPTER_PARTS.includes(part)) {
             return this.chapterParts.allows(part);
+        }
+
+        if (part === 'previousTrack' || part === 'nextTrack') {
+            return hasTrackWay(this.tracks, part);
         }
 
         return ZOOM_PARTS.includes(part) ? this.zoomButtons() : true;
@@ -936,6 +964,13 @@ export class Player {
 
                 break;
             }
+            case 'previousTrack':
+            case 'nextTrack':
+                // Placed only when allowed, so the tracks are there.
+                if (this.tracks !== undefined) {
+                    target.append(trackPart(this.host, part, this.tracks));
+                }
+                break;
             case 'slot':
                 if (this.options.slot) {
                     target.append(this.options.slot);

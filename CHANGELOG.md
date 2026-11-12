@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- A player can know the tracks around its sound, off by default: `tracks` (`previous`, `next`, `hasPrevious`,
+  `hasNext`) and `setTracks` add the parts `previousTrack` and `nextTrack`, the key N (Shift+N back; `keys.track`
+  picks the letter or turns it off) and the media controls' previous and next track. `mediaSession.previousNext`
+  picks what those controls step through: the tracks or the chapters (`'auto'`, the default), only one, or nothing.
+  At an end of the list a track button is marked unavailable and keeps its place in the tab order.
+
 ## [1.1.0] - 2026-11-11
 
 Nothing changes in your code: the player's time reads as it did until you turn the new clock on.

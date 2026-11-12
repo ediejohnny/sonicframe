@@ -25,6 +25,7 @@ export type {
     PlayerListenButton,
     PlayerMediaSession,
     PlayerOptions,
+    PlayerTracks,
     PlayerZoom,
 } from './player/player/player-options';
 export type {

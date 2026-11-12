@@ -55,6 +55,10 @@ export type PlayerLabels = {
     chapterLink: string;
     previousChapter: string;
     nextChapter: string;
+    /** The button to the track before, in a list of tracks. */
+    previousTrack: string;
+    /** The button to the track after, in a list of tracks. */
+    nextTrack: string;
     /** The button that closes the chapters drawer. */
     closeChapters: string;
     /** Said at the first play of a sound that resumes where it was left: `{time}`. */
