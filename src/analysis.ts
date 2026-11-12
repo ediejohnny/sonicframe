@@ -77,6 +77,15 @@ export {
     type MarksWriteOptions,
 } from './core/marks/write-marks';
 export {
+    MAX_TRACKS,
+    readTracks,
+    writeTracks,
+    type ReadTracksOptions,
+    type Track,
+    type TrackInput,
+    type TracksFormat,
+} from './core/playlist/tracks';
+export {
     loadWaveform,
     readWaveform,
     type LoadWaveformOptions,
