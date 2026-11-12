@@ -138,6 +138,36 @@ describe('how often a precise clock moves', () => {
     });
 });
 
+describe('a clock written by a mask', () => {
+    it('moves as often as the mask’s last field changes: tenths ten times a second, whole seconds not at all', () => {
+        const tenths = playing();
+        const seconds = playing();
+        const counters = [tenths, seconds].map((media, at) => {
+            const counter = { shows: 0 };
+            stops.push(
+                tickClock(
+                    media,
+                    { format: at === 0 ? 'mm:ss.S' : 'mm:ss' },
+                    () => media.currentTime,
+                    () => {
+                        counter.shows += 1;
+                    },
+                ),
+            );
+
+            return counter;
+        });
+
+        for (let step = 0; step < 1000; step += 1) {
+            tenths.currentTime += 0.001;
+            seconds.currentTime += 0.001;
+            vi.advanceTimersByTime(1);
+        }
+
+        expect(counters.map((counter) => counter.shows)).toEqual([10, 0]);
+    });
+});
+
 describe('when a precise clock rests', () => {
     it('stops at a pause, and starts again when the sound plays', () => {
         const media = playing();

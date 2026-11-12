@@ -6,6 +6,7 @@
  */
 
 import {
+    clockPrecision,
     clockStep,
     nextClockChange,
     type ClockFormat,
@@ -35,7 +36,7 @@ export function tickClock(
     time: () => number | null,
     show: () => void,
 ): () => void {
-    if (clock.precision === 'seconds') {
+    if (clockPrecision(clock) === 'seconds') {
         return () => {};
     }
 

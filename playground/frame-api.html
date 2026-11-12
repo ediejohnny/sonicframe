@@ -230,18 +230,27 @@
                         For more than whole seconds,
                         <code>formatClock(time, clock)</code> writes a time as
                         the player's precise clock does: <code>clock</code> is
-                        <code>{ precision, fps, hours, decimal }</code>, read as
-                        the look's <code>timePrecision</code>,
-                        <code>timeFps</code>, <code>timeHours</code> and
-                        <code>timeDecimal</code> (<code>decimal</code> is
+                        <code
+                            >{ precision, fps, hours, decimal, digits, format
+                            }</code
+                        >, each optional, read as the look's
+                        <code>timePrecision</code>, <code>timeFps</code>,
+                        <code>timeHours</code>, <code>timeDecimal</code>,
+                        <code>timeDigits</code> and
+                        <code>timeFormat</code> (<code>decimal</code> is
                         <code>'.'</code> or <code>','</code>). Tenths,
                         hundredths and milliseconds are rounded to the nearest,
                         a frame is the one the sound is in:
                         <code
-                            >formatClock(65.25, { precision: 'hundredths', fps:
-                            30, hours: 'auto', decimal: '.' })</code
+                            >formatClock(65.25, { precision: 'hundredths'
+                            })</code
                         >
-                        is <code>1:05.25</code>. See
+                        is <code>1:05.25</code>, and
+                        <code
+                            >formatClock(65, { format: 'hh[h]mm[m]ss[s]'
+                            })</code
+                        >
+                        is <code>00h01m05s</code>. See
                         <a href="./layouts.html#a-precise-clock"
                             >A precise clock</a
                         >.

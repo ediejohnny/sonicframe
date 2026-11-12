@@ -91,24 +91,30 @@ describe('remember, remember-key and a11y-remember', () => {
     });
 });
 
-describe('time-precision, time-fps, time-hours and time-decimal', () => {
+describe('time-precision, time-fps, time-hours, time-decimal and time-format', () => {
     it('give the look its clock, names in any case and spacing, the look keeping only what it knows', () => {
         expect(options({}).look).toBeUndefined();
         expect(
             options({
                 'time-precision': ' Frames ',
                 'time-fps': '29.97',
-                'time-hours': 'PADDED',
+                'time-hours': 'NEEDED',
                 'time-decimal': ',',
             }).look,
         ).toEqual({
             timePrecision: 'frames',
             timeFps: 29.97,
-            timeHours: 'padded',
+            timeHours: 'needed',
             timeDecimal: ',',
         });
         expect(options({ 'time-decimal': 'Auto' }).look).toEqual({
             timeDecimal: 'auto',
+        });
+    });
+
+    it('give the mask as written, the case of its letters kept: H and h are not the same field', () => {
+        expect(options({ 'time-format': 'H[ HORAS ]mm:ss' }).look).toEqual({
+            timeFormat: 'H[ HORAS ]mm:ss',
         });
     });
 

@@ -220,6 +220,7 @@ export {
 export { formatPosition, formatTime } from './core/shared/timing';
 export {
     formatClock,
+    type ClockDigits,
     type ClockFormat,
     type ClockHours,
     type ClockPrecision,
