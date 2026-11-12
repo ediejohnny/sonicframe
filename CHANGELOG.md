@@ -20,6 +20,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   SonicFrame (only http, https or relative), every name is cleaned to one safe line of at most 120 characters, a
   list keeps at most 1000 tracks (`MAX_TRACKS`) and a text over 512 KB is refused.
 
+### Changed
+
+- Donations moved to Buy Me a Coffee (https://buymeacoffee.com/ediejohnny): `npm fund`, the repository's Sponsor
+  button, the README and the docs site point there.
+
 ## [1.1.0] - 2026-11-11
 
 Nothing changes in your code: the player's time reads as it did until you turn the new clock on.
