@@ -1,0 +1,221 @@
+/*
+ * A page's text and what sits in it: links to the headings, a readable measure, the room between
+ * blocks, callouts, option tables, and the previous and next pages at the end.
+ */
+
+/* A heading's link to itself, shown on hover or focus. */
+.doc :is(h2, h3) {
+    position: relative;
+}
+
+.anchor {
+    margin-left: 0.5rem;
+    color: var(--muted);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+}
+
+.doc :is(h2, h3):hover .anchor,
+.anchor:focus-visible {
+    opacity: 1;
+}
+
+/* Running text keeps to a readable measure; demos, code and tables use the full width. The text rules never
+   reach inside a player, whose lists lay themselves out. */
+.doc :is(p, ul, ol):not([class], .sonicframe-player *) {
+    max-width: 44rem;
+}
+
+/* Blocks in a section, the demos' shelves, word boxes and live tags included, keep 1rem apart. */
+.doc
+    > .section
+    > :is(
+        p,
+        ul,
+        ol,
+        .callout,
+        .code,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        sonic-player
+    )
+    + :is(
+        p,
+        ul,
+        ol,
+        .callout,
+        .code,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        sonic-player,
+        h3
+    ) {
+    margin-top: 1rem;
+}
+
+.doc :is(ul, ol):not([class], .sonicframe-player *) {
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+.doc li:not(.sonicframe-player *) + li {
+    margin-top: 0.375rem;
+}
+
+.doc
+    h2
+    + :is(
+        p,
+        .lede,
+        .code,
+        .callout,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        ul,
+        ol
+    ),
+.doc
+    h3
+    + :is(
+        p,
+        .code,
+        .callout,
+        .table-wrap,
+        .stage,
+        .shelf,
+        .theme-list,
+        .words,
+        ul,
+        ol
+    ) {
+    margin-top: 0.875rem;
+}
+
+:not(pre) > code {
+    padding: 0.0625rem 0.3125rem;
+    border-radius: 0.125rem;
+    background: var(--sunken);
+    color: var(--ink);
+    font-size: 0.875em;
+}
+
+/* A tip, a note or a warning beside the text. */
+.callout {
+    max-width: 44rem;
+    padding: 0.875rem 1rem;
+    border: 0.0625rem solid var(--line);
+    border-left: 0.25rem solid var(--brand);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.callout.warn {
+    border-left-color: var(--sonicframe-marker);
+}
+
+.callout.tip {
+    border-left-color: var(--accent);
+}
+
+.callout > strong:first-child {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+/* Option tables: they scroll sideways on narrow screens instead of squeezing. */
+.table-wrap {
+    overflow-x: auto;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+}
+
+.table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+}
+
+.table-wrap th,
+.table-wrap td {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 0.0625rem solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.table-wrap tr:last-child td {
+    border-bottom: 0;
+}
+
+.table-wrap th {
+    background: var(--sunken);
+    font-family: var(--display);
+    font-weight: 600;
+}
+
+/* A name in the first column never breaks; the cell wraps between names and in prose. */
+.table-wrap td:first-child code {
+    white-space: nowrap;
+}
+
+/* Previous and next page, at the end of every page. */
+.pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 4rem;
+}
+
+.pager a {
+    display: grid;
+    gap: 0.25rem;
+    padding: 1rem 1.125rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
+    color: var(--ink);
+    font-family: var(--display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pager a:hover {
+    border-color: var(--brand);
+    color: var(--link);
+}
+
+.pager span {
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.pager-next {
+    grid-column: 2;
+    text-align: right;
+}
+
+@media (max-width: 30rem) {
+    .pager {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pager-next {
+        grid-column: 1;
+    }
+}

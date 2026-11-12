@@ -149,6 +149,211 @@
                 </section>
 
                 <section class="section">
+                    <h2>A precise clock</h2>
+                    <p>
+                        <code>timePrecision</code> adds tenths, hundredths or
+                        milliseconds to the time, rounded to the nearest, or the
+                        frame of a timecode, at <code>timeFps</code> frames a
+                        second. The default, <code>'seconds'</code>, keeps the
+                        time as it always was.
+                    </p>
+                    <div class="code">
+                        <pre><code>look: { timePrecision: 'hundredths', underStart: 'line' }</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"look":{"timePrecision":"hundredths","underStart":"line"}}'
+                    ></div>
+                    <p>
+                        A frame comes after the hours even under an hour, as a
+                        timecode writes it (<code>timeHours: 'auto'</code>;
+                        <code>'needed'</code> waits for the hour, and
+                        <code>'always'</code> shows them with any precision).
+                        <code>timeDigits</code> gives each field its least
+                        digits, here two for the hours, as video tools write
+                        them:
+                    </p>
+                    <div class="code">
+                        <pre><code>look: {
+    timePrecision: 'frames',
+    timeFps: 25,
+    timeDigits: { hours: 2 },
+    underStart: 'line',
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"look":{"timePrecision":"frames","timeFps":25,"timeDigits":{"hours":2},"underStart":"line"}}'
+                    ></div>
+                    <p>
+                        While the sound plays, the time changes as often as its
+                        last digit does, and no more. Whole seconds follow the
+                        sound's own reports, as always; tenths change ten times
+                        a second, at the moment they turn; hundredths,
+                        milliseconds and frames are read once a frame of the
+                        screen, and written only when they change. Paused,
+                        nothing runs. Each time keeps the room of its longest
+                        text at the precision chosen, so nothing beside it
+                        moves.
+                    </p>
+                    <p>
+                        The time played and the time left always add up to the
+                        length shown. Screen readers keep hearing the position
+                        in whole seconds (see
+                        <a href="./announcements.html">Screen readers</a>). To
+                        write a time the same way on your own page, use
+                        <code>formatClock</code>, from <code>sonicframe</code>.
+                    </p>
+
+                    <h3>A mask of your own</h3>
+                    <p>
+                        <code>timeFormat</code> writes the time with a mask:
+                        each letter is a field, repeated for its least digits
+                        (up to 4), and everything else is written as it is.
+                        Letters you want as text go inside brackets. The mask
+                        wins over <code>timePrecision</code>,
+                        <code>timeHours</code>, <code>timeDigits</code> and
+                        <code>timeDecimal</code>; <code>timeFps</code> still
+                        counts the frames.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Letter</th>
+                                    <th>Writes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>h</code></td>
+                                    <td>the hours</td>
+                                </tr>
+                                <tr>
+                                    <td><code>H</code></td>
+                                    <td>
+                                        the hours from one hour on; below an
+                                        hour, the text after them goes with them
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>m</code></td>
+                                    <td>the minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>s</code></td>
+                                    <td>the seconds (every mask has them)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>S</code></td>
+                                    <td>
+                                        the decimals: <code>S</code> tenths,
+                                        <code>SS</code> hundredths,
+                                        <code>SSS</code> milliseconds
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>f</code></td>
+                                    <td>
+                                        the frame, at <code>timeFps</code>, with
+                                        room for its largest number
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>[text]</code></td>
+                                    <td>the text inside, letters and all</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        The fields go in that order, the minutes under the
+                        hours, the decimals or the frame last. A mask with no
+                        hours lets the minutes hold them, and one with no
+                        minutes lets the seconds hold everything. A mask the
+                        clock cannot read is left out, and the options above
+                        write the time.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mask</th>
+                                    <th>1 hour, 2 minutes, 5.25 seconds</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>'hh:mm:ss.SSS'</code></td>
+                                    <td><code>01:02:05.250</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>'H:mm:ss'</code></td>
+                                    <td>
+                                        <code>1:02:05</code>, and
+                                        <code>02:05</code> under an hour
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'hh[h]mm[m]ss[s]'</code></td>
+                                    <td><code>01h02m05s</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>'hh[h] mm[m] ss[s]'</code></td>
+                                    <td><code>01h 02m 05s</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code
+                                            >'hh[ hours, ]mm[ minutes, ]ss[
+                                            seconds]'</code
+                                        >
+                                    </td>
+                                    <td>
+                                        <code
+                                            >01 hours, 02 minutes, 05
+                                            seconds</code
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>'mmmm:ss'</code></td>
+                                    <td><code>0062:05</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>'hh:mm:ss;ff'</code>, 25 frames a
+                                        second
+                                    </td>
+                                    <td><code>01:02:05;06</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code">
+                        <pre><code>look: { timeFormat: 'hh[h]mm[m]ss[s]', underStart: 'line' }</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <div
+                        class="stage"
+                        data-demo="player"
+                        data-options='{"look":{"timeFormat":"hh[h]mm[m]ss[s]","underStart":"line"}}'
+                    ></div>
+                    <div class="callout warn">
+                        <strong>Keep a mask short</strong>
+                        The time keeps the room of the widest text its mask can
+                        write, beside the wave or under it. A long mask (words,
+                        many digits) can leave the wave too little room, or
+                        overflow the player, on a phone or in a narrow column.
+                        Try your mask at phone width before you ship it.
+                    </div>
+                </section>
+
+                <section class="section">
                     <h2>Every look option</h2>
                     <div class="table-wrap">
                         <table>
@@ -306,6 +511,77 @@
                                         after the wave or a spacer, and on the
                                         right under a voice note's wave; to the
                                         start everywhere else.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timePrecision</code></td>
+                                    <td><code>'seconds'</code></td>
+                                    <td>
+                                        What the time shows after the seconds:
+                                        nothing, <code>'tenths'</code>,
+                                        <code>'hundredths'</code>,
+                                        <code>'milliseconds'</code> or
+                                        <code>'frames'</code> (see
+                                        <a href="#a-precise-clock"
+                                            >A precise clock</a
+                                        >).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeFps</code></td>
+                                    <td><code>30</code></td>
+                                    <td>
+                                        With <code>'frames'</code>, the frames
+                                        in a second (1 to 120); 29.97 counts 30
+                                        frames in each second.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeHours</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        The hours: from one hour on, but always
+                                        with a frame, as a timecode writes them;
+                                        <code>'always'</code>
+                                        (<code>0:01:05</code>); or
+                                        <code>'needed'</code>, from one hour on
+                                        with a frame too.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeDecimal</code></td>
+                                    <td><code>'.'</code></td>
+                                    <td>
+                                        The mark before tenths, hundredths and
+                                        milliseconds: <code>'.'</code>,
+                                        <code>','</code> or <code>'auto'</code>,
+                                        the one of the player's language.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeDigits</code></td>
+                                    <td>
+                                        <code
+                                            >{ hours: 1, minutes: 1, seconds: 2,
+                                            frames: 2 }</code
+                                        >
+                                    </td>
+                                    <td>
+                                        The least digits of each field: hours
+                                        and minutes 1 to 4, seconds and the
+                                        frame 2 to 4. Give only the ones to
+                                        change; minutes under hours keep two.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>timeFormat</code></td>
+                                    <td><code>null</code></td>
+                                    <td>
+                                        A mask that writes the time its own way,
+                                        over the four options above (see
+                                        <a href="#a-mask-of-your-own"
+                                            >A mask of your own</a
+                                        >).
                                     </td>
                                 </tr>
                                 <tr>

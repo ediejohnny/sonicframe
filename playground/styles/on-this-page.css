@@ -1,0 +1,175 @@
+/*
+ * "On this page": a track along the headings, filled up to the one being read (`--played`, set by
+ * the script) with a playhead on it, like the played part of a wave.
+ */
+
+.toc {
+    font-size: 0.875rem;
+}
+
+.toc-title {
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.toc-toggle {
+    display: none;
+}
+
+.toc-list {
+    position: relative;
+    display: grid;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0 0 0 1rem;
+    list-style: none;
+}
+
+.toc-list::before,
+.toc-list::after {
+    position: absolute;
+    top: 0;
+    left: 0.25rem;
+    width: 0.125rem;
+    border-radius: 0.125rem;
+    content: '';
+}
+
+.toc-list::before {
+    bottom: 0;
+    background: var(--line);
+}
+
+.toc-list::after {
+    height: var(--played, 0);
+    background: var(--brand);
+}
+
+.toc-list a {
+    position: relative;
+    display: block;
+    padding: 0.25rem 0.5rem;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.toc-sub a {
+    padding-left: 1.25rem;
+}
+
+.toc-list a:hover {
+    color: var(--ink);
+}
+
+.toc-list a[aria-current] {
+    color: var(--link);
+    font-weight: 600;
+}
+
+/* The playhead, centered on the track: the track's middle sits 0.3125rem in from the list. */
+.toc-list a[aria-current]::before {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: -1rem;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-top: -0.3125rem;
+    border-radius: 0.125rem;
+    background: var(--brand);
+    box-shadow: 0 0 0 0.1875rem var(--page);
+    content: '';
+}
+
+@media (min-width: 76rem) {
+    .content:has(> .toc) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 13rem;
+        column-gap: 3rem;
+    }
+
+    .content > .page-head {
+        grid-row: 1;
+        grid-column: 1;
+    }
+
+    .content > .toc {
+        position: sticky;
+        top: 3.75rem;
+        grid-row: 1 / span 2;
+        grid-column: 2;
+        align-self: start;
+        max-height: calc(100vh - 3.75rem);
+        overflow-y: auto;
+        padding: 2.75rem 0 2rem;
+    }
+
+    .content > .doc {
+        grid-row: 2;
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 75.99rem) {
+    .toc {
+        margin-top: 1.75rem;
+        border: 0.0625rem solid var(--line);
+        border-radius: 0.125rem;
+        background: var(--panel);
+    }
+
+    .toc-title {
+        display: none;
+    }
+
+    .toc-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 0;
+        background: none;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+    }
+
+    .toc-toggle::after {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-right: 0.125rem solid currentColor;
+        border-bottom: 0.125rem solid currentColor;
+        transform: rotate(45deg);
+        content: '';
+    }
+
+    .toc-toggle[aria-expanded='true']::after {
+        transform: rotate(-135deg);
+    }
+
+    .toc-list {
+        display: none;
+        margin: 0 1rem 1rem;
+    }
+
+    .toc-list.open {
+        display: grid;
+    }
+}
+
+.section {
+    padding-top: 3.5rem;
+}
+
+.doc h2 {
+    font-size: 1.625rem;
+}
+
+.doc h3 {
+    margin-top: 2rem;
+    font-size: 1.1875rem;
+}

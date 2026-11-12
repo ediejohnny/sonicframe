@@ -91,6 +91,45 @@ describe('remember, remember-key and a11y-remember', () => {
     });
 });
 
+describe('time-precision, time-fps, time-hours, time-decimal and time-format', () => {
+    it('give the look its clock, names in any case and spacing, the look keeping only what it knows', () => {
+        expect(options({}).look).toBeUndefined();
+        expect(
+            options({
+                'time-precision': ' Frames ',
+                'time-fps': '29.97',
+                'time-hours': 'NEEDED',
+                'time-decimal': ',',
+            }).look,
+        ).toEqual({
+            timePrecision: 'frames',
+            timeFps: 29.97,
+            timeHours: 'needed',
+            timeDecimal: ',',
+        });
+        expect(options({ 'time-decimal': 'Auto' }).look).toEqual({
+            timeDecimal: 'auto',
+        });
+    });
+
+    it('give the mask as written, the case of its letters kept: H and h are not the same field', () => {
+        expect(options({ 'time-format': 'H[ HORAS ]mm:ss' }).look).toEqual({
+            timeFormat: 'H[ HORAS ]mm:ss',
+        });
+    });
+
+    it('leave the background the background attributes give', () => {
+        const background = { 'background-color': '#123456' };
+
+        expect(
+            options({ ...background, 'time-precision': 'tenths' }).look,
+        ).toEqual({
+            ...options(background).look,
+            timePrecision: 'tenths',
+        });
+    });
+});
+
 describe('the words the tag reads', () => {
     it('names each switch after its option, in kebab-case, and still reads the older short words', () => {
         const kebab = {

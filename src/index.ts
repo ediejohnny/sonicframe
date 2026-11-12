@@ -218,6 +218,13 @@ export {
     type ZoomWords,
 } from './core/view/zoom';
 export { formatPosition, formatTime } from './core/shared/timing';
+export {
+    formatClock,
+    type ClockDigits,
+    type ClockFormat,
+    type ClockHours,
+    type ClockPrecision,
+} from './core/shared/clock';
 export type { ValueText } from './core/frame/controller';
 export type { KeyModifiers } from './core/frame/keys';
 export type { TooltipA11y } from './dom/shared/tooltip';
@@ -242,7 +249,7 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '1.0.0';
+export const VERSION: string = '1.1.0';
 
 // Names kept until 2.0: each works as before, and its note says what to use instead.
 

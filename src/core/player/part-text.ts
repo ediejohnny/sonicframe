@@ -1,8 +1,14 @@
 /**
- * What a player's parts read: the time as the look asks, the mold that keeps the time's room, and
- * the speed.
+ * What a player's parts read: the time as the look asks, the mold that keeps the time's room, the
+ * precise clock the look may ask for, and the speed.
  */
 
+import {
+    DEFAULT_CLOCK_DIGITS,
+    decimalMark,
+    type ClockDigits,
+    type ClockFormat,
+} from '../shared/clock';
 import { formatPosition, formatTime } from '../shared/timing';
 import type { PlayerLook } from './look';
 
@@ -47,6 +53,39 @@ export function timeMold(
             : timeText(format, longest, longest);
 
     return text.replace(/\d/g, '0');
+}
+
+/**
+ * The clock the look's time options ask for, its decimal mark from `locale` when `'auto'`; null for
+ * the plain one (whole seconds, the hours from one hour on, the default digits, no mask), which
+ * `timeText` writes.
+ */
+export function clockOf(look: PlayerLook, locale: string): ClockFormat | null {
+    const digits = look.timeDigits;
+    const plainDigits = (
+        Object.keys(DEFAULT_CLOCK_DIGITS) as (keyof ClockDigits)[]
+    ).every((field) => digits[field] === DEFAULT_CLOCK_DIGITS[field]);
+
+    if (
+        look.timePrecision === 'seconds' &&
+        look.timeHours !== 'always' &&
+        plainDigits &&
+        look.timeFormat === null
+    ) {
+        return null;
+    }
+
+    return {
+        precision: look.timePrecision,
+        fps: look.timeFps,
+        hours: look.timeHours,
+        decimal:
+            look.timeDecimal === 'auto'
+                ? decimalMark(locale)
+                : look.timeDecimal,
+        digits,
+        format: look.timeFormat,
+    };
 }
 
 /** The speed after `rate`, wrapping around; the first one when `rate` is not in the list. */

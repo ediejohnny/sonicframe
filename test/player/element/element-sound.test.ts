@@ -39,6 +39,21 @@ describe('the sound of <sonic-player>', () => {
         expect(element.querySelectorAll('audio')).toHaveLength(1);
     });
 
+    it('builds the player again with a precise clock when a time- attribute changes, the sound kept', () => {
+        const element = tag({ src: 'dusk.mp3' });
+        document.body.append(element);
+        const audio = audioOf(element);
+        const text = (): string | null | undefined =>
+            element.querySelector('.sonicframe-time-text')?.textContent;
+
+        expect(text()).toBe('0:00 / 0:00');
+
+        element.setAttribute('time-precision', 'tenths');
+
+        expect(text()).toBe('0:00.0 / 0:00.0');
+        expect(audioOf(element)).toBe(audio);
+    });
+
     it('keeps the same player for what it changes as it is: the theme, the palette, the wave, the font and the volume', () => {
         const element = tag({ src: 'dusk.mp3' });
         document.body.append(element);

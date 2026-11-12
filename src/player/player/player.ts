@@ -19,6 +19,7 @@ import { PlayButton } from '../../controls/play/play-button';
 import { VolumeControl } from '../../controls/volume/volume';
 import type { FontChoice } from '../../core/player/fonts';
 import { playerWords, type PlayerWords } from '../../core/player/labels';
+import { clockOf } from '../../core/player/part-text';
 import {
     DEFAULT_LOOK,
     type Part,
@@ -72,6 +73,7 @@ import {
 } from '../chapters/chapter-parts';
 import { playerKeyboard, type PlayerKeyboard } from '../keys/player-keys';
 import { playerMemory, type PlayerMemory } from '../remember/player-remember';
+import { tickClock } from '../parts/clock-ticker';
 import { listenPart } from '../parts/listen-button';
 import { skipPart, speedPart, zoomPart } from '../parts/part-buttons';
 import { TimeParts, type Side, type TimeSides } from '../parts/time-parts';
@@ -694,11 +696,20 @@ export class Player {
         );
 
         const sync = (): void => this.showTime();
+        const clock = clockOf(look, this.words.locale);
+        this.times.useClock(clock);
         this.partCleanups.push(
             frame.on('timeupdate', sync),
             frame.on('durationchange', sync),
             frame.on('seek', sync),
         );
+
+        if (clock !== null && this.media !== null && this.times.shown) {
+            this.partCleanups.push(
+                tickClock(this.media, clock, () => frame.time, sync),
+            );
+        }
+
         this.showTime();
         this.chapterParts.showChapter();
         this.chapterParts.showList();

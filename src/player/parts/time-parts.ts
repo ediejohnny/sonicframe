@@ -7,6 +7,11 @@
 
 import type { PlayerLook } from '../../core/player/look';
 import { timeMold, timeText } from '../../core/player/part-text';
+import {
+    clockMold,
+    clockText,
+    type ClockFormat,
+} from '../../core/shared/clock';
 import { MUTED } from '../../core/shared/variables';
 import type { SonicFrame } from '../../dom/frame/frame';
 import { css } from '../../dom/shared/css';
@@ -26,6 +31,17 @@ type TimePart = TimeSides & {
 
 export class TimeParts {
     private parts: TimePart[] = [];
+    private clock: ClockFormat | null = null;
+
+    /** Whether the player shows any time. */
+    get shown(): boolean {
+        return this.parts.length > 0;
+    }
+
+    /** Reads every time with `clock` from now on; null, the plain clock of whole seconds. */
+    useClock(clock: ClockFormat | null): void {
+        this.clock = clock;
+    }
 
     /** A new time, read as `format`; hidden from screen readers, as the wave already speaks the position. */
     add(format: PlayerLook['time'], sides: TimeSides): HTMLElement {
@@ -65,16 +81,28 @@ export class TimeParts {
     }
 
     /**
-     * Writes where the sound is. The frame's time, never the media's own: before the media loads
-     * (`preload="none"`) a seek waits in the frame, and the media still says 0.
+     * Writes where the sound is, touching the page only where the text changed. The frame's time,
+     * never the media's own: before the media loads (`preload="none"`) a seek waits in the frame,
+     * and the media still says 0.
      */
     show(frame: SonicFrame): void {
         const duration = frame.duration;
         const time = frame.time;
+        const clock = this.clock;
 
         for (const { text, mold, format } of this.parts) {
-            const longest = timeMold(format, time, duration);
-            text.textContent = timeText(format, time, duration);
+            const shown =
+                clock === null
+                    ? timeText(format, time, duration)
+                    : clockText(format, time, duration, clock);
+            const longest =
+                clock === null
+                    ? timeMold(format, time, duration)
+                    : clockMold(format, time, duration, clock);
+
+            if (text.textContent !== shown) {
+                text.textContent = shown;
+            }
 
             // The mold changes only with the duration's form, not on every tick.
             if (mold.textContent !== longest) {

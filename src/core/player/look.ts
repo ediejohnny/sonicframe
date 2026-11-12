@@ -6,6 +6,7 @@
  */
 
 import type { ButtonFill, ButtonShape } from '../controls/button';
+import type { ClockDigits, ClockHours, ClockPrecision } from '../shared/clock';
 import type { Background } from './background';
 import type { BackgroundAnimation } from './background-animation';
 import type { FontName } from './fonts';
@@ -62,6 +63,34 @@ export type PlayerLook = {
      * group under a voice note's wave; to the start everywhere else.
      */
     timeAlign: 'auto' | 'start' | 'center' | 'end';
+    /**
+     * What the time shows after the seconds: nothing (`'seconds'`), tenths, hundredths, milliseconds
+     * (rounded to the nearest), or the frame of a timecode (`'frames'`, at `timeFps`). While the
+     * sound plays, the time changes as often as its last digit does, and no more.
+     */
+    timePrecision: ClockPrecision;
+    /** With `'frames'`, the frames in a second, 1 to 120; 29.97 counts 30 frames in each second. */
+    timeFps: number;
+    /**
+     * The hours: from one hour on, but always with a frame, as a timecode writes them (`'auto'`);
+     * always (`0:01:05`); or from one hour on, frame or not (`'needed'`).
+     */
+    timeHours: ClockHours;
+    /** The mark before tenths, hundredths and milliseconds: a point, a comma, or the player's language's (`'auto'`). */
+    timeDecimal: '.' | ',' | 'auto';
+    /**
+     * The least digits of the hours and minutes (1 to 4) and of the seconds and the frame (2 to
+     * 4): `{ hours: 2, minutes: 2 }` writes `00:01:05`. Minutes under hours keep two digits.
+     */
+    timeDigits: ClockDigits;
+    /**
+     * A mask that writes the time its own way, over the precision, hours, digits and decimal mark:
+     * `h` the hours, `H` the hours from one hour on, `m` the minutes, `s` the seconds, `S` the
+     * decimals, `f` the frame, each repeated for its least digits (up to 4, 3 for `S`); anything
+     * else is written as it is, and `[...]` writes letters as text (`'hh[h]mm[m]ss[s]'`). Null, or
+     * a mask that cannot be read, leaves the options above.
+     */
+    timeFormat: string | null;
     /**
      * Where the rows under a wave in the line start (the small line, a voice note's time, a list):
      * at the wave's left edge (`'wave'`, the default) or at the line's, under the play button
@@ -207,6 +236,12 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     wavePlace: 'inline',
     time: 'both',
     timeAlign: 'auto',
+    timePrecision: 'seconds',
+    timeFps: 30,
+    timeHours: 'auto',
+    timeDecimal: '.',
+    timeDigits: { hours: 1, minutes: 1, seconds: 2, frames: 2 },
+    timeFormat: null,
     underStart: 'wave',
     button: { shape: 'circle', fill: 'solid', size: 36 },
     waveHeight: 2.5,

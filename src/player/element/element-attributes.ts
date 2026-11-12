@@ -19,6 +19,7 @@ import type { MediaSessionDetails } from '../../core/session/media-session';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { backgroundLookOf } from './background-attributes';
+import { clockLookOf } from './clock-attributes';
 
 /** The tag's older short words, each read as the option's name in kebab-case until 2.0. */
 const OLD_WORDS: Readonly<Record<string, string>> = {
@@ -298,6 +299,16 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         keys: keysOf(element.getAttribute('keys')),
         remember: rememberOf(element),
         a11y: a11yOf(element),
-        look: backgroundLookOf(element),
+        look: lookOf(element),
     };
+}
+
+/** The look from the `background-` and `time-` attributes, or undefined when the tag has none. */
+function lookOf(element: Element): PlayerOptions['look'] {
+    const background = backgroundLookOf(element);
+    const clock = clockLookOf(element);
+
+    return background === undefined && clock === undefined
+        ? undefined
+        : { ...background, ...clock };
 }

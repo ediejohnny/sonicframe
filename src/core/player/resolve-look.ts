@@ -5,6 +5,12 @@
  */
 
 import { isOneOf, oneOf, within } from '../shared/checked';
+import {
+    CLOCK_HOURS,
+    CLOCK_PRECISIONS,
+    clockDigits,
+    isClockMask,
+} from '../shared/clock';
 import { backgroundOver } from './background';
 import { animationOver } from './background-animation';
 import { isFontName } from './fonts';
@@ -165,6 +171,24 @@ export function resolveLook(
             ['auto', 'start', 'center', 'end'] as const,
             base.timeAlign,
         ),
+        timePrecision: oneOf(
+            given.timePrecision,
+            CLOCK_PRECISIONS,
+            base.timePrecision,
+        ),
+        timeFps: within(given.timeFps, base.timeFps, 1, 120),
+        timeHours: oneOf(given.timeHours, CLOCK_HOURS, base.timeHours),
+        timeDecimal: oneOf(
+            given.timeDecimal,
+            ['.', ',', 'auto'] as const,
+            base.timeDecimal,
+        ),
+        // A partial set of digits changes only the fields it gives.
+        timeDigits: clockDigits({ ...base.timeDigits, ...given.timeDigits }),
+        timeFormat:
+            given.timeFormat === null || isClockMask(given.timeFormat)
+                ? (given.timeFormat ?? null)
+                : base.timeFormat,
         underStart: oneOf(
             given.underStart,
             ['wave', 'line'] as const,
