@@ -13,7 +13,6 @@ import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf } from '../../core/shared/checked';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { optionsOf } from '../../player/element/element-attributes';
-import { PLAYER_ATTRIBUTES } from '../../player/element/element';
 import type {
     PlaylistButton,
     PlaylistList,
@@ -21,61 +20,7 @@ import type {
     PlaylistPlayer,
 } from '../playlist/playlist-options';
 
-/** The playlist's own attributes. */
-const OWN_ATTRIBUTES = [
-    'src',
-    'feed',
-    'feed-order',
-    'feed-limit',
-    'feed-max-size',
-    'feed-max-depth',
-    'feed-max-elements',
-    'feed-max-attributes',
-    'feed-max-name-length',
-    'start',
-    'layout',
-    'advance',
-    'repeat',
-    'shuffle',
-    'gap',
-    'previous-restarts',
-    'play-on-select',
-    'list',
-    'list-place',
-    'list-placement',
-    'list-side',
-    'list-width',
-    'list-max-height',
-    'list-header',
-    'list-stay-open',
-    'list-backdrop',
-    'list-animation',
-    'list-palette',
-    'buttons',
-    'remember-key',
-    'now-playing',
-    'fetch-credentials',
-    'a11y-label',
-    'a11y-announce',
-    'a11y-lang',
-] as const;
-
-/** The player's attributes that belong to the sound, which each track brings instead. */
-const SOUND_ATTRIBUTES = new Set([
-    'src',
-    'preload',
-    'peaks',
-    'label',
-    'chapters',
-]);
-
-/** Every attribute the tag reads. */
-export const PLAYLIST_ATTRIBUTES: readonly string[] = Object.freeze([
-    ...new Set([
-        ...OWN_ATTRIBUTES,
-        ...PLAYER_ATTRIBUTES.filter((name) => !SOUND_ATTRIBUTES.has(name)),
-    ]),
-]);
+export { PLAYLIST_ATTRIBUTES } from '../../core/tags/tag-attributes';
 
 /** An on-or-off attribute that is on unless it says `false`; undefined without it. */
 function onUnlessFalse(value: string | null): boolean | undefined {

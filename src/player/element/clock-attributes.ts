@@ -7,24 +7,13 @@
  */
 
 import type { PlayerLook } from '../../core/player/look';
+import type { ClockAttribute } from '../../core/tags/tag-attributes';
 import { attributeNumber } from '../../dom/shared/custom-element';
 
-/** An attribute of the tag's clock. */
-export type ClockAttribute =
-    | 'time-precision'
-    | 'time-fps'
-    | 'time-hours'
-    | 'time-decimal'
-    | 'time-format';
-
-/** The tag's attributes for the clock. */
-export const CLOCK_ATTRIBUTES: readonly ClockAttribute[] = Object.freeze([
-    'time-precision',
-    'time-fps',
-    'time-hours',
-    'time-decimal',
-    'time-format',
-]);
+export {
+    CLOCK_ATTRIBUTES,
+    type ClockAttribute,
+} from '../../core/tags/tag-attributes';
 
 /** An attribute's word, trimmed and in lower case; null without the attribute. */
 function word(element: Element, name: ClockAttribute): string | null {

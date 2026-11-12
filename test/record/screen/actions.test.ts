@@ -6,6 +6,7 @@
 
 import { describe, expect, it, vi } from 'vite-plus/test';
 import type { Recording, RecorderScreen } from '../../../src/record';
+import { expectNothingInjected, PAYLOADS } from '../../support/xss';
 import { parts, press, screen, useRecordingPage } from './screen-harness';
 
 useRecordingPage();
@@ -49,6 +50,24 @@ describe("the app's own buttons", () => {
         action(made, 'save')?.click();
         expect(pressed[1]).toEqual([made.recording, made]);
         expect(made.recording).not.toBeNull();
+    });
+
+    it('take their names from outside as text, never as page elements', () => {
+        const { made } = screen({
+            actions: {
+                save: { label: PAYLOADS[0], press: () => undefined },
+                keep: { label: PAYLOADS[1], press: () => undefined },
+            },
+            parts: { idle: ['record', 'save', 'keep'] },
+        });
+
+        expect(action(made, 'save')?.getAttribute('aria-label')).toBe(
+            PAYLOADS[0],
+        );
+        expect(action(made, 'keep')?.getAttribute('aria-label')).toBe(
+            PAYLOADS[1],
+        );
+        expectNothingInjected(made.element);
     });
 
     it('never take the name of an icon of the screen (cancel, resume), which a tag would share with it', () => {

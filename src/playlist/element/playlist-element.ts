@@ -1,8 +1,8 @@
 /**
  * `<sonic-playlist>`: the playlist as an HTML tag. Nothing is registered on import;
  * `defineSonicPlaylist()` does it once. The tracks are the tag's own links, or the list at `src`
- * (see `playlist-attributes.ts`); while the playlist is built, the links are hidden, and they come
- * back when the tag leaves the page. Changing an attribute or a link builds the playlist again;
+ * (see `playlist-attributes.ts`); while the playlist is built, the links are hidden and inert, and
+ * they come back as they were when the tag leaves the page. Changing an attribute or a link builds the playlist again;
  * taking the tag out of the page destroys it. The playlist's events are dispatched on the tag as
  * `sonicframe:<event>` custom events, with their arguments in `detail`.
  */
@@ -85,8 +85,8 @@ export function defineSonicPlaylist(name: string = 'sonic-playlist'): boolean {
 
             private built: Playlist | null = null;
             private links: MutationObserver | null = null;
-            /** The links the tag hid while its playlist stands. */
-            private hiddenLinks: HTMLElement[] = [];
+            /** The links the tag hid while its playlist stands, with whether each was inert before. */
+            private hiddenLinks: { link: HTMLElement; inert: boolean }[] = [];
 
             get playlist(): Playlist | null {
                 return this.built;
@@ -140,13 +140,16 @@ export function defineSonicPlaylist(name: string = 'sonic-playlist'): boolean {
 
                 showAsBlock(this);
                 const options = playlistOptionsOf(this);
-                this.hiddenLinks = ownLinks(this).filter(
-                    (link) => !link.hidden,
-                );
+                this.hiddenLinks = ownLinks(this)
+                    .filter((link) => !link.hidden)
+                    .map((link) => ({ link, inert: link.inert }));
                 this.links?.disconnect();
 
-                for (const link of this.hiddenLinks) {
+                // Inert as well as hidden: a page whose CSS shows `[hidden]` still cannot click or focus a
+                // link, one with an address the playlist refused (`javascript:`) included.
+                for (const { link } of this.hiddenLinks) {
                     link.hidden = true;
+                    link.inert = true;
                 }
 
                 const playlist = new Playlist({ container: this, ...options });
@@ -159,8 +162,9 @@ export function defineSonicPlaylist(name: string = 'sonic-playlist'): boolean {
                 this.built?.destroy();
                 this.built = null;
 
-                for (const link of this.hiddenLinks) {
+                for (const { link, inert } of this.hiddenLinks) {
                     link.hidden = false;
+                    link.inert = inert;
                 }
 
                 this.hiddenLinks = [];

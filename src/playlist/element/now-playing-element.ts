@@ -5,6 +5,7 @@
  * untrusted input: an unknown word falls back to the default, a number counts only when it is one.
  */
 
+import { NOW_PLAYING_ATTRIBUTES } from '../../core/tags/tag-attributes';
 import { attributeNumber, canDefine } from '../../dom/shared/custom-element';
 import { fontOf, paletteOf } from '../../dom/shared/look-attributes';
 import { NowPlaying } from '../now-playing/now-playing';
@@ -13,26 +14,7 @@ import type {
     NowPlayingPart,
 } from '../now-playing/now-playing-options';
 
-/** The attributes the tag reads. */
-export const NOW_PLAYING_ATTRIBUTES: readonly string[] = Object.freeze([
-    'when',
-    'place',
-    'align',
-    'offset',
-    'width',
-    'z-index',
-    'parts',
-    'palette',
-    'font',
-    'font-src',
-    'font-stylesheet',
-    'close',
-    'animation',
-    'animation-type',
-    'a11y-label',
-    'a11y-announce',
-    'a11y-lang',
-]);
+export { NOW_PLAYING_ATTRIBUTES };
 
 /** Everything the tag's attributes say, as the bar's options; the bar checks each word. */
 export function nowPlayingOptionsOf(element: Element): NowPlayingOptions {

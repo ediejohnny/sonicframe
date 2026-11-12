@@ -20,6 +20,10 @@
  */
 
 import {
+    PLAYER_ATTRIBUTES,
+    SESSION_DETAILS,
+} from '../../core/tags/tag-attributes';
+import {
     canDefine,
     forwardEvents,
     showAsBlock,
@@ -27,11 +31,6 @@ import {
 import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { Player } from '../player/player';
 import { makeAudio, releaseMedia } from '../player/player-media';
-import {
-    BACKGROUND_ATTRIBUTES,
-    type BackgroundAttribute,
-} from './background-attributes';
-import { CLOCK_ATTRIBUTES, type ClockAttribute } from './clock-attributes';
 import { optionsOf, sessionDetailsOf } from './element-attributes';
 
 /** A `<sonic-player>` element: the tag, with the player it built while it is on the page. */
@@ -46,99 +45,10 @@ declare global {
     }
 }
 
-/** What the system's media controls show. */
-type SessionDetail =
-    | 'media-title'
-    | 'media-artist'
-    | 'media-album'
-    | 'media-artwork';
-
-/** An attribute the tag reads. */
-export type PlayerAttribute =
-    | 'src'
-    | 'preload'
-    | 'peaks'
-    | 'peaks-channel'
-    | 'peaks-max'
-    | 'peaks-normalize'
-    | 'theme'
-    | 'palette'
-    | 'wave'
-    | 'font'
-    | 'font-src'
-    | 'font-stylesheet'
-    | 'label'
-    | 'volume'
-    | 'spectrogram'
-    | 'zoom'
-    | 'zoom-max'
-    | 'minimap'
-    | 'chapters'
-    | 'chapters-options'
-    | 'chapter-options'
-    | 'media-session'
-    | SessionDetail
-    | 'keys'
-    | 'remember'
-    | 'remember-key'
-    | 'a11y-lang'
-    | 'a11y-label'
-    | 'a11y-chapters'
-    | 'a11y-description'
-    | 'a11y-zoom'
-    | 'a11y-minimap'
-    | 'a11y-keys'
-    | 'a11y-remember'
-    | BackgroundAttribute
-    | ClockAttribute;
-
-/** What the system's media controls show: changed, they show at once, the player kept. */
-const SESSION_DETAILS: readonly SessionDetail[] = [
-    'media-title',
-    'media-artist',
-    'media-album',
-    'media-artwork',
-];
-
-/** The attributes the tag reads (`chapter-options` is the old name of `chapters-options`). */
-export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
-    'src',
-    'preload',
-    'peaks',
-    'peaks-channel',
-    'peaks-max',
-    'peaks-normalize',
-    'theme',
-    'palette',
-    'wave',
-    'font',
-    'font-src',
-    'font-stylesheet',
-    'label',
-    'volume',
-    'spectrogram',
-    'zoom',
-    'zoom-max',
-    'minimap',
-    'chapters',
-    'chapters-options',
-    'chapter-options',
-    'media-session',
-    ...SESSION_DETAILS,
-    'keys',
-    'remember',
-    'remember-key',
-    'a11y-lang',
-    'a11y-label',
-    'a11y-chapters',
-    'a11y-description',
-    'a11y-zoom',
-    'a11y-minimap',
-    'a11y-keys',
-    'a11y-remember',
-    ...BACKGROUND_ATTRIBUTES,
-    ...CLOCK_ATTRIBUTES,
-]);
+export {
+    PLAYER_ATTRIBUTES,
+    type PlayerAttribute,
+} from '../../core/tags/tag-attributes';
 
 /** The attributes the player changes as it is: every other one needs a new player (its sound kept). */
 const LIVE: ReadonlySet<string> = new Set([

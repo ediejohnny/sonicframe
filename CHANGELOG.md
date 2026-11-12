@@ -25,6 +25,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   up to 20 MB), `maxDepth` (100, up to 256), `maxElements` (200000, up to 1000000), `maxAttributes` (200, up to 10000) and `maxNameLength` (1000, up to 50000). The defaults are the ones the most used XML readers settled on;
   an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. Past one,
   a `RangeError` names the option.
+- `SONIC_TAGS`, in `sonicframe` and `sonicframe/analysis`: each tag with the attributes it reads, its children that
+  count (a playlist's links) and the starts of names it also reads, for a CMS's HTML filter (WordPress's KSES,
+  DOMPurify) to let authors place players. None is an event handler; `upload-url`, which sends a visitor's recording
+  to the address an author picks, is marked `trustedOnly`. The docs' new page "On a CMS or WordPress" gives the
+  filter ready to paste and how a shortcode or block escapes the tag on the server.
+
+### Changed
+
+- A `<sonic-playlist>`'s own links are inert as well as hidden while its playlist stands, so a page whose CSS shows
+  hidden elements still cannot click or focus one (one with a `javascript:` address included); they come back as
+  they were when the tag leaves the page.
 
 ### Fixed
 
