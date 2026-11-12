@@ -1,6 +1,6 @@
 /**
  * The player's own keys on the page: Space plays and pauses, M mutes, the side arrows skip, the others
- * change the volume, and `>` / `<` the speed. A key pressed in the player counts unless the control
+ * change the volume, `>` / `<` the speed, and with tracks N goes to the next one (Shift+N back). A key pressed in the player counts unless the control
  * with the focus took it first (the wave's arrows, the volume bar's), it presses a button or a link
  * (Space), or someone types (a field, the app's own part). With the `'page'` scope the keys also reach
  * the player that played last (the first one made, before any played) while nothing on the page has
@@ -25,7 +25,8 @@ import {
 import { skipRatio } from '../../core/shared/steps';
 import { announce } from '../../dom/a11y/announce';
 import type { SonicFrame } from '../../dom/frame/frame';
-import type { PlayerOptions } from '../player/player-options';
+import { goTrack } from '../parts/track-buttons';
+import type { PlayerOptions, PlayerTracks } from '../player/player-options';
 
 /** What the keys need from their player. */
 export type KeysHost = {
@@ -37,6 +38,8 @@ export type KeysHost = {
     look(): PlayerLook;
     /** The wave built now; null while none is. */
     frame(): SonicFrame | null;
+    /** The tracks around the sound, while the player has them. */
+    tracks(): PlayerTracks | undefined;
     reportError(error: unknown): void;
 };
 
@@ -165,8 +168,12 @@ export class PlayerKeyboard {
         playedLast(this);
     };
 
-    /** Does `action`; whether there was a media to do it on. */
+    /** Does `action`; whether it did (a media to act on, or a track that way). */
     private run(action: PlayerKeyAction): boolean {
+        if (action === 'previousTrack' || action === 'nextTrack') {
+            return goTrack(this.host.tracks(), action);
+        }
+
         const media = this.host.media;
 
         if (media === null) {

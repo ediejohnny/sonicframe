@@ -84,6 +84,8 @@ export const EN: Words = {
         zoomReset: 'Show the whole sound',
         previousChapter: 'Previous chapter',
         nextChapter: 'Next chapter',
+        previousTrack: 'Previous track',
+        nextTrack: 'Next track',
         closeChapters: 'Close the chapters',
         resume: 'Resuming at {time}',
     },

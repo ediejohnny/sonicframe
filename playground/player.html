@@ -155,6 +155,17 @@ const player = createPlayer({
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td>
+                                        <code>previousTrack</code>,
+                                        <code>nextTrack</code>
+                                    </td>
+                                    <td>
+                                        The track before and after; only for a
+                                        player given <code>tracks</code>, each
+                                        for the way it is given.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>slot</code></td>
                                     <td>
                                         Your own element (an avatar, say), given
@@ -211,6 +222,14 @@ const player = createPlayer({
                                     <td><code>setLook(look)</code></td>
                                     <td>
                                         Part of the look (rebuilds the player).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>setTracks(tracks)</code></td>
+                                    <td>
+                                        Other tracks around the sound (rebuilds
+                                        the player); with none, the track
+                                        buttons go.
                                     </td>
                                 </tr>
                                 <tr>

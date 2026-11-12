@@ -1,12 +1,19 @@
 /**
  * The player's own keys, without the page: which keys play, mute, skip, change the volume and the
- * speed, where they work, and the speed one step up or down the look's list. A key held with Ctrl,
- * Alt or ⌘ is the browser's, and a held key repeats a step but never a switch (play, mute).
+ * speed, go from track to track, where they work, and the speed one step up or down the look's list.
+ * A key held with Ctrl, Alt or ⌘ is the browser's, and a held key repeats a step but never a switch
+ * (play, mute) nor a change of track.
  */
 
 import type { KeyModifiers } from '../frame/keys';
 import { oneOf, within } from '../shared/checked';
-import { keyIn, keyList, type KeyChoice } from '../shared/keys';
+import {
+    keyIn,
+    keyLetter,
+    keyList,
+    letterStep,
+    type KeyChoice,
+} from '../shared/keys';
 
 /** The player's keys; each one key or several, as `KeyboardEvent.key` names them, or `false`. */
 export type PlayerKeys = {
@@ -35,10 +42,15 @@ export type PlayerKeys = {
     faster?: KeyChoice;
     /** The speed before it: `<`. */
     slower?: KeyChoice;
+    /**
+     * The letter that goes to the next track, and with Shift to the one before: N. One character;
+     * false switches it off. It works only for a player given `tracks`.
+     */
+    track?: string | false;
 };
 
-/** What a player key does. */
-export type PlayerKeyAction =
+/** What a key from the player's lists does. */
+type ListedAction =
     | 'play'
     | 'mute'
     | 'back'
@@ -48,14 +60,18 @@ export type PlayerKeyAction =
     | 'faster'
     | 'slower';
 
-/** The player's keys, resolved: every key a list, every number in range. */
+/** What a player key does. */
+export type PlayerKeyAction = ListedAction | 'previousTrack' | 'nextTrack';
+
+/** The player's keys, resolved: every key a list, every number in range, the tracks' letter or null. */
 export type PlayerKeySettings = {
     scope: 'player' | 'page';
     seconds: number;
     volumeStep: number;
-} & Record<PlayerKeyAction, string[]>;
+    track: string | null;
+} & Record<ListedAction, string[]>;
 
-const DEFAULT_KEYS: Readonly<Record<PlayerKeyAction, readonly string[]>> =
+const DEFAULT_KEYS: Readonly<Record<ListedAction, readonly string[]>> =
     Object.freeze({
         play: [' '],
         mute: ['m'],
@@ -67,11 +83,16 @@ const DEFAULT_KEYS: Readonly<Record<PlayerKeyAction, readonly string[]>> =
         slower: ['<'],
     });
 
-/** The actions in the order a key is looked up. */
-const ACTIONS = Object.keys(DEFAULT_KEYS) as PlayerKeyAction[];
+/** The actions in the order a key is looked up; the tracks' letter comes after them. */
+const ACTIONS = Object.keys(DEFAULT_KEYS) as ListedAction[];
 
-/** The switches, which a held key never repeats. */
-const SWITCHES: readonly PlayerKeyAction[] = ['play', 'mute'];
+/** The switches and the changes of track, which a held key never repeats. */
+const SWITCHES: readonly PlayerKeyAction[] = [
+    'play',
+    'mute',
+    'previousTrack',
+    'nextTrack',
+];
 
 /** The player's keys, or null while they are off (the default); strange values fall back to their defaults. */
 export function resolvePlayerKeys(
@@ -95,20 +116,46 @@ export function resolvePlayerKeys(
         volumeStep: within(own.volumeStep, 0.05, 0.01, 1),
         faster: keyList(own.faster, DEFAULT_KEYS.faster),
         slower: keyList(own.slower, DEFAULT_KEYS.slower),
+        track: keyLetter(
+            typeof own.track === 'string' || own.track === false
+                ? own.track
+                : undefined,
+            'n',
+        ),
     };
 }
 
-/** What `key` does, or null: for a key that is no player key, a key with Ctrl, Alt or ⌘, or a held switch. */
+/** The change of track a press of the tracks' letter asks for: the next one, or with Shift the one before. */
+function trackAction(
+    key: string,
+    modifiers: KeyModifiers & { shiftKey?: boolean },
+    letter: string | null,
+): PlayerKeyAction | undefined {
+    const step = letterStep(key, modifiers, letter);
+
+    if (step === null) {
+        return undefined;
+    }
+
+    return step === 1 ? 'nextTrack' : 'previousTrack';
+}
+
+/**
+ * What `key` does, or null: for a key that is no player key, a key with Ctrl, Alt or ⌘, or a held
+ * switch or change of track. A key the app gave another action keeps it over the tracks' letter.
+ */
 export function playerKeyAction(
     key: string,
-    modifiers: KeyModifiers,
+    modifiers: KeyModifiers & { shiftKey?: boolean },
     settings: PlayerKeySettings,
 ): PlayerKeyAction | null {
     if (modifiers.ctrlKey || modifiers.altKey || modifiers.metaKey) {
         return null;
     }
 
-    const action = ACTIONS.find((name) => keyIn(key, settings[name]));
+    const action =
+        ACTIONS.find((name) => keyIn(key, settings[name])) ??
+        trackAction(key, modifiers, settings.track);
 
     if (
         action === undefined ||

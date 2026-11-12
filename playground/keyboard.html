@@ -75,6 +75,12 @@
                             <kbd>&gt;</kbd> <kbd>&lt;</kbd> go up and down the
                             look's <code>speeds</code>, in order
                         </li>
+                        <li>
+                            <kbd>N</kbd> goes to the next track,
+                            <kbd>Shift</kbd> + <kbd>N</kbd> to the one before;
+                            only for a player given <code>tracks</code> (a
+                            playlist)
+                        </li>
                     </ul>
                     <p>
                         The control with the focus keeps the keys it uses: on
@@ -115,7 +121,12 @@
                         <code>forward</code>, <code>volumeUp</code>,
                         <code>volumeDown</code>, <code>faster</code> and
                         <code>slower</code>. A letter works whatever its case.
-                        With <code>scope: 'page'</code>, the keys also reach the
+                        <code>track</code> is one letter (<code>'n'</code>) or
+                        <code>false</code>: the letter goes forward, and with
+                        <kbd>Shift</kbd> back, as for the chapters. At an end of
+                        the list, or held down, it does nothing, and a key you
+                        gave another action keeps it. With
+                        <code>scope: 'page'</code>, the keys also reach the
                         player that played last (the first one, before any
                         played) while nothing on the page has the focus; a focus
                         in another player is that player's.

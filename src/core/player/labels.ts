@@ -51,6 +51,8 @@ function playerLabels(words: Readonly<Words>): PlayerLabels {
         chapterLink: chapters.link,
         previousChapter: player.previousChapter,
         nextChapter: player.nextChapter,
+        previousTrack: player.previousTrack,
+        nextTrack: player.nextTrack,
         closeChapters: player.closeChapters,
         resume: player.resume,
     };
