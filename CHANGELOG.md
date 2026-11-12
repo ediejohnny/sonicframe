@@ -50,6 +50,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A `<sonic-playlist>`'s own links are inert as well as hidden while its playlist stands, so a page whose CSS shows
   hidden elements still cannot click or focus one (one with a `javascript:` address included); they come back as
   they were when the tag leaves the page.
+- Ceilings that could only be lowered now go up to a fixed most, studied in mature projects and the browsers' own
+  limits: the player's `decode.maxBytes` (50 MiB, up to 256 MiB) and `decode.maxSeconds` (30 minutes, up to 10
+  hours), and `readPeaks`'s limit (20 000, up to 1 000 000). A larger value is kept at the most until 2.0. New
+  options `maxPeaks` and `maxBytes` on `loadPeaks` (20 000 and 2 MB, up to 1 000 000 and 64 MB) refuse a value past
+  either end with a `RangeError` that names them.
 
 ### Fixed
 

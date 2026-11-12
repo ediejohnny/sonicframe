@@ -48,6 +48,18 @@ describe('readPeaks', () => {
         expect(() => readPeaks([0.1, 0.2, 0.3], 2)).toThrow(RangeError);
         expect(readPeaks([0.1, 0.2], 2)).toHaveLength(2);
     });
+
+    it('takes 20 000 by default and a limit up to 1 000 000; past that, 1 000 000 until 2.0', () => {
+        const zeros = (count: number): number[] =>
+            Array.from({ length: count }, () => 0);
+
+        expect(() => readPeaks(zeros(20_001))).toThrow(RangeError);
+        expect(readPeaks(zeros(20_001), 1_000_000)).toHaveLength(20_001);
+        expect(readPeaks(zeros(20_001), 1e9)).toHaveLength(20_001);
+        expect(() => readPeaks(zeros(1_000_001), 1e9)).toThrow(
+            'at most 1000000',
+        );
+    });
 });
 
 describe('loadPeaks', () => {
@@ -146,6 +158,57 @@ describe('loadPeaks', () => {
                 });
             };
         }
+
+        it('takes maxPeaks and maxBytes, up to 1 000 000 peaks and 64 MB, refusing past them by name', async () => {
+            const calls = { count: 0 };
+            const three = counted('[0.1,0.2,0.3]', calls);
+
+            await expect(
+                loadPeaks('/three.json', {
+                    fetcher: three,
+                    shared: false,
+                    maxPeaks: 2,
+                }),
+            ).rejects.toThrow('too many peaks');
+            await expect(
+                loadPeaks('/three.json', {
+                    fetcher: three,
+                    shared: false,
+                    maxBytes: 5,
+                }),
+            ).rejects.toThrow('too large');
+            await expect(
+                loadPeaks('/announced.json', {
+                    fetcher: counted('[0.5]', calls, 3_000_000),
+                    shared: false,
+                }),
+            ).rejects.toThrow('too large');
+            await expect(
+                loadPeaks('/announced.json', {
+                    fetcher: counted('[0.5]', calls, 3_000_000),
+                    shared: false,
+                    maxBytes: 64_000_000,
+                }),
+            ).resolves.toEqual([0.5]);
+            await expect(
+                loadPeaks('/three.json', {
+                    fetcher: three,
+                    shared: false,
+                    maxPeaks: 1_000_001,
+                }),
+            ).rejects.toThrow(
+                new RangeError(
+                    'sonicframe: maxPeaks goes past its most, 1000000 (1000001)',
+                ),
+            );
+            await expect(
+                loadPeaks('/three.json', {
+                    fetcher: three,
+                    shared: false,
+                    maxBytes: 64_000_001,
+                }),
+            ).rejects.toThrow('maxBytes goes past its most, 64000000');
+        });
 
         it('reads through the app fetcher, once per page unless shared is off', async () => {
             const calls = { count: 0 };

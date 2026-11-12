@@ -5,7 +5,12 @@
 
 import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
-import { limitOf, tagLimit, type Limit } from '../../../src/core/shared/limits';
+import {
+    heldLimit,
+    limitOf,
+    tagLimit,
+    type Limit,
+} from '../../../src/core/shared/limits';
 
 const DEPTH: Limit = { value: 100, least: 1, most: 256, whole: true };
 const SECONDS: Limit = { value: 1800, least: 1, most: 36_000, whole: false };
@@ -70,6 +75,23 @@ describe('limitOf', () => {
                 },
             ),
         );
+    });
+});
+
+describe('heldLimit, for options that shipped before their most', () => {
+    it('keeps a value from the least to the most instead of refusing it, until 2.0', () => {
+        expect(heldLimit(50, DEPTH)).toBe(50);
+        expect(heldLimit(256, DEPTH)).toBe(256);
+        expect(heldLimit(1e9, DEPTH)).toBe(256);
+        expect(heldLimit(0.5, DEPTH)).toBe(1);
+        expect(heldLimit(7.9, DEPTH)).toBe(7);
+        expect(heldLimit(7.9, SECONDS)).toBe(7.9);
+    });
+
+    it('gives the default for no finite number, and for none above 0, as those options did', () => {
+        for (const given of [undefined, 'big', Number.NaN, Infinity, 0, -3]) {
+            expect(heldLimit(given, DEPTH)).toBe(100);
+        }
     });
 });
 

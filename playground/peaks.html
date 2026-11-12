@@ -131,6 +131,26 @@ new SonicFrame({
                                         <code>loadChapters</code>.
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>maxPeaks</code></td>
+                                    <td><code>20000</code></td>
+                                    <td>
+                                        The most peaks read, up to 1,000,000 (10
+                                        hours at about 27 a second).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxBytes</code></td>
+                                    <td><code>2000000</code></td>
+                                    <td>
+                                        The largest file read, in bytes, up to
+                                        64,000,000. Past either end of
+                                        <code>maxPeaks</code> or
+                                        <code>maxBytes</code>, a
+                                        <code>RangeError</code> names the
+                                        option.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

@@ -610,15 +610,23 @@ player.forget(); // clears what it kept</code></pre>
                                     <td><code>maxSeconds</code></td>
                                     <td>30 minutes</td>
                                     <td>
-                                        Can only lower the decoder's ceiling; a
-                                        longer sound is read evenly through.
+                                        The longest sound read, in seconds, up
+                                        to 36,000 (10 hours); a longer one is
+                                        read evenly through. The browser decodes
+                                        the whole file first, so this saves no
+                                        memory.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>maxBytes</code></td>
-                                    <td>50 MB</td>
+                                    <td>50 MiB</td>
                                     <td>
-                                        Can only lower the download ceiling.
+                                        The largest file decoded, up to
+                                        268,435,456 bytes (256 MiB). A decoded
+                                        hour takes about 635 MB, and a browser
+                                        tab falls over past a few GB, sooner on
+                                        a phone: for long sounds, give the
+                                        player peaks made on a server.
                                     </td>
                                 </tr>
                             </tbody>

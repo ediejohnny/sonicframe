@@ -75,9 +75,11 @@
                     <ul>
                         <li>
                             Peaks files: 2 MB and 20,000 values
-                            (<code>loadPeaks</code>); waveform files: 8 MB by
-                            default, folded past <code>maxPeaks</code>; files
-                            that do not match their header are refused.
+                            (<code>loadPeaks</code>, up to 64 MB and 1,000,000);
+                            waveform files: 8 MB by default, folded past
+                            <code>maxPeaks</code>; files that do not match their
+                            header are refused. Decoding a sound: 50 MiB by
+                            default, up to 256 MiB.
                         </li>
                         <li>Captions and tooltips: text only, capped.</li>
                         <li>

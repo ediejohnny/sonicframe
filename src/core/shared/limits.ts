@@ -2,8 +2,9 @@
  * The ceilings on what comes from outside (sizes, counts, lengths of time), each an option: a safe
  * default, which an app's code may raise up to a fixed most (the most open that mature projects and
  * the browsers settled on) and lower down to a least. Past either end the option is refused with a
- * `RangeError` that names it, never cut to a number the app did not ask for. A tag's attribute, which
- * a page's author may write, only lowers the default.
+ * `RangeError` that names it, never cut to a number the app did not ask for; an option that shipped
+ * before its most was fixed is kept within its ends instead, until 2.0 (`heldLimit`). A tag's
+ * attribute, which a page's author may write, only lowers the default.
  */
 
 /** A ceiling: its default, the least and the most it may be set to, and whether it counts whole things. */
@@ -39,6 +40,21 @@ export function limitOf(name: string, given: unknown, limit: Limit): number {
     }
 
     return value;
+}
+
+/**
+ * A ceiling of an option that shipped before its most was fixed: kept from the least to the most
+ * instead of refused, so an app that passes a larger value keeps working until 2.0, when it becomes
+ * `limitOf`. No finite number, or none above 0, is the default.
+ */
+export function heldLimit(given: unknown, limit: Limit): number {
+    if (typeof given !== 'number' || !Number.isFinite(given) || given <= 0) {
+        return limit.value;
+    }
+
+    const value = limit.whole ? Math.floor(given) : given;
+
+    return Math.min(limit.most, Math.max(limit.least, value));
 }
 
 /**
