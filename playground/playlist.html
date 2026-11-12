@@ -136,6 +136,16 @@ playlist.on('trackchange', (track, index) => console.log(index, track.title));</
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>maxTracks</code></td>
+                                    <td>1000</td>
+                                    <td>
+                                        The most tracks the list keeps, given,
+                                        fetched or added: from 1 to 10,000. Past
+                                        either end, a
+                                        <code>RangeError</code> names it.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>src</code></td>
                                     <td>none</td>
                                     <td>
@@ -384,7 +394,10 @@ ep1.mp3</code></pre>
                                 <tr>
                                     <td><code>limit</code></td>
                                     <td>1000</td>
-                                    <td>The most episodes kept, from 1.</td>
+                                    <td>
+                                        The most episodes kept, from 1 to
+                                        10,000.
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><code>maxSize</code></td>
@@ -550,8 +563,11 @@ ep1.mp3</code></pre>
                             the track out.
                         </li>
                         <li>
-                            A list keeps at most 1000 tracks; a list over 512 KB
-                            is refused, and names are cut to 120 characters.
+                            A list keeps at most 1000 tracks
+                            (<code>maxTracks</code>, up to 10,000); a list over
+                            512 KB is refused (<code>loadTracks</code>'s
+                            <code>maxBytes</code>, up to 5 MB), and names are
+                            cut to 120 characters.
                         </li>
                         <li>
                             What <code>remember</code> kept is read back as

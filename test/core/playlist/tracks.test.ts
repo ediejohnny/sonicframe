@@ -162,6 +162,30 @@ describe('readTracks against a hostile list', () => {
         );
     });
 
+    it('keeps up to 10 000 tracks and reads up to 5 MB when asked, in JSON and M3U, refusing past either by name', () => {
+        const many = Array.from({ length: 10_001 }, (_, at) => ({
+            src: `t${at}.mp3`,
+        }));
+        const m3u = `#EXTM3U\n${many.map((track) => track.src).join('\n')}`;
+
+        expect(readTracks(many, { maxTracks: 10_000 })).toHaveLength(10_000);
+        expect(readTracks(m3u, { maxTracks: 10_000 })).toHaveLength(10_000);
+        expect(readTracks(m3u, { maxTracks: 2 })).toHaveLength(2);
+        expect(
+            readTracks(`#EXTM3U\nt.mp3\n#${'a'.repeat(524_288)}`, {
+                maxText: 5_242_880,
+            }),
+        ).toHaveLength(1);
+        expect(() => readTracks(many, { maxTracks: 10_001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxTracks goes past its most, 10000 (10001)',
+            ),
+        );
+        expect(() => readTracks(m3u, { maxText: 5_242_881 })).toThrow(
+            'maxText goes past its most, 5242880',
+        );
+    });
+
     it('reads a hostile M3U of the largest size in well under a second', () => {
         const lines = [
             `#EXTINF:${'1'.repeat(200_000)}`,

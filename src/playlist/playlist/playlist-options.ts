@@ -64,12 +64,17 @@ export type PlaylistOptions = {
     container: HTMLElement;
     /** The tracks: a list, or the text of a JSON or M3U list (see `readTracks`). */
     tracks?: readonly TrackInput[] | string;
+    /**
+     * The most tracks the list keeps, given, fetched from `src` or added: 1000, from 1 to 10 000; past
+     * either end, a `RangeError`. A feed keeps to its own `limit`.
+     */
+    maxTracks?: number;
     /** The address of a JSON or M3U list, fetched when `tracks` is left out. */
     src?: string;
     /**
      * The address of a podcast feed (RSS), fetched when `tracks` is left out: its episodes, newest first.
      * Or `{ src, ...options }`, with the options of `readFeed`: `order` `'newest'` or `'oldest'`,
-     * `limit` at most 1000, and the reader's ceilings (`maxSize`, `maxDepth`, `maxElements`,
+     * `limit` (1000, up to 10 000), and the reader's ceilings (`maxSize`, `maxDepth`, `maxElements`,
      * `maxAttributes`, `maxNameLength`).
      */
     feed?: string | ({ src: string } & Omit<ReadFeedOptions, 'base'>);

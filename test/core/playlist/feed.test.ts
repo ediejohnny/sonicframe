@@ -106,6 +106,22 @@ describe('readFeed', () => {
         ).join('');
 
         expect(readFeed(feed(many)).tracks).toHaveLength(1000);
+        expect(readFeed(feed(many), { limit: 1003 }).tracks).toHaveLength(1003);
+    });
+
+    it('keeps up to 10 000 episodes when asked; past that, 10 000', () => {
+        const many = Array.from(
+            { length: 10_002 },
+            (_, at) =>
+                `<item><enclosure url="https://cdn.test/${at}.mp3"/></item>`,
+        ).join('');
+
+        expect(readFeed(feed(many), { limit: 10_000 }).tracks).toHaveLength(
+            10_000,
+        );
+        expect(readFeed(feed(many), { limit: 1e9 }).tracks).toHaveLength(
+            10_000,
+        );
     });
 
     it('reads 5 MB by default, and takes maxSize from 1 KB to 20 MB', () => {

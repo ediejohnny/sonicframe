@@ -14,8 +14,8 @@ import { loadText, type LoadTextOptions } from '../shared/load-text';
 import { cleanText } from '../shared/text';
 import {
     address,
-    MAX_TRACKS,
     readTracks,
+    TRACK_COUNT,
     type Track,
     type TrackInput,
 } from './tracks';
@@ -27,7 +27,7 @@ export type ReadFeedOptions = ReadXmlOptions & {
     base?: string;
     /** `'newest'` (the default) or `'oldest'` first, by each episode's date. */
     order?: 'newest' | 'oldest';
-    /** The most episodes kept: 1000, from 1. */
+    /** The most episodes kept: 1000, from 1 to 10 000 (past either end, kept at it, as it shipped). */
     limit?: number;
     /**
      * The longest feed read, in characters, and the largest fetched, in bytes: 5242880 (5 MB), from
@@ -128,7 +128,13 @@ export function readFeed(text: string, options: ReadFeedOptions = {}): Feed {
     const showImage =
         attributeOf(channel, 'itunes:image', 'href') ??
         (image === null ? undefined : textOf(image, 'url'));
-    const limit = within(options.limit, MAX_TRACKS, 1, MAX_TRACKS, Math.floor);
+    const limit = within(
+        options.limit,
+        TRACK_COUNT.value,
+        TRACK_COUNT.least,
+        TRACK_COUNT.most,
+        Math.floor,
+    );
     const newest = options.order !== 'oldest';
     const items = channel.children
         .filter((child) => child.name.toLowerCase() === 'item')
@@ -173,7 +179,7 @@ export function readFeed(text: string, options: ReadFeedOptions = {}): Feed {
     return {
         title: cleanText(show, MAX_TITLE),
         image: address(showImage, options.base),
-        tracks: readTracks(inputs, { base: options.base }).slice(0, limit),
+        tracks: readTracks(inputs, { base: options.base, maxTracks: limit }),
     };
 }
 
