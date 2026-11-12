@@ -207,8 +207,8 @@ function peaksReading(element: Element): ReadWaveformOptions {
 }
 
 /**
- * The accessibility attributes: the language, the description, and what the zoom, the minimap, the
- * keys and the memory say.
+ * The accessibility attributes: the language, the description, what the zoom, the minimap, the keys,
+ * the memory and a failed load say, and what names the wave's slider.
  */
 function a11yOf(element: Element): PlayerA11y {
     const zoom = element.getAttribute('a11y-zoom');
@@ -238,6 +238,9 @@ function a11yOf(element: Element): PlayerA11y {
         // On by default: only `false` turns the announcement off.
         loadError:
             loadError?.trim() === 'false' ? { announce: false } : undefined,
+        // Checked by the player: an unknown word is `'position'`.
+        sliderName: (element.getAttribute('a11y-slider-name')?.trim() ??
+            undefined) as PlayerA11y['sliderName'],
     };
 }
 

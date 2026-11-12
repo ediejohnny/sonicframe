@@ -36,6 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   also the media controls' artist when `mediaSession` names none, and a playlist's track brings its own. On
   `<sonic-player>`, the `artist` attribute, and `line` and `meta` (part names by spaces, `"play wave title"`) place
   the parts as `look.line` and `look.meta` do.
+- `a11y.sliderName` (the tag's `a11y-slider-name`) names the wave's slider by its sound: `'label'` the sound's
+  name, `'both'` the name and the slider's word ("Little Elf, Playback position"), so a page of many players tells
+  their sliders apart. The default stays `'position'`, the word alone; `setLabel` updates it, and `frame.label` wins.
 
 ### Changed
 

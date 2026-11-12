@@ -29,6 +29,7 @@ export type {
     PlayerOptions,
     PlayerTracks,
     PlayerZoom,
+    SliderName,
 } from './player/player/player-options';
 export type {
     BarStyle,

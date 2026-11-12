@@ -104,6 +104,7 @@ export type PlayerAttribute =
     | 'a11y-remember'
     | 'load-error'
     | 'a11y-load-error'
+    | 'a11y-slider-name'
     | BackgroundAttribute
     | ClockAttribute;
 
@@ -148,6 +149,7 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'a11y-remember',
     'load-error',
     'a11y-load-error',
+    'a11y-slider-name',
     ...BACKGROUND_ATTRIBUTES,
     ...CLOCK_ATTRIBUTES,
 ]);

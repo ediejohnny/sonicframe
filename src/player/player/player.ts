@@ -40,7 +40,7 @@ import {
     type Theme,
     type ThemeInput,
 } from '../../core/player/theme';
-import { unknownName } from '../../core/shared/checked';
+import { oneOf, unknownName } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
 import {
     joinPlayers,
@@ -92,6 +92,7 @@ import type {
     PlayerEvents,
     PlayerOptions,
     PlayerTracks,
+    SliderName,
 } from './player-options';
 import { PlayerBackdrop } from '../background/backdrop';
 import { finishBox, followPalette, wearPalette } from './player-paint';
@@ -99,6 +100,9 @@ import { boxHeight, listenSettings, playerPlugins } from './player-plugins';
 import { PlayerSession } from './player-session';
 import { SoundNotice } from './sound-notice';
 import { PlayerSound } from './player-sound';
+
+/** What may name the wave's slider. */
+const SLIDER_NAMES: readonly SliderName[] = ['position', 'label', 'both'];
 
 /** The zoom buttons the player adds at the end of the line when the look places none. */
 const ZOOM_PARTS: readonly Part[] = ['zoomOut', 'zoomReset', 'zoomIn'];
@@ -438,7 +442,28 @@ export class Player {
                 cleanText(label ?? this.words.labels.player, 120),
             );
             this.names.show();
+
+            if (this.options.frame?.label === undefined) {
+                this.frameRef?.setLabel(this.sliderLabel());
+            }
         }
+    }
+
+    /** The wave's slider's name, as `a11y.sliderName` says; its `position` word without a sound's name. */
+    private sliderLabel(): string {
+        const position = this.words.labels.position;
+        const way = oneOf(
+            this.options.a11y?.sliderName,
+            SLIDER_NAMES,
+            'position',
+        );
+        const name = way === 'position' ? '' : this.titleText();
+
+        if (name === '') {
+            return position;
+        }
+
+        return way === 'label' ? name : `${name}, ${position}`;
     }
 
     /** The sound's name for the `title` part: the player's own, or its file's when the look allows. */
@@ -664,7 +689,7 @@ export class Player {
         const frameA11y = this.options.frame?.a11y;
 
         return {
-            label: words.labels.position,
+            label: this.sliderLabel(),
             valueText: words.valueText,
             ...this.options.frame,
             zoom: this.options.zoom ?? this.options.frame?.zoom,

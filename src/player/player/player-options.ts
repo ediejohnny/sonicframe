@@ -199,7 +199,17 @@ export type PlayerA11y = {
      * so a person who cannot see the player learns it too.
      */
     loadError?: { announce?: boolean };
+    /**
+     * The wave's slider's name: `'position'` (the default) its `position` word ("Playback position"),
+     * `'label'` the sound's name, `'both'` the two ("Little Elf, Playback position"). The sound's name
+     * is the one the `title` part shows; without one, the slider keeps its word. An unknown value is
+     * `'position'`, and the app's own `frame.label` wins.
+     */
+    sliderName?: SliderName;
 };
+
+/** What names the wave's slider (see `PlayerA11y.sliderName`). */
+export type SliderName = 'position' | 'label' | 'both';
 
 /**
  * The player's chapters: the plugin's options (its words come from the player's language and
