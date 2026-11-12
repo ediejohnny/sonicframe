@@ -5,7 +5,7 @@
         <title>Upgrade guide · SonicFrame</title>
         <meta
             name="description"
-            content="Moving to SonicFrame 1.0 from 0.8, 0.7 or 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
+            content="Moving to SonicFrame 1.1 from 1.0, 0.8, 0.7 or 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
         />
     </head>
     <body>
@@ -14,9 +14,9 @@
                 <h1>Upgrade guide</h1>
                 <p class="lede">
                     What changes from one version to the next, the newest first:
-                    from 0.8 to 1.0, from 0.7 to 0.8, then from 0.6 to 0.7.
-                    Nothing breaks: every new feature is off until you turn it
-                    on, and every old name keeps working until 2.0.
+                    from 1.0 to 1.1, from 0.8 to 1.0, from 0.7 to 0.8, then from
+                    0.6 to 0.7. Nothing breaks: every new feature is off until
+                    you turn it on, and every old name keeps working until 2.0.
                 </p>
             </div>
 
@@ -26,6 +26,80 @@
                     <div class="code">
                         <pre><code>npm install sonicframe@1</code></pre>
                         <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>In 1.1: what you can turn on</h2>
+                    <p>
+                        Nothing to change: the player's time reads as it did
+                        until you turn the new clock on.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>New</th>
+                                    <th>Where to read about it</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        A precise clock: tenths, hundredths,
+                                        milliseconds or a timecode's frames
+                                        (<code>timePrecision</code>,
+                                        <code>timeFps</code>), the hours
+                                        (<code>timeHours</code>), each field's
+                                        digits (<code>timeDigits</code>) and the
+                                        decimal mark (<code>timeDecimal</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./layouts.html#a-precise-clock"
+                                            >A precise clock</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A mask of your own for the time, with
+                                        letters, separators and words
+                                        (<code>timeFormat</code>)
+                                    </td>
+                                    <td>
+                                        <a
+                                            href="./layouts.html#a-mask-of-your-own"
+                                            >A mask of your own</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The same on the tag:
+                                        <code>time-precision</code>,
+                                        <code>time-fps</code>,
+                                        <code>time-hours</code>,
+                                        <code>time-decimal</code> and
+                                        <code>time-format</code>
+                                    </td>
+                                    <td>
+                                        <a href="./tag-attributes.html"
+                                            >Tag attributes</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>formatClock</code>, to write a
+                                        time in your own page the way the clock
+                                        does
+                                    </td>
+                                    <td>
+                                        <a href="./frame-api.html">Frame API</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 

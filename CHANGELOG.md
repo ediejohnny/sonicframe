@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-11
+
+Nothing changes in your code: the player's time reads as it did until you turn the new clock on.
+
 ### Added
 
 - A precise clock, off by default: the look's `timePrecision` (`time-precision` on `<sonic-player>`) adds
