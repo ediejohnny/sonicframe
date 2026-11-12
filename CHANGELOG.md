@@ -53,7 +53,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Ceilings that could only be lowered now go up to a fixed most, studied in mature projects and the browsers' own
   limits: the player's `decode.maxBytes` (50 MiB, up to 256 MiB) and `decode.maxSeconds` (30 minutes, up to 10
   hours), `readPeaks`'s limit (20 000, up to 1 000 000), and a recording's `maxSeconds` (300, up to 6 hours, from 3600) and `maxBytes` (100 MiB, up to 1 GiB); `<sonic-recorder max-seconds>` keeps to 3600, as before. A larger
-  value is kept at the most until 2.0. New
+  value is kept at the most until 2.0. Chapters: `loadChapters`'s `maxBytes` goes up to 5 MB, and the new
+  `maxChapters` (1000, up to 10 000) is also taken by `readChapters` and by the chapters plugin's `load` for chapters
+  given as a list or a text. New
   options `maxPeaks` and `maxBytes` on `loadPeaks` (20 000 and 2 MB, up to 1 000 000 and 64 MB) refuse a value past
   either end with a `RangeError` that names them.
 

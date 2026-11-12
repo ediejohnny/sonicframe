@@ -317,6 +317,25 @@ describe('where the chapters come from', () => {
         };
     }
 
+    it('keeps to load.maxChapters for chapters given as a list, a text or by set', () => {
+        const own = chapters({
+            items: [{ start: 0 }, { start: 5 }, { start: 9 }],
+            load: { maxChapters: 2 },
+        });
+        showFrame([own]);
+
+        expect(own.chapters.map((chapter) => chapter.start)).toEqual([0, 5]);
+
+        own.set(
+            'WEBVTT\n\n00:01.000 --> 00:02.000\nA\n\n00:03.000 --> 00:04.000\nB\n\n00:05.000 --> 00:06.000\nC\n',
+        );
+
+        expect(own.chapters.map((chapter) => chapter.title)).toEqual([
+            'A',
+            'B',
+        ]);
+    });
+
     it('fetches an address once, and keeps the chapters when set up again', async () => {
         const calls = { count: 0 };
         const own = chapters({

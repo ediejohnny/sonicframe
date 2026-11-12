@@ -111,9 +111,12 @@ The meeting</code></pre>
                     </p>
                     <div class="callout tip">
                         <strong>Read as untrusted</strong>
-                        At most 512 KB and 1000 chapters. Titles become one line
-                        of plain text (120 characters at most). A picture or a
-                        link is kept only from a web or relative address, never
+                        At most 512 KB and 1000 chapters by default; your code
+                        may raise them up to 5 MB and 10,000 with
+                        <code>load.maxBytes</code> and
+                        <code>load.maxChapters</code>. Titles become one line of
+                        plain text (120 characters at most). A picture or a link
+                        is kept only from a web or relative address, never
                         <code>javascript:</code>, <code>data:</code> or another
                         host by <code>//</code>.
                     </div>
@@ -150,7 +153,10 @@ The meeting</code></pre>
                                         How <code>src</code> is fetched:
                                         <code>fetcher</code>,
                                         <code>shared</code>,
-                                        <code>maxBytes</code>.
+                                        <code>maxBytes</code> (512 KB, up to 5
+                                        MB) and <code>maxChapters</code> (1000,
+                                        up to 10,000; it also keeps to it the
+                                        chapters given as a list or a text).
                                     </td>
                                 </tr>
                                 <tr>

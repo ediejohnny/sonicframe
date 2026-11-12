@@ -6,7 +6,7 @@
  * they are web or relative addresses. Nothing here touches the page.
  */
 
-import { within } from '../shared/checked';
+import { heldLimit, limitOf, type Limit } from '../shared/limits';
 import {
     fetchOk,
     oncePerPage,
@@ -44,13 +44,25 @@ export type ChapterInput = {
     toc?: boolean;
 };
 
+export type ReadChaptersOptions = {
+    /** The most chapters kept: 1000, from 1 to 10 000; past either end, a `RangeError`. */
+    maxChapters?: number;
+    /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
+    maxText?: number;
+};
+
 export type LoadChaptersOptions = {
     /** The same address is fetched once per page. On by default. */
     shared?: boolean;
     /** The app's own `fetch`. */
     fetcher?: Fetcher;
-    /** A larger file is refused. Only lowers 524 288 bytes. */
+    /**
+     * A larger file is refused: 524 288 bytes, up to 5 242 880 (5 MB). It shipped able to take any, so
+     * past its most it is its most until 2.0.
+     */
     maxBytes?: number;
+    /** The most chapters kept (see `ReadChaptersOptions`). */
+    maxChapters?: number;
 };
 
 /**
@@ -63,11 +75,24 @@ export type ChaptersSource =
     | readonly ChapterInput[]
     | null;
 
-/** The most chapters kept. */
-export const MAX_CHAPTERS = 1000;
+/** The most chapters kept: 1000, up to 10 000 (a chapter a minute for 10 hours is 600). */
+export const CHAPTER_COUNT: Limit = {
+    value: 1000,
+    least: 1,
+    most: 10_000,
+    whole: true,
+};
 
-/** The longest chapters text read, in characters (and the largest file fetched, in bytes). */
-const MAX_TEXT = 524_288;
+/** The default of `CHAPTER_COUNT`. */
+export const MAX_CHAPTERS: number = CHAPTER_COUNT.value;
+
+/** The longest chapters text read, in characters (and the largest file fetched, in bytes): 512 KB, up to 5 MB. */
+export const CHAPTER_TEXT: Limit = {
+    value: 524_288,
+    least: 1,
+    most: 5_242_880,
+    whole: true,
+};
 
 /** The longest title, in characters. */
 const MAX_TITLE = 120;
@@ -133,15 +158,16 @@ function ordered(chapters: Chapter[]): Chapter[] {
     );
 }
 
-/** Up to `MAX_CHAPTERS` usable chapters from a list, read item by item. */
+/** Up to `most` usable chapters from a list, read item by item. */
 function collect<Item>(
     items: readonly Item[],
     read: (item: Item) => Chapter | null,
+    most: number,
 ): Chapter[] {
     const kept: Chapter[] = [];
 
     for (const item of items) {
-        if (kept.length >= MAX_CHAPTERS) {
+        if (kept.length >= most) {
             break;
         }
 
@@ -157,7 +183,7 @@ function collect<Item>(
 }
 
 /** The Podcasting 2.0 chapters: `{ chapters: [{ startTime, endTime, title, img, url, toc }] }`. */
-function readJson(value: unknown): Chapter[] {
+function readJson(value: unknown, most: number): Chapter[] {
     const list: unknown =
         typeof value === 'object' && value !== null
             ? (value as { chapters?: unknown }).chapters
@@ -167,51 +193,65 @@ function readJson(value: unknown): Chapter[] {
         throw notChapters();
     }
 
-    return collect(list as Record<string, unknown>[], (item) =>
-        chapterOf({
-            start: item.startTime,
-            end: item.endTime,
-            title: item.title,
-            image: item.img,
-            url: item.url,
-            toc: item.toc,
-        }),
+    return collect(
+        list as Record<string, unknown>[],
+        (item) =>
+            chapterOf({
+                start: item.startTime,
+                end: item.endTime,
+                title: item.title,
+                image: item.img,
+                url: item.url,
+                toc: item.toc,
+            }),
+        most,
     );
 }
 
 /**
  * Reads chapters from WebVTT text, Podcasting 2.0 JSON (as text or already parsed) or a list of
- * `ChapterInput`. They come back in order of their starts, at most `MAX_CHAPTERS`, with a cue or an
+ * `ChapterInput`. They come back in order of their starts, at most `maxChapters`, with a cue or an
  * item that has no usable start (or a WebVTT cue that ends before it starts) left out. Anything
- * else throws a `TypeError`; a text over 512 KB throws a `RangeError`.
+ * else throws a `TypeError`; a text over `maxText` throws a `RangeError`.
  */
-export function readChapters(input: unknown): Chapter[] {
+export function readChapters(
+    input: unknown,
+    options: ReadChaptersOptions = {},
+): Chapter[] {
+    const most = limitOf('maxChapters', options.maxChapters, CHAPTER_COUNT);
+    const maxText = limitOf('maxText', options.maxText, CHAPTER_TEXT);
+
     if (Array.isArray(input)) {
-        return collect(input as ChapterInput[], (item) =>
-            chapterOf({
-                start: item.start,
-                end: item.end,
-                title: item.title,
-                image: item.image,
-                url: item.url,
-                toc: item.toc,
-            }),
+        return collect(
+            input as ChapterInput[],
+            (item) =>
+                chapterOf({
+                    start: item.start,
+                    end: item.end,
+                    title: item.title,
+                    image: item.image,
+                    url: item.url,
+                    toc: item.toc,
+                }),
+            most,
         );
     }
 
     if (typeof input !== 'string') {
-        return readJson(input);
+        return readJson(input, most);
     }
 
-    if (input.length > MAX_TEXT) {
+    if (input.length > maxText) {
         throw tooLarge();
     }
 
     const text = textLines(input);
 
     if (isVtt(text)) {
-        return collect(readVtt(text), (cue) =>
-            chapterOf({ ...cue, image: null, url: null, toc: true }),
+        return collect(
+            readVtt(text),
+            (cue) => chapterOf({ ...cue, image: null, url: null, toc: true }),
+            most,
         );
     }
 
@@ -227,7 +267,7 @@ export function readChapters(input: unknown): Chapter[] {
         throw notChapters();
     }
 
-    return readJson(parsed);
+    return readJson(parsed, most);
 }
 
 /**
@@ -296,6 +336,19 @@ export function nextChapter(
 const loading = new Map<string, Promise<Chapter[]>>();
 
 /**
+ * How chapters fetched with `options` are read: `maxBytes` as the longest text (kept up to its most,
+ * as it shipped) and `maxChapters`; also for the chapters a player is given as a list or a text.
+ */
+export function chapterLimits(
+    options: LoadChaptersOptions = {},
+): Required<ReadChaptersOptions> {
+    return {
+        maxChapters: limitOf('maxChapters', options.maxChapters, CHAPTER_COUNT),
+        maxText: heldLimit(options.maxBytes, CHAPTER_TEXT),
+    };
+}
+
+/**
  * Fetches a chapters file and reads it (see `readChapters`), as UTF-8. Unless `shared` is false, an
  * address is fetched once per page however many players show it; a failed fetch is forgotten, so it
  * can be tried again.
@@ -304,24 +357,22 @@ export function loadChapters(
     url: string,
     options: LoadChaptersOptions = {},
 ): Promise<Chapter[]> {
-    const maxBytes = within(
-        options.maxBytes,
-        MAX_TEXT,
-        1,
-        MAX_TEXT,
-        Math.floor,
-    );
+    const read = chapterLimits(options);
     const fetcher = options.fetcher ?? ((address: string) => fetch(address));
     const load = async (): Promise<Chapter[]> => {
         const response = await fetchOk(fetcher, url, 'chapters');
-        const bytes = await readCapped(response, maxBytes, tooLarge);
+        const bytes = await readCapped(response, read.maxText, tooLarge);
 
-        return readChapters(new TextDecoder('utf-8').decode(bytes));
+        return readChapters(new TextDecoder('utf-8').decode(bytes), read);
     };
 
     if (options.shared === false) {
         return load();
     }
 
-    return oncePerPage(loading, JSON.stringify([url, maxBytes]), load);
+    return oncePerPage(
+        loading,
+        JSON.stringify([url, read.maxText, read.maxChapters]),
+        load,
+    );
 }
