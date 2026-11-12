@@ -276,6 +276,14 @@ describe('markers plugin', () => {
         expect(invalidated).toBe(1);
     });
 
+    it('keeps 2000 markers by default and up to 20 000 when asked; past that, 20 000', () => {
+        const times = Array.from({ length: 20_001 }, (_, at) => at);
+
+        expect(markers({ times }).times).toHaveLength(2000);
+        expect(markers({ times, max: 20_000 }).times).toHaveLength(20_000);
+        expect(markers({ times, max: 1e9 }).times).toHaveLength(20_000);
+    });
+
     it('keeps every marker when max is not a number', () => {
         const times = [5, 10, 15];
 

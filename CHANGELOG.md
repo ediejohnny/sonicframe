@@ -57,7 +57,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `maxChapters` (1000, up to 10 000) is also taken by `readChapters` and by the chapters plugin's `load` for chapters
   given as a list or a text. Tracks: `readTracks` takes `maxTracks` (1000, up to 10 000) and `maxText` (512 KB, up
   to 5 MB), `loadTracks` takes `maxTracks` and its `maxBytes` goes up to 5 MB, the playlist takes `maxTracks`, and a
-  feed's `limit` goes up to 10 000. New
+  feed's `limit` goes up to 10 000. Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems`
+  (2000, up to 20 000) and `maxText` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000. The
+  player's `remember.sounds` goes up to 5000. New
   options `maxPeaks` and `maxBytes` on `loadPeaks` (20 000 and 2 MB, up to 1 000 000 and 64 MB) refuse a value past
   either end with a `RangeError` that names them.
 

@@ -29,7 +29,7 @@ describe('resolveRemember', () => {
                 volume: false,
                 key: 'podcast',
                 sound: 'episode-12',
-                sounds: 9999,
+                sounds: 99_999,
                 nearEnd: -3,
             }),
         ).toEqual({
@@ -38,7 +38,7 @@ describe('resolveRemember', () => {
             speed: true,
             key: 'podcast',
             sound: 'episode-12',
-            sounds: 500,
+            sounds: 5000,
             nearEnd: 0,
         });
         expect(
@@ -49,6 +49,17 @@ describe('resolveRemember', () => {
                 nearEnd: Number.NaN,
             }),
         ).toMatchObject({ key: 'player', sound: null, sounds: 1, nearEnd: 5 });
+        expect(resolveRemember({ sounds: 4000 })?.sounds).toBe(4000);
+    });
+
+    it('reads back up to 5000 positions, as many as it may keep', () => {
+        const positions = Array.from({ length: 5001 }, (_, at) => ({
+            sound: `s${at}`,
+            time: 10,
+        }));
+        const read = readRemembered(JSON.stringify({ positions }));
+
+        expect(read.positions).toHaveLength(5000);
     });
 });
 
