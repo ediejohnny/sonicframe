@@ -29,7 +29,7 @@ html {
 
 .layout {
     display: grid;
-    grid-template-columns: 14rem minmax(0, 1fr);
+    grid-template-columns: 15.5rem minmax(0, 1fr);
     gap: 3rem;
     align-items: start;
 }

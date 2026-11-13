@@ -246,14 +246,7 @@ const peaks = peaksFromChannel(audioBuffer.getChannelData(0), 400);</code></pre>
                         </table>
                     </div>
                     <h3>Reading in pieces</h3>
-                    <div class="code">
-                        <pre><code>createPlayer({
-    container,
-    src: '/episode.mp3',
-    decode: { stream: true },
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="peaks-stream.js"></div>
                     <p>
                         It reads MP3, AAC (<code>.aac</code>), WAV, MP4 and M4A,
                         Ogg (Opus and Vorbis), FLAC and WebM, known by their

@@ -11,6 +11,7 @@ import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite-plus';
+import { highlightBlocks } from './highlight';
 import { PAGES, readingOrder, type DocsPage } from './pages';
 import { SOUNDS } from './sounds';
 
@@ -319,9 +320,53 @@ function footer(): string {
 </div></footer>`;
 }
 
+/** An example's file: lower-case words joined by dashes, then `.js` or `.html`. */
+const EXAMPLE_FILE = /^([a-z0-9]+(?:-[a-z0-9]+)*)\.(js|html)$/;
+
+/**
+ * Puts each example's code on the page, as Bootstrap's docs do: `<div class="example"
+ * data-example="name.js"></div>` becomes the code of `playground/examples/name.js` in a block with its
+ * copy button, and under it the box that very code draws in (`#name`, examples.ts runs the file). A
+ * `.html` example's markup is shown, and also put in the box as it is. Either way the code shown is
+ * the code that runs. `read` gives a file's text (the disk by default).
+ */
+export function inlineExamples(
+    html: string,
+    read: (file: string) => string = (file) => readFileSync(file, 'utf8'),
+): string {
+    return html.replace(
+        /<div class="example" data-example="([^"]*)"><\/div>/g,
+        (_whole, file: string) => {
+            const parts = EXAMPLE_FILE.exec(file);
+
+            if (parts === null) {
+                throw new Error(`docs: "${file}" is not an example file`);
+            }
+
+            const [, name, kind] = parts;
+
+            if (html.includes(`id="${name}"`)) {
+                throw new Error(
+                    `docs: the example "${file}" draws in #${name}, which the page already has`,
+                );
+            }
+
+            const code = read(join(PLAYGROUND, 'examples', file)).trim();
+            const result =
+                kind === 'html'
+                    ? `<div class="example-result" data-markup="${name}">${code}</div>`
+                    : `<div class="example-result" id="${name}"></div>`;
+
+            return `<div class="example" data-example="${file}"><div class="code"><pre><code>${escape(code)}</code></pre><button class="button small" type="button">Copy</button></div>${result}</div>`;
+        },
+    );
+}
+
 /** Draws the shared parts around a page's own `<main>`. */
 export function dressPage(html: string, file: string, base = ''): string {
-    const { html: anchored, headings } = anchorHeadings(html);
+    const { html: anchored, headings } = anchorHeadings(
+        highlightBlocks(inlineExamples(html)),
+    );
     // The "not found" page is served at any depth, so its relative links start from the site's base.
     const anchor = base === '' ? '' : `<base href="${escape(base)}" />\n`;
     const head = `${anchor}<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -439,6 +484,21 @@ function docsPages(): Plugin {
 
     return {
         name: 'sonicframe-docs',
+        // The examples import the package by its published names; on the site they are its sources.
+        config: () => ({
+            resolve: {
+                alias: [
+                    {
+                        find: /^sonicframe$/,
+                        replacement: join(PROJECT, 'src', 'index.ts'),
+                    },
+                    {
+                        find: /^sonicframe\/(analysis|player|record|playlist)$/,
+                        replacement: join(PROJECT, 'src', '$1.ts'),
+                    },
+                ],
+            },
+        }),
         configResolved(config) {
             outDir = resolve(config.root, config.build.outDir);
             base = config.command === 'build' ? config.base : '';

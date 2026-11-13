@@ -302,13 +302,7 @@
                         colors, with the sound. It resolves with
                         <code>{ blob, mimeType, duration }</code>.
                     </p>
-                    <div class="code">
-                        <pre><code>button.addEventListener('click', async () =&gt; {
-    const clip = await frame.exportClip({ start: 8, end: 16, caption: 'The second verse' });
-    download(clip.blob, `verse.${clip.mimeType.includes('mp4') ? 'mp4' : 'webm'}`);
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="analysis-clip.js"></div>
                     <div class="table-wrap">
                         <table>
                             <thead>

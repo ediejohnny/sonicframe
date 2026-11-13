@@ -105,31 +105,15 @@
 
                 <section class="section" id="code">
                     <h2>In code</h2>
-                    <div class="code">
-                        <pre><code>createPlayer({
-    container,
-    src: '/voice.mp3',
-    a11y: {
-        lang: 'pt',
-        description: {
-            keys: true,
-            pauseInValue: true,
-            button: { animation: true, animationType: 'pulse' },
-        },
-    },
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div
+                        class="example"
+                        data-example="words-description.js"
+                    ></div>
                     <p>
                         On a frame of your own, it is the
                         <code>soundDescription</code> plugin:
                     </p>
-                    <div class="code">
-                        <pre><code>import { soundDescription } from 'sonicframe';
-
-frame.use(soundDescription({ lang: 'pt', keys: true }));</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="words-frame.js"></div>
                 </section>
 
                 <section class="section">
