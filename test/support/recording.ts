@@ -52,6 +52,7 @@ export class FakeRecorder {
         readonly options: {
             mimeType?: string;
             audioBitsPerSecond?: number;
+            videoBitsPerSecond?: number;
         } = {},
     ) {
         this.mimeType = options.mimeType ?? '';
@@ -92,6 +93,11 @@ export class FakeRecorder {
     /** Hands a chunk of `bytes` bytes, as a browser does every second. */
     give(bytes: number): void {
         this.ondataavailable?.({ data: new Blob([new Uint8Array(bytes)]) });
+    }
+
+    /** Hands a chunk said to be `bytes` bytes, never held in memory (for the size caps of long recordings). */
+    announce(bytes: number): void {
+        this.ondataavailable?.({ data: { size: bytes } as Blob });
     }
 }
 

@@ -137,6 +137,11 @@ export type PlayerOptions = {
      * system's media controls when `mediaSession` names no artist.
      */
     artist?: string;
+    /**
+     * The longest name, artist, word or media-controls detail shown, in characters: 120, from 1 to
+     * 1000; past either end, a `RangeError`.
+     */
+    maxText?: number;
     /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */
@@ -353,9 +358,15 @@ export type PlayerDecode = {
      * count never falls below `peakCount`, nor rises past 1 000 000.
      */
     peaksPerSecond?: number;
-    /** The longest sound decoded, in seconds; a longer one is read evenly through. Only lowers 1800. */
+    /**
+     * The longest sound read, in seconds; a longer one is read evenly through: 1800, up to 36 000 (10
+     * hours). The browser decodes the whole file first, so this saves no memory: `maxBytes` does.
+     */
     maxSeconds?: number;
-    /** The largest file decoded, in bytes. Only lowers 52 428 800. */
+    /**
+     * The largest file decoded, in bytes: 52 428 800 (50 MiB), up to 268 435 456 (256 MiB). A decoded
+     * hour takes about 635 MB; past a few GB a browser tab falls over, sooner on a phone.
+     */
     maxBytes?: number;
 };
 

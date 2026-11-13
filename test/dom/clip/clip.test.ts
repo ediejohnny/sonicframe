@@ -13,6 +13,7 @@ import {
     it,
     vi,
 } from 'vite-plus/test';
+import type { ClipOptions } from '../../../src/dom/clip/clip';
 import { recordingOf } from '../../support/fakes';
 import { mount, fakeMedia, type Mounted } from '../../support/helpers';
 import { FakeRecorder } from '../../support/recording';
@@ -271,6 +272,113 @@ describe('frame.exportClip while recording', () => {
         await vi.advanceTimersByTimeAsync(121_100);
 
         expect(outcome()).toBe('resolved');
+    });
+
+    it('holds an Infinity limit at 2 hours of source, the most it may decode', async () => {
+        smallDownloads();
+        mounted = mount({ peaks: [0.5, 0.5] });
+
+        FakeAudioContext.decoded = 3 * 60 * 60;
+        const long = watch(
+            mounted.frame.exportClip({
+                audio: '/long.mp3',
+                maxSourceSeconds: Infinity,
+            }),
+        );
+        await vi.advanceTimersByTimeAsync(0);
+        expect((long() as Error).message).toMatch(/too long/);
+
+        FakeAudioContext.decoded = 2 * 60 * 60;
+        const most = watch(
+            mounted.frame.exportClip({
+                audio: '/long.mp3',
+                maxSourceSeconds: Infinity,
+                end: 1,
+            }),
+        );
+        await vi.advanceTimersByTimeAsync(2_100);
+        expect(most()).toBe('resolved');
+    });
+
+    it('cuts a clip at 120 s, or at maxSeconds up to 600, refusing one past it', async () => {
+        smallDownloads();
+        FakeAudioContext.decoded = 20 * 60;
+        mounted = mount({ peaks: [0.5, 0.5] });
+        const { frame } = mounted;
+        const lengths: number[] = [];
+        const record = (options: Partial<ClipOptions>): Promise<void> =>
+            frame
+                .exportClip({ audio: '/long.mp3', ...options })
+                .then((clip) => {
+                    lengths.push(clip.duration);
+                });
+
+        const plain = record({ maxSourceSeconds: 3600 });
+        await vi.advanceTimersByTimeAsync(121_100);
+        await plain;
+        const raised = record({ maxSourceSeconds: 3600, maxSeconds: 600 });
+        await vi.advanceTimersByTimeAsync(601_100);
+        await raised;
+
+        expect(lengths).toEqual([120, 600]);
+        await expect(record({ maxSeconds: 601 })).rejects.toThrow(
+            new RangeError(
+                'sonicframe: maxSeconds goes past its most, 600 (601)',
+            ),
+        );
+    });
+
+    it('records at 8 Mbps, or at the bitrate asked up to 50 Mbps, refusing one past it', async () => {
+        mounted = mount({ peaks: [0.5, 0.5] });
+        const { frame } = mounted;
+        const bitrates = async (
+            bitrate?: number,
+        ): Promise<number | undefined> => {
+            const done = frame.exportClip({ audio: sound(1), bitrate });
+            await vi.advanceTimersByTimeAsync(2_100);
+            await done;
+
+            return FakeRecorder.made.at(-1)?.options.videoBitsPerSecond;
+        };
+
+        expect(await bitrates()).toBe(8_000_000);
+        expect(await bitrates(50_000_000)).toBe(50_000_000);
+        await expect(
+            frame.exportClip({ audio: sound(1), bitrate: 50_000_001 }),
+        ).rejects.toThrow('bitrate goes past its most, 50000000');
+    });
+
+    it('takes a source and a clip of up to maxBytes, 100 MiB unless asked, up to 1 GiB', async () => {
+        smallDownloads();
+        mounted = mount({ peaks: [0.5, 0.5] });
+
+        await expect(
+            mounted.frame.exportClip({ audio: '/a.mp3', maxBytes: 10 }),
+        ).rejects.toThrow('too large');
+        await expect(
+            mounted.frame.exportClip({
+                audio: '/a.mp3',
+                maxBytes: 1_073_741_825,
+            }),
+        ).rejects.toThrow('maxBytes goes past its most, 1073741824');
+    });
+
+    it('draws a video up to 3840 × 2160 when asked; past that, 3840 × 2160', async () => {
+        mounted = mount({ peaks: [0.5, 0.5] });
+        const made = vi.spyOn(document, 'createElement');
+        const done = mounted.frame.exportClip({
+            audio: sound(1),
+            width: 1e9,
+            height: 1e9,
+        });
+        await vi.advanceTimersByTimeAsync(2_100);
+        await done;
+        const canvas = made.mock.results.find(
+            (result) => result.value instanceof HTMLCanvasElement,
+        )?.value as HTMLCanvasElement;
+        made.mockRestore();
+
+        expect([canvas.width, canvas.height]).toEqual([3840, 2160]);
     });
 
     it('keeps the wave in the middle of the room above the caption', async () => {

@@ -182,6 +182,52 @@ describe('readChapters: limits and other input', () => {
         expect(readChapters(many)).toHaveLength(1000);
     });
 
+    it('keeps a title of 120 characters, or maxText up to 1000, refusing one past it', () => {
+        const long = [{ start: 0, title: 'a'.repeat(2000) }];
+        const vtt = `WEBVTT\n\n00:00.000 --> 00:01.000\n${'b'.repeat(2000)}\n`;
+
+        expect(readChapters(long)[0].title).toHaveLength(120);
+        expect(readChapters(long, { maxText: 1000 })[0].title).toHaveLength(
+            1000,
+        );
+        expect(readChapters(vtt, { maxText: 500 })[0].title).toHaveLength(500);
+        expect(
+            readChapters(
+                { chapters: [{ startTime: 0, title: 'c'.repeat(900) }] },
+                { maxText: 800 },
+            )[0].title,
+        ).toHaveLength(800);
+        expect(() => readChapters(long, { maxText: 1001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxText goes past its most, 1000 (1001)',
+            ),
+        );
+    });
+
+    it('keeps up to 10 000 chapters and reads up to 5 MB when asked, refusing past either by name', () => {
+        const many = Array.from({ length: 10_001 }, (_, index) => ({
+            start: index,
+        }));
+        const text = `WEBVTT\n\n${'x'.repeat(524_288)}`;
+
+        expect(readChapters(many, { maxChapters: 10_000 })).toHaveLength(
+            10_000,
+        );
+        expect(readChapters(many, { maxChapters: 3 })).toHaveLength(3);
+        expect(readChapters(text, { maxSize: 5_242_880 })).toEqual([]);
+        expect(() => readChapters(many, { maxChapters: 10_001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxChapters goes past its most, 10000 (10001)',
+            ),
+        );
+        expect(() => readChapters(text, { maxSize: 5_242_881 })).toThrow(
+            'maxSize goes past its most, 5242880',
+        );
+        expect(() => readChapters(many, { maxChapters: 0 })).toThrow(
+            'maxChapters goes under its least, 1',
+        );
+    });
+
     it('reads back the cues a WebVTT writer wrote, whatever their times and titles', () => {
         /** Our own writer, independent of the reader: h:mm:ss.ttt or mm:ss.ttt. */
         const stamp = (ms: number, hours: boolean): string => {
@@ -383,5 +429,36 @@ describe('loadChapters', () => {
                 maxBytes: 100,
             }),
         ).rejects.toThrow('too large');
+    });
+
+    it('takes maxBytes up to 5 MB (past it, 5 MB until 2.0), and maxChapters', async () => {
+        const big = `WEBVTT\n\n00:00.000 --> 00:01.000\nA\n\n${'x'.repeat(600_000)}`;
+
+        await expect(
+            loadChapters('/raised.vtt', {
+                fetcher: respond(big),
+                maxBytes: 5_242_880,
+            }),
+        ).resolves.toHaveLength(1);
+        await expect(
+            loadChapters('/held.vtt', {
+                fetcher: respond(big),
+                maxBytes: 1e12,
+            }),
+        ).resolves.toHaveLength(1);
+        await expect(
+            loadChapters('/held.vtt', {
+                fetcher: respond('WEBVTT\n', { length: 5_242_881 }),
+                maxBytes: 1e12,
+                shared: false,
+            }),
+        ).rejects.toThrow('too large');
+
+        const two =
+            'WEBVTT\n\n00:00.000 --> 00:01.000\nA\n\n00:01.000 --> 00:02.000\nB\n';
+
+        await expect(
+            loadChapters('/two.vtt', { fetcher: respond(two), maxChapters: 1 }),
+        ).resolves.toHaveLength(1);
     });
 });

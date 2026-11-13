@@ -3,10 +3,19 @@
  * and decoded. A source past the length limit is refused with both lengths named.
  */
 
+import type { Limit } from '../../core/shared/limits';
 import { fetchAudio } from '../audio/decode';
 
-/** The largest sound a clip is recorded from, and the largest clip, in bytes (100 MiB). */
-export const MAX_BYTES = 104_857_600;
+/**
+ * The largest sound a clip is recorded from, and the largest clip, in bytes: 100 MiB, up to 1 GiB
+ * (half the 2 GB a desktop Chrome keeps in memory for files).
+ */
+export const CLIP_BYTES: Limit = {
+    value: 104_857_600,
+    least: 1,
+    most: 1_073_741_824,
+    whole: true,
+};
 
 /** Whether the sound is already decoded (and needs neither a download nor a decode). */
 export function isDecoded(
@@ -22,11 +31,12 @@ export function tooLong(seconds: number, limit: number): Error {
     );
 }
 
-/** The sound decoded in `context`; a download or a blob past `MAX_BYTES` is refused. */
+/** The sound decoded in `context`; a download or a blob past `maxBytes` is refused. */
 export async function toBuffer(
     context: AudioContext,
     audio: AudioBuffer | Blob | string,
     signal: AbortSignal | undefined,
+    maxBytes: number = CLIP_BYTES.value,
 ): Promise<AudioBuffer> {
     if (isDecoded(audio)) {
         return audio;
@@ -35,9 +45,9 @@ export async function toBuffer(
     let data: ArrayBuffer;
 
     if (typeof audio === 'string') {
-        data = await fetchAudio(audio, MAX_BYTES, signal);
+        data = await fetchAudio(audio, maxBytes, signal);
     } else {
-        if (audio.size > MAX_BYTES) {
+        if (audio.size > maxBytes) {
             throw new Error('sonicframe: audio is too large to record');
         }
 

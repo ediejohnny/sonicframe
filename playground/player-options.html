@@ -202,8 +202,18 @@
                                         <code>artist</code> part, and the media
                                         controls' artist when
                                         <code>mediaSession</code> names none.
-                                        Shown as text, one line, up to 120
-                                        characters.
+                                        Shown as text, one line, up to
+                                        <code>maxText</code> characters.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxText</code></td>
+                                    <td>120</td>
+                                    <td>
+                                        The longest name, artist, word or media
+                                        controls' detail shown, in characters,
+                                        from 1 to 1000. Past either end, a
+                                        <code>RangeError</code> names it.
                                     </td>
                                 </tr>
                                 <tr>
@@ -556,7 +566,7 @@ player.forget(); // clears what it kept</code></pre>
                                     <td><code>50</code></td>
                                     <td>
                                         How many sounds keep their position, the
-                                        oldest dropped first; from 1 to 500.
+                                        oldest dropped first; from 1 to 5000.
                                     </td>
                                 </tr>
                                 <tr>
@@ -610,15 +620,23 @@ player.forget(); // clears what it kept</code></pre>
                                     <td><code>maxSeconds</code></td>
                                     <td>30 minutes</td>
                                     <td>
-                                        Can only lower the decoder's ceiling; a
-                                        longer sound is read evenly through.
+                                        The longest sound read, in seconds, up
+                                        to 36,000 (10 hours); a longer one is
+                                        read evenly through. The browser decodes
+                                        the whole file first, so this saves no
+                                        memory.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>maxBytes</code></td>
-                                    <td>50 MB</td>
+                                    <td>50 MiB</td>
                                     <td>
-                                        Can only lower the download ceiling.
+                                        The largest file decoded, up to
+                                        268,435,456 bytes (256 MiB). A decoded
+                                        hour takes about 635 MB, and a browser
+                                        tab falls over past a few GB, sooner on
+                                        a phone: for long sounds, give the
+                                        player peaks made on a server.
                                     </td>
                                 </tr>
                             </tbody>

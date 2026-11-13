@@ -185,6 +185,21 @@ describe('regions on the page', () => {
         expect(changes).toEqual([2]);
     });
 
+    it('keeps a label to 120 characters, or maxText up to 1000, when set and when changed', () => {
+        const long = 'l'.repeat(2000);
+        const plain = regions({ items: [{ start: 1, end: 2, label: long }] });
+        const raised = regions({ maxText: 300 });
+        raised.set([{ start: 1, end: 2, label: long }]);
+        const id = raised.items[0].id;
+        raised.update(id, { label: long });
+
+        expect(plain.items[0].label).toHaveLength(120);
+        expect(raised.items[0].label).toHaveLength(300);
+        expect(() => regions({ maxText: 1001 })).toThrow(
+            'maxText goes past its most, 1000',
+        );
+    });
+
     it('removes the selected region on Delete', () => {
         const { container, plugin } = shown({ items: [{ start: 8, end: 12 }] });
 

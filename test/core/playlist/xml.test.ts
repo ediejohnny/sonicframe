@@ -127,11 +127,16 @@ describe('readXml', () => {
             'maxDepth (1)',
         );
         expect(() => readXml(nested(2), { maxDepth: 0 })).toThrow(
-            'maxDepth (1)',
+            new RangeError('sonicframe: maxDepth goes under its least, 1 (0)'),
         );
         expect(readXml(nested(256), { maxDepth: 256 }).name).toBe('a');
-        expect(() => readXml(nested(257), { maxDepth: 1000 })).toThrow(
+        expect(() => readXml(nested(257), { maxDepth: 256 })).toThrow(
             'maxDepth (256)',
+        );
+        expect(() => readXml(nested(2), { maxDepth: 1000 })).toThrow(
+            new RangeError(
+                'sonicframe: maxDepth goes past its most, 256 (1000)',
+            ),
         );
     });
 
@@ -147,10 +152,13 @@ describe('readXml', () => {
             'maxElements (2)',
         );
         expect(
-            readXml(many(200_001), { maxElements: 1e9 }).children,
+            readXml(many(200_001), { maxElements: 1_000_000 }).children,
         ).toHaveLength(200_000);
-        expect(() => readXml(many(1_000_001), { maxElements: 1e9 })).toThrow(
-            'maxElements (1000000)',
+        expect(() =>
+            readXml(many(1_000_001), { maxElements: 1_000_000 }),
+        ).toThrow('maxElements (1000000)');
+        expect(() => readXml(many(3), { maxElements: 1e9 })).toThrow(
+            'maxElements goes past its most, 1000000',
         );
     });
 
@@ -163,11 +171,15 @@ describe('readXml', () => {
             new RangeError('sonicframe: the XML goes past maxAttributes (200)'),
         );
         expect(
-            readXml(attributes(10_000), { maxAttributes: 1e9 }).attributes.size,
+            readXml(attributes(10_000), { maxAttributes: 10_000 }).attributes
+                .size,
         ).toBe(10_000);
         expect(() =>
-            readXml(attributes(10_001), { maxAttributes: 1e9 }),
+            readXml(attributes(10_001), { maxAttributes: 10_000 }),
         ).toThrow('maxAttributes (10000)');
+        expect(() => readXml(attributes(2), { maxAttributes: 10_001 })).toThrow(
+            'maxAttributes goes past its most, 10000',
+        );
         expect(() => readXml(attributes(2), { maxAttributes: 1 })).toThrow(
             'maxAttributes (1)',
         );
@@ -187,11 +199,14 @@ describe('readXml', () => {
         expect(readXml(attribute(1000)).attributes.size).toBe(1);
         expect(() => readXml(attribute(1001))).toThrow('maxNameLength (1000)');
         expect(
-            readXml(element(50_000), { maxNameLength: 1e9 }).name,
+            readXml(element(50_000), { maxNameLength: 50_000 }).name,
         ).toHaveLength(50_000);
         expect(() =>
-            readXml(attribute(50_001), { maxNameLength: 1e9 }),
+            readXml(attribute(50_001), { maxNameLength: 50_000 }),
         ).toThrow('maxNameLength (50000)');
+        expect(() => readXml(element(1), { maxNameLength: 50_001 })).toThrow(
+            'maxNameLength goes past its most, 50000',
+        );
     });
 
     it.each([

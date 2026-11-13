@@ -103,15 +103,22 @@ describe('spectrogram', () => {
         }
     });
 
-    it('caps the dimensions and the window size', () => {
-        const job = createSpectrogram(samples, rate, {
-            fftSize: 3,
-            columns: 99999,
-            rows: 99999,
+    it('keeps the window from 32 to 32 768, the columns up to 16 384 and the rows up to 4096', () => {
+        const small = createSpectrogram(samples, rate, { fftSize: 3 });
+        const usual = createSpectrogram(samples, rate);
+        const big = createSpectrogram(samples, rate, {
+            fftSize: 1e9,
+            columns: 1e9,
+            rows: 1e9,
         });
 
-        expect(job.columns).toBeLessThanOrEqual(4096);
-        expect(job.rows).toBeLessThanOrEqual(1024);
-        expect(job.data).toHaveLength(job.columns * job.rows);
+        expect(small.fftSize).toBe(32);
+        expect([usual.fftSize, usual.columns, usual.rows]).toEqual([
+            1024, 512, 256,
+        ]);
+        expect([big.fftSize, big.columns, big.rows]).toEqual([
+            32_768, 16_384, 4096,
+        ]);
+        expect(big.data).toHaveLength(16_384 * 4096);
     });
 });

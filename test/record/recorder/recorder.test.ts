@@ -301,6 +301,31 @@ describe('Recorder', () => {
         expect(microphone.streams[0].track.stopped).toBe(true);
     });
 
+    it('takes a size cap up to 1 GiB; past that, 1 GiB until 2.0', async () => {
+        // Each chunk is announced at its size, never held: 600 MiB passes a 1 GiB cap, 500 MiB more does not.
+        const { made } = await recording({ maxBytes: 1e15 });
+        const errors: string[] = [];
+        made.on('error', (error) => errors.push(error.reason));
+        FakeRecorder.made[0].announce(629_145_600);
+        expect(errors).toEqual([]);
+
+        FakeRecorder.made[0].announce(524_288_000);
+
+        expect(errors).toEqual(['too-large']);
+    });
+
+    it('stops at 100 MiB by default', async () => {
+        const { made } = await recording();
+        const errors: string[] = [];
+        made.on('error', (error) => errors.push(error.reason));
+        FakeRecorder.made[0].announce(104_857_600);
+        expect(errors).toEqual([]);
+
+        FakeRecorder.made[0].announce(1);
+
+        expect(errors).toEqual(['too-large']);
+    });
+
     it('stops with an error when the browser’s recorder breaks', async () => {
         const { made, microphone } = await recording();
         const errors: string[] = [];

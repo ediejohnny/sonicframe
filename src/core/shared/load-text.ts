@@ -17,7 +17,7 @@ export type LoadTextOptions = {
     signal?: AbortSignal;
     /** The app's own `fetch`, given the address alone. */
     fetcher?: (url: string) => Promise<FetchedResponse>;
-    /** A larger file is refused. Only lowers the ceiling of what is fetched. */
+    /** A larger file is refused; each loader says its default and its most. */
     maxBytes?: number;
 };
 

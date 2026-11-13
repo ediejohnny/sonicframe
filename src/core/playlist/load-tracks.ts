@@ -4,8 +4,9 @@
  * app says otherwise.
  */
 
+import { heldLimit } from '../shared/limits';
 import { loadText, type LoadTextOptions } from '../shared/load-text';
-import { readTracks, type Track } from './tracks';
+import { readTracks, TRACK_TEXT, type Track } from './tracks';
 
 export type LoadTracksOptions = LoadTextOptions & {
     /**
@@ -13,21 +14,30 @@ export type LoadTracksOptions = LoadTextOptions & {
      * absolute (the playlist hands the page's resolved one).
      */
     base?: string;
+    /** The most tracks kept: 1000, from 1 to 10 000 (see `readTracks`). */
+    maxTracks?: number;
+    /** The longest name kept: 120, from 1 to 1000 (see `readTracks`). */
+    maxText?: number;
 };
 
-/** The largest list fetched, in bytes (512 KB). */
-const MAX_BYTES = 524_288;
-
-/** The list's tracks at `url`; refused for an unsafe address, a failed request or a file too large. */
+/**
+ * The list's tracks at `url`; refused for an unsafe address, a failed request or a file too large:
+ * 512 KB, or `maxBytes` up to 5 MB (it shipped able to take any, so past its most it is its most
+ * until 2.0).
+ */
 export async function loadTracks(
     url: string,
     options: LoadTracksOptions = {},
 ): Promise<Track[]> {
-    const loaded = await loadText(url, options, 'tracks', MAX_BYTES);
+    const maxBytes = heldLimit(options.maxBytes, TRACK_TEXT);
+    const loaded = await loadText(url, options, 'tracks', maxBytes);
 
     return readTracks(loaded.text, {
         base:
             options.base ??
             (/^https?:/i.test(loaded.url) ? loaded.url : undefined),
+        maxTracks: options.maxTracks,
+        maxSize: maxBytes,
+        maxText: options.maxText,
     });
 }

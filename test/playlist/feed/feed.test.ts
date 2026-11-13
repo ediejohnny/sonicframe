@@ -136,6 +136,16 @@ describe('loadFeed and the playlist', () => {
             maxAttributes: 200,
             maxNameLength: 1000,
         });
+
+        // An author's 0 never breaks the page: it is the least, 1 (1 KB for the size).
+        for (const name of ['max-size', 'max-depth']) {
+            tag.setAttribute(`feed-${name}`, '0');
+        }
+
+        expect(playlistOptionsOf(tag).feed).toMatchObject({
+            maxSize: 1024,
+            maxDepth: 1,
+        });
     });
 
     it('never fetches a feed address that is not a web address', async () => {

@@ -23,8 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   SonicFrame's own small XML reader, not the browser's, so it works under a strict Content-Security-Policy with
   Trusted Types and in Node. One that declares entities is refused, and its ceilings are options: `maxSize` (5 MB,
   up to 20 MB), `maxDepth` (100, up to 256), `maxElements` (200000, up to 1000000), `maxAttributes` (200, up to 10000) and `maxNameLength` (1000, up to 50000). The defaults are the ones the most used XML readers settled on;
-  an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. Past one,
-  a `RangeError` names the option.
+  an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. A feed past
+  one, or an option past its most or under its least, throws a `RangeError` that names the option.
 - `SONIC_TAGS`, in `sonicframe` and `sonicframe/analysis`: each tag with the attributes it reads, its children that
   count (a playlist's links) and the starts of names it also reads, for a CMS's HTML filter (WordPress's KSES,
   DOMPurify) to let authors place players. None is an event handler; `upload-url`, which sends a visitor's recording
@@ -50,6 +50,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A `<sonic-playlist>`'s own links are inert as well as hidden while its playlist stands, so a page whose CSS shows
   hidden elements still cannot click or focus one (one with a `javascript:` address included); they come back as
   they were when the tag leaves the page.
+- The ceilings on what comes from outside go up to a fixed most, studied in mature projects and in the browsers'
+  own limits; the defaults stay. An option that shipped before keeps a larger value at its most until 2.0; a new
+  one refuses a value past either end with a `RangeError` that names it. A tag's attribute only lowers a ceiling.
+    - Sound: the player's `decode.maxBytes` (50 MiB, up to 256 MiB) and `decode.maxSeconds` (30 minutes, up to 10
+      hours); `readPeaks`'s limit (20 000, up to 1 000 000); `loadPeaks` takes `maxPeaks` and `maxBytes` (20 000 and
+      2 MB, up to 1 000 000 and 64 MB).
+    - Recording: `maxSeconds` (300, up to 6 hours, from 3600) and `maxBytes` (100 MiB, up to 1 GiB);
+      `<sonic-recorder max-seconds>` keeps to 3600, as before.
+    - Chapters: `loadChapters`'s `maxBytes` goes up to 5 MB; `readChapters`, `loadChapters` and the chapters plugin's
+      `load` take `maxChapters` (1000, up to 10 000), and `readChapters` takes `maxSize` (512 KB, up to 5 MB).
+    - Tracks: `readTracks` takes `maxTracks` (1000, up to 10 000) and `maxSize` (512 KB, up to 5 MB); `loadTracks`
+      takes `maxTracks` and its `maxBytes` goes up to 5 MB; the playlist takes `maxTracks`; a feed's `limit` goes up
+      to 10 000.
+    - Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems` (2000, up to 20 000) and
+      `maxSize` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000; the player's `remember.sounds` goes
+      up to 5000.
+    - Names: `maxText`, the longest title, name, label or word kept (120 characters, up to 1000), on `readChapters`,
+      `loadChapters` and the chapters plugin's `load`, `readTracks`, `loadTracks`, a feed, `readRegions` and
+      `readMarkers`, the player (its name, artist, words and media controls), the playlist, the now-playing bar, the
+      recorder and the regions plugin.
+    - Clips: `width` and `height` go up to 3840 × 2160; `exportClip` takes `maxSeconds` (120, up to 600), `bitrate`
+      (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB).
+    - Analysis: the spectrogram's `fftSize` goes up to 32 768 (the Web Audio standard's own most), its `columns` up to
+      16 384 and its `rows` up to 4096, and its job gives the `fftSize` it used; `levels` and `findSilences` take
+      `maxWindows` (200 000, up to 2 000 000); `findSilences` and `silencesFromPeaks` take `maxSilences` (10 000, up
+      to 100 000).
 
 ### Fixed
 
@@ -63,6 +89,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A WebVTT file's character reference named like a property every object has (`&constructor;`) was read as the
   text of a JavaScript function in a chapter's or a cue's title; it now stays as written, like any unknown
   reference.
+- A clip's `maxSourceSeconds: Infinity` lifted every limit on the source decoded whole in memory, so a long
+  enough sound could take the tab down; it now goes up to 2 hours (about 2.7 GB of decoded stereo), `Infinity`
+  included.
 
 ## [1.2.0] - 2026-11-12
 

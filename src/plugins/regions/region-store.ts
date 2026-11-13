@@ -41,14 +41,14 @@ export type RegionsHost = {
     remove(id: string): void;
 };
 
-/** The longest label, in characters. */
-const MAX_LABEL = 120;
-
 let counter = 0;
 
-/** A label from outside, cleaned to one safe line, or none. */
-export function regionLabel(label: string | undefined): string | undefined {
-    return label === undefined ? undefined : cleanText(label, MAX_LABEL);
+/** A label from outside, cleaned to one safe line of at most `longest` characters, or none. */
+export function regionLabel(
+    label: string | undefined,
+    longest: number,
+): string | undefined {
+    return label === undefined ? undefined : cleanText(label, longest);
 }
 
 export class RegionStore {
@@ -61,6 +61,8 @@ export class RegionStore {
     constructor(
         private readonly minLength: number,
         private readonly max: number,
+        /** The longest label, in characters (`maxText`). */
+        readonly longest: number,
     ) {}
 
     /** Whether `max` regions exist already. */
@@ -121,7 +123,7 @@ export class RegionStore {
                     : this.newId(reserved),
             start: bounds.start,
             end: bounds.end,
-            label: regionLabel(item.label),
+            label: regionLabel(item.label, this.longest),
             color: item.color,
         };
         this.items = [...this.items, region];

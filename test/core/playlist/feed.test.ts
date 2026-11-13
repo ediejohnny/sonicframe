@@ -106,6 +106,32 @@ describe('readFeed', () => {
         ).join('');
 
         expect(readFeed(feed(many)).tracks).toHaveLength(1000);
+        expect(readFeed(feed(many), { limit: 1003 }).tracks).toHaveLength(1003);
+    });
+
+    it('keeps the show’s and the episodes’ names to maxText', () => {
+        const read = readFeed(
+            `<rss><channel><title>${'s'.repeat(300)}</title><item><title>${'e'.repeat(300)}</title><enclosure url="https://cdn.test/1.mp3"/></item></channel></rss>`,
+            { maxText: 200 },
+        );
+
+        expect(read.title).toHaveLength(200);
+        expect(read.tracks[0].title).toHaveLength(200);
+    });
+
+    it('keeps up to 10 000 episodes when asked; past that, 10 000', () => {
+        const many = Array.from(
+            { length: 10_002 },
+            (_, at) =>
+                `<item><enclosure url="https://cdn.test/${at}.mp3"/></item>`,
+        ).join('');
+
+        expect(readFeed(feed(many), { limit: 10_000 }).tracks).toHaveLength(
+            10_000,
+        );
+        expect(readFeed(feed(many), { limit: 1e9 }).tracks).toHaveLength(
+            10_000,
+        );
     });
 
     it('reads 5 MB by default, and takes maxSize from 1 KB to 20 MB', () => {
@@ -116,14 +142,24 @@ describe('readFeed', () => {
         expect(() => readFeed(sized(1100), { maxSize: 1024 })).toThrow(
             'too large',
         );
-        expect(readFeed(feed(TWO), { maxSize: 10 }).tracks).toHaveLength(1);
         expect(() => readFeed(sized(5_242_880))).toThrow('too large');
         expect(
-            readFeed(sized(5_242_880), { maxSize: 1e9 }).tracks,
+            readFeed(sized(5_242_880), { maxSize: 20_971_520 }).tracks,
         ).toHaveLength(1);
         expect(() =>
-            readFeed(' '.repeat(20_971_521), { maxSize: 1e9 }),
+            readFeed(' '.repeat(20_971_521), { maxSize: 20_971_520 }),
         ).toThrow('too large');
+    });
+
+    it('refuses a maxSize past 20 MB or under 1 KB, naming it', () => {
+        expect(() => readFeed(feed(TWO), { maxSize: 20_971_521 })).toThrow(
+            new RangeError(
+                'sonicframe: maxSize goes past its most, 20971520 (20971521)',
+            ),
+        );
+        expect(() => readFeed(feed(TWO), { maxSize: 10 })).toThrow(
+            'maxSize goes under its least, 1024',
+        );
     });
 
     it('passes the reader’s ceilings on to it', () => {

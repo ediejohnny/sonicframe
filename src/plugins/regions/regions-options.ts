@@ -27,6 +27,8 @@ export type RegionsKeys = {
 export type RegionsOptions = {
     /** Regions to start with; an id is kept when no other region has it. */
     items?: readonly RegionInput[];
+    /** The longest label kept, in characters: 120, from 1 to 1000; past either end, a `RangeError`. */
+    maxText?: number;
     /**
      * Whether the pointer creates regions: on by default, by `createGesture`. The old forms
      * `'shift-drag'` and `'drag'` still work until 2.0, as `createGesture`.

@@ -272,6 +272,42 @@ describe('the shuffle', () => {
 });
 
 describe('changing the tracks', () => {
+    it('keeps to maxTracks when given, set and added, and refuses one past 10 000', () => {
+        const four = [1, 2, 3, 4].map((at) => ({
+            src: `https://site.test/${at}.mp3`,
+        }));
+        const { playlist } = make({ tracks: four, maxTracks: 2 });
+
+        expect(playlist.tracks).toHaveLength(2);
+
+        playlist.add(four);
+        expect(playlist.tracks).toHaveLength(2);
+
+        playlist.setTracks(four);
+        expect(playlist.tracks).toHaveLength(2);
+
+        expect(() => make({ maxTracks: 10_001 })).toThrow(
+            'maxTracks goes past its most, 10000',
+        );
+    });
+
+    it('keeps its own name to maxText', () => {
+        const { playlist } = make({ maxText: 4, a11y: { label: 'abcdef' } });
+
+        expect(playlist.element.getAttribute('aria-label')).toBe('abcd');
+    });
+
+    it('keeps the tracks’ names to maxText, given and added', () => {
+        const named = [{ src: 'https://site.test/1.mp3', title: 'abcdef' }];
+        const { playlist } = make({ tracks: named, maxText: 3 });
+        playlist.add([{ src: 'https://site.test/2.mp3', title: 'ghijkl' }]);
+
+        expect(playlist.tracks.map((track) => track.title)).toEqual([
+            'abc',
+            'ghi',
+        ]);
+    });
+
     it('keeps the track playing when tracks are added before it', () => {
         const { playlist, media } = make({ start: 1 });
         const changes: (readonly Track[])[] = [];

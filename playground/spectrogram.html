@@ -97,7 +97,7 @@ createPlayer({ container, src, spectrogram: true });</code></pre>
                                     <td></td>
                                     <td>
                                         Window size, a power of two from 32 to
-                                        8192.
+                                        32,768 (1024 by default).
                                     </td>
                                 </tr>
                                 <tr>
@@ -107,7 +107,8 @@ createPlayer({ container, src, spectrogram: true });</code></pre>
                                     <td></td>
                                     <td>
                                         The picture's size in time and
-                                        frequency.
+                                        frequency: 512 × 256 by default, up to
+                                        16,384 × 4096.
                                     </td>
                                 </tr>
                                 <tr>

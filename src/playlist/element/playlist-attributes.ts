@@ -11,6 +11,7 @@ import type { TrackInput } from '../../core/playlist/tracks';
 import { XML_LIMITS } from '../../core/playlist/xml-limits';
 import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf } from '../../core/shared/checked';
+import { tagLimit, type Limit } from '../../core/shared/limits';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { optionsOf } from '../../player/element/element-attributes';
 import type {
@@ -97,17 +98,14 @@ function playerOf(element: Element): PlaylistPlayer {
     return { ...player, a11y: { ...player.a11y, label: undefined } };
 }
 
-/** Everything the tag says, as the playlist's options (all but the container). */
-/** A ceiling a tag may only lower: past `most`, it is `most`. Raising one is for an app's code. */
-function atMost(value: number | undefined, most: number): number | undefined {
-    return value === undefined ? undefined : Math.min(value, most);
-}
-
-/** The tag's feed: its address, order and limit, and its reader's ceilings, which only go down. */
+/**
+ * The tag's feed: its address, order and limit, and its reader's ceilings, which a tag may only lower
+ * (see `tagLimit`); raising one is for an app's code.
+ */
 function feedOf(get: (name: string) => string | null): PlaylistOptions['feed'] {
     const src = get('feed');
-    const ceiling = (name: string, most: number): number | undefined =>
-        atMost(attributeNumber(get(`feed-${name}`)), most);
+    const ceiling = (name: string, limit: Limit): number | undefined =>
+        tagLimit(get(`feed-${name}`), limit);
 
     return src === null
         ? undefined
@@ -116,21 +114,20 @@ function feedOf(get: (name: string) => string | null): PlaylistOptions['feed'] {
               order: (get('feed-order') ?? undefined) as 'newest' | 'oldest',
               limit: attributeNumber(get('feed-limit')),
               maxSize: ceiling('max-size', FEED_SIZE),
-              maxDepth: ceiling('max-depth', XML_LIMITS.maxDepth.value),
-              maxElements: ceiling(
-                  'max-elements',
-                  XML_LIMITS.maxElements.value,
-              ),
+              maxDepth: ceiling('max-depth', XML_LIMITS.maxDepth),
+              maxElements: ceiling('max-elements', XML_LIMITS.maxElements),
               maxAttributes: ceiling(
                   'max-attributes',
-                  XML_LIMITS.maxAttributes.value,
+                  XML_LIMITS.maxAttributes,
               ),
               maxNameLength: ceiling(
                   'max-name-length',
-                  XML_LIMITS.maxNameLength.value,
+                  XML_LIMITS.maxNameLength,
               ),
           };
 }
+
+/** Everything the tag says, as the playlist's options (all but the container). */
 
 export function playlistOptionsOf(
     element: Element,
