@@ -368,6 +368,30 @@ export type PlayerDecode = {
      * hour takes about 635 MB; past a few GB a browser tab falls over, sooner on a phone.
      */
     maxBytes?: number;
+    /**
+     * Reads the sound in pieces as it downloads, keeping only its peaks, so sounds of hours get a wave:
+     * off by default. MP3, AAC, WAV, MP4/M4A, Ogg (Opus, Vorbis), FLAC and WebM are read this way; any
+     * other sound, or one the browser cannot decode in pieces, is decoded whole as without it.
+     */
+    stream?: boolean | PlayerDecodeStream;
+};
+
+/** Reading a sound in pieces for its peaks (`decode.stream`). */
+export type PlayerDecodeStream = {
+    /**
+     * The most bytes downloaded for the peaks: 1 073 741 824 (1 GiB), from 1 up to 4 294 967 296
+     * (4 GiB). Past either end, a `RangeError`. The page's `<audio>` downloads the sound too.
+     */
+    maxBytes?: number;
+    /**
+     * The most seconds read: 36 000 (10 hours), up to 86 400 (24 hours); past either end, a
+     * `RangeError`. A longer sound shows its start, and the rest as silence when its length is known.
+     */
+    maxSeconds?: number;
+    /** Draws the wave while the sound is read: on by default. */
+    progressive?: boolean;
+    /** `'auto'` (the default) decodes with WebCodecs where it can; `false` always decodes small pieces whole. */
+    webcodecs?: 'auto' | false;
 };
 
 /** The description on a player: the plugin's options, plus a button that reads it aloud. */

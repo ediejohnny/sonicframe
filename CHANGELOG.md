@@ -44,6 +44,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   with their own minified chunks, in about half the bytes. From npm they are `sonicframe/min`,
   `sonicframe/min/player`, `sonicframe/min/record`, `sonicframe/min/playlist` and `sonicframe/min/analysis`. The
   readable files are unchanged.
+- Waves for sounds of hours: `decode.stream` (the tag's `decode-stream`) reads a sound in pieces as it downloads and
+  keeps only its peaks, never the whole decoded sound, so a 10-hour podcast gets a wave where decoding it whole would
+  take gigabytes. Off by default. MP3, AAC, WAV, MP4/M4A, Ogg (Opus, Vorbis), FLAC and WebM are read by SonicFrame's
+  own small readers, the format told by the file's first bytes; the frames are decoded with WebCodecs where the
+  browser has it, or else in small whole pieces. A sound that cannot be read this way is decoded whole, as before.
+  The wave is drawn while the sound is read (`progressive`, on), and its ceilings are options: `maxBytes` (1 GiB, up
+  to 4 GiB) and `maxSeconds` (10 hours, up to 24); past either end, a `RangeError`. The tag's
+  `decode-stream-max-bytes` and `decode-stream-max-seconds` may only lower them. The frame's `previewPeaks` draws
+  peaks while the peaks being loaded are still read.
 - `createPeakStream(count)`, in `sonicframe` and `sonicframe/analysis`: peaks from a sound that arrives in pieces,
   holding four values per peak instead of the sound, so hours of audio fit in a few megabytes. `push` takes each
   piece, `peaks()` gives the peaks so far, and `peaks(totalSamples)` draws the part still to come as silence. A

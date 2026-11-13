@@ -241,7 +241,12 @@ export class Player {
                 this.events.emit('chapterchange', chapter, index),
             listed: (chapters) => this.session.listed(chapters),
         };
-        this.sound = new PlayerSound(options, this.media, this.abort.signal);
+        this.sound = new PlayerSound(
+            options,
+            this.media,
+            this.abort.signal,
+            () => this.frameRef,
+        );
         this.chapterParts = new ChapterParts(options.chapters, this.host);
         this.session = new PlayerSession(options, {
             look: () => this.look,

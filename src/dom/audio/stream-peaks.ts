@@ -28,6 +28,7 @@ import {
 import { createWavReader, type PcmReader } from '../../core/audio/wav';
 import { createWebmReader } from '../../core/audio/webm';
 import { createPeakStream } from '../../core/peaks/peak-stream';
+import type { Limit } from '../../core/shared/limits';
 import { webCodecsSink, wholeFileSink, type FrameSink } from './frame-sinks';
 
 /** Thrown when a sound cannot be read in pieces here; no peak was given yet. */
@@ -58,6 +59,22 @@ export type StreamPeaksOptions = {
 };
 
 export type StreamedPeaks = { peaks: number[]; duration: number };
+
+/** The most bytes downloaded for the peaks: 1 GiB, up to 4 GiB. */
+export const STREAM_BYTES: Limit = {
+    value: 1_073_741_824,
+    least: 1,
+    most: 4_294_967_296,
+    whole: true,
+};
+
+/** The most seconds read: 36 000 (10 hours), up to 86 400 (24 hours). */
+export const STREAM_SECONDS: Limit = {
+    value: 36_000,
+    least: 1,
+    most: 86_400,
+    whole: false,
+};
 
 /** The largest `moov` box read from the end of an MP4: 64 MiB. */
 const MOOV_BYTES = 67_108_864;

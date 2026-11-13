@@ -398,6 +398,16 @@ export class SonicFrame implements PluginHost {
         }
     }
 
+    /**
+     * Draws peaks while the peaks being loaded are still read (a long sound read in pieces); the
+     * loader's own peaks replace them when they come.
+     */
+    previewPeaks(peaks: readonly number[]): void {
+        if (!this.destroyed) {
+            this.receive(peaks);
+        }
+    }
+
     /** Follows an audio or video element (or none): its time drives the picture, seeks drive it. */
     bind(media: HTMLMediaElement | null): void {
         if (this.destroyed) {
