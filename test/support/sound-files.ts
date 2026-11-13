@@ -137,6 +137,40 @@ export function expectSafeOnAnyBytes(
     );
 }
 
+/**
+ * Reads `file` with up to six of its bytes changed at random: `read` must end, and throw nothing but
+ * a TypeError.
+ */
+export function expectSafeWhenDamaged(
+    file: Uint8Array,
+    read: (damaged: Uint8Array) => void,
+): void {
+    fc.assert(
+        fc.property(
+            fc.array(
+                fc.tuple(
+                    fc.nat({ max: file.length - 1 }),
+                    fc.integer({ min: 0, max: 255 }),
+                ),
+                { minLength: 1, maxLength: 6 },
+            ),
+            (changes) => {
+                const damaged = file.slice();
+
+                for (const [at, value] of changes) {
+                    damaged[at] = value;
+                }
+
+                try {
+                    read(damaged);
+                } catch (error) {
+                    expect(error).toBeInstanceOf(TypeError);
+                }
+            },
+        ),
+    );
+}
+
 /** Feeds `data` to `push` in pieces cut at `cuts` (sizes), the rest last. */
 export function inPieces<T>(
     data: Uint8Array,

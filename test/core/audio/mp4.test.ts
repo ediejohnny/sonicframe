@@ -2,7 +2,12 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
 import { createMp4Reader } from '../../../src/core/audio/mp4';
 import { box, esds, m4a, type M4aOptions } from '../../support/mp4-files';
-import { ascii, bytes, inPieces } from '../../support/sound-files';
+import {
+    ascii,
+    bytes,
+    expectSafeWhenDamaged,
+    inPieces,
+} from '../../support/sound-files';
 
 const SIZES = [100, 120, 90, 110, 95];
 
@@ -177,35 +182,11 @@ describe('createMp4Reader', () => {
     it('never runs away on a damaged file, and throws only TypeError', () => {
         const { file } = m4a({ sizes: SIZES, perChunk: 2, video: true });
 
-        fc.assert(
-            fc.property(
-                fc.array(
-                    fc.tuple(
-                        fc.nat({ max: file.length - 1 }),
-                        fc.integer({ min: 0, max: 255 }),
-                    ),
-                    {
-                        minLength: 1,
-                        maxLength: 6,
-                    },
-                ),
-                (changes) => {
-                    const damaged = file.slice();
-
-                    for (const [at, value] of changes) {
-                        damaged[at] = value;
-                    }
-
-                    try {
-                        for (const frame of createMp4Reader().push(damaged)) {
-                            expect(frame.data.length).toBeGreaterThan(0);
-                        }
-                    } catch (error) {
-                        expect(error).toBeInstanceOf(TypeError);
-                    }
-                },
-            ),
-        );
+        expectSafeWhenDamaged(file, (damaged) => {
+            for (const frame of createMp4Reader().push(damaged)) {
+                expect(frame.data.length).toBeGreaterThan(0);
+            }
+        });
     });
 });
 

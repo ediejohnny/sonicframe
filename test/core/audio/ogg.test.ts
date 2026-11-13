@@ -8,7 +8,12 @@ import {
     page,
     vorbisId,
 } from '../../support/ogg-files';
-import { ascii, bytes, inPieces } from '../../support/sound-files';
+import {
+    ascii,
+    bytes,
+    expectSafeWhenDamaged,
+    inPieces,
+} from '../../support/sound-files';
 
 /** Each frame the reader gives for `file` pushed in pieces: its size, its fill and its samples. */
 function framesOf(
@@ -175,33 +180,9 @@ describe('createOggReader', () => {
     });
 
     it('never runs away on a damaged file, and throws only TypeError', () => {
-        fc.assert(
-            fc.property(
-                fc.array(
-                    fc.tuple(
-                        fc.nat({ max: OPUS.length - 1 }),
-                        fc.integer({ min: 0, max: 255 }),
-                    ),
-                    {
-                        minLength: 1,
-                        maxLength: 6,
-                    },
-                ),
-                (changes) => {
-                    const damaged = OPUS.slice();
-
-                    for (const [at, value] of changes) {
-                        damaged[at] = value;
-                    }
-
-                    try {
-                        createOggReader().push(damaged);
-                    } catch (error) {
-                        expect(error).toBeInstanceOf(TypeError);
-                    }
-                },
-            ),
-        );
+        expectSafeWhenDamaged(OPUS, (damaged) => {
+            createOggReader().push(damaged);
+        });
     });
 });
 

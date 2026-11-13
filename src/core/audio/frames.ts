@@ -27,6 +27,8 @@ export type FrameReader = {
     readonly format: CodedFormat | null;
     /** Takes the next bytes and gives every frame they complete. */
     push(bytes: Uint8Array): CodedFrame[];
+    /** The last frames, for formats whose frames end only where the next one starts. */
+    end?(): CodedFrame[];
 };
 
 /** Thrown when the bytes are not the format a reader reads. */
