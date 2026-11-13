@@ -126,18 +126,7 @@
                         Where SonicFrame offers motion, a boolean turns it on
                         and a separate option picks its kind, with a default:
                     </p>
-                    <div class="code">
-                        <pre><code>createPlayer({
-    container,
-    src,
-    a11y: {
-        description: {
-            button: { animation: true, animationType: 'fade' }, // 'pulse' by default
-        },
-    },
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="motion-fade.js"></div>
                     <p>
                         A kind it does not know falls back to the default, and
                         the whole animation is skipped when the system asks for
@@ -147,10 +136,7 @@
 
                 <section class="section">
                     <h2>Turning the grow-in off</h2>
-                    <div class="code">
-                        <pre><code>new SonicFrame({ container, media, peaks, animate: false });</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="motion-still.js"></div>
                 </section>
             </div>
         </main>

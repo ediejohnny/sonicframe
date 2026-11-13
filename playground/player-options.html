@@ -498,16 +498,10 @@
                         sound left near its end, or one that ended, starts over;
                         one already under way stays where it is.
                     </p>
-                    <div class="code">
-                        <pre><code>const player = createPlayer({
-    container,
-    src: 'episode-12.mp3',
-    remember: { key: 'podcast', sound: 'episode-12' },
-});
-player.on('resume', (time) =&gt; console.log('resumed at', time));
-player.forget(); // clears what it kept</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div
+                        class="example"
+                        data-example="player-remember.js"
+                    ></div>
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -713,14 +707,7 @@ player.forget(); // clears what it kept</code></pre>
                             </tbody>
                         </table>
                     </div>
-                    <div class="code">
-                        <pre><code>createPlayer({
-    container,
-    src: '/episode.mp3',
-    decode: { stream: { maxSeconds: 14_400, progressive: false } },
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="player-stream.js"></div>
                 </section>
             </div>
         </main>

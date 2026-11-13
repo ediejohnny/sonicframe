@@ -24,16 +24,7 @@
             <div class="doc">
                 <section class="section">
                     <h2>Reading a file</h2>
-                    <div class="code">
-                        <pre><code>import { SonicFrame, loadWaveform } from 'sonicframe';
-
-new SonicFrame({
-    container: document.querySelector('#episode'),
-    media: document.querySelector('audio'),
-    peaks: () =&gt; loadWaveform('/episode.dat'),
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="waveform-dat.js"></div>
                     <p>
                         SonicFrame reads the files of the audiowaveform tool,
                         binary (<code>.dat</code>) or JSON, version 1 or 2, 8 or

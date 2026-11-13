@@ -22,25 +22,7 @@
             <div class="doc">
                 <section class="section">
                     <h2>The shape of a plugin</h2>
-                    <div class="code">
-                        <pre><code>const playhead = {
-    name: 'playhead-glow',
-    layer: 'over', // or 'under', before the bars
-    setup(host) {
-        // Called once; keep the host to ask for a redraw later.
-    },
-    draw(paint) {
-        const x = paint.xAt(paint.progress);
-        const ctx = paint.ctx;
-        ctx.fillStyle = paint.color('var(--sonicframe-progress, #2f6fdb)');
-        ctx.fillRect(x - 2 * paint.pixelRatio, 0, 4 * paint.pixelRatio, paint.height);
-    },
-    destroy() {},
-};
-
-frame.use(playhead); // returns the function that removes it</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="plugin-glow.js"></div>
                     <p>
                         A plugin is an object with a <code>name</code> and any
                         of the hooks below. One that throws from any hook is
