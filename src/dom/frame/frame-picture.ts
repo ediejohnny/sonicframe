@@ -57,11 +57,17 @@ export class FramePicture {
         return this.appear !== null;
     }
 
-    /** New peaks came (or went): what was measured from the old ones goes, and `grow` lets them grow in. */
-    newPeaks(grow: boolean): void {
+    /**
+     * New peaks came (or went): what was measured from the old ones goes, and `grow` lets them grow
+     * in; `'keep'` leaves the bars as they are, growing on only if they were growing.
+     */
+    newPeaks(grow: boolean | 'keep'): void {
         this.values = null;
         this.detail = null;
-        this.appear = grow ? -1 : null;
+
+        if (grow !== 'keep') {
+            this.appear = grow ? -1 : null;
+        }
     }
 
     /** The live values changed: the values per bar are measured again. */

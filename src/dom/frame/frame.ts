@@ -114,6 +114,8 @@ export class SonicFrame implements PluginHost {
     private loader: (() => Promise<readonly number[] | PeaksData>) | null =
         null;
     private loads = 0;
+    /** Whether peaks of the load under way were already drawn while it reads (`previewPeaks`). */
+    private previewed = false;
     private size: Size = { width: 0, height: 0, pixelRatio: 1 };
     private near = false;
     private allocated = false;
@@ -384,6 +386,7 @@ export class SonicFrame implements PluginHost {
         }
 
         this.loads++;
+        this.previewed = false;
 
         if (typeof source === 'function') {
             this.loader = source;
@@ -404,7 +407,8 @@ export class SonicFrame implements PluginHost {
      */
     previewPeaks(peaks: readonly number[]): void {
         if (!this.destroyed) {
-            this.receive(peaks);
+            this.receive(peaks, this.previewed);
+            this.previewed = true;
         }
     }
 
@@ -711,7 +715,7 @@ export class SonicFrame implements PluginHost {
         ).then(
             (peaks) => {
                 if (load === this.loads && !this.destroyed) {
-                    this.receive(peaks);
+                    this.receive(peaks, this.previewed);
                 }
             },
             (error: unknown) => {
@@ -722,7 +726,14 @@ export class SonicFrame implements PluginHost {
         );
     }
 
-    private receive(source: readonly number[] | PeaksData | null): void {
+    /**
+     * Takes new peaks. They grow in, when motion is welcome, unless `keep` says they are more of the
+     * same sound read further: then the bars stay standing.
+     */
+    private receive(
+        source: readonly number[] | PeaksData | null,
+        keep = false,
+    ): void {
         const { peaks, duration } = unpack(source);
         this.peaksData =
             peaks === null
@@ -730,11 +741,13 @@ export class SonicFrame implements PluginHost {
                 : peaks.map((value) => clamp01(Math.abs(value)));
         this.controller.setPeaksDuration(duration);
         this.picture.newPeaks(
-            this.peaksData !== null &&
-                this.animate &&
-                this.allocated &&
-                this.near &&
-                !prefersReducedMotion(),
+            keep && this.peaksData !== null
+                ? 'keep'
+                : this.peaksData !== null &&
+                      this.animate &&
+                      this.allocated &&
+                      this.near &&
+                      !prefersReducedMotion(),
         );
         this.frameView.refit();
         this.layoutDirty = true;
