@@ -1,11 +1,18 @@
 /**
  * What every docs page shares: the sound, the header, the sidebar of pages and "On this page" (the
  * code blocks are in code-blocks.ts). The sound's peaks and length come from a ready-made file, so every player gets the
- * same ones at once and nothing is decoded; a sound the reader picks is decoded once. The header
+ * same ones at once and nothing is decoded; a sound the reader picks is read once, in pieces when
+ * its format allows (so hours fit in the tab), else decoded whole. The header
  * switches the page between light and dark and picks its font; canvas colors are read once, so the
  * page repaints its players after every switch.
  */
 
+import {
+    NotStreamable,
+    STREAM_BYTES,
+    STREAM_SECONDS,
+    streamPeaks,
+} from '../src/dom/audio/stream-peaks';
 import { loadWaveform, peaksFromChannel } from '../src/index';
 import { POEM } from './docs/sounds';
 import { setupFontPicker } from './font-picker';
@@ -26,14 +33,56 @@ export type Sound = {
 /** How many peaks are decoded from a sound. */
 const PEAKS = 1000;
 
+/** The largest file read in pieces: decode.stream's lock, 4 GiB. */
+const MOST_STREAMED = STREAM_BYTES.most;
+
+/** The largest file decoded whole (a format not read in pieces): 256 MiB, decode.maxBytes' lock. */
+const MOST_WHOLE = 268_435_456;
+
 const SCHEME_KEY = 'sonicframe-playground-scheme';
 
 type Scheme = 'light' | 'dark';
 
-/** Decodes a sound once; the object URL of `blob` lives until `forget` is called with it. */
-async function soundFrom(
+/** A file's size in words: KB under a megabyte, MB under a gigabyte, then GB, to one decimal. */
+export function sizeText(bytes: number): string {
+    const tenth = (value: number): string => String(Number(value.toFixed(1)));
+
+    if (bytes < 1_048_576) {
+        return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    }
+
+    return bytes < 1_073_741_824
+        ? `${tenth(bytes / 1_048_576)} MB`
+        : `${tenth(bytes / 1_073_741_824)} GB`;
+}
+
+/** A file too large for the way it would be read; its message is said as it is. */
+class TooLarge extends Error {}
+
+/** `body` passed on unchanged, telling the share of the file read once each piece is through. */
+function counted(
+    body: ReadableStream<Uint8Array>,
+    from: number,
+    size: number,
+    progress: (share: number) => void,
+): ReadableStream<Uint8Array> {
+    let read = from;
+
+    return body.pipeThrough(
+        new TransformStream<Uint8Array, Uint8Array>({
+            transform(piece, controller): void {
+                read += piece.length;
+                progress(size > 0 ? read / size : 1);
+                controller.enqueue(piece);
+            },
+        }),
+    );
+}
+
+/** Decodes a sound whole, once; the object URL `url` lives until `forget` is called with it. */
+async function decodedWhole(
     bytes: ArrayBuffer,
-    blob: Blob,
+    url: string,
     name: string,
 ): Promise<Sound> {
     const context = new AudioContext();
@@ -42,7 +91,7 @@ async function soundFrom(
         const buffer = await context.decodeAudioData(bytes);
 
         return {
-            url: URL.createObjectURL(blob),
+            url,
             own: true,
             peaks: peaksFromChannel(buffer.getChannelData(0), PEAKS),
             duration: buffer.duration,
@@ -50,6 +99,77 @@ async function soundFrom(
         };
     } finally {
         void context.close();
+    }
+}
+
+/**
+ * A picked file as the page's sound. Its peaks are read in pieces as the bytes go through, the bar
+ * filling with the share read; a format that cannot be read so is read and decoded whole, up to
+ * 256 MiB, with the seconds of decoding on the bar. `tell` says each step.
+ */
+async function soundFromFile(
+    file: File,
+    bar: FileProgress,
+    tell: (text: string) => void,
+): Promise<Sound> {
+    const url = URL.createObjectURL(file);
+    const size = sizeText(file.size);
+
+    try {
+        const streamed = await streamPeaks(url, {
+            count: PEAKS,
+            maxBytes: MOST_STREAMED,
+            maxSeconds: STREAM_SECONDS.most,
+            open: (from = 0) =>
+                Promise.resolve(
+                    new Response(
+                        counted(
+                            file.slice(from).stream(),
+                            from,
+                            file.size,
+                            (share) => bar.reading(share),
+                        ),
+                    ),
+                ),
+        });
+
+        return {
+            url,
+            own: true,
+            peaks: streamed.peaks,
+            duration: streamed.duration,
+            name: file.name,
+        };
+    } catch (error) {
+        if (!(error instanceof NotStreamable)) {
+            URL.revokeObjectURL(url);
+            throw error;
+        }
+    }
+
+    if (file.size > MOST_WHOLE) {
+        URL.revokeObjectURL(url);
+        throw new TooLarge(
+            `${file.name} is ${size}: in this format the page reads files up to ${sizeText(MOST_WHOLE)}. MP3, AAC, WAV, M4A, MP4, Ogg, FLAC and WebM go up to ${sizeText(MOST_STREAMED)}.`,
+        );
+    }
+
+    try {
+        const bytes = await readFile(file, (share) => bar.reading(share));
+        tell(`Decoding ${file.name}… A long sound can take a while.`);
+        const start = Date.now();
+        const seconds = (): number => Math.round((Date.now() - start) / 1000);
+        bar.decoding(0);
+        const timer = setInterval(() => bar.decoding(seconds()), 1000);
+
+        try {
+            return await decodedWhole(bytes, url, file.name);
+        } finally {
+            clearInterval(timer);
+        }
+    } catch (error) {
+        URL.revokeObjectURL(url);
+        throw error;
     }
 }
 
@@ -148,9 +268,10 @@ function fileProgress(anchor: Element): FileProgress {
 }
 
 /**
- * A button that opens a hidden file input, and the file chosen becomes the page's sound. While it
- * loads, `tell` says each step and a bar after the button shows the share read, then the seconds
- * spent decoding; the button ignores presses until the file is in or refused.
+ * A button that opens a hidden file input, and the file chosen becomes the page's sound. A note
+ * after the button tells the largest file taken, and a larger one is refused before it is read.
+ * While a file loads, `tell` says each step and a bar shows the share read (or the seconds spent
+ * decoding a format read whole); the button ignores presses until the file is in or refused.
  */
 export function pickSound(
     button: HTMLButtonElement,
@@ -159,7 +280,11 @@ export function pickSound(
     fail: (error: unknown) => void,
     tell: (text: string) => void,
 ): void {
-    const bar = fileProgress(button);
+    const limit = document.createElement('span');
+    limit.className = 'file-limit';
+    limit.textContent = `Up to ${sizeText(MOST_STREAMED)}.`;
+    button.after(limit);
+    const bar = fileProgress(limit);
     let busy = false;
 
     button.addEventListener('click', () => {
@@ -175,24 +300,22 @@ export function pickSound(
             return;
         }
 
+        if (file.size > MOST_STREAMED) {
+            tell(
+                `${file.name} is ${sizeText(file.size)}: the page reads files up to ${sizeText(MOST_STREAMED)}.`,
+            );
+
+            return;
+        }
+
         busy = true;
         button.setAttribute('aria-disabled', 'true');
-        tell(`Reading ${file.name}…`);
+        tell(`Reading ${file.name} (${sizeText(file.size)})…`);
         bar.reading(0);
-        readFile(file, (share) => bar.reading(share))
-            .then((bytes) => {
-                tell(`Decoding ${file.name}… A long sound can take a while.`);
-                const start = Date.now();
-                const seconds = (): number =>
-                    Math.round((Date.now() - start) / 1000);
-                bar.decoding(0);
-                const timer = setInterval(() => bar.decoding(seconds()), 1000);
-
-                return soundFrom(bytes, file, file.name).finally(() =>
-                    clearInterval(timer),
-                );
-            })
-            .then(use, fail)
+        soundFromFile(file, bar, tell)
+            .then(use, (error: unknown) =>
+                error instanceof TooLarge ? tell(error.message) : fail(error),
+            )
             .finally(() => {
                 busy = false;
                 button.removeAttribute('aria-disabled');

@@ -222,6 +222,30 @@ describe('streamPeaks', () => {
         expect(served.sent).toBeLessThan(file.length * 2);
     });
 
+    it('reads the bytes the caller opens itself, from where it asks, with no fetch', async () => {
+        const { file, moovAt } = m4a({
+            sizes: [40, 40, 40, 40, 40],
+            perChunk: 2,
+            moovFirst: false,
+        });
+        const fetched = serve(file, { ranges: true });
+        stubWebCodecs({ at: 0 });
+        const opened: (number | undefined)[] = [];
+        const result = await streamPeaks('/a.m4a', {
+            ...OPTIONS,
+            count: 5,
+            open: (from) => {
+                opened.push(from);
+
+                return Promise.resolve(new Response(file.slice(from ?? 0)));
+            },
+        });
+
+        expect(opened).toEqual([undefined, moovAt, undefined]);
+        expect(scaled(result.peaks)).toEqual([12, 24, 36, 48, 60]);
+        expect(fetched.requests).toEqual([]);
+    });
+
     it('leaves an MP4 whose index comes last to the whole decode when the server sends no ranges', async () => {
         serve(m4a({ sizes: [40, 40], perChunk: 1, moovFirst: false }).file);
         stubWebCodecs();

@@ -56,6 +56,11 @@ export type StreamPeaksOptions = {
     /** Called with the peaks so far, the part to come drawn as silence, at most every `every` ms. */
     onPeaks?: (peaks: number[]) => void;
     every?: number;
+    /**
+     * Gives the sound's bytes from `from` on (all of them when `from` is undefined) in place of
+     * fetching the address: a file the person picked, say. Its body starts at `from`.
+     */
+    open?: (from?: number) => Promise<Response>;
 };
 
 export type StreamedPeaks = { peaks: number[]; duration: number };
@@ -148,12 +153,14 @@ export async function streamPeaks(
     let stopped = false;
 
     const open = async (from?: number): Promise<Response> => {
-        const response = await fetch(url, {
-            signal: options.signal,
-            ...(from === undefined
-                ? {}
-                : { headers: { Range: `bytes=${from}-` } }),
-        });
+        const response = options.open
+            ? await options.open(from)
+            : await fetch(url, {
+                  signal: options.signal,
+                  ...(from === undefined
+                      ? {}
+                      : { headers: { Range: `bytes=${from}-` } }),
+              });
 
         if (!response.ok) {
             throw new Error(
@@ -268,7 +275,7 @@ export async function streamPeaks(
     const mp4After = async (at: number): Promise<Mp4Reader> => {
         const response = await open(at);
 
-        if (response.status !== 206) {
+        if (options.open === undefined && response.status !== 206) {
             throw new NotStreamable('the server sends no ranges');
         }
 

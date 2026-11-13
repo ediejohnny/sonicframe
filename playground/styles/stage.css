@@ -89,7 +89,12 @@
     font-size: 0.9375rem;
 }
 
-/* A picked file while it loads: the share read, then a moving stripe while it decodes. */
+/* A picked file: the largest one taken, and while it loads, the share read (a moving stripe while a
+   format read whole decodes). */
+
+.file-limit {
+    font-size: 0.875rem;
+}
 
 .file-progress {
     display: inline-flex;
