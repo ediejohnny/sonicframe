@@ -30,8 +30,12 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
   button.
 - **Light with hundreds of players.** Shared observers and one animation loop; only a wave near the screen keeps
   pixels, and only a playing one moves.
-- **Strict CSP friendly.** No inline styles, no `eval`, no blob workers, no HTML parsed. Colors come from your CSS.
-- **Long sounds.** Zoom, scroll and a minimap, with ready-made peaks files, so an hour of audio opens at once.
+- **Strict CSP friendly.** No inline styles, no `eval`, no blob workers, no HTML parsed, so it runs under a strict
+  Content-Security-Policy with Trusted Types required. Colors come from your CSS.
+- **Long sounds.** Zoom, scroll and a minimap, with ready-made peaks files, so an hour of audio opens at once; or the
+  player reads the sound in pieces as it downloads, so even ten hours fit in a tab.
+- **Safe on pages other people write.** Text from outside stays text and every address is checked, so a player in a
+  CMS or a WordPress post cannot be turned against the page.
 - **A whole player in one line.** 24 themes, 8 palettes and 10 drawings, from JavaScript or as an HTML tag. The
   [theme gallery](https://ediejohnny.github.io/sonicframe/themes.html) shows them all, live, with the code for each.
 
@@ -41,8 +45,10 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 npm install sonicframe
 ```
 
-One package, four entries: `sonicframe` (the wave), `sonicframe/player` (a whole player), `sonicframe/analysis`
-(levels, silences, waveform files) and `sonicframe/record` (recording from the microphone).
+One package, five entries: `sonicframe` (the wave), `sonicframe/player` (a whole player), `sonicframe/playlist` (a
+playlist, a podcast's feed and a "now playing" bar), `sonicframe/analysis` (levels, silences, waveform files) and
+`sonicframe/record` (recording from the microphone). Each one also comes minified, as `sonicframe/min/player` and
+so on.
 
 No package manager? Load it from a CDN, or
 [build it from the source code](https://ediejohnny.github.io/sonicframe/installation.html#from-the-source-code) and
@@ -142,19 +148,23 @@ More in the docs: [Accessibility](https://ediejohnny.github.io/sonicframe/access
 
 ## What's inside
 
-| Part                             | What it does                                                                                            | Docs                                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| The frame (`sonicframe`)         | The waveform: draws it, follows an `<audio>` or `<video>`, seeks by click, drag and keys.               | [The frame](https://ediejohnny.github.io/sonicframe/frame.html)           |
-| The player (`sonicframe/player`) | A whole player: play, time, speed, skip, volume, zoom buttons, and the `<sonic-player>` tag.            | [Player basics](https://ediejohnny.github.io/sonicframe/player.html)      |
-| Themes and palettes              | A whole look in one word; make your own from any of them, with a background of its own.                 | [Themes](https://ediejohnny.github.io/sonicframe/theming.html)            |
-| Plugins                          | Markers, chapters, regions, a timeline, captions, a spectrogram, skipped silences and live frequency.   | [Plugins](https://ediejohnny.github.io/sonicframe/plugins.html)           |
-| Long sounds                      | Zoom, scroll, a minimap, and audiowaveform `.dat` and JSON files, read and written.                     | [Zoom and scroll](https://ediejohnny.github.io/sonicframe/zoom.html)      |
-| Chapters                         | WebVTT and Podcasting 2.0 JSON chapters: lines on the wave, keys, and a list in the player.             | [Chapters](https://ediejohnny.github.io/sonicframe/chapters.html)         |
-| Analysis (`sonicframe/analysis`) | Levels, silences, the wave in words and waveform files, pure, in the browser or in Node.                | [Analysis](https://ediejohnny.github.io/sonicframe/analysis.html)         |
-| Recording (`sonicframe/record`)  | Record from the microphone, hear it back and send it: a ready-made screen, a tag, or the bare recorder. | [Recording](https://ediejohnny.github.io/sonicframe/recording.html)       |
-| Backgrounds                      | A player's own background: a color, a gradient or an image, with filters, effects and gentle motion.    | [Backgrounds](https://ediejohnny.github.io/sonicframe/backgrounds.html)   |
-| Lock screen and media keys       | The system's media controls: title, pictures, play, pause, skip, seek and chapters.                     | [Lock screen](https://ediejohnny.github.io/sonicframe/media-session.html) |
-| Languages                        | Every word in English, Portuguese (Brazil or Portugal), Spanish or French, or a language of your own.   | [Languages](https://ediejohnny.github.io/sonicframe/languages.html)       |
+| Part                             | What it does                                                                                            | Docs                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| The frame (`sonicframe`)         | The waveform: draws it, follows an `<audio>` or `<video>`, seeks by click, drag and keys.               | [The frame](https://ediejohnny.github.io/sonicframe/frame.html)                 |
+| The player (`sonicframe/player`) | A whole player: play, time, speed, skip, volume, zoom buttons, and the `<sonic-player>` tag.            | [Player basics](https://ediejohnny.github.io/sonicframe/player.html)            |
+| Themes and palettes              | A whole look in one word; make your own from any of them, with a background of its own.                 | [Themes](https://ediejohnny.github.io/sonicframe/theming.html)                  |
+| Plugins                          | Markers, chapters, regions, a timeline, captions, a spectrogram, skipped silences and live frequency.   | [Plugins](https://ediejohnny.github.io/sonicframe/plugins.html)                 |
+| Long sounds                      | Zoom, scroll, a minimap, and audiowaveform `.dat` and JSON files, read and written.                     | [Zoom and scroll](https://ediejohnny.github.io/sonicframe/zoom.html)            |
+| Sounds of hours                  | The player reads MP3, AAC, WAV, M4A, Ogg, FLAC or WebM in pieces as it downloads, keeping only peaks.   | [Long sounds](https://ediejohnny.github.io/sonicframe/peaks.html#long-sounds)   |
+| Chapters                         | WebVTT and Podcasting 2.0 JSON chapters: lines on the wave, keys, and a list in the player.             | [Chapters](https://ediejohnny.github.io/sonicframe/chapters.html)               |
+| Playlist (`sonicframe/playlist`) | A list of tracks on one `<audio>`: JSON, M3U or a podcast's feed, shuffle, repeat, and a tag.           | [Playlist](https://ediejohnny.github.io/sonicframe/playlist.html)               |
+| Now playing                      | A small bar that keeps the sound playing in reach when its player scrolls out of view.                  | [Now playing](https://ediejohnny.github.io/sonicframe/now-playing.html)         |
+| A precise clock                  | Tenths to thousandths, timecode frames, digits per field, and a time mask of your own.                  | [Layouts](https://ediejohnny.github.io/sonicframe/layouts.html#a-precise-clock) |
+| Analysis (`sonicframe/analysis`) | Levels, silences, the wave in words and waveform files, pure, in the browser or in Node.                | [Analysis](https://ediejohnny.github.io/sonicframe/analysis.html)               |
+| Recording (`sonicframe/record`)  | Record from the microphone, hear it back and send it: a ready-made screen, a tag, or the bare recorder. | [Recording](https://ediejohnny.github.io/sonicframe/recording.html)             |
+| Backgrounds                      | A player's own background: a color, a gradient or an image, with filters, effects and gentle motion.    | [Backgrounds](https://ediejohnny.github.io/sonicframe/backgrounds.html)         |
+| Lock screen and media keys       | The system's media controls: title, pictures, play, pause, skip, seek and chapters.                     | [Lock screen](https://ediejohnny.github.io/sonicframe/media-session.html)       |
+| Languages                        | Every word in English, Portuguese (Brazil or Portugal), Spanish or French, or a language of your own.   | [Languages](https://ediejohnny.github.io/sonicframe/languages.html)             |
 
 Every option, method, event and attribute is in the
 [Reference](https://ediejohnny.github.io/sonicframe/frame-options.html).
@@ -167,9 +177,14 @@ fall back to CSS pixels times the screen density where `device-pixel-content-box
 ## Security
 
 - No HTML is ever parsed: text goes in as text, icons are built element by element, and nothing uses `innerHTML` or
-  `eval`. Styles are set through the CSSOM, so a strict Content-Security-Policy without `'unsafe-inline'` works.
+  `eval`. Styles are set through the CSSOM, so a strict Content-Security-Policy without `'unsafe-inline'` works, and
+  so does one that requires Trusted Types. A podcast's feed is read by our own XML reader, with no entities.
+- Ready for pages other people write: `SONIC_TAGS` lists every tag and attribute for your HTML filter, a tag
+  attribute can only lower a limit, and a link a playlist refuses can never be clicked. See
+  [On a CMS or WordPress](https://ediejohnny.github.io/sonicframe/cms.html).
 - Colors only reach properties that take nothing but a color, so a color can never make the page fetch an address.
-- Everything that comes from outside has a ceiling: peaks files, text, regions, FFT sizes, clips and downloads.
+- Everything that comes from outside has a ceiling: peaks files, text, regions, playlists, feeds, FFT sizes, clips,
+  downloads and the sound files read in pieces. Your code can raise each one up to a fixed most.
 - No runtime dependencies and no install scripts. The only text in the package that looks like an address is the SVG
   namespace, `http://www.w3.org/2000/svg`, a name the browser needs to create the icons; it is never fetched, and
   the build check fails on any other.
