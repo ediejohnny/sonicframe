@@ -44,6 +44,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   with their own minified chunks, in about half the bytes. From npm they are `sonicframe/min`,
   `sonicframe/min/player`, `sonicframe/min/record`, `sonicframe/min/playlist` and `sonicframe/min/analysis`. The
   readable files are unchanged.
+- `createPeakStream(count)`, in `sonicframe` and `sonicframe/analysis`: peaks from a sound that arrives in pieces,
+  holding four values per peak instead of the sound, so hours of audio fit in a few megabytes. `push` takes each
+  piece, `peaks()` gives the peaks so far, and `peaks(totalSamples)` draws the part still to come as silence. A
+  server can feed it decoded audio (an `ffmpeg` pipe, say) and save the result with `writeWaveform`. `count` goes
+  from 1 to 1000000 (20000 if not a number); past either end, a `RangeError`.
 
 ### Changed
 

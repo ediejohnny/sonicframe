@@ -180,6 +180,7 @@ export {
     type LoadPeaksOptions,
     type PeaksFetcher,
 } from './core/peaks/peaks';
+export { createPeakStream, type PeakStream } from './core/peaks/peak-stream';
 export type { FetchedResponse, Fetcher } from './core/shared/fetch';
 export {
     loadWaveform,
