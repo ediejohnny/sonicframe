@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-13
+
 ### Added
 
 - The now-playing bar, `nowPlaying` in `sonicframe/playlist`: a small bar fixed to the window that follows the
@@ -56,7 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `createPeakStream(count)`, in `sonicframe` and `sonicframe/analysis`: peaks from a sound that arrives in pieces,
   holding four values per peak instead of the sound, so hours of audio fit in a few megabytes. `push` takes each
   piece, `peaks()` gives the peaks so far, and `peaks(totalSamples)` draws the part still to come as silence. A
-  server can feed it decoded audio (an `ffmpeg` pipe, say) and save the result with `writeWaveform`. `count` goes
+  server can feed it decoded audio (an `ffmpeg` pipe, say) and save the peaks as a peaks file. `count` goes
   from 1 to 1000000 (20000 if not a number); past either end, a `RangeError`.
 
 ### Changed
