@@ -11,6 +11,14 @@ export function textAt(bytes: Uint8Array, at: number, text: string): boolean {
     return true;
 }
 
+/** A little-endian unsigned 32-bit number at `at`. */
+export function uint32le(bytes: Uint8Array, at: number): number {
+    return (
+        bytes[at + 3] * 0x1000000 +
+        ((bytes[at + 2] << 16) | (bytes[at + 1] << 8) | bytes[at])
+    );
+}
+
 /** A big-endian unsigned 32-bit number at `at`. */
 export function uint32(bytes: Uint8Array, at: number): number {
     return (

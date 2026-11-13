@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { textAt, uint32 } from '../../../src/core/audio/bytes';
+import { textAt, uint32, uint32le } from '../../../src/core/audio/bytes';
 
 describe('uint32', () => {
     it('reads big-endian numbers up to 2^32 - 1, never negative', () => {
@@ -8,6 +8,18 @@ describe('uint32', () => {
             2_147_483_649,
         );
         expect(uint32(Uint8Array.from([0xff, 0xff, 0xff, 0xff]), 0)).toBe(
+            4_294_967_295,
+        );
+    });
+});
+
+describe('uint32le', () => {
+    it('reads little-endian numbers up to 2^32 - 1, never negative', () => {
+        expect(uint32le(Uint8Array.from([0x02, 0x01, 0, 0]), 0)).toBe(258);
+        expect(uint32le(Uint8Array.from([9, 1, 0, 0, 0x80]), 1)).toBe(
+            2_147_483_649,
+        );
+        expect(uint32le(Uint8Array.from([0xff, 0xff, 0xff, 0xff]), 0)).toBe(
             4_294_967_295,
         );
     });
