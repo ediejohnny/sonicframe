@@ -13,7 +13,7 @@ import {
     ascii,
     bytes,
     expectSafeWhenDamaged,
-    inPieces,
+    readAll,
 } from '../../support/sound-files';
 
 /** A payload holding a false sync whose header even passes its CRC-8. */
@@ -34,10 +34,7 @@ function framesOf(
     file: Uint8Array,
     cuts: readonly number[] = [],
 ): [number, number][] {
-    const reader = createFlacReader();
-    const frames = inPieces(file, cuts, (piece) => reader.push(piece)).flat();
-
-    return [...frames, ...(reader.end?.() ?? [])].map((frame) => [
+    return readAll(createFlacReader(), file, cuts).map((frame) => [
         frame.data.length,
         frame.samples,
     ]);

@@ -6,6 +6,7 @@
  */
 
 import { textAt, uint32 } from './bytes';
+import { aacCodec } from './codecs';
 import { notFormat, type CodedFormat } from './frames';
 
 /** The most frames a track may list: 16 777 216 (four days of AAC at 48 kHz). */
@@ -151,19 +152,14 @@ function codecOf(
 
             const specific = descriptor(bytes, config.start + 13, config.end);
 
-            if (
-                [0x40, 0x66, 0x67, 0x68].includes(object) &&
-                specific?.tag === 5 &&
-                specific.end - specific.start >= 2
-            ) {
-                const setup = bytes.slice(specific.start, specific.end);
-                const kind = setup[0] >> 3;
-                const type =
-                    kind === 31
-                        ? 32 + (((setup[0] & 7) << 3) | (setup[1] >> 5))
-                        : kind;
+            const setup =
+                specific?.tag === 5
+                    ? bytes.slice(specific.start, specific.end)
+                    : new Uint8Array(0);
+            const codec = aacCodec(setup);
 
-                return { codec: `mp4a.40.${type}`, description: setup };
+            if ([0x40, 0x66, 0x67, 0x68].includes(object) && codec !== null) {
+                return { codec, description: setup };
             }
         }
     }

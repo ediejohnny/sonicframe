@@ -5,7 +5,7 @@
 
 import fc from 'fast-check';
 import { expect } from 'vite-plus/test';
-import type { FrameReader } from '../../src/core/audio/frames';
+import type { CodedFrame, FrameReader } from '../../src/core/audio/frames';
 
 /** Bytes of a text, one per letter. */
 export function ascii(text: string): number[] {
@@ -169,6 +169,17 @@ export function expectSafeWhenDamaged(
             },
         ),
     );
+}
+
+/** Every frame `reader` gives for `file` pushed in pieces cut at `cuts`, then its end. */
+export function readAll(
+    reader: FrameReader,
+    file: Uint8Array,
+    cuts: readonly number[] = [],
+): CodedFrame[] {
+    const frames = inPieces(file, cuts, (piece) => reader.push(piece)).flat();
+
+    return [...frames, ...(reader.end?.() ?? [])];
 }
 
 /** Feeds `data` to `push` in pieces cut at `cuts` (sizes), the rest last. */
