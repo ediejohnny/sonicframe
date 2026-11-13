@@ -202,8 +202,18 @@
                                         <code>artist</code> part, and the media
                                         controls' artist when
                                         <code>mediaSession</code> names none.
-                                        Shown as text, one line, up to 120
-                                        characters.
+                                        Shown as text, one line, up to
+                                        <code>maxText</code> characters.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxText</code></td>
+                                    <td>120</td>
+                                    <td>
+                                        The longest name, artist, word or media
+                                        controls' detail shown, in characters,
+                                        from 1 to 1000. Past either end, a
+                                        <code>RangeError</code> names it.
                                     </td>
                                 </tr>
                                 <tr>

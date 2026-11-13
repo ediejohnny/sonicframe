@@ -52,9 +52,6 @@ import {
 import { PlaylistStore } from './playlist-store';
 import { trackItem, trackOptions, trackTitle } from './track-options';
 
-/** The longest word or name, in characters. */
-const MAX_WORD = 120;
-
 export class Playlist {
     /** The playlist's root element. */
     readonly element: HTMLDivElement;
@@ -95,7 +92,11 @@ export class Playlist {
         const a11y = options.a11y ?? {};
         const lang =
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang;
-        this.words = mergeWords(wordsFor(lang).playlist, a11y.words, MAX_WORD);
+        this.words = mergeWords(
+            wordsFor(lang).playlist,
+            a11y.words,
+            this.reading.maxText,
+        );
         this.store = PlaylistStore.of(options.remember);
 
         this.element = document.createElement('div');
@@ -103,7 +104,7 @@ export class Playlist {
         this.element.setAttribute('role', 'group');
         this.element.setAttribute(
             'aria-label',
-            cleanText(a11y.label ?? this.words.playlist, MAX_WORD),
+            cleanText(a11y.label ?? this.words.playlist, this.reading.maxText),
         );
 
         // A language the app chose marks the playlist, so a screen reader says its words in that voice.

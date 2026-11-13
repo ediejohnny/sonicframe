@@ -8,6 +8,7 @@
 
 import type { Chapter } from '../chapters/chapters';
 import { finiteOr } from '../shared/checked';
+import { limitOf, TEXT_LENGTH } from '../shared/limits';
 import { positive } from '../shared/math';
 import { cleanText } from '../shared/text';
 import { safeUrl } from '../shared/url';
@@ -30,6 +31,8 @@ export type MediaSessionDetails = {
     artwork?: string | readonly MediaSessionArtwork[];
     /** The chapters, for the controls that list them; those out of the table of contents are left out. */
     chapters?: readonly Chapter[];
+    /** The longest title, artist or album shown, in characters: 120, from 1 to 1000. */
+    maxText?: number;
 };
 
 /** A chapter as the controls take it. */
@@ -55,9 +58,6 @@ export type MediaSessionPosition = {
     playbackRate: number;
 };
 
-/** The longest word taken, in characters. */
-const MAX_WORD = 120;
-
 /** The most pictures sent. */
 const MAX_ARTWORK = 8;
 
@@ -70,9 +70,9 @@ const SIZES = /^(any|\d{1,5}x\d{1,5}( \d{1,5}x\d{1,5}){0,7})$/;
 /** An image type, short. */
 const IMAGE_TYPE = /^image\/[a-z0-9.+-]{1,40}$/;
 
-/** A word from the app as one clean line, or empty when it is not text. */
-function word(value: unknown): string {
-    return typeof value === 'string' ? cleanText(value, MAX_WORD) : '';
+/** A word from the app as one clean line of at most `longest` characters, or empty when it is not text. */
+function word(value: unknown, longest: number): string {
+    return typeof value === 'string' ? cleanText(value, longest) : '';
 }
 
 /** One picture, or null when its address is not safe; sizes and type only when well formed. */
@@ -130,7 +130,7 @@ function pictures(value: unknown): MediaSessionArtwork[] {
 }
 
 /** The chapters of the table of contents with a start at or after zero, as the controls take them. */
-function chapterInfo(value: unknown): MediaSessionChapter[] {
+function chapterInfo(value: unknown, longest: number): MediaSessionChapter[] {
     if (!Array.isArray(value)) {
         return [];
     }
@@ -141,7 +141,7 @@ function chapterInfo(value: unknown): MediaSessionChapter[] {
                 chapter.toc !== false && finiteOr(chapter.start, -1) >= 0,
         )
         .map((chapter) => ({
-            title: word(chapter.title),
+            title: word(chapter.title, longest),
             startTime: chapter.start as number,
             artwork: pictures(chapter.image ?? undefined),
         }));
@@ -151,12 +151,14 @@ function chapterInfo(value: unknown): MediaSessionChapter[] {
 export function sessionMetadata(
     details: MediaSessionDetails,
 ): MediaSessionMetadata {
+    const longest = limitOf('maxText', details.maxText, TEXT_LENGTH);
+
     return {
-        title: word(details.title),
-        artist: word(details.artist),
-        album: word(details.album),
+        title: word(details.title, longest),
+        artist: word(details.artist, longest),
+        album: word(details.album, longest),
         artwork: pictures(details.artwork),
-        chapterInfo: chapterInfo(details.chapters),
+        chapterInfo: chapterInfo(details.chapters, longest),
     };
 }
 

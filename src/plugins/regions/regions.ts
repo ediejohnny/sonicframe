@@ -10,6 +10,7 @@
  */
 
 import { finiteOr, within } from '../../core/shared/checked';
+import { limitOf, TEXT_LENGTH } from '../../core/shared/limits';
 import { positive } from '../../core/shared/math';
 import { PROGRESS, REGION } from '../../core/shared/variables';
 import { placeX } from '../../core/wave/scene';
@@ -44,7 +45,11 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             : (options.createGesture ??
               (typeof create === 'string' ? create : 'shift-drag'));
 
-    const store = new RegionStore(minLength, max);
+    const store = new RegionStore(
+        minLength,
+        max,
+        limitOf('maxText', options.maxText, TEXT_LENGTH),
+    );
     const labels = new RegionLabels();
     const playback = new RegionPlayback();
     const find = (id: string): Region | undefined => store.byId(id);
@@ -199,7 +204,7 @@ export function regions(options: RegionsOptions = {}): RegionsPlugin {
             region.end = bounds.end;
 
             if ('label' in patch) {
-                region.label = regionLabel(patch.label);
+                region.label = regionLabel(patch.label, store.longest);
             }
 
             if ('color' in patch) {

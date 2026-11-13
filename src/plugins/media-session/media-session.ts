@@ -123,6 +123,7 @@ export function mediaSession(
         album: options.album,
         artwork: options.artwork,
         chapters: options.chapters,
+        maxText: options.maxText,
     };
     let host: PluginHost | null = null;
     let stops: (() => void)[] = [];

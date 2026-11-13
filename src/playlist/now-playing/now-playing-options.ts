@@ -35,6 +35,8 @@ export const NOW_PLAYING_PARTS: readonly NowPlayingPart[] = Object.freeze([
 ] as const);
 
 export type NowPlayingOptions = {
+    /** The longest word or name of the bar, in characters: 120, from 1 to 1000; past either end, a `RangeError`. */
+    maxText?: number;
     /**
      * When it shows: `'outOfView'` (the default: the player is playing and out of view), `'playing'`
      * (whenever it plays) or `'always'` (from the first play on, paused too).

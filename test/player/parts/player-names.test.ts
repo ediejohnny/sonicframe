@@ -196,6 +196,47 @@ describe('the title and artist parts', () => {
     });
 });
 
+describe('maxText', () => {
+    it('keeps the name, the artist and the words to 120 characters, or maxText up to 1000', async () => {
+        const long = 'x'.repeat(2000);
+        const plain = make({ a11y: { label: long }, artist: long });
+        const raised = make({
+            a11y: { label: long, words: { play: long } },
+            artist: long,
+            maxText: 1000,
+        });
+
+        expect(plain.element.getAttribute('aria-label')).toHaveLength(120);
+        expect(textOf(plain, 'artist')).toHaveLength(120);
+        expect(raised.element.getAttribute('aria-label')).toHaveLength(1000);
+        expect(textOf(raised, 'title')).toHaveLength(1000);
+        expect(textOf(raised, 'artist')).toHaveLength(1000);
+        expect(
+            raised.element.querySelector('button')?.getAttribute('aria-label'),
+        ).toHaveLength(1000);
+        expect(() => make({ maxText: 1001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxText goes past its most, 1000 (1001)',
+            ),
+        );
+    });
+
+    it('keeps the media controls’ details to it too', async () => {
+        const session = stubSession();
+        const media = playableMedia(100);
+        make({
+            media,
+            artist: 'a'.repeat(2000),
+            mediaSession: { album: 'b'.repeat(2000) },
+            maxText: 500,
+        });
+        await media.play();
+
+        expect(session.metadata?.artist).toHaveLength(500);
+        expect(session.metadata?.album).toHaveLength(500);
+    });
+});
+
 describe('the artist elsewhere', () => {
     it('names the artist in the system’s media controls, unless the session gives its own', async () => {
         const session = stubSession();

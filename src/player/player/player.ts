@@ -41,6 +41,7 @@ import {
     type ThemeInput,
 } from '../../core/player/theme';
 import { oneOf, unknownName } from '../../core/shared/checked';
+import { limitOf, TEXT_LENGTH } from '../../core/shared/limits';
 import { Emitter } from '../../core/shared/emitter';
 import {
     joinPlayers,
@@ -160,6 +161,8 @@ export class Player {
     private readonly names: NameParts;
     /** The player's own name, as the app gave it; undefined while it has none. */
     private name: string | undefined;
+    /** The longest name, artist or word shown (`maxText`). */
+    private readonly longest: number;
     private readonly times = new TimeParts();
     private partCleanups: (() => void)[] = [];
     private layout: PlayerLayout | null = null;
@@ -191,11 +194,13 @@ export class Player {
         this.combine();
         this.font = options.font;
         const a11y = options.a11y ?? {};
+        this.longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
         this.words = playerWords(
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang,
             a11y.labels === undefined && a11y.words === undefined
                 ? undefined
                 : { ...a11y.labels, ...a11y.words },
+            this.longest,
         );
 
         this.element = document.createElement('div');
@@ -205,7 +210,7 @@ export class Player {
             'aria-label',
             cleanText(
                 a11y.label ?? options.label ?? this.words.labels.player,
-                120,
+                this.longest,
             ),
         );
 
@@ -253,7 +258,7 @@ export class Player {
             look: () => this.look,
             frame: () => this.frameRef,
             title: () => this.titleText(),
-            artist: () => cleanText(options.artist ?? '', 120),
+            artist: () => cleanText(options.artist ?? '', this.longest),
         });
         const loadError = options.loadError;
         this.notice = new SoundNotice({
@@ -439,7 +444,7 @@ export class Player {
             this.name = label;
             this.element.setAttribute(
                 'aria-label',
-                cleanText(label ?? this.words.labels.player, 120),
+                cleanText(label ?? this.words.labels.player, this.longest),
             );
             this.names.show();
 
@@ -469,7 +474,7 @@ export class Player {
     /** The sound's name for the `title` part: the player's own, or its file's when the look allows. */
     private titleText(): string {
         if (this.name !== undefined) {
-            return cleanText(this.name, 120);
+            return cleanText(this.name, this.longest);
         }
 
         const media = this.media;

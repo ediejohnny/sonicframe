@@ -178,6 +178,12 @@ describe('the now-playing bar', () => {
         expect(box().hidden).toBe(true);
     });
 
+    it('keeps its name and words to maxText', () => {
+        bar({ maxText: 3, a11y: { label: 'abcdef' } });
+
+        expect(box().getAttribute('aria-label')).toBe('abc');
+    });
+
     it('is a named region that Escape closes, and says nothing unless asked', async () => {
         bar({ when: 'playing' });
         const { media } = player();

@@ -8,6 +8,7 @@
 import { localeFor, wordsFor } from '../../core/languages/language';
 import { mergeWords } from '../../core/languages/merge-words';
 import { DEFAULT_PALETTE } from '../../core/player/palettes';
+import { limitOf, TEXT_LENGTH } from '../../core/shared/limits';
 import { cleanText } from '../../core/shared/text';
 import { announce } from '../../dom/a11y/announce';
 import { pageLanguage } from '../../dom/a11y/page-language';
@@ -23,9 +24,6 @@ import {
     type NowPlayingSettings,
 } from './now-playing-options';
 import { barPart, type BarPart } from './now-playing-parts';
-
-/** The longest word or name, in characters. */
-const MAX_WORD = 120;
 
 /** How long the bar takes to come in, when it moves, in milliseconds. */
 const ENTER_MS = 180;
@@ -50,8 +48,9 @@ export class NowPlaying {
         const lang =
             a11y.lang === 'auto' ? pageLanguage(document.body) : a11y.lang;
         const all = wordsFor(lang);
-        const words = mergeWords(all.nowPlaying, a11y.words, MAX_WORD);
-        this.label = cleanText(a11y.label ?? words.bar, MAX_WORD);
+        const longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
+        const words = mergeWords(all.nowPlaying, a11y.words, longest);
+        this.label = cleanText(a11y.label ?? words.bar, longest);
 
         this.element = document.createElement('div');
         this.element.className = 'sonicframe-now-playing';

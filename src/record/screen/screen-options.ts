@@ -199,6 +199,8 @@ export type RecorderScreenA11y = {
 export type RecorderScreenOptions = RecorderOptions & {
     /** The element the screen is added to. */
     container: HTMLElement;
+    /** The longest word shown or said, in characters: 120, from 1 to 1000; past either end, a `RangeError`. */
+    maxText?: number;
     /** The parts of each stage. */
     parts?: RecorderParts;
     /** The app's own buttons, by name; each shows where its name is listed in `parts`. */

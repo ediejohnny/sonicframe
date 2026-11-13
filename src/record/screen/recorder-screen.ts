@@ -26,6 +26,7 @@ import {
 } from '../../core/recording/recording';
 import { oneOf } from '../../core/shared/checked';
 import { Emitter } from '../../core/shared/emitter';
+import { limitOf, TEXT_LENGTH } from '../../core/shared/limits';
 import { formatTime } from '../../core/shared/timing';
 import { MUTED } from '../../core/shared/variables';
 import { announce } from '../../dom/a11y/announce';
@@ -115,6 +116,7 @@ export class RecorderScreen {
             a11y.labels === undefined && a11y.words === undefined
                 ? undefined
                 : { ...a11y.labels, ...a11y.words },
+            limitOf('maxText', options.maxText, TEXT_LENGTH),
         );
         const theme =
             options.theme === undefined

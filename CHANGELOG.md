@@ -66,9 +66,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
     - Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems` (2000, up to 20 000) and
       `maxSize` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000; the player's `remember.sounds` goes
       up to 5000.
-    - Names: `maxText`, the longest title, name or label kept (120 characters, up to 1000), on `readChapters`,
-      `loadChapters` and the chapters plugin's `load`, `readTracks`, `loadTracks`, the playlist, a feed, `readRegions`
-      and `readMarkers`.
+    - Names: `maxText`, the longest title, name, label or word kept (120 characters, up to 1000), on `readChapters`,
+      `loadChapters` and the chapters plugin's `load`, `readTracks`, `loadTracks`, a feed, `readRegions` and
+      `readMarkers`, the player (its name, artist, words and media controls), the playlist, the now-playing bar, the
+      recorder and the regions plugin.
     - Clips: `width` and `height` go up to 3840 × 2160; `exportClip` takes `maxSeconds` (120, up to 600), `bitrate`
       (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB).
     - Analysis: the spectrogram's `fftSize` goes up to 32 768 (the Web Audio standard's own most), its `columns` up to

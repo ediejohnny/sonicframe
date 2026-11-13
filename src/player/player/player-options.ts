@@ -137,6 +137,11 @@ export type PlayerOptions = {
      * system's media controls when `mediaSession` names no artist.
      */
     artist?: string;
+    /**
+     * The longest name, artist, word or media-controls detail shown, in characters: 120, from 1 to
+     * 1000; past either end, a `RangeError`.
+     */
+    maxText?: number;
     /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */

@@ -46,6 +46,15 @@ describe('the recorder screen', () => {
         expect(made.state).toBe('idle');
     });
 
+    it('keeps its words to maxText', () => {
+        const { made } = screen({
+            maxText: 5,
+            a11y: { words: { recorder: 'Recorder of voices' } },
+        });
+
+        expect(made.element.getAttribute('aria-label')).toBe('Recor');
+    });
+
     it('records on a press: the time, the live wave and the buttons, the focus on stop', async () => {
         const { made } = screen();
         button(made, 'record')?.focus();

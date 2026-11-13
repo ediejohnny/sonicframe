@@ -291,6 +291,12 @@ describe('changing the tracks', () => {
         );
     });
 
+    it('keeps its own name to maxText', () => {
+        const { playlist } = make({ maxText: 4, a11y: { label: 'abcdef' } });
+
+        expect(playlist.element.getAttribute('aria-label')).toBe('abcd');
+    });
+
     it('keeps the tracks’ names to maxText, given and added', () => {
         const named = [{ src: 'https://site.test/1.mp3', title: 'abcdef' }];
         const { playlist } = make({ tracks: named, maxText: 3 });
