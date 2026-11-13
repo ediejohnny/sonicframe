@@ -30,12 +30,16 @@ const SCHEME_KEY = 'sonicframe-playground-scheme';
 
 type Scheme = 'light' | 'dark';
 
-/** Decodes a sound once; the object URL lives until `forget` is called with it. */
-export async function soundFrom(blob: Blob, name: string): Promise<Sound> {
+/** Decodes a sound once; the object URL of `blob` lives until `forget` is called with it. */
+async function soundFrom(
+    bytes: ArrayBuffer,
+    blob: Blob,
+    name: string,
+): Promise<Sound> {
     const context = new AudioContext();
 
     try {
-        const buffer = await context.decodeAudioData(await blob.arrayBuffer());
+        const buffer = await context.decodeAudioData(bytes);
 
         return {
             url: URL.createObjectURL(blob),
@@ -71,20 +75,129 @@ export function forget(sound: Sound): void {
     }
 }
 
-/** A button that opens a hidden file input, and the file chosen becomes the page's sound. */
+/** Reads a file, telling the share read so far (0 to 1). */
+function readFile(
+    file: Blob,
+    progress: (share: number) => void,
+): Promise<ArrayBuffer> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener('progress', (event) => {
+            if (event.lengthComputable && event.total > 0) {
+                progress(event.loaded / event.total);
+            }
+        });
+        reader.addEventListener('load', () =>
+            resolve(reader.result as ArrayBuffer),
+        );
+        reader.addEventListener('error', () => reject(reader.error));
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+type FileProgress = {
+    /** The share of the file read, from 0 to 1. */
+    reading(share: number): void;
+    /** Decoding, which tells no share: a moving stripe and the seconds so far. */
+    decoding(seconds: number): void;
+    done(): void;
+};
+
+/** A bar after `anchor` for a picked file while it loads. */
+function fileProgress(anchor: Element): FileProgress {
+    const box = document.createElement('span');
+    box.className = 'file-progress';
+    box.hidden = true;
+    const track = document.createElement('span');
+    track.className = 'file-progress-track';
+    track.setAttribute('role', 'progressbar');
+    track.setAttribute('aria-label', 'Loading your sound');
+    track.setAttribute('aria-valuemin', '0');
+    track.setAttribute('aria-valuemax', '100');
+    const fill = document.createElement('span');
+    fill.className = 'file-progress-fill';
+    const note = document.createElement('span');
+    note.className = 'file-progress-note';
+    note.setAttribute('aria-hidden', 'true');
+    track.append(fill);
+    box.append(track, note);
+    anchor.after(box);
+
+    return {
+        reading(share: number): void {
+            const percent = Math.round(Math.min(1, Math.max(0, share)) * 100);
+            box.hidden = false;
+            delete track.dataset.busy;
+            fill.style.setProperty('width', `${percent}%`);
+            track.setAttribute('aria-valuenow', String(percent));
+            track.removeAttribute('aria-valuetext');
+            note.textContent = `${percent}%`;
+        },
+        decoding(seconds: number): void {
+            box.hidden = false;
+            track.dataset.busy = '';
+            fill.style.removeProperty('width');
+            track.removeAttribute('aria-valuenow');
+            track.setAttribute('aria-valuetext', 'Decoding');
+            note.textContent = `${seconds} s`;
+        },
+        done(): void {
+            box.hidden = true;
+        },
+    };
+}
+
+/**
+ * A button that opens a hidden file input, and the file chosen becomes the page's sound. While it
+ * loads, `tell` says each step and a bar after the button shows the share read, then the seconds
+ * spent decoding; the button ignores presses until the file is in or refused.
+ */
 export function pickSound(
     button: HTMLButtonElement,
     input: HTMLInputElement,
     use: (sound: Sound) => void,
     fail: (error: unknown) => void,
+    tell: (text: string) => void,
 ): void {
-    button.addEventListener('click', () => input.click());
+    const bar = fileProgress(button);
+    let busy = false;
+
+    button.addEventListener('click', () => {
+        if (!busy) {
+            input.click();
+        }
+    });
     input.addEventListener('change', () => {
         const file = input.files?.[0];
+        input.value = '';
 
-        if (file) {
-            soundFrom(file, file.name).then(use, fail);
+        if (!file || busy) {
+            return;
         }
+
+        busy = true;
+        button.setAttribute('aria-disabled', 'true');
+        tell(`Reading ${file.name}…`);
+        bar.reading(0);
+        readFile(file, (share) => bar.reading(share))
+            .then((bytes) => {
+                tell(`Decoding ${file.name}… A long sound can take a while.`);
+                const start = Date.now();
+                const seconds = (): number =>
+                    Math.round((Date.now() - start) / 1000);
+                bar.decoding(0);
+                const timer = setInterval(() => bar.decoding(seconds()), 1000);
+
+                return soundFrom(bytes, file, file.name).finally(() =>
+                    clearInterval(timer),
+                );
+            })
+            .then(use, fail)
+            .finally(() => {
+                busy = false;
+                button.removeAttribute('aria-disabled');
+                bar.done();
+            });
     });
 }
 
