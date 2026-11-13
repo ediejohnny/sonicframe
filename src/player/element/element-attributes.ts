@@ -17,6 +17,8 @@ import type {
     PlayerZoom,
 } from '../player/player-options';
 import type { MediaSessionDetails } from '../../core/session/media-session';
+import { tagLimit } from '../../core/shared/limits';
+import { STREAM_BYTES, STREAM_SECONDS } from '../../dom/audio/stream-peaks';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { fontOf, paletteOf, waveOf } from '../../dom/shared/look-attributes';
 import { backgroundLookOf } from './background-attributes';
@@ -268,6 +270,31 @@ function rememberOf(element: Element): PlayerOptions['remember'] {
     };
 }
 
+/**
+ * Reading the sound in pieces, from `decode-stream`: present turns it on, `false` leaves it off; its
+ * ceilings, `decode-stream-max-bytes` and `decode-stream-max-seconds`, may only be lowered.
+ */
+function decodeOf(element: Element): PlayerOptions['decode'] {
+    const stream = element.getAttribute('decode-stream');
+
+    if (stream === null || stream.trim() === 'false') {
+        return undefined;
+    }
+
+    return {
+        stream: {
+            maxBytes: tagLimit(
+                element.getAttribute('decode-stream-max-bytes'),
+                STREAM_BYTES,
+            ),
+            maxSeconds: tagLimit(
+                element.getAttribute('decode-stream-max-seconds'),
+                STREAM_SECONDS,
+            ),
+        },
+    };
+}
+
 /** The player's keys from the `keys` attribute: present turns them on, and `page` lets them reach the page. */
 function keysOf(value: string | null): PlayerOptions['keys'] {
     if (value === null) {
@@ -310,6 +337,7 @@ export function optionsOf(element: Element): Omit<PlayerOptions, 'container'> {
         mediaSession: sessionOf(element),
         keys: keysOf(element.getAttribute('keys')),
         remember: rememberOf(element),
+        decode: decodeOf(element),
         // On by default: only `false` turns the message off.
         loadError:
             element.getAttribute('load-error')?.trim() === 'false'

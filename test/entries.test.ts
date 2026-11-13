@@ -157,6 +157,15 @@ describe('the names an app or a plugin needs', () => {
         expect(typeof analysis.readTracks).toBe('function');
     });
 
+    it('gives a server the peaks of a sound read in pieces', () => {
+        const stream = analysis.createPeakStream(2);
+        stream.push([0.25, 0]);
+        stream.push([0, -0.5]);
+
+        expect(stream.peaks()).toEqual([0.5, 1]);
+        expect(main.createPeakStream).toBe(analysis.createPeakStream);
+    });
+
     it('names the recorder screen choices, with their lists', () => {
         expectTypeOf<RecorderAfterSend>().toEqualTypeOf<'reset' | 'keep'>();
         expectTypeOf<RecorderLive>().toEqualTypeOf<'scroll' | 'fit'>();

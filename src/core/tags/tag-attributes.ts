@@ -105,6 +105,9 @@ export type PlayerAttribute =
     | 'load-error'
     | 'a11y-load-error'
     | 'a11y-slider-name'
+    | 'decode-stream'
+    | 'decode-stream-max-bytes'
+    | 'decode-stream-max-seconds'
     | BackgroundAttribute
     | ClockAttribute;
 
@@ -150,6 +153,9 @@ export const PLAYER_ATTRIBUTES: readonly PlayerAttribute[] = Object.freeze([
     'load-error',
     'a11y-load-error',
     'a11y-slider-name',
+    'decode-stream',
+    'decode-stream-max-bytes',
+    'decode-stream-max-seconds',
     ...BACKGROUND_ATTRIBUTES,
     ...CLOCK_ATTRIBUTES,
 ]);

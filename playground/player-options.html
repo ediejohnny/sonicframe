@@ -636,11 +636,90 @@ player.forget(); // clears what it kept</code></pre>
                                         hour takes about 635 MB, and a browser
                                         tab falls over past a few GB, sooner on
                                         a phone: for long sounds, give the
-                                        player peaks made on a server.
+                                        player peaks made on a server, or turn
+                                        on <code>stream</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>stream</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <code>true</code> or the options below:
+                                        the sound is read in pieces as it
+                                        downloads, keeping only its peaks, so
+                                        hours fit in a tab. A sound it cannot
+                                        read so is decoded whole as above. See
+                                        <a href="./peaks.html#long-sounds"
+                                            >Long sounds</a
+                                        >.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <h3>Reading in pieces, <code>decode.stream</code></h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>maxBytes</code></td>
+                                    <td>1 GiB</td>
+                                    <td>
+                                        The most bytes downloaded for the peaks,
+                                        from 1 to 4,294,967,296 (4 GiB); a
+                                        larger sound stops there, with the
+                                        player's <code>error</code> event.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSeconds</code></td>
+                                    <td>10 hours</td>
+                                    <td>
+                                        The most seconds read, from 1 to 86,400
+                                        (24 hours); the rest of a longer sound
+                                        is drawn as silence. Past either end of
+                                        either ceiling, a
+                                        <code>RangeError</code> names the option
+                                        when the player is made.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>progressive</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The wave grows while the peaks come;
+                                        <code>false</code> draws it once, at the
+                                        end.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>webcodecs</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        <code>'auto'</code> uses the browser's
+                                        WebCodecs decoder where it has one;
+                                        <code>false</code> always decodes about
+                                        30 seconds at a time with
+                                        <code>decodeAudioData</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="code">
+                        <pre><code>createPlayer({
+    container,
+    src: '/episode.mp3',
+    decode: { stream: { maxSeconds: 14_400, progressive: false } },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
                     </div>
                 </section>
             </div>

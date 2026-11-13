@@ -16,6 +16,7 @@ export type {
     PlayerChapterListStyle,
     PlayerChapters,
     PlayerDecode,
+    PlayerDecodeStream,
     PlayerDescription,
     PlayerEvents,
     PlayerKeys,

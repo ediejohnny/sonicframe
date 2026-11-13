@@ -89,6 +89,69 @@
     font-size: 0.9375rem;
 }
 
+/* A picked file: the largest one taken, and while it loads, the share read (a moving stripe while a
+   format read whole decodes). */
+
+.file-limit {
+    font-size: 0.875rem;
+}
+
+.file-progress {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.file-progress[hidden] {
+    display: none;
+}
+
+.file-progress-track {
+    position: relative;
+    width: 10rem;
+    height: 0.5rem;
+    overflow: hidden;
+    border-radius: 0.125rem;
+    background: var(--line);
+}
+
+.file-progress-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    background: var(--brand);
+}
+
+.file-progress-track[data-busy] .file-progress-fill {
+    width: 30%;
+    animation: file-progress 1.2s ease-in-out infinite;
+}
+
+.file-progress-note {
+    min-width: 3rem;
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes file-progress {
+    from {
+        left: -30%;
+    }
+
+    to {
+        left: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .file-progress-track[data-busy] .file-progress-fill {
+        width: 100%;
+        opacity: 0.5;
+        animation: none;
+    }
+}
+
 /* Code with a copy button. */
 
 .snippets {

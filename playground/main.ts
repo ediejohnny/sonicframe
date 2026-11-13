@@ -1028,7 +1028,7 @@ const pick = document.getElementById('pick');
 const file = document.getElementById('file');
 
 if (pick instanceof HTMLButtonElement && file instanceof HTMLInputElement) {
-    pickSound(pick, file, render, showError);
+    pickSound(pick, file, render, showError, say);
 }
 
 bundledSound().then(render, (error: unknown) => {
