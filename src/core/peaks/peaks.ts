@@ -11,13 +11,33 @@ import {
     readCapped,
     type Fetcher,
 } from '../shared/fetch';
+import { heldLimit, limitOf, type Limit } from '../shared/limits';
 import { clamp01 } from '../shared/math';
 
-/** The most peaks accepted from a file: plenty for any screen, small enough to read quickly. */
-export const MAX_PEAKS = 20_000;
+/**
+ * The most peaks accepted from a file: 20 000 (plenty for any screen, small enough to read quickly),
+ * up to 1 000 000 (10 hours at about 27 a second).
+ */
+export const PEAKS_COUNT: Limit = {
+    value: 20_000,
+    least: 1,
+    most: 1_000_000,
+    whole: true,
+};
 
-/** A peaks file larger than this is refused, and reading it stops there (it is never parsed). */
-const MAX_PEAKS_BYTES = 2_000_000;
+/** The default of `PEAKS_COUNT`. */
+export const MAX_PEAKS: number = PEAKS_COUNT.value;
+
+/**
+ * A peaks file larger than this is refused, and reading it stops there (it is never parsed): 2 MB,
+ * up to 64 MB.
+ */
+export const PEAKS_BYTES: Limit = {
+    value: 2_000_000,
+    least: 1,
+    most: 64_000_000,
+    whole: true,
+};
 
 /** @deprecated The response of a `PeaksFetcher`; goes in 2.0 with it. */
 export type PeaksResponse = {
@@ -37,21 +57,23 @@ function tooLarge(): RangeError {
     return new RangeError('sonicframe: peaks file is too large');
 }
 
-/** The response as text, refusing it once it passes `MAX_PEAKS_BYTES`. */
+/** The response as text, refusing it once it passes the default of `PEAKS_BYTES`. */
 async function readText(response: PeaksResponse): Promise<string> {
-    if (Number(response.headers?.get('content-length')) > MAX_PEAKS_BYTES) {
+    const most = PEAKS_BYTES.value;
+
+    if (Number(response.headers?.get('content-length')) > most) {
         throw tooLarge();
     }
 
     if (response.body) {
         return new TextDecoder().decode(
-            await readBody(response.body, MAX_PEAKS_BYTES, tooLarge),
+            await readBody(response.body, most, tooLarge),
         );
     }
 
     const text = await response.text();
 
-    if (text.length > MAX_PEAKS_BYTES) {
+    if (text.length > most) {
         throw tooLarge();
     }
 
@@ -60,10 +82,15 @@ async function readText(response: PeaksResponse): Promise<string> {
 
 /**
  * Reads peaks out of parsed JSON: either a list of numbers or `{ "peaks": [...] }`. Anything else, a
- * value that is not a finite number, or more than `limit` values is refused. Negative values count as
- * their size and values above 1 are capped, so a list in -1..1 also works.
+ * value that is not a finite number, or more than `most` values is refused. Negative values count as
+ * their size and values above 1 are capped, so a list in -1..1 also works. `most` is 20 000 unless
+ * given, up to 1 000 000 (past it, 1 000 000 until 2.0; see `heldLimit`).
  */
-export function readPeaks(data: unknown, limit: number = MAX_PEAKS): number[] {
+export function readPeaks(
+    data: unknown,
+    most: number = PEAKS_COUNT.value,
+): number[] {
+    const limit = heldLimit(most, PEAKS_COUNT);
     const list: unknown = Array.isArray(data)
         ? data
         : data !== null && typeof data === 'object' && 'peaks' in data
@@ -94,6 +121,10 @@ export type LoadPeaksOptions = {
     shared?: boolean;
     /** The app's own `fetch`. */
     fetcher?: Fetcher;
+    /** The most peaks read: 20 000, from 1 to 1 000 000; past either end, a `RangeError`. */
+    maxPeaks?: number;
+    /** The largest file read, in bytes: 2 000 000, from 1 to 64 000 000; past either end, a `RangeError`. */
+    maxBytes?: number;
 };
 
 const loading = new Map<string, Promise<number[]>>();
@@ -127,10 +158,12 @@ export function loadPeaks(
 
     const fetcher = options.fetcher ?? ((address: string) => fetch(address));
     const load = async (): Promise<number[]> => {
+        const maxPeaks = limitOf('maxPeaks', options.maxPeaks, PEAKS_COUNT);
+        const maxBytes = limitOf('maxBytes', options.maxBytes, PEAKS_BYTES);
         const response = await fetchOk(fetcher, url, 'peaks');
-        const bytes = await readCapped(response, MAX_PEAKS_BYTES, tooLarge);
+        const bytes = await readCapped(response, maxBytes, tooLarge);
 
-        return readPeaks(JSON.parse(new TextDecoder().decode(bytes)));
+        return readPeaks(JSON.parse(new TextDecoder().decode(bytes)), maxPeaks);
     };
 
     return options.shared === false ? load() : oncePerPage(loading, url, load);

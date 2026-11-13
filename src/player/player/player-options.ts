@@ -126,6 +126,22 @@ export type PlayerOptions = {
      * it. Off by default.
      */
     remember?: boolean | PlayerRemember;
+    /**
+     * When the sound cannot load, a message over the wave says why ("Could not load the sound"), in
+     * the player's language. On by default (`false` turns it off); the `error` event goes out either
+     * way, with a `SoundError` whose `reason` says why.
+     */
+    loadError?: boolean | { show?: boolean };
+    /**
+     * Who made the sound: shown by the `artist` part (off the line by default) and given to the
+     * system's media controls when `mediaSession` names no artist.
+     */
+    artist?: string;
+    /**
+     * The longest name, artist, word or media-controls detail shown, in characters: 120, from 1 to
+     * 1000; past either end, a `RangeError`.
+     */
+    maxText?: number;
     /** @deprecated Use `a11y.label`; `label` goes in 2.0. */
     label?: string;
     /** Accessibility: the language of the player's words, its labels and the sound in words. */
@@ -146,7 +162,10 @@ export type PlayerOptions = {
     >;
 };
 
-/** The player's accessibility options, grouped by place; everything that adds behaviour is off by default. */
+/**
+ * The player's accessibility options, grouped by place; everything that adds behaviour is off by
+ * default but the load error's announcement, which tells of a sound that cannot play.
+ */
 export type PlayerA11y = {
     /**
      * The language of the accessible names, the wave's value in words, the description and the
@@ -180,7 +199,22 @@ export type PlayerA11y = {
     keys?: { announce?: boolean };
     /** `announce` says where a sound resumes, at its first play ("Resuming at 12:30"). Off by default. */
     remember?: { announce?: boolean };
+    /**
+     * `announce` says, when the sound cannot load, why ("Could not load the sound"). On by default,
+     * so a person who cannot see the player learns it too.
+     */
+    loadError?: { announce?: boolean };
+    /**
+     * The wave's slider's name: `'position'` (the default) its `position` word ("Playback position"),
+     * `'label'` the sound's name, `'both'` the two ("Little Elf, Playback position"). The sound's name
+     * is the one the `title` part shows; without one, the slider keeps its word. An unknown value is
+     * `'position'`, and the app's own `frame.label` wins.
+     */
+    sliderName?: SliderName;
 };
+
+/** What names the wave's slider (see `PlayerA11y.sliderName`). */
+export type SliderName = 'position' | 'label' | 'both';
 
 /**
  * The player's chapters: the plugin's options (its words come from the player's language and
@@ -324,10 +358,40 @@ export type PlayerDecode = {
      * count never falls below `peakCount`, nor rises past 1 000 000.
      */
     peaksPerSecond?: number;
-    /** The longest sound decoded, in seconds; a longer one is read evenly through. Only lowers 1800. */
+    /**
+     * The longest sound read, in seconds; a longer one is read evenly through: 1800, up to 36 000 (10
+     * hours). The browser decodes the whole file first, so this saves no memory: `maxBytes` does.
+     */
     maxSeconds?: number;
-    /** The largest file decoded, in bytes. Only lowers 52 428 800. */
+    /**
+     * The largest file decoded, in bytes: 52 428 800 (50 MiB), up to 268 435 456 (256 MiB). A decoded
+     * hour takes about 635 MB; past a few GB a browser tab falls over, sooner on a phone.
+     */
     maxBytes?: number;
+    /**
+     * Reads the sound in pieces as it downloads, keeping only its peaks, so sounds of hours get a wave:
+     * off by default. MP3, AAC, WAV, MP4/M4A, Ogg (Opus, Vorbis), FLAC and WebM are read this way; any
+     * other sound, or one the browser cannot decode in pieces, is decoded whole as without it.
+     */
+    stream?: boolean | PlayerDecodeStream;
+};
+
+/** Reading a sound in pieces for its peaks (`decode.stream`). */
+export type PlayerDecodeStream = {
+    /**
+     * The most bytes downloaded for the peaks: 1 073 741 824 (1 GiB), from 1 up to 4 294 967 296
+     * (4 GiB). Past either end, a `RangeError`. The page's `<audio>` downloads the sound too.
+     */
+    maxBytes?: number;
+    /**
+     * The most seconds read: 36 000 (10 hours), up to 86 400 (24 hours); past either end, a
+     * `RangeError`. A longer sound shows its start, and the rest as silence when its length is known.
+     */
+    maxSeconds?: number;
+    /** Draws the wave while the sound is read: on by default. */
+    progressive?: boolean;
+    /** `'auto'` (the default) decodes with WebCodecs where it can; `false` always decodes small pieces whole. */
+    webcodecs?: 'auto' | false;
 };
 
 /** The description on a player: the plugin's options, plus a button that reads it aloud. */

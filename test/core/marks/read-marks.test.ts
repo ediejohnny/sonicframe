@@ -185,6 +185,48 @@ describe('readRegions', () => {
         expect(readMarkers(many)).toHaveLength(2000);
     });
 
+    it('keeps labels of 120 characters, or maxText up to 1000, refusing one past it', () => {
+        const csv = `start,end,label\n1,2,${'l'.repeat(2000)}`;
+
+        expect(readRegions(csv)[0].label).toHaveLength(120);
+        expect(readRegions(csv, { maxText: 1000 })[0].label).toHaveLength(1000);
+        expect(readMarkers(csv, { maxText: 7 })[0].label).toHaveLength(7);
+        expect(() => readMarkers(csv, { maxText: 1001 })).toThrow(
+            'maxText goes past its most, 1000',
+        );
+    });
+
+    it('keeps up to 20 000 items and reads up to 5 MB when asked, in every format, refusing past either by name', () => {
+        const count = 20_001;
+        const json = JSON.stringify(
+            Array.from({ length: count }, (_, at) => ({ start: at, end: at })),
+        );
+        const csv = Array.from(
+            { length: count },
+            (_, at) => `${at},${at}`,
+        ).join('\n');
+        const audacity = Array.from(
+            { length: count },
+            (_, at) => `${at}\t${at}\tL`,
+        ).join('\n');
+        const most = { maxItems: 20_000, maxSize: 5_242_880 };
+
+        for (const text of [json, csv, audacity]) {
+            expect(readRegions(text, most)).toHaveLength(20_000);
+            expect(readMarkers(text, most)).toHaveLength(20_000);
+        }
+
+        expect(readMarkers(csv, { maxItems: 3 })).toHaveLength(3);
+        expect(() => readRegions(csv, { maxItems: 20_001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxItems goes past its most, 20000 (20001)',
+            ),
+        );
+        expect(() => readMarkers(csv, { maxSize: 5_242_881 })).toThrow(
+            'maxSize goes past its most, 5242880',
+        );
+    });
+
     it('refuses what is no text, JSON that is broken or no list, and a text over 512 KB', () => {
         expect(() => readRegions(3 as unknown as string)).toThrow(
             'no regions or markers file',

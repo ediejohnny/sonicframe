@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Now playing · SonicFrame</title>
+        <meta
+            name="description"
+            content="A small bar fixed to the window that follows the player playing, so the sound can be controlled while the page scrolls."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>Now playing</h1>
+                <p class="lede">
+                    A small bar fixed to the window that follows the player that
+                    started playing last, any player of the page, so the sound
+                    can be controlled while the page scrolls.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Try it</h2>
+                    <div class="stage" data-demo="now-playing"></div>
+                    <p>
+                        Play the sound, then scroll the player out of view: the
+                        bar comes up at the bottom of the window.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Adding it</h2>
+                    <div class="code">
+                        <pre><code>import { nowPlaying } from 'sonicframe/playlist';
+
+nowPlaying({ parts: ['play', 'title', 'time', 'progress', 'back', 'close'] });</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        One bar serves every player of the page, made with
+                        <code>createPlayer</code>, the tag or a playlist. A
+                        playlist can bring its own with
+                        <code>nowPlaying: true</code> (or the
+                        <code>now-playing</code> attribute), and
+                        <code>currentPlayer()</code> in
+                        <code>sonicframe/player</code> gives the player that
+                        played last.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>Options</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>when</code></td>
+                                    <td><code>'outOfView'</code></td>
+                                    <td>
+                                        <code>'outOfView'</code> (playing and
+                                        out of view), <code>'playing'</code> or
+                                        <code>'always'</code> (from the first
+                                        play on, paused too).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>place</code></td>
+                                    <td><code>'bottom'</code></td>
+                                    <td>
+                                        <code>'bottom'</code> or
+                                        <code>'top'</code> of the window, clear
+                                        of a phone's rounded edges.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>align</code></td>
+                                    <td><code>'stretch'</code></td>
+                                    <td>
+                                        <code>'stretch'</code>,
+                                        <code>'start'</code>,
+                                        <code>'center'</code> or
+                                        <code>'end'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>offset</code></td>
+                                    <td><code>0.5</code></td>
+                                    <td>
+                                        Space from the window's edge, in rem,
+                                        from 0 to 20: room for your own fixed
+                                        footer.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>width</code></td>
+                                    <td><code>28</code></td>
+                                    <td>
+                                        Its width when it does not stretch, in
+                                        rem, from 10 to 60.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>zIndex</code></td>
+                                    <td><code>2147483640</code></td>
+                                    <td>Its stacking order.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>parts</code></td>
+                                    <td>
+                                        <code>play</code>, <code>title</code>,
+                                        <code>time</code>,
+                                        <code>progress</code>,
+                                        <code>close</code>
+                                    </td>
+                                    <td>
+                                        What it holds, in order; also
+                                        <code>previousTrack</code>,
+                                        <code>nextTrack</code>,
+                                        <code>back</code> (scrolls to the player
+                                        and gives it the focus) and
+                                        <code>speed</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>palette</code></td>
+                                    <td><code>'player'</code></td>
+                                    <td>
+                                        The colors of the player playing, or a
+                                        palette of its own;
+                                        <code>font</code> and
+                                        <code>box</code> as for the chapters'
+                                        list.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>close</code></td>
+                                    <td><code>'untilNextPlay'</code></td>
+                                    <td>
+                                        Closed, it stays away until the next
+                                        play, or <code>'forPage'</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>animation</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        Moves in as it shows
+                                        (<code>animationType</code>:
+                                        <code>'slide'</code> or
+                                        <code>'fade'</code>), never for people
+                                        who asked for less motion.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y</code></td>
+                                    <td></td>
+                                    <td>
+                                        <code>label</code> ("Now playing"),
+                                        <code>announce</code> (off),
+                                        <code>lang</code> and
+                                        <code>words</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>On the tag</h2>
+                    <div class="code">
+                        <pre><code>&lt;sonic-now-playing parts="play title time back close" place="bottom"&gt;&lt;/sonic-now-playing&gt;
+
+&lt;script type="module"&gt;
+    import { defineSonicNowPlaying } from 'sonicframe/playlist';
+    defineSonicNowPlaying();
+&lt;/script&gt;</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        The attributes are those of the options:
+                        <code>when</code>, <code>place</code>,
+                        <code>align</code>, <code>offset</code>,
+                        <code>width</code>, <code>z-index</code>,
+                        <code>parts</code>, <code>palette</code>,
+                        <code>font</code>, <code>close</code>,
+                        <code>animation</code>, <code>animation-type</code> and
+                        the <code>a11y-</code> ones.
+                    </p>
+                </section>
+
+                <section class="section">
+                    <h2>For screen readers and the keyboard</h2>
+                    <ul>
+                        <li>
+                            The bar is a region named "Now playing"; it never
+                            takes the focus when it shows.
+                        </li>
+                        <li>
+                            Every part is a real button with a name; play says
+                            "Play" or "Pause", and the time is text.
+                        </li>
+                        <li>Escape closes it while the focus is in it.</li>
+                        <li>
+                            <code>a11y.announce</code> says the sound's name
+                            when it shows. Off by default.
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+        <script type="module" src="./main.ts"></script>
+        <script type="module" src="./now-playing-demo.ts"></script>
+    </body>
+</html>

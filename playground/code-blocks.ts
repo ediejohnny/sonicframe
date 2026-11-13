@@ -3,8 +3,10 @@
  * whatever it says at the time, is described by the heading over the block (a page has many "Copy"
  * buttons), and its result is also said aloud, since a button's new words are not. A block too wide
  * for the screen becomes a named region in the tab order, so the keyboard can scroll it; it leaves
- * the tab order once it fits.
+ * the tab order once it fits. An example's code runs in the box under it (examples.ts).
  */
+
+import { runExamples } from './examples';
 
 /** How long a copy button says it copied, in milliseconds. */
 const COPIED_FOR = 1500;
@@ -128,6 +130,7 @@ let fitting = false;
 
 export function setupCodeBlocks(): void {
     statusLine();
+    runExamples();
 
     for (const block of document.querySelectorAll<HTMLElement>('.code')) {
         copyButton(block);

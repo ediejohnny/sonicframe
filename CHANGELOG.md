@@ -7,6 +7,108 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-13
+
+### Added
+
+- The now-playing bar, `nowPlaying` in `sonicframe/playlist`: a small bar fixed to the window that follows the
+  player that started playing last, so the sound can be controlled while the page scrolls. It shows while that
+  player plays out of view (`when`: also `'playing'` or `'always'`), at the bottom or the top (`place`, `align`,
+  `offset`, `width`, `zIndex`), holds the `parts` asked for (play, title, time, progress, close, the tracks
+  around the sound, back to the player, speed), wears the player's colors or its own, and is a named region that
+  Escape closes. `<sonic-now-playing>` is the same as a tag, a playlist brings one with `nowPlaying` (or the
+  `now-playing` attribute), and `currentPlayer()` in `sonicframe/player` gives the player that played last.
+  Players also have a `tracks` getter.
+- A podcast's feed as a playlist: `feed` (or the tag's `feed`, `feed-order`, `feed-limit`) reads each episode's
+  sound, length, picture, chapters and transcript, newest first by default, with a limit. `readFeed` and `loadFeed`
+  read one by themselves, in `sonicframe/playlist` and in `sonicframe/analysis` for servers. The feed is read by
+  SonicFrame's own small XML reader, not the browser's, so it works under a strict Content-Security-Policy with
+  Trusted Types and in Node. One that declares entities is refused, and its ceilings are options: `maxSize` (5 MB,
+  up to 20 MB), `maxDepth` (100, up to 256), `maxElements` (200000, up to 1000000), `maxAttributes` (200, up to 10000) and `maxNameLength` (1000, up to 50000). The defaults are the ones the most used XML readers settled on;
+  an app's code may raise each up to its most, and the tag's `feed-max-*` attributes may only lower them. A feed past
+  one, or an option past its most or under its least, throws a `RangeError` that names the option.
+- `SONIC_TAGS`, in `sonicframe` and `sonicframe/analysis`: each tag with the attributes it reads, its children that
+  count (a playlist's links) and the starts of names it also reads, for a CMS's HTML filter (WordPress's KSES,
+  DOMPurify) to let authors place players. None is an event handler; `upload-url`, which sends a visitor's recording
+  to the address an author picks, is marked `trustedOnly`. The docs' new page "On a CMS or WordPress" gives the
+  filter ready to paste and how a shortcode or block escapes the tag on the server.
+- The `title` and `artist` parts, off unless the look places them: the sound's name (the player's `a11y.label`, or
+  without one its file's name, "little-elf.mp3" as "Little elf", which `look.titleFromFile: false` turns off) and
+  the new `artist` option, as text that screen readers skip (they hear the name on the player itself). Each
+  takes its text's width up to `look.nameMaxWidth` (12 rem) and gives up its room before the wave. `artist` is
+  also the media controls' artist when `mediaSession` names none, and a playlist's track brings its own. On
+  `<sonic-player>`, the `artist` attribute, and `line` and `meta` (part names by spaces, `"play wave title"`) place
+  the parts as `look.line` and `look.meta` do.
+- `a11y.sliderName` (the tag's `a11y-slider-name`) names the wave's slider by its sound: `'label'` the sound's
+  name, `'both'` the name and the slider's word ("Little Elf, Playback position"), so a page of many players tells
+  their sliders apart. The default stays `'position'`, the word alone; `setLabel` updates it, and `frame.label` wins.
+- Minified files beside the readable ones, for pages without a bundler: `dist/player.min.js` and each other entry,
+  with their own minified chunks, in about half the bytes. From npm they are `sonicframe/min`,
+  `sonicframe/min/player`, `sonicframe/min/record`, `sonicframe/min/playlist` and `sonicframe/min/analysis`. The
+  readable files are unchanged.
+- Waves for sounds of hours: `decode.stream` (the tag's `decode-stream`) reads a sound in pieces as it downloads and
+  keeps only its peaks, never the whole decoded sound, so a 10-hour podcast gets a wave where decoding it whole would
+  take gigabytes. Off by default. MP3, AAC, WAV, MP4/M4A, Ogg (Opus, Vorbis), FLAC and WebM are read by SonicFrame's
+  own small readers, the format told by the file's first bytes; the frames are decoded with WebCodecs where the
+  browser has it, or else in small whole pieces. A sound that cannot be read this way is decoded whole, as before.
+  The wave is drawn while the sound is read (`progressive`, on), and its ceilings are options: `maxBytes` (1 GiB, up
+  to 4 GiB) and `maxSeconds` (10 hours, up to 24); past either end, a `RangeError`. The tag's
+  `decode-stream-max-bytes` and `decode-stream-max-seconds` may only lower them. The frame's `previewPeaks` draws
+  peaks while the peaks being loaded are still read.
+- `createPeakStream(count)`, in `sonicframe` and `sonicframe/analysis`: peaks from a sound that arrives in pieces,
+  holding four values per peak instead of the sound, so hours of audio fit in a few megabytes. `push` takes each
+  piece, `peaks()` gives the peaks so far, and `peaks(totalSamples)` draws the part still to come as silence. A
+  server can feed it decoded audio (an `ffmpeg` pipe, say) and save the peaks as a peaks file. `count` goes
+  from 1 to 1000000 (20000 if not a number); past either end, a `RangeError`.
+
+### Changed
+
+- A `<sonic-playlist>`'s own links are inert as well as hidden while its playlist stands, so a page whose CSS shows
+  hidden elements still cannot click or focus one (one with a `javascript:` address included); they come back as
+  they were when the tag leaves the page.
+- The ceilings on what comes from outside go up to a fixed most, studied in mature projects and in the browsers'
+  own limits; the defaults stay. An option that shipped before keeps a larger value at its most until 2.0; a new
+  one refuses a value past either end with a `RangeError` that names it. A tag's attribute only lowers a ceiling.
+    - Sound: the player's `decode.maxBytes` (50 MiB, up to 256 MiB) and `decode.maxSeconds` (30 minutes, up to 10
+      hours); `readPeaks`'s limit (20 000, up to 1 000 000); `loadPeaks` takes `maxPeaks` and `maxBytes` (20 000 and
+      2 MB, up to 1 000 000 and 64 MB).
+    - Recording: `maxSeconds` (300, up to 6 hours, from 3600) and `maxBytes` (100 MiB, up to 1 GiB);
+      `<sonic-recorder max-seconds>` keeps to 3600, as before.
+    - Chapters: `loadChapters`'s `maxBytes` goes up to 5 MB; `readChapters`, `loadChapters` and the chapters plugin's
+      `load` take `maxChapters` (1000, up to 10 000), and `readChapters` takes `maxSize` (512 KB, up to 5 MB).
+    - Tracks: `readTracks` takes `maxTracks` (1000, up to 10 000) and `maxSize` (512 KB, up to 5 MB); `loadTracks`
+      takes `maxTracks` and its `maxBytes` goes up to 5 MB; the playlist takes `maxTracks`; a feed's `limit` goes up
+      to 10 000.
+    - Regions and markers in a file: `readRegions` and `readMarkers` take `maxItems` (2000, up to 20 000) and
+      `maxSize` (512 KB, up to 5 MB); the markers plugin's `max` goes up to 20 000; the player's `remember.sounds` goes
+      up to 5000.
+    - Names: `maxText`, the longest title, name, label or word kept (120 characters, up to 1000), on `readChapters`,
+      `loadChapters` and the chapters plugin's `load`, `readTracks`, `loadTracks`, a feed, `readRegions` and
+      `readMarkers`, the player (its name, artist, words and media controls), the playlist, the now-playing bar, the
+      recorder and the regions plugin.
+    - Clips: `width` and `height` go up to 3840 × 2160; `exportClip` takes `maxSeconds` (120, up to 600), `bitrate`
+      (8 Mbps, up to 50) and `maxBytes` (100 MiB, up to 1 GiB).
+    - Analysis: the spectrogram's `fftSize` goes up to 32 768 (the Web Audio standard's own most), its `columns` up to
+      16 384 and its `rows` up to 4096, and its job gives the `fftSize` it used; `levels` and `findSilences` take
+      `maxWindows` (200 000, up to 2 000 000); `findSilences` and `silencesFromPeaks` take `maxSilences` (10 000, up
+      to 100 000).
+
+### Fixed
+
+- A sound that cannot load no longer leaves the player silent about it at "0:00 / 0:00": a message over the wave
+  says why ("Could not load the sound", "This sound cannot be played here"…) in the player's language, the
+  live region says it, and the `error` event goes out with a `SoundError` (`sonicframe/player`) whose `reason` is
+  `'network'`, `'unsupported'`, `'decode'` or `'aborted'`. The message and the announcement are on by default, so a
+  person who cannot see the player learns it too; `loadError: false` and `a11y.loadError.announce: false` (the tag's
+  `load-error="false"` and `a11y-load-error="false"`) turn them off. A language registered for 1.1 says the four new
+  phrases in English until it gives its own.
+- A WebVTT file's character reference named like a property every object has (`&constructor;`) was read as the
+  text of a JavaScript function in a chapter's or a cue's title; it now stays as written, like any unknown
+  reference.
+- A clip's `maxSourceSeconds: Infinity` lifted every limit on the source decoded whole in memory, so a long
+  enough sound could take the tab down; it now goes up to 2 hours (about 2.7 GB of decoded stereo), `Infinity`
+  included.
+
 ## [1.2.0] - 2026-11-12
 
 ### Added

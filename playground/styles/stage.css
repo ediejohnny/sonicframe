@@ -89,6 +89,69 @@
     font-size: 0.9375rem;
 }
 
+/* A picked file: the largest one taken, and while it loads, the share read (a moving stripe while a
+   format read whole decodes). */
+
+.file-limit {
+    font-size: 0.875rem;
+}
+
+.file-progress {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.file-progress[hidden] {
+    display: none;
+}
+
+.file-progress-track {
+    position: relative;
+    width: 10rem;
+    height: 0.5rem;
+    overflow: hidden;
+    border-radius: 0.125rem;
+    background: var(--line);
+}
+
+.file-progress-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    background: var(--brand);
+}
+
+.file-progress-track[data-busy] .file-progress-fill {
+    width: 30%;
+    animation: file-progress 1.2s ease-in-out infinite;
+}
+
+.file-progress-note {
+    min-width: 3rem;
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes file-progress {
+    from {
+        left: -30%;
+    }
+
+    to {
+        left: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .file-progress-track[data-busy] .file-progress-fill {
+        width: 100%;
+        opacity: 0.5;
+        animation: none;
+    }
+}
+
 /* Code with a copy button. */
 
 .snippets {
@@ -128,6 +191,60 @@
     border-color: #2a3442;
     background: #1c2531;
     color: var(--deck-ink);
+}
+
+/* The code's parts, as Prism names them, each above 4.5:1 on the deck. */
+.code :is(.token.comment, .token.prolog, .token.doctype, .token.cdata) {
+    color: #93a1b6;
+}
+
+.code
+    :is(
+        .token.keyword,
+        .token.boolean,
+        .token.atrule,
+        .token.important,
+        .token.builtin
+    ) {
+    color: #8fb6ff;
+}
+
+.code
+    :is(
+        .token.string,
+        .token.attr-value,
+        .token.char,
+        .token.regex,
+        .token.url,
+        .token.template-string
+    ) {
+    color: #7ee0c3;
+}
+
+.code :is(.token.number, .token.unit, .token.constant) {
+    color: #f3b97a;
+}
+
+.code :is(.token.tag, .token.selector) {
+    color: #f59bc6;
+}
+
+.code
+    :is(.token.attr-name, .token.property, .token.function, .token.class-name) {
+    color: #c7b8ff;
+}
+
+.code .token.punctuation {
+    color: #b4c0d0;
+}
+
+/* An example: its code on top, and under it, a block apart, what that code draws. */
+.example-result {
+    margin-top: 1rem;
+    padding: 1.125rem;
+    border: 0.0625rem solid var(--line);
+    border-radius: 0.125rem;
+    background: var(--panel);
 }
 
 .install {

@@ -87,6 +87,8 @@ export class PlayerSession {
             ? mediaSession({
                   ...own,
                   title: own.title ?? options.a11y?.label ?? options.label,
+                  artist: own.artist ?? options.artist,
+                  maxText: own.maxText ?? options.maxText,
                   seekOffset: own.seekOffset ?? (() => host.look().skip),
                   onPrevious: own.onPrevious ?? step('previous'),
                   onNext: own.onNext ?? step('next'),

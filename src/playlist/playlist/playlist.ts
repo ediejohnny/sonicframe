@@ -19,13 +19,15 @@ import {
     type Repeat,
 } from '../../core/playlist/order';
 import { loadTracks } from '../../core/playlist/load-tracks';
+import { loadFeed } from '../../core/playlist/feed';
 import {
-    MAX_TRACKS,
     readTracks,
+    TRACK_COUNT,
     type Track,
     type TrackInput,
 } from '../../core/playlist/tracks';
 import { oneOf } from '../../core/shared/checked';
+import { limitOf, TEXT_LENGTH } from '../../core/shared/limits';
 import { Emitter } from '../../core/shared/emitter';
 import { cleanText, fillTemplate } from '../../core/shared/text';
 import { announce } from '../../dom/a11y/announce';
@@ -37,6 +39,7 @@ import type {
     PlayerTracks,
 } from '../../player/player/player-options';
 import { TrackList } from '../list/track-list';
+import { NowPlaying } from '../now-playing/now-playing';
 import { EachStage } from '../stage/each-stage';
 import { OneStage } from '../stage/one-stage';
 import type { Stage } from '../stage/stage';
@@ -49,9 +52,6 @@ import {
 import { PlaylistStore } from './playlist-store';
 import { trackItem, trackOptions, trackTitle } from './track-options';
 
-/** The longest word or name, in characters. */
-const MAX_WORD = 120;
-
 export class Playlist {
     /** The playlist's root element. */
     readonly element: HTMLDivElement;
@@ -59,12 +59,15 @@ export class Playlist {
     private readonly settings: PlaylistSettings;
     private readonly events = new Emitter<PlaylistEvents>();
     private readonly abort = new AbortController();
+    /** How the list's tracks are read: the most it keeps (`maxTracks`) and their longest names (`maxText`). */
+    private readonly reading: { maxTracks: number; maxText: number };
     private readonly words: PlaylistWords;
     private readonly store: PlaylistStore | null;
     /** The media the playlist made itself, taken off with it; null for the app's or a stack's. */
     private readonly ownMedia: HTMLMediaElement | null = null;
     private readonly stage: Stage;
     private readonly list: TrackList | null = null;
+    private readonly bar: NowPlaying | null;
     private trackList: Track[] = [];
     private orderList: number[] = [];
     private current = -1;
@@ -79,13 +82,21 @@ export class Playlist {
         }
 
         this.options = options;
+        this.reading = {
+            maxTracks: limitOf('maxTracks', options.maxTracks, TRACK_COUNT),
+            maxText: limitOf('maxText', options.maxText, TEXT_LENGTH),
+        };
         this.settings = playlistSettings(options);
         this.shuffleOn = this.settings.shuffle;
         this.repeatMode = this.settings.repeat;
         const a11y = options.a11y ?? {};
         const lang =
             a11y.lang === 'auto' ? pageLanguage(options.container) : a11y.lang;
-        this.words = mergeWords(wordsFor(lang).playlist, a11y.words, MAX_WORD);
+        this.words = mergeWords(
+            wordsFor(lang).playlist,
+            a11y.words,
+            this.reading.maxText,
+        );
         this.store = PlaylistStore.of(options.remember);
 
         this.element = document.createElement('div');
@@ -93,7 +104,7 @@ export class Playlist {
         this.element.setAttribute('role', 'group');
         this.element.setAttribute(
             'aria-label',
-            cleanText(a11y.label ?? this.words.playlist, MAX_WORD),
+            cleanText(a11y.label ?? this.words.playlist, this.reading.maxText),
         );
 
         // A language the app chose marks the playlist, so a screen reader says its words in that voice.
@@ -154,6 +165,12 @@ export class Playlist {
         }
 
         options.container.append(this.element);
+        this.bar =
+            options.nowPlaying === undefined || options.nowPlaying === false
+                ? null
+                : new NowPlaying(
+                      options.nowPlaying === true ? {} : options.nowPlaying,
+                  );
         this.start(options);
     }
 
@@ -234,14 +251,14 @@ export class Playlist {
 
     /** Adds tracks at `at` (the end by default); the track playing goes on. */
     add(tracks: readonly TrackInput[] | string, at?: number): void {
-        const added = readTracks(tracks);
+        const added = readTracks(tracks, this.reading);
         const place =
             typeof at === 'number' && Number.isInteger(at)
                 ? Math.min(Math.max(0, at), this.trackList.length)
                 : this.trackList.length;
         const all = [...this.trackList];
         all.splice(place, 0, ...added);
-        this.change(all.slice(0, MAX_TRACKS));
+        this.change(all.slice(0, this.reading.maxTracks));
     }
 
     /** Takes track `index` out; when it is the current one, the track that takes its place is. */
@@ -281,7 +298,7 @@ export class Playlist {
 
     /** Takes a new list of tracks, its first one current. */
     setTracks(tracks: readonly TrackInput[] | string): void {
-        const all = readTracks(tracks);
+        const all = readTracks(tracks, this.reading);
         this.change(all, all[0] ?? null);
         this.changed();
     }
@@ -317,6 +334,7 @@ export class Playlist {
         this.abort.abort();
         this.stage.destroy();
         this.list?.destroy();
+        this.bar?.destroy();
         this.ownMedia?.pause();
         this.element.remove();
     }
@@ -324,31 +342,38 @@ export class Playlist {
     /** The first tracks, from the options or fetched from `src`, and where the list starts. */
     private start(options: PlaylistOptions): void {
         if (options.tracks !== undefined) {
-            this.first(readTracks(options.tracks));
+            this.first(readTracks(options.tracks, this.reading));
 
             return;
         }
 
-        if (typeof options.src !== 'string') {
+        const feed =
+            typeof options.feed === 'string'
+                ? { src: options.feed }
+                : options.feed;
+        const address = feed?.src ?? options.src;
+
+        if (typeof address !== 'string') {
             this.first([]);
 
             return;
         }
 
-        const base = (): string | undefined => {
-            try {
-                return new URL(options.src ?? '', document.baseURI).href;
-            } catch {
-                return undefined;
-            }
-        };
-
-        loadTracks(options.src, {
-            base: base(),
+        const load = {
+            base: pageAddress(address),
             credentials: options.fetch?.credentials,
             referrerPolicy: options.fetch?.referrerPolicy,
             signal: this.abort.signal,
-        }).then(
+        };
+        const loading =
+            feed === undefined
+                ? loadTracks(address, { ...load, ...this.reading })
+                : // The feed's own options (order, limit, ceilings); how it is fetched comes from `load`.
+                  loadFeed(address, { ...feed, ...load }).then(
+                      (read) => read.tracks,
+                  );
+
+        loading.then(
             (tracks) => {
                 if (!this.destroyed) {
                     this.first(tracks);
@@ -357,7 +382,6 @@ export class Playlist {
             (error: unknown) => this.fail(error),
         );
     }
-
     /** Takes the first tracks: the current one is the remembered one, or `start`. */
     private first(tracks: Track[]): void {
         const kept = this.store?.read();
@@ -535,6 +559,15 @@ export class Playlist {
                 error instanceof Error ? error : new Error(String(error)),
             );
         }
+    }
+}
+
+/** `address` resolved against the page, or undefined when it cannot be. */
+function pageAddress(address: string): string | undefined {
+    try {
+        return new URL(address, document.baseURI).href;
+    } catch {
+        return undefined;
     }
 }
 

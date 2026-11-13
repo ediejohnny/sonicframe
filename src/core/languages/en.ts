@@ -88,6 +88,10 @@ export const EN: CompleteWords = {
         nextTrack: 'Next track',
         closeChapters: 'Close the chapters',
         resume: 'Resuming at {time}',
+        soundFailed: 'Could not load the sound',
+        soundUnsupported: 'This sound cannot be played here',
+        soundDecode: 'The sound’s file is damaged',
+        soundAborted: 'The sound stopped loading',
     },
     recorder: {
         recorder: 'Voice recorder',
@@ -127,5 +131,10 @@ export const EN: CompleteWords = {
         repeatOne: 'Repeat: one',
         playing: 'Playing: {title}, {place} of {count}',
         untitled: 'Track {place}',
+    },
+    nowPlaying: {
+        bar: 'Now playing',
+        close: 'Close the bar',
+        back: 'Back to the player',
     },
 };

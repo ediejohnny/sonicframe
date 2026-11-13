@@ -78,6 +78,14 @@ export {
     type MarksFormat,
     type MarksWriteOptions,
 } from './core/marks/write-marks';
+export { SONIC_TAGS, type SonicTag } from './core/tags/sonic-tags';
+export {
+    loadFeed,
+    readFeed,
+    type Feed,
+    type LoadFeedOptions,
+    type ReadFeedOptions,
+} from './core/playlist/feed';
 export {
     MAX_TRACKS,
     readTracks,
@@ -93,6 +101,7 @@ export {
     type LoadWaveformOptions,
 } from './core/peaks/read-waveform';
 export { resample as resamplePeaks } from './core/peaks/peaks';
+export { createPeakStream, type PeakStream } from './core/peaks/peak-stream';
 export type { FetchedResponse, Fetcher } from './core/shared/fetch';
 export type {
     ReadWaveformOptions,

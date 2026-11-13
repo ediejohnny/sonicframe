@@ -27,7 +27,13 @@
                         through <code>textContent</code> (with control and
                         direction-changing characters removed, and a length
                         cap), and icons are built element by element. Nothing
-                        uses <code>innerHTML</code> or <code>eval</code>.
+                        uses <code>innerHTML</code>, <code>eval</code> or the
+                        browser's <code>DOMParser</code>: a podcast feed is read
+                        by SonicFrame's own small XML reader, as text only. So a
+                        page that requires Trusted Types (<code
+                            >require-trusted-types-for 'script'</code
+                        >, even with <code>trusted-types 'none'</code>) keeps
+                        working.
                     </p>
                 </section>
 
@@ -69,11 +75,39 @@
                     <ul>
                         <li>
                             Peaks files: 2 MB and 20,000 values
-                            (<code>loadPeaks</code>); waveform files: 8 MB by
-                            default, folded past <code>maxPeaks</code>; files
-                            that do not match their header are refused.
+                            (<code>loadPeaks</code>, up to 64 MB and 1,000,000);
+                            waveform files: 8 MB by default, folded past
+                            <code>maxPeaks</code>; files that do not match their
+                            header are refused. Decoding a sound: 50 MiB by
+                            default, up to 256 MiB.
+                        </li>
+                        <li>
+                            Reading a sound in pieces
+                            (<code>decode.stream</code>): 1 GiB and 10 hours by
+                            default (your code may raise them up to 4 GiB and 24
+                            hours). The file's own bytes are read by our code,
+                            each read inside what arrived: tags, boxes, pages
+                            and frames have their own caps (a frame of at most
+                            16 MiB, an MP4 index of at most 64 MiB and
+                            16,777,216 frames), the search for the first frame
+                            gives up after 64 KiB, and damaged bytes are skipped
+                            or refused, never read in a loop. No worker, no
+                            <code>blob:</code> address, and nothing new for your
+                            Content-Security-Policy.
                         </li>
                         <li>Captions and tooltips: text only, capped.</li>
+                        <li>
+                            Playlists: 1000 tracks, 512 KB of JSON or M3U (your
+                            code may raise them up to 10,000 and 5 MB), names of
+                            120 characters. Podcast feeds: 5 MB, with no entity
+                            declarations and the nesting, elements, attributes
+                            and names of the XML capped at the defaults the most
+                            used XML readers settled on (see
+                            <a href="./playlist.html">Playlist</a>); your code
+                            may raise each up to a fixed most (past it, the
+                            option is refused with a <code>RangeError</code>),
+                            and a tag may only lower it.
+                        </li>
                         <li>
                             The lock screen and the media keys: words in one
                             line of 120 characters, at most eight pictures from
@@ -82,12 +116,13 @@
                         <li>
                             Recording: the microphone only after a press, never
                             sent to the speakers, let go on stop, cancel and
-                            destroy; a recording capped at 100 MiB and 3600
-                            seconds. An upload goes only to a web or relative
-                            address, with header names checked and values kept
-                            to one line, every text capped, and the server's
-                            answer kept to 64 KiB; the app's icons are taken
-                            only as path data.
+                            destroy; a recording capped at 100 MiB and 300
+                            seconds by default (your code may raise them up to 1
+                            GiB and 6 hours). An upload goes only to a web or
+                            relative address, with header names checked and
+                            values kept to one line, every text capped, and the
+                            server's answer kept to 64 KiB; the app's icons are
+                            taken only as path data.
                         </li>
                         <li>
                             Marks, regions, analysis windows, FFT sizes, live
@@ -121,6 +156,90 @@
 
 link.href = safeUrl(fromDatabase) ?? '#';</code></pre>
                         <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>Players on pages other people write</h2>
+                    <p>
+                        On a CMS, the people who write the pages can place
+                        players with the tags, and anything they type (a title,
+                        a label, a playlist's links) is shown as text. A
+                        playlist's own links are hidden and inert while the
+                        playlist stands, so a link it refused
+                        (<code>javascript:</code>) cannot be clicked or focused
+                        even when the page's CSS shows hidden elements. Your
+                        HTML filter decides which tags an author may write:
+                        <code>SONIC_TAGS</code> lists them, and
+                        <a href="./cms.html">On a CMS or WordPress</a> gives the
+                        filter ready to paste.
+                    </p>
+                    <p>
+                        The flaws known in other audio players, and what keeps
+                        each out of SonicFrame (each is guarded by a test that
+                        puts XSS payloads through every view):
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>The flaw</th>
+                                    <th>In SonicFrame</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        A title read from the sound file shown
+                                        as HTML in a playlist (CVE-2017-6814,
+                                        WordPress's own playlist).
+                                    </td>
+                                    <td>
+                                        Every name, from a file, a list, a feed
+                                        or a tag, goes in as text; there is no
+                                        template that builds HTML.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A shortcode's attribute written into the
+                                        page unescaped, so a contributor runs a
+                                        script (CVE-2022-4699, CVE-2024-11881,
+                                        CVE-2025-7963).
+                                    </td>
+                                    <td>
+                                        A tag's attributes are read as text and
+                                        words it knows; a plugin that writes the
+                                        tag escapes them on the server (see
+                                        <a href="./cms.html"
+                                            >On a CMS or WordPress</a
+                                        >).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A shortcode's <code>src</code> taken as
+                                        it came (CVE-2026-1909).
+                                    </td>
+                                    <td>
+                                        Every address goes through
+                                        <code>safeUrl</code>: only http, https
+                                        or relative.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A plugin part that runs script from its
+                                        address (CVE-2016-4567, a Flash part).
+                                    </td>
+                                    <td>
+                                        No Flash, no frames, no code read from
+                                        text: no <code>eval</code>, and it works
+                                        under Trusted Types.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 

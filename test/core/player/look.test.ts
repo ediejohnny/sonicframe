@@ -244,6 +244,31 @@ describe('resolveLook', () => {
         ).toBe(false);
     });
 
+    it('names the sound from its file unless told not to, its title and artist up to 12 rem (2 to 40)', () => {
+        expect(DEFAULT_LOOK.titleFromFile).toBe(true);
+        expect(
+            resolveLook(DEFAULT_LOOK, { titleFromFile: false }).titleFromFile,
+        ).toBe(false);
+        expect(
+            resolveLook(DEFAULT_LOOK, { titleFromFile: 'no' as never })
+                .titleFromFile,
+        ).toBe(true);
+        expect(DEFAULT_LOOK.nameMaxWidth).toBe(12);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameMaxWidth: 20 }).nameMaxWidth,
+        ).toBe(20);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameMaxWidth: 1 }).nameMaxWidth,
+        ).toBe(2);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameMaxWidth: 99 }).nameMaxWidth,
+        ).toBe(40);
+        expect(
+            resolveLook(DEFAULT_LOOK, { nameMaxWidth: Number.NaN })
+                .nameMaxWidth,
+        ).toBe(12);
+    });
+
     it('ends a long name in an ellipsis unless the look asks for a fade or a cut, with a fade in range', () => {
         expect(DEFAULT_LOOK.nameOverflow).toBe('ellipsis');
         expect(DEFAULT_LOOK.nameFade).toBe(1.5);

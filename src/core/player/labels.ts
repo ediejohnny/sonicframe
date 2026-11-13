@@ -13,6 +13,7 @@ import {
 } from '../languages/language';
 import { mergeWords } from '../languages/merge-words';
 import type { CompleteWords, PlayerLabels } from '../languages/words';
+import { TEXT_LENGTH } from '../shared/limits';
 import { clamp01 } from '../shared/math';
 import { cleanText, fillTemplate } from '../shared/text';
 import { formatPosition, formatTime } from '../shared/timing';
@@ -55,15 +56,16 @@ function playerLabels(words: Readonly<CompleteWords>): PlayerLabels {
         nextTrack: player.nextTrack,
         closeChapters: player.closeChapters,
         resume: player.resume,
+        soundFailed: player.soundFailed,
+        soundUnsupported: player.soundUnsupported,
+        soundDecode: player.soundDecode,
+        soundAborted: player.soundAborted,
     };
 }
 
 /** The player's labels in each built-in language. */
 export const PLAYER_LABELS: Readonly<Record<Language, Readonly<PlayerLabels>>> =
     byLanguage(playerLabels);
-
-/** The longest label taken from the app, in characters. */
-const MAX_LABEL = 120;
 
 /** The player's words in one language. */
 export type PlayerWords = {
@@ -83,13 +85,14 @@ export type PlayerWords = {
     valueText: ValueText;
 };
 
-/** The labels for a language tag, with the app's own over them. */
+/** The labels for a language tag, with the app's own over them, each at most `longest` characters. */
 export function playerWords(
     lang: string | null | undefined,
     own?: Partial<PlayerLabels>,
+    longest: number = TEXT_LENGTH.value,
 ): PlayerWords {
     const locale = localeFor(lang, own !== undefined);
-    const labels = mergeWords(playerLabels(wordsFor(lang)), own, MAX_LABEL);
+    const labels = mergeWords(playerLabels(wordsFor(lang)), own, longest);
 
     // The app's own plural without its singular stands for both, never mixed with the language's.
     for (const [many, single] of [
@@ -114,7 +117,7 @@ export function playerWords(
         locale,
         labels,
         say: (name, values = {}) =>
-            cleanText(fillTemplate(labels[name], values), MAX_LABEL),
+            cleanText(fillTemplate(labels[name], values), longest),
         number,
         one: (value) => plural.select(value) === 'one',
         valueText: (time, ratio, duration) =>

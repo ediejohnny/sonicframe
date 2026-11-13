@@ -5,7 +5,7 @@
         <title>Upgrade guide · SonicFrame</title>
         <meta
             name="description"
-            content="Moving to SonicFrame 1.1 from 1.0, 0.8, 0.7 or 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
+            content="Moving to SonicFrame 1.3 from 1.2 back to 0.6: what works differently, what is new, the new names of 0.7, and what changes in 2.0."
         />
     </head>
     <body>
@@ -14,9 +14,10 @@
                 <h1>Upgrade guide</h1>
                 <p class="lede">
                     What changes from one version to the next, the newest first:
-                    from 1.0 to 1.1, from 0.8 to 1.0, from 0.7 to 0.8, then from
-                    0.6 to 0.7. Nothing breaks: every new feature is off until
-                    you turn it on, and every old name keeps working until 2.0.
+                    from 1.2 to 1.3, then back to 0.6. Nothing breaks: every new
+                    feature is off until you turn it on (the one exception, a
+                    sound that cannot load now says so, is listed below), and
+                    every old name keeps working until 2.0.
                 </p>
             </div>
 
@@ -26,6 +27,159 @@
                     <div class="code">
                         <pre><code>npm install sonicframe@1</code></pre>
                         <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>In 1.3: what works differently</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Change</th>
+                                    <th>To keep the old way</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        A sound that cannot load says so: a
+                                        message over the wave, the same words in
+                                        the live region, and an
+                                        <code>error</code> event with a
+                                        <code>SoundError</code>
+                                    </td>
+                                    <td>
+                                        <code>loadError: false</code> and
+                                        <code
+                                            >a11y.loadError.announce:
+                                            false</code
+                                        >
+                                        (the tag's
+                                        <code>load-error="false"</code> and
+                                        <code>a11y-load-error="false"</code>)
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A <code>&lt;sonic-playlist&gt;</code>'s
+                                        own links are inert as well as hidden
+                                        while it stands
+                                    </td>
+                                    <td>
+                                        Nothing to do: they come back as they
+                                        were when the tag leaves the page
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The ceilings on what comes from outside
+                                        go up to a fixed most; an option that
+                                        shipped before keeps a larger value at
+                                        its most until 2.0, and a clip's
+                                        <code>maxSourceSeconds: Infinity</code>
+                                        means 2 hours
+                                    </td>
+                                    <td>
+                                        <a href="./security.html"
+                                            >Limits on everything from
+                                            outside</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>In 1.3: what you can turn on</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>New</th>
+                                    <th>Where to read about it</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        A now-playing bar that keeps the sound
+                                        in reach while the page scrolls
+                                        (<code>nowPlaying</code>,
+                                        <code>&lt;sonic-now-playing&gt;</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./now-playing.html"
+                                            >Now playing</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        A podcast's feed as a playlist
+                                        (<code>feed</code>,
+                                        <code>readFeed</code>,
+                                        <code>loadFeed</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./playlist.html">Playlist</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Waves for sounds of hours, read in
+                                        pieces as they download
+                                        (<code>decode.stream</code>,
+                                        <code>decode-stream</code>), and
+                                        <code>createPeakStream</code> for
+                                        servers
+                                    </td>
+                                    <td>
+                                        <a href="./peaks.html#long-sounds"
+                                            >Long sounds</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Players on pages other people write:
+                                        <code>SONIC_TAGS</code> for your HTML
+                                        filter
+                                    </td>
+                                    <td>
+                                        <a href="./cms.html"
+                                            >On a CMS or WordPress</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        The <code>title</code> and
+                                        <code>artist</code> parts, and
+                                        <code>a11y.sliderName</code> to name the
+                                        slider by its sound
+                                    </td>
+                                    <td>
+                                        <a href="./player-options.html"
+                                            >Player options</a
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Minified files for pages without a
+                                        bundler (<code>sonicframe/min/…</code>)
+                                    </td>
+                                    <td>
+                                        <a href="./installation.html"
+                                            >Installation</a
+                                        >
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 

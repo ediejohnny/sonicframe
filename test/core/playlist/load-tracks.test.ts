@@ -76,6 +76,28 @@ describe('loadTracks', () => {
         ).rejects.toThrow('too large');
     });
 
+    it('takes maxBytes up to 5 MB (past it, 5 MB until 2.0), and maxTracks', async () => {
+        const big = `${M3U}\n#${'x'.repeat(600_000)}`;
+
+        await expect(
+            loadTracks('https://site.test/a.m3u', {
+                fetcher: serve(bytes(big)),
+            }),
+        ).rejects.toThrow('too large');
+        await expect(
+            loadTracks('https://site.test/a.m3u', {
+                fetcher: serve(bytes(big)),
+                maxBytes: 1e12,
+            }),
+        ).resolves.toHaveLength(2);
+        await expect(
+            loadTracks('https://site.test/a.m3u', {
+                fetcher: serve(bytes(M3U)),
+                maxTracks: 1,
+            }),
+        ).resolves.toHaveLength(1);
+    });
+
     it('sends cookies only to the page’s own site by default, and as the app says otherwise', async () => {
         const asked: RequestInit[] = [];
         const fetch = vi.fn((_url: string, init: RequestInit) => {

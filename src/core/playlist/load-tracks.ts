@@ -1,73 +1,43 @@
 /**
- * A list of tracks fetched from an address (JSON or M3U) and read by `readTracks`: the address must
- * pass `safeUrl`, a failed request is refused with its status, and the text is read with a ceiling.
- * Cookies go only to the page's own site unless the app says otherwise.
+ * A list of tracks fetched from an address (JSON or M3U) and read by `readTracks`, through `loadText`:
+ * a checked address, a refused failure, a ceiling, and cookies only to the page's own site unless the
+ * app says otherwise.
  */
 
-import { fetchOk, readCapped, type FetchedResponse } from '../shared/fetch';
-import { oneOf, within } from '../shared/checked';
-import { safeUrl } from '../shared/url';
-import { readTracks, type Track } from './tracks';
+import { heldLimit } from '../shared/limits';
+import { loadText, type LoadTextOptions } from '../shared/load-text';
+import { readTracks, TRACK_TEXT, type Track } from './tracks';
 
-export type LoadTracksOptions = {
+export type LoadTracksOptions = LoadTextOptions & {
     /**
      * The address relative addresses in the list point beside; the list's own address when that is
      * absolute (the playlist hands the page's resolved one).
      */
     base?: string;
-    /** Whether the request carries cookies: `'same-origin'` (the default, for any other value), `'omit'` or `'include'`. */
-    credentials?: RequestCredentials;
-    /** What the request tells the server of the page: the browser's default when left out. */
-    referrerPolicy?: ReferrerPolicy;
-    /** Stops the request (a playlist destroyed). */
-    signal?: AbortSignal;
-    /** The app's own `fetch`, given the address alone. */
-    fetcher?: (url: string) => Promise<FetchedResponse>;
-    /** A larger file is refused. Only lowers 524 288 bytes. */
-    maxBytes?: number;
+    /** The most tracks kept: 1000, from 1 to 10 000 (see `readTracks`). */
+    maxTracks?: number;
+    /** The longest name kept: 120, from 1 to 1000 (see `readTracks`). */
+    maxText?: number;
 };
 
-/** The largest list fetched, in bytes (512 KB). */
-const MAX_BYTES = 524_288;
-
-/** The list's tracks at `url`; refused for an unsafe address, a failed request or a file too large. */
+/**
+ * The list's tracks at `url`; refused for an unsafe address, a failed request or a file too large:
+ * 512 KB, or `maxBytes` up to 5 MB (it shipped able to take any, so past its most it is its most
+ * until 2.0).
+ */
 export async function loadTracks(
     url: string,
     options: LoadTracksOptions = {},
 ): Promise<Track[]> {
-    const checked = safeUrl(url.trim());
+    const maxBytes = heldLimit(options.maxBytes, TRACK_TEXT);
+    const loaded = await loadText(url, options, 'tracks', maxBytes);
 
-    if (checked === null) {
-        throw new TypeError('sonicframe: the tracks address is not allowed');
-    }
-
-    const maxBytes = within(
-        options.maxBytes,
-        MAX_BYTES,
-        1,
-        MAX_BYTES,
-        Math.floor,
-    );
-    const fetcher =
-        options.fetcher ??
-        ((address: string) =>
-            fetch(address, {
-                credentials: oneOf(
-                    options.credentials,
-                    ['same-origin', 'omit', 'include'] as const,
-                    'same-origin',
-                ),
-                referrerPolicy: options.referrerPolicy,
-                signal: options.signal,
-            }));
-    const response = await fetchOk(fetcher, checked, 'tracks');
-    const bytes = await readCapped(
-        response,
-        maxBytes,
-        () => new RangeError('sonicframe: tracks file is too large'),
-    );
-
-    return readTracks(new TextDecoder('utf-8').decode(bytes), {
-        base: options.base ?? (/^https?:/i.test(checked) ? checked : undefined),
+    return readTracks(loaded.text, {
+        base:
+            options.base ??
+            (/^https?:/i.test(loaded.url) ? loaded.url : undefined),
+        maxTracks: options.maxTracks,
+        maxSize: maxBytes,
+        maxText: options.maxText,
     });
 }

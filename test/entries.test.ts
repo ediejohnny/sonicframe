@@ -121,6 +121,7 @@ describe('the names an app or a plugin needs', () => {
     it('names the options and results of the analysis functions', () => {
         expectTypeOf<LevelsOptions>().toEqualTypeOf<{
             windowSeconds?: number;
+            maxWindows?: number;
         }>();
         expectTypeOf<Levels>().toEqualTypeOf<{
             rms: number[];
@@ -130,6 +131,7 @@ describe('the names an app or a plugin needs', () => {
         expectTypeOf<SilencesFromPeaksOptions>().toEqualTypeOf<{
             threshold?: number;
             minDuration?: number;
+            maxSilences?: number;
         }>();
         expectTypeOf<FindSilencesOptions>().toHaveProperty('thresholdDb');
         expectTypeOf<PeakLevel>().toEqualTypeOf<{
@@ -140,6 +142,28 @@ describe('the names an app or a plugin needs', () => {
         }>();
         expectTypeOf<SilenceKind>().toEqualTypeOf<'pause' | 'silence'>();
         expectTypeOf<analysis.RecorderWords>().toEqualTypeOf<RecorderWords>();
+    });
+
+    it('gives a server the playlist and podcast feed readers', () => {
+        const read = analysis.readFeed(
+            '<rss><channel><title>Show</title><item><enclosure url="https://cdn.test/a.mp3"/></item></channel></rss>',
+        );
+
+        expect(read.title).toBe('Show');
+        expect(read.tracks.map((track) => track.src)).toEqual([
+            'https://cdn.test/a.mp3',
+        ]);
+        expect(typeof analysis.loadFeed).toBe('function');
+        expect(typeof analysis.readTracks).toBe('function');
+    });
+
+    it('gives a server the peaks of a sound read in pieces', () => {
+        const stream = analysis.createPeakStream(2);
+        stream.push([0.25, 0]);
+        stream.push([0, -0.5]);
+
+        expect(stream.peaks()).toEqual([0.5, 1]);
+        expect(main.createPeakStream).toBe(analysis.createPeakStream);
     });
 
     it('names the recorder screen choices, with their lists', () => {

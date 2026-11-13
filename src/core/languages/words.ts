@@ -63,6 +63,17 @@ export type PlayerLabels = {
     closeChapters: string;
     /** Said at the first play of a sound that resumes where it was left: `{time}`. */
     resume: string;
+    /** Shown and said when the sound cannot be fetched (the network, the address). */
+    soundFailed: string;
+    /**
+     * Shown and said when the browser cannot play the sound (`MediaError` code 4): its format, or a
+     * missing file, which browsers report the same way.
+     */
+    soundUnsupported: string;
+    /** Shown and said when the sound's file is damaged and cannot be decoded. */
+    soundDecode: string;
+    /** Shown and said when the sound stopped loading before it could play. */
+    soundAborted: string;
 };
 
 /** The phrases of a description. `{name}` marks are filled in; a mark that is not known is dropped. */
@@ -224,17 +235,36 @@ export type PlaylistWords = {
     untitled: string;
 };
 
+/** The now-playing bar (`nowPlaying`). */
+export type NowPlayingWords = {
+    /** The bar's name, as a region of the page. */
+    bar: string;
+    close: string;
+    /** The button that scrolls back to the player. */
+    back: string;
+};
+
 /** The player's labels added after 1.0. */
-type LaterPlayer = 'previousTrack' | 'nextTrack';
+type LaterPlayer =
+    | 'previousTrack'
+    | 'nextTrack'
+    | 'soundFailed'
+    | 'soundUnsupported'
+    | 'soundDecode'
+    | 'soundAborted';
 
 /**
  * Every word of SonicFrame in one language, as a language given to `registerLanguage` is written:
  * the phrases added after 1.0 may be left out, and are then said in English.
  */
-export type Words = Omit<CompleteWords, 'player' | 'playlist'> & {
+export type Words = Omit<
+    CompleteWords,
+    'player' | 'playlist' | 'nowPlaying'
+> & {
     player: Omit<PlayerLabels, Borrowed | LaterPlayer> &
         Partial<Pick<PlayerLabels, LaterPlayer>>;
     playlist?: Partial<PlaylistWords>;
+    nowPlaying?: Partial<NowPlayingWords>;
 };
 
 /** Every word of SonicFrame in one language, each phrase there: the words a language gives (`wordsFor`). */
@@ -277,4 +307,5 @@ export type CompleteWords = {
     player: Omit<PlayerLabels, Borrowed>;
     recorder: RecorderWords;
     playlist: PlaylistWords;
+    nowPlaying: NowPlayingWords;
 };

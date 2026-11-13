@@ -71,6 +71,23 @@ describe('the media controls of <sonic-player>', () => {
         expect(session.metadata?.title).toBe('Evening note');
     });
 
+    it('take the artist as the artist when there is no media-artist', () => {
+        const session = stubSession();
+        const element = shown({
+            src: 'dusk.mp3',
+            artist: 'Ana',
+            'media-session': '',
+            'media-artist': 'Band',
+        });
+        play(element);
+
+        expect(session.metadata?.artist).toBe('Band');
+
+        element.removeAttribute('media-artist');
+
+        expect(session.metadata?.artist).toBe('Ana');
+    });
+
     it('show a changed attribute at once, without building the player again', () => {
         const session = stubSession();
         const element = shown({

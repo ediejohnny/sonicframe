@@ -9,6 +9,8 @@
  * `sonicframe:send` and counts as sent, or with `upload-url` sends it to that address first.
  */
 
+import { RECORDER_ATTRIBUTES } from '../../core/tags/tag-attributes';
+import { TAG_RECORDING_SECONDS } from '../../core/recording/recording';
 import type { RecorderUpload } from '../../core/recording/upload';
 import {
     attributeNumber,
@@ -24,49 +26,7 @@ import type {
     RecorderScreenOptions,
 } from '../screen/screen-options';
 
-/** The attributes the tag reads (the old names `max`, `window`, `keep` and `record-blink` too, until 2.0). */
-export const RECORDER_ATTRIBUTES: readonly string[] = Object.freeze([
-    'max-seconds',
-    'max',
-    'live',
-    'live-seconds',
-    'window',
-    'theme',
-    'palette',
-    'wave',
-    'font',
-    'font-src',
-    'font-stylesheet',
-    'hold',
-    'after-send',
-    'keep',
-    'idle-parts',
-    'recording-parts',
-    'review-parts',
-    'actions',
-    'after-stop',
-    'align',
-    'icon-record',
-    'icon-stop',
-    'icon-pause',
-    'icon-resume',
-    'icon-discard',
-    'icon-send',
-    'icon-cancel',
-    'upload-url',
-    'upload-method',
-    'upload-field',
-    'cancel-send',
-    'record-style',
-    'record-color',
-    'rec-place',
-    'rec-blink',
-    'record-blink',
-    'mic-style',
-    'mic-color',
-    'a11y-lang',
-    'a11y-announce-every',
-]);
+export { RECORDER_ATTRIBUTES };
 
 const ICONS: readonly RecorderIcon[] = [
     'record',
@@ -145,9 +105,14 @@ export function recorderOptionsOf(
 ): Omit<RecorderScreenOptions, 'container'> {
     const get = (name: string): string | null => element.getAttribute(name);
     const afterSend = get('after-send');
+    const seconds = attributeNumber(get('max-seconds') ?? get('max'));
 
     return {
-        maxSeconds: attributeNumber(get('max-seconds') ?? get('max')),
+        // A tag keeps to the hour it always had; longer is for an app's code.
+        maxSeconds:
+            seconds === undefined
+                ? undefined
+                : Math.min(seconds, TAG_RECORDING_SECONDS),
         live: get('live') === 'fit' ? 'fit' : 'scroll',
         liveSeconds: attributeNumber(get('live-seconds') ?? get('window')),
         theme: get('theme') ?? undefined,

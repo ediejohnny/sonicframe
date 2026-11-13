@@ -12,33 +12,10 @@ import type {
 import type { BackgroundAnimation } from '../../core/player/background-animation';
 import type { PlayerLook } from '../../core/player/look';
 
-/** An attribute of the tag's background. */
-export type BackgroundAttribute =
-    | 'background-color'
-    | 'background-gradient'
-    | 'background-image'
-    | 'background-options'
-    | 'background-angle'
-    | 'background-blur'
-    | 'background-opacity'
-    | 'background-effects'
-    | 'background-animation'
-    | 'background-duration';
-
-/** The tag's attributes for the background. */
-export const BACKGROUND_ATTRIBUTES: readonly BackgroundAttribute[] =
-    Object.freeze([
-        'background-color',
-        'background-gradient',
-        'background-image',
-        'background-options',
-        'background-angle',
-        'background-blur',
-        'background-opacity',
-        'background-effects',
-        'background-animation',
-        'background-duration',
-    ]);
+export {
+    BACKGROUND_ATTRIBUTES,
+    type BackgroundAttribute,
+} from '../../core/tags/tag-attributes';
 
 /** The words that place an image. */
 const PLACES = ['top', 'bottom', 'left', 'right', 'center'];

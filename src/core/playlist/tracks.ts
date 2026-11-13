@@ -5,6 +5,7 @@
  * line, and the counts are capped. A track without a usable address is left out.
  */
 
+import { limitOf, TEXT_LENGTH, type Limit } from '../shared/limits';
 import { cleanText } from '../shared/text';
 import { safeUrl } from '../shared/url';
 import { textLines } from '../shared/vtt';
@@ -51,19 +52,38 @@ export type ReadTracksOptions = {
      * it. Left out, relative addresses stay as they are, relative to the page.
      */
     base?: string;
+    /** The most tracks kept: 1000, from 1 to 10 000; past either end, a `RangeError`. */
+    maxTracks?: number;
+    /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
+    maxSize?: number;
+    /**
+     * The longest title, artist, album or id kept, in characters: 120, from 1 to 1000; past either
+     * end, a `RangeError`.
+     */
+    maxText?: number;
 };
 
 /** The formats `writeTracks` writes. */
 export type TracksFormat = 'json' | 'm3u';
 
-/** The most tracks kept. */
-export const MAX_TRACKS = 1000;
+/** The most tracks kept: 1000, up to 10 000 (some podcasts have thousands of episodes). */
+export const TRACK_COUNT: Limit = {
+    value: 1000,
+    least: 1,
+    most: 10_000,
+    whole: true,
+};
 
-/** The longest list text read, in characters (512 KB). */
-const MAX_TEXT = 524_288;
+/** The default of `TRACK_COUNT`. */
+export const MAX_TRACKS: number = TRACK_COUNT.value;
 
-/** The longest title, artist, album or id, in characters. */
-const MAX_NAME = 120;
+/** The longest list text read, in characters: 512 KB, up to 5 MB (a feed's own default). */
+export const TRACK_TEXT: Limit = {
+    value: 524_288,
+    least: 1,
+    most: 5_242_880,
+    whole: true,
+};
 
 /** The most peaks one track carries as numbers. */
 const MAX_PEAKS = 1_000_000;
@@ -76,13 +96,16 @@ function tooLarge(): RangeError {
     return new RangeError('sonicframe: list of tracks is too large');
 }
 
-/** A text field cleaned to one safe line, or empty. */
-function name(value: unknown): string {
-    return typeof value === 'string' ? cleanText(value, MAX_NAME) : '';
+/** A text field cleaned to one safe line of at most `longest` characters, or empty. */
+function name(value: unknown, longest: number): string {
+    return typeof value === 'string' ? cleanText(value, longest) : '';
 }
 
 /** An address that passes `safeUrl`, pointing beside `base` when it is relative and a base is given. */
-function address(value: unknown, base: string | undefined): string | null {
+export function address(
+    value: unknown,
+    base: string | undefined,
+): string | null {
     if (typeof value !== 'string') {
         return null;
     }
@@ -140,7 +163,7 @@ function peaksOf(
  */
 function trackOf(
     fields: Readonly<Record<string, unknown>>,
-    base: string | undefined,
+    { base, longest }: Reading,
 ): Track | null {
     const src = address(fields.src, base);
 
@@ -150,29 +173,33 @@ function trackOf(
 
     return Object.freeze({
         src,
-        title: name(fields.title),
-        artist: name(fields.artist),
-        album: name(fields.album),
+        title: name(fields.title, longest),
+        artist: name(fields.artist, longest),
+        album: name(fields.album, longest),
         artwork: address(fields.artwork, base),
         peaks: peaksOf(fields.peaks, base),
         duration: seconds(fields.duration),
         chapters: address(fields.chapters, base),
         transcript: address(fields.transcript, base),
-        id: name(fields.id) || src,
+        id: name(fields.id, longest) || src,
     });
 }
 
-/** Up to `MAX_TRACKS` usable tracks from a list, read item by item. */
-function collect(items: readonly unknown[], base: string | undefined): Track[] {
+/** Where a list's tracks point, and how many are kept. */
+type Reading = { base: string | undefined; most: number; longest: number };
+
+/** Up to `most` usable tracks from a list, read item by item. */
+function collect(items: readonly unknown[], reading: Reading): Track[] {
+    const { most } = reading;
     const tracks: Track[] = [];
 
     for (const item of items) {
-        if (tracks.length === MAX_TRACKS) {
+        if (tracks.length === most) {
             break;
         }
 
         if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
-            const track = trackOf(item as Record<string, unknown>, base);
+            const track = trackOf(item as Record<string, unknown>, reading);
 
             if (track !== null) {
                 tracks.push(track);
@@ -184,16 +211,16 @@ function collect(items: readonly unknown[], base: string | undefined): Track[] {
 }
 
 /** The tracks of parsed JSON: a list, or `{ tracks: [...] }`. */
-function readJson(value: unknown, base: string | undefined): Track[] {
+function readJson(value: unknown, reading: Reading): Track[] {
     if (Array.isArray(value)) {
-        return collect(value, base);
+        return collect(value, reading);
     }
 
     if (typeof value === 'object' && value !== null) {
         const list = (value as { tracks?: unknown }).tracks;
 
         if (Array.isArray(list)) {
-            return collect(list, base);
+            return collect(list, reading);
         }
     }
 
@@ -235,7 +262,7 @@ const EXTRA = /^#(EXTART|EXTALB|EXTIMG):(.*)$/i;
  * `#EXTINF` (length, then `Artist - Title`), `#EXTART`, `#EXTALB` and `#EXTIMG` lines before it. When
  * `#EXTART` names the artist, the `#EXTINF` text is the whole title.
  */
-function readM3u(text: string, base: string | undefined): Track[] {
+function readM3u(text: string, reading: Reading): Track[] {
     const items: Record<string, unknown>[] = [];
     let pending: Record<string, unknown> = {};
 
@@ -278,12 +305,12 @@ function readM3u(text: string, base: string | undefined): Track[] {
         items.push({ ...titled(pending), src: line });
         pending = {};
 
-        if (items.length === MAX_TRACKS) {
+        if (items.length === reading.most) {
             break;
         }
     }
 
-    return collect(items, base);
+    return collect(items, reading);
 }
 
 /** The `#EXTINF` text as the title, split as `Artist - Title` unless `#EXTART` named the artist. */
@@ -310,20 +337,24 @@ function titled(
 /**
  * Reads tracks from a list of `TrackInput`, SonicFrame's JSON (`{ tracks: [...] }` or a list, as text
  * or already parsed) or an M3U/M3U8 text. They come back in the order written, at most
- * `MAX_TRACKS`, each one cleaned (see `Track`); one without a usable address is left out. Anything
- * else throws a `TypeError`; a text over 512 KB throws a `RangeError`.
+ * `maxTracks`, each one cleaned (see `Track`); one without a usable address is left out. Anything
+ * else throws a `TypeError`; a text over `maxSize` throws a `RangeError`.
  */
 export function readTracks(
     input: unknown,
     options: ReadTracksOptions = {},
 ): Track[] {
-    const base = typeof options.base === 'string' ? options.base : undefined;
+    const reading: Reading = {
+        base: typeof options.base === 'string' ? options.base : undefined,
+        most: limitOf('maxTracks', options.maxTracks, TRACK_COUNT),
+        longest: limitOf('maxText', options.maxText, TEXT_LENGTH),
+    };
 
     if (typeof input !== 'string') {
-        return readJson(input, base);
+        return readJson(input, reading);
     }
 
-    if (input.length > MAX_TEXT) {
+    if (input.length > limitOf('maxSize', options.maxSize, TRACK_TEXT)) {
         throw tooLarge();
     }
 
@@ -338,14 +369,14 @@ export function readTracks(
             throw notTracks();
         }
 
-        return readJson(parsed, base);
+        return readJson(parsed, reading);
     }
 
     if (text === '') {
         throw notTracks();
     }
 
-    return readM3u(text, base);
+    return readM3u(text, reading);
 }
 
 /** A track as SonicFrame's JSON writes it: only what is given. */
@@ -406,7 +437,7 @@ function m3uTrack(track: Track): string[] {
 
 /**
  * Writes tracks as SonicFrame's JSON or as M3U, which `readTracks` reads back the same. The tracks
- * are cleaned as `readTracks` cleans them first (at most `MAX_TRACKS`), so a track built by hand can
+ * are cleaned as `readTracks` cleans them first (at most 10 000, the most it may keep), so a track built by hand can
  * never break a line of the file nor carry an address `readTracks` would refuse. M3U keeps the
  * address, title, artist, album, picture and length (a length too long for plain digits is written
  * as unknown); the peaks, the chapters, the transcript and the id go only in JSON.
@@ -415,7 +446,11 @@ export function writeTracks(
     tracks: readonly Track[],
     format: TracksFormat = 'json',
 ): string {
-    const clean = collect(tracks, undefined);
+    const clean = collect(tracks, {
+        base: undefined,
+        most: TRACK_COUNT.most,
+        longest: TEXT_LENGTH.most,
+    });
 
     if (format === 'm3u') {
         return ['#EXTM3U', ...clean.flatMap(m3uTrack), ''].join('\n');

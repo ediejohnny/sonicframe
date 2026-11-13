@@ -180,6 +180,24 @@
                                         seconds, from 0.001 to 1.
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>maxWindows</code></td>
+                                    <td><code>200000</code></td>
+                                    <td>
+                                        The most windows measured, from 1 to
+                                        2,000,000; a longer sound widens them.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSilences</code></td>
+                                    <td><code>10000</code></td>
+                                    <td>
+                                        The most silences kept, from 1 to
+                                        100,000. Past either end of it or of
+                                        <code>maxWindows</code>, a
+                                        <code>RangeError</code> names it.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -214,6 +232,14 @@
                                     <td><code>0.4</code></td>
                                     <td>
                                         The shortest silence kept, in seconds.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSilences</code></td>
+                                    <td><code>10000</code></td>
+                                    <td>
+                                        The most silences kept, from 1 to
+                                        100,000.
                                     </td>
                                 </tr>
                             </tbody>
@@ -276,13 +302,7 @@
                         colors, with the sound. It resolves with
                         <code>{ blob, mimeType, duration }</code>.
                     </p>
-                    <div class="code">
-                        <pre><code>button.addEventListener('click', async () =&gt; {
-    const clip = await frame.exportClip({ start: 8, end: 16, caption: 'The second verse' });
-    download(clip.blob, `verse.${clip.mimeType.includes('mp4') ? 'mp4' : 'webm'}`);
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="analysis-clip.js"></div>
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -308,8 +328,34 @@
                                         <code>fps</code>
                                     </td>
                                     <td>
-                                        The video's size and frame rate
-                                        (capped).
+                                        The video's size and frame rate: 1280 ×
+                                        720 at 30 by default, up to 3840 × 2160
+                                        at 60.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSeconds</code></td>
+                                    <td>
+                                        The longest clip: 120 seconds, up to
+                                        600.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>bitrate</code></td>
+                                    <td>
+                                        The video's bits a second: 8,000,000,
+                                        from 100,000 to 50,000,000.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxBytes</code></td>
+                                    <td>
+                                        The largest source downloaded and the
+                                        largest clip: 100 MiB, up to 1 GiB. Past
+                                        either end of <code>maxSeconds</code>,
+                                        <code>bitrate</code> or
+                                        <code>maxBytes</code>, a
+                                        <code>RangeError</code> names it.
                                     </td>
                                 </tr>
                                 <tr>
@@ -322,8 +368,8 @@
                                 <tr>
                                     <td><code>maxSourceSeconds</code></td>
                                     <td>
-                                        The longest source decoded (600 by
-                                        default).
+                                        The longest source decoded: 600 seconds
+                                        by default, up to 7200 (2 hours).
                                     </td>
                                 </tr>
                                 <tr>
@@ -370,8 +416,9 @@
                         The source is decoded whole before the clip is cut,
                         about 23 MB of memory per minute of stereo audio, so it
                         is limited to <code>maxSourceSeconds</code>. Raise it
-                        where memory allows (<code>Infinity</code> lifts it), or
-                        pass a <code>Blob</code> or <code>AudioBuffer</code>
+                        where memory allows, up to 2 hours (a larger value is 2
+                        hours), or pass a <code>Blob</code> or
+                        <code>AudioBuffer</code>
                         holding just the part to clip.
                     </p>
                 </section>

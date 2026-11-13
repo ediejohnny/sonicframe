@@ -6,11 +6,14 @@
  * list at `src`. Every attribute of `<sonic-player>` but the sound's own sets each track's player.
  */
 
+import { FEED_SIZE } from '../../core/playlist/feed';
 import type { TrackInput } from '../../core/playlist/tracks';
+import { XML_LIMITS } from '../../core/playlist/xml-limits';
+import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf } from '../../core/shared/checked';
+import { tagLimit, type Limit } from '../../core/shared/limits';
 import { attributeNumber } from '../../dom/shared/custom-element';
 import { optionsOf } from '../../player/element/element-attributes';
-import { PLAYER_ATTRIBUTES } from '../../player/element/element';
 import type {
     PlaylistButton,
     PlaylistList,
@@ -18,52 +21,7 @@ import type {
     PlaylistPlayer,
 } from '../playlist/playlist-options';
 
-/** The playlist's own attributes. */
-const OWN_ATTRIBUTES = [
-    'src',
-    'start',
-    'layout',
-    'advance',
-    'repeat',
-    'shuffle',
-    'gap',
-    'previous-restarts',
-    'play-on-select',
-    'list',
-    'list-place',
-    'list-placement',
-    'list-side',
-    'list-width',
-    'list-max-height',
-    'list-header',
-    'list-stay-open',
-    'list-backdrop',
-    'list-animation',
-    'list-palette',
-    'buttons',
-    'remember-key',
-    'fetch-credentials',
-    'a11y-label',
-    'a11y-announce',
-    'a11y-lang',
-] as const;
-
-/** The player's attributes that belong to the sound, which each track brings instead. */
-const SOUND_ATTRIBUTES = new Set([
-    'src',
-    'preload',
-    'peaks',
-    'label',
-    'chapters',
-]);
-
-/** Every attribute the tag reads. */
-export const PLAYLIST_ATTRIBUTES: readonly string[] = Object.freeze([
-    ...new Set([
-        ...OWN_ATTRIBUTES,
-        ...PLAYER_ATTRIBUTES.filter((name) => !SOUND_ATTRIBUTES.has(name)),
-    ]),
-]);
+export { PLAYLIST_ATTRIBUTES } from '../../core/tags/tag-attributes';
 
 /** An on-or-off attribute that is on unless it says `false`; undefined without it. */
 function onUnlessFalse(value: string | null): boolean | undefined {
@@ -140,7 +98,37 @@ function playerOf(element: Element): PlaylistPlayer {
     return { ...player, a11y: { ...player.a11y, label: undefined } };
 }
 
+/**
+ * The tag's feed: its address, order and limit, and its reader's ceilings, which a tag may only lower
+ * (see `tagLimit`); raising one is for an app's code.
+ */
+function feedOf(get: (name: string) => string | null): PlaylistOptions['feed'] {
+    const src = get('feed');
+    const ceiling = (name: string, limit: Limit): number | undefined =>
+        tagLimit(get(`feed-${name}`), limit);
+
+    return src === null
+        ? undefined
+        : {
+              src,
+              order: (get('feed-order') ?? undefined) as 'newest' | 'oldest',
+              limit: attributeNumber(get('feed-limit')),
+              maxSize: ceiling('max-size', FEED_SIZE),
+              maxDepth: ceiling('max-depth', XML_LIMITS.maxDepth),
+              maxElements: ceiling('max-elements', XML_LIMITS.maxElements),
+              maxAttributes: ceiling(
+                  'max-attributes',
+                  XML_LIMITS.maxAttributes,
+              ),
+              maxNameLength: ceiling(
+                  'max-name-length',
+                  XML_LIMITS.maxNameLength,
+              ),
+          };
+}
+
 /** Everything the tag says, as the playlist's options (all but the container). */
+
 export function playlistOptionsOf(
     element: Element,
 ): Omit<PlaylistOptions, 'container'> {
@@ -150,8 +138,12 @@ export function playlistOptionsOf(
     const remember = element.hasAttribute('remember');
 
     return {
-        tracks: src === null ? linkTracks(element) : undefined,
+        tracks:
+            src === null && get('feed') === null
+                ? linkTracks(element)
+                : undefined,
         src: src ?? undefined,
+        feed: feedOf(get),
         // A tag's words may come from whoever writes a page's content: it may keep cookies home or leave
         // them out, never send them to another site (an app's code can, with `fetch.credentials`).
         fetch: {
@@ -176,6 +168,12 @@ export function playlistOptionsOf(
                 : (buttons.split(/\s+/) as PlaylistButton[]),
         remember: remember
             ? { key: get('remember-key') ?? undefined }
+            : undefined,
+        nowPlaying: element.hasAttribute('now-playing')
+            ? {
+                  when: (get('now-playing') ||
+                      undefined) as NowPlayingOptions['when'],
+              }
             : undefined,
         player: playerOf(element),
         a11y: {

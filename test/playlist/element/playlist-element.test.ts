@@ -79,6 +79,24 @@ describe('<sonic-playlist>', () => {
         expect(element.playlist).toBeNull();
     });
 
+    it('makes its links inert while the playlist stands, so a page that shows [hidden] cannot reach them', () => {
+        const element = tag(
+            {},
+            '<a href="javascript:alert(1)">Bad</a><a href="https://site.test/ok.mp3">Ok</a>' +
+                '<a href="https://site.test/kept.mp3" inert>Kept</a>',
+        );
+        const [bad, ok, kept] = [
+            ...element.querySelectorAll(':scope > a'),
+        ] as HTMLElement[];
+
+        expect([bad.inert, ok.inert, kept.inert]).toEqual([true, true, true]);
+
+        element.remove();
+
+        expect([bad.inert, ok.inert, kept.inert]).toEqual([false, false, true]);
+        expect([bad.hidden, ok.hidden]).toEqual([false, false]);
+    });
+
     it('leaves out a link whose address is not a web address', () => {
         const element = tag(
             {},

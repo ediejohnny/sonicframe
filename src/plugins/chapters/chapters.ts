@@ -13,6 +13,7 @@
 import {
     chapterAt,
     chapterEnds,
+    chapterLimits,
     loadChapters,
     nextChapter,
     readChapters,
@@ -217,9 +218,9 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
     function begin(current: PluginHost): void {
         try {
             if (options.items !== undefined) {
-                apply(readChapters(options.items));
+                apply(readChapters(options.items, chapterLimits(options.load)));
             } else if (options.text !== undefined) {
-                apply(readChapters(options.text));
+                apply(readChapters(options.text, chapterLimits(options.load)));
             } else if (options.src !== undefined) {
                 loadChapters(options.src, options.load).then(apply, (error) =>
                     host?.reportError(error),
@@ -267,7 +268,11 @@ export function chapters(options: ChaptersOptions = {}): ChaptersPlugin {
         },
 
         set(input): void {
-            apply(input === null ? [] : readChapters(input));
+            apply(
+                input === null
+                    ? []
+                    : readChapters(input, chapterLimits(options.load)),
+            );
         },
 
         load(url): Promise<void> {

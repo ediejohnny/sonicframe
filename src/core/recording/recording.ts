@@ -7,6 +7,7 @@
  */
 
 import { within } from '../shared/checked';
+import type { Limit } from '../shared/limits';
 
 /** Where the recorder's screen is (the `Recorder` without a screen has its own `RecorderPhase`). */
 export type RecorderScreenState =
@@ -118,10 +119,40 @@ export const DEFAULT_RECORD_TYPES: readonly string[] = Object.freeze([
     'audio/ogg;codecs=opus',
 ]);
 
-/** The largest recording kept, in bytes (100 MiB); past it, recording stops with an error. */
-export const MAX_RECORDING_BYTES = 104_857_600;
+/**
+ * The largest recording kept, in bytes; past it, recording stops with an error: 100 MiB, up to 1 GiB
+ * (half the 2 GB a desktop Chrome keeps in memory for files; a phone keeps far less).
+ */
+export const RECORDING_BYTES: Limit = {
+    value: 104_857_600,
+    least: 1,
+    most: 1_073_741_824,
+    whole: true,
+};
 
-/** How long a recording runs before it stops on its own, in seconds: 300 by default, from 1 to 3600. */
+/** The default of `RECORDING_BYTES`. */
+export const MAX_RECORDING_BYTES: number = RECORDING_BYTES.value;
+
+/**
+ * How long a recording runs before it stops on its own, in seconds: 300, from 1 to 21 600 (6 hours,
+ * as long as the best known online recorders take). A tag keeps to 3600, as it always did.
+ */
+export const RECORDING_SECONDS: Limit = {
+    value: 300,
+    least: 1,
+    most: 21_600,
+    whole: false,
+};
+
+/** The most a tag's time limit may be, in seconds; longer is for an app's code. */
+export const TAG_RECORDING_SECONDS = 3600;
+
+/**
+ * A recording's time limit, kept from 1 to 21 600 seconds: it shipped taking any number, so past its
+ * ends it is kept at them until 2.0 instead of refused.
+ */
 export function recordSeconds(asked: unknown): number {
-    return within(asked, 300, 1, 3600);
+    const { value, least, most } = RECORDING_SECONDS;
+
+    return within(asked, value, least, most);
 }

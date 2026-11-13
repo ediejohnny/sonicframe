@@ -38,6 +38,12 @@ export type Part =
     /** The track before and after, shown only for a player the app gives `tracks`. */
     | 'previousTrack'
     | 'nextTrack'
+    /**
+     * The sound's name (the player's accessible name, or its file's name), and the player's
+     * `artist`, shown as text; hidden from screen readers, which hear the name on the player itself.
+     */
+    | 'title'
+    | 'artist'
     | 'slot'
     | 'spacer'
     /** The old name of `previousChapter`, read as it until 2.0. */
@@ -169,6 +175,13 @@ export type PlayerLook = {
     nameFadeStart: boolean;
     /** A long name shows in full in a tooltip while the mouse is on it. */
     nameTooltip: boolean;
+    /** The `title` part of a player without a name shows its file's name ("little-elf.mp3" as "Little elf"). */
+    titleFromFile: boolean;
+    /**
+     * The widest the `title` and `artist` parts grow, in rem (2 to 40). Each takes its text's width up
+     * to this, and gives up its room before the wave does.
+     */
+    nameMaxWidth: number;
     /**
      * A chapter's name too long for its room walks across it, pauses at its end and starts over;
      * off, it stays still and ends as `nameOverflow` says. Never with reduced motion.
@@ -230,6 +243,8 @@ export const PART_NAMES: readonly Part[] = Object.freeze([
     'chapters',
     'previousTrack',
     'nextTrack',
+    'title',
+    'artist',
     'slot',
     'spacer',
 ] as const);
@@ -274,6 +289,8 @@ export const DEFAULT_LOOK: Readonly<PlayerLook> = Object.freeze<PlayerLook>({
     nameFade: 1.5,
     nameFadeStart: true,
     nameTooltip: false,
+    titleFromFile: true,
+    nameMaxWidth: 12,
     marquee: false,
     marqueeType: 'loop',
     marqueeGap: 2.5,

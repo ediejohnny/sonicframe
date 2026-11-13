@@ -46,6 +46,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'themes.html', name: 'Theme gallery' },
             { file: 'media-session.html', name: 'Lock screen and media keys' },
             { file: 'playlist.html', name: 'Playlist' },
+            { file: 'now-playing.html', name: 'Now playing' },
             { file: 'element.html', name: 'The HTML tag' },
         ],
     },
@@ -109,6 +110,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'plugin-api.html', name: 'Plugin API' },
             { file: 'css-variables.html', name: 'CSS variables' },
             { file: 'security.html', name: 'Security' },
+            { file: 'cms.html', name: 'On a CMS or WordPress' },
         ],
     },
 ];

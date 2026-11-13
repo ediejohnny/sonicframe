@@ -85,6 +85,10 @@ export const ES: CompleteWords = {
         nextTrack: 'Pista siguiente',
         closeChapters: 'Cerrar los capítulos',
         resume: 'Continuando desde {time}',
+        soundFailed: 'No se pudo cargar el sonido',
+        soundUnsupported: 'Este sonido no se puede reproducir aquí',
+        soundDecode: 'El archivo del sonido está dañado',
+        soundAborted: 'El sonido dejó de cargarse',
     },
     recorder: {
         recorder: 'Grabadora de voz',
@@ -124,5 +128,10 @@ export const ES: CompleteWords = {
         repeatOne: 'Repetir: una',
         playing: 'Reproduciendo: {title}, {place} de {count}',
         untitled: 'Pista {place}',
+    },
+    nowPlaying: {
+        bar: 'Reproduciendo ahora',
+        close: 'Cerrar la barra',
+        back: 'Volver al reproductor',
     },
 };

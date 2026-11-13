@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>On a CMS or WordPress · SonicFrame</title>
+        <meta
+            name="description"
+            content="Let the people who write a site's pages place SonicFrame players safely: the HTML filter to allow, and how a WordPress shortcode or block writes the tags."
+        />
+    </head>
+    <body>
+        <main class="content">
+            <div class="page-head">
+                <h1>On a CMS or WordPress</h1>
+                <p class="lede">
+                    When other people write a site's pages, they can place
+                    players with SonicFrame's tags. Nothing they write in a
+                    tag's text or attributes runs as code; your site's HTML
+                    filter decides which tags they may write at all.
+                </p>
+            </div>
+
+            <div class="doc">
+                <section class="section">
+                    <h2>Who does what</h2>
+                    <ul>
+                        <li>
+                            <strong>SonicFrame</strong> shows every title, label
+                            and attribute as text, never as HTML, checks every
+                            address (only http, https or relative), and a tag
+                            can never loosen what your code set (see
+                            <a href="./security.html">Security</a>).
+                        </li>
+                        <li>
+                            <strong>Your HTML filter</strong> (WordPress's KSES,
+                            DOMPurify, your server's own) decides what an author
+                            may write. A
+                            <code>&lt;sonic-player onclick="…"&gt;</code> or a
+                            <code>&lt;a href="javascript:…"&gt;</code> would be
+                            run by the browser before SonicFrame ever sees it,
+                            so the filter allows the <code>sonic-</code> tags
+                            with their attributes and nothing named
+                            <code>on…</code>.
+                        </li>
+                        <li>
+                            <strong>Your own code</strong> never writes
+                            SonicFrame's results into the page as HTML: a
+                            <code>track.title</code> or a feed's
+                            <code>title</code> holds the text as it came, markup
+                            included. Use <code>textContent</code>.
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2>The tags to allow</h2>
+                    <p>
+                        <code>SONIC_TAGS</code> (in <code>sonicframe</code> and
+                        <code>sonicframe/analysis</code>) lists each tag with
+                        the attributes it reads, the children that count (a
+                        playlist's links) and the starts of names it reads too
+                        (the recorder's <code>icon-</code>). None starts with
+                        <code>on</code>. The few marked
+                        <code>trustedOnly</code> send what a visitor does to an
+                        address the author picks: <code>upload-url</code> sends
+                        a visitor's recording there. Allow those only to authors
+                        you trust.
+                    </p>
+                    <p>With DOMPurify, on a server or in the page:</p>
+                    <div class="code">
+                        <pre><code>import DOMPurify from 'dompurify';
+import { SONIC_TAGS } from 'sonicframe/analysis';
+
+const tags = new Set(SONIC_TAGS.map((tag) =&gt; tag.tag));
+const names = new Set(
+    SONIC_TAGS.flatMap((tag) =&gt;
+        tag.attributes.filter((name) =&gt; !tag.trustedOnly.includes(name)),
+    ),
+);
+const prefixes = SONIC_TAGS.flatMap((tag) =&gt; tag.prefixes);
+
+const clean = DOMPurify.sanitize(html, {
+    CUSTOM_ELEMENT_HANDLING: {
+        tagNameCheck: (name) =&gt; tags.has(name),
+        attributeNameCheck: (name) =&gt;
+            names.has(name) || prefixes.some((start) =&gt; name.startsWith(start)),
+        allowCustomizedBuiltInElements: false,
+    },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>WordPress: the filter</h2>
+                    <p>
+                        WordPress lets authors and contributors write only the
+                        HTML its KSES filter allows. This adds SonicFrame's tags
+                        to what a post may hold, with
+                        <code>upload-url</code> left out; add it to the
+                        recorder's list only if every author can be trusted with
+                        your visitors' recordings. For the recorder's own
+                        buttons, add <code>icon-</code> and the name of each
+                        action your site uses.
+                    </p>
+                    <div class="code">
+                        <pre><code>add_filter( 'wp_kses_allowed_html', 'sonicframe_allowed_html', 10, 2 );
+
+function sonicframe_allowed_html( $allowed, $context ) {
+    if ( 'post' !== $context ) {
+        return $allowed;
+    }
+
+    $tags = array(
+        'sonic-player' =&gt; array(
+            'src', 'preload', 'peaks', 'peaks-channel', 'peaks-max', 'peaks-normalize', 'theme',
+            'palette', 'wave', 'font', 'font-src', 'font-stylesheet', 'label', 'artist', 'line',
+            'meta', 'volume', 'spectrogram', 'zoom', 'zoom-max', 'minimap', 'chapters', 'chapters-options',
+            'chapter-options', 'media-session', 'media-title', 'media-artist', 'media-album',
+            'media-artwork', 'keys', 'remember', 'remember-key', 'a11y-lang', 'a11y-label',
+            'a11y-chapters', 'a11y-description', 'a11y-zoom', 'a11y-minimap', 'a11y-keys',
+            'a11y-remember', 'load-error', 'a11y-load-error', 'a11y-slider-name', 'decode-stream',
+            'decode-stream-max-bytes', 'decode-stream-max-seconds', 'background-color',
+            'background-gradient',
+            'background-image',
+            'background-options', 'background-angle', 'background-blur', 'background-opacity',
+            'background-effects', 'background-animation', 'background-duration', 'time-precision',
+            'time-fps', 'time-hours', 'time-decimal', 'time-format',
+        ),
+        'sonic-playlist' =&gt; array(
+            'src', 'feed', 'feed-order', 'feed-limit', 'feed-max-size', 'feed-max-depth',
+            'feed-max-elements', 'feed-max-attributes', 'feed-max-name-length', 'start', 'layout',
+            'advance', 'repeat', 'shuffle', 'gap', 'previous-restarts', 'play-on-select', 'list',
+            'list-place', 'list-placement', 'list-side', 'list-width', 'list-max-height',
+            'list-header', 'list-stay-open', 'list-backdrop', 'list-animation', 'list-palette',
+            'buttons', 'remember-key', 'now-playing', 'fetch-credentials', 'a11y-label',
+            'a11y-announce', 'a11y-lang', 'peaks-channel', 'peaks-max', 'peaks-normalize', 'theme',
+            'palette', 'wave', 'font', 'font-src', 'font-stylesheet', 'line', 'meta', 'volume',
+            'spectrogram', 'zoom', 'zoom-max', 'minimap', 'chapters-options', 'chapter-options', 'media-session',
+            'media-title', 'media-artist', 'media-album', 'media-artwork', 'keys', 'remember',
+            'a11y-chapters', 'a11y-description', 'a11y-zoom', 'a11y-minimap', 'a11y-keys',
+            'a11y-remember', 'load-error', 'a11y-load-error', 'a11y-slider-name', 'decode-stream',
+            'decode-stream-max-bytes', 'decode-stream-max-seconds', 'background-color',
+            'background-gradient',
+            'background-image',
+            'background-options', 'background-angle', 'background-blur', 'background-opacity',
+            'background-effects', 'background-animation', 'background-duration', 'time-precision',
+            'time-fps', 'time-hours', 'time-decimal', 'time-format',
+        ),
+        'sonic-now-playing' =&gt; array(
+            'when', 'place', 'align', 'offset', 'width', 'z-index', 'parts', 'palette', 'font',
+            'font-src', 'font-stylesheet', 'close', 'animation', 'animation-type', 'a11y-label',
+            'a11y-announce', 'a11y-lang',
+        ),
+        'sonic-recorder' =&gt; array(
+            'max-seconds', 'max', 'live', 'live-seconds', 'window', 'theme', 'palette', 'wave',
+            'font', 'font-src', 'font-stylesheet', 'hold', 'after-send', 'keep', 'idle-parts',
+            'recording-parts', 'review-parts', 'actions', 'after-stop', 'align', 'icon-record',
+            'icon-stop', 'icon-pause', 'icon-resume', 'icon-discard', 'icon-send', 'icon-cancel',
+            'upload-method', 'upload-field', 'cancel-send', 'record-style', 'record-color',
+            'rec-place', 'rec-blink', 'record-blink', 'mic-style', 'mic-color', 'a11y-lang',
+            'a11y-announce-every',
+        ),
+    );
+
+    foreach ( $tags as $tag =&gt; $names ) {
+        $allowed[ $tag ] = array_fill_keys( $names, true );
+    }
+
+    // The playlist's links: the address and the data- attributes it reads.
+    $allowed['a'] = array_merge(
+        $allowed['a'] ?? array(),
+        array_fill_keys(
+            array(
+                'href', 'data-artist', 'data-album', 'data-artwork', 'data-peaks', 'data-duration',
+                'data-chapters', 'data-id',
+            ),
+            true
+        )
+    );
+
+    return $allowed;
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2>WordPress: a shortcode or a block</h2>
+                    <p>
+                        A plugin that writes the tags for its authors escapes
+                        every value on the server, whoever the author is, even
+                        one allowed to post unfiltered HTML. The audio-player
+                        plugins whose shortcodes let a contributor run a script
+                        all skipped this step for one attribute.
+                    </p>
+                    <ul>
+                        <li>
+                            Every attribute through <code>esc_attr()</code>;
+                            every address first through
+                            <code>esc_url()</code> (which drops
+                            <code>javascript:</code>).
+                        </li>
+                        <li>
+                            A list or options as JSON through
+                            <code>wp_json_encode()</code>, then
+                            <code>esc_attr()</code>.
+                        </li>
+                        <li>
+                            Names read from a sound file (its ID3 title and
+                            artist) are outside text too: through
+                            <code>esc_attr()</code> into an attribute, or
+                            <code>esc_html()</code> into a link's text.
+                        </li>
+                        <li>
+                            Never a value written into the page as it came, and
+                            never a tag built by joining strings without
+                            escaping each piece.
+                        </li>
+                    </ul>
+                    <div class="code">
+                        <pre><code>add_shortcode( 'sonic_player', 'sonicframe_player_shortcode' );
+
+function sonicframe_player_shortcode( $atts ) {
+    $atts = shortcode_atts(
+        array( 'src' =&gt; '', 'label' =&gt; '', 'theme' =&gt; '' ),
+        $atts,
+        'sonic_player'
+    );
+
+    return sprintf(
+        '&lt;sonic-player src="%s" label="%s" theme="%s"&gt;&lt;/sonic-player&gt;',
+        esc_url( $atts['src'] ),
+        esc_attr( $atts['label'] ),
+        esc_attr( $atts['theme'] )
+    );
+}</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        The page also loads SonicFrame and registers the tags
+                        once (<code>defineSonicPlayer()</code>, and the others
+                        it uses); see
+                        <a href="./tag-attributes.html">Tag attributes</a>.
+                    </p>
+                </section>
+            </div>
+        </main>
+    </body>
+</html>

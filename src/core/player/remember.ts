@@ -27,7 +27,10 @@ export type PlayerRemember = {
     sound?: string;
     /** Where it is kept: the page's `localStorage` by default, or any storage of your own. */
     store?: RememberStore;
-    /** How many sounds keep their position, the oldest dropped first: 50, from 1 to 500. */
+    /**
+     * How many sounds keep their position, the oldest dropped first: 50, from 1 to 5000 (a few hundred
+     * KB, well inside the 5 MiB a page's storage holds).
+     */
     sounds?: number;
     /** A sound left this many seconds or less from its end starts over: 5, from 0 to 60. */
     nearEnd?: number;
@@ -59,8 +62,8 @@ export const MIN_POSITION = 1;
 /** The longest name of a group or a sound, in characters. */
 const MAX_NAME = 2000;
 
-/** The most positions read back from the storage. */
-const MAX_SOUNDS = 500;
+/** The most positions kept and read back from the storage. */
+const MAX_SOUNDS = 5000;
 
 /** A name from outside, or null when it is not one. */
 function nameOf(value: unknown): string | null {

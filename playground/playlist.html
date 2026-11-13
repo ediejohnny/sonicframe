@@ -136,6 +136,26 @@ playlist.on('trackchange', (track, index) => console.log(index, track.title));</
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>maxTracks</code></td>
+                                    <td>1000</td>
+                                    <td>
+                                        The most tracks the list keeps, given,
+                                        fetched or added: from 1 to 10,000. Past
+                                        either end, a
+                                        <code>RangeError</code> names it.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxText</code></td>
+                                    <td>120</td>
+                                    <td>
+                                        The longest title, artist, album or id
+                                        kept, in characters, from 1 to 1000. A
+                                        feed takes its own
+                                        <code>maxText</code>.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>src</code></td>
                                     <td>none</td>
                                     <td>
@@ -337,6 +357,126 @@ ep1.mp3</code></pre>
                 </section>
 
                 <section class="section">
+                    <h2>A podcast's feed</h2>
+                    <div class="code">
+                        <pre><code>createPlaylist({
+    container,
+    feed: { src: 'https://example.com/show.xml', order: 'newest', limit: 50 },
+});</code></pre>
+                        <button class="button small" type="button">Copy</button>
+                    </div>
+                    <p>
+                        <code>feed</code> takes a podcast's RSS feed (an
+                        address, or <code>{ src, ...options }</code>): each
+                        episode's sound, length, picture (the show's when it has
+                        none), chapters and transcript, newest first by default.
+                        <code>readFeed(text, options)</code> and
+                        <code>loadFeed(url, options)</code> read one by
+                        themselves and give the show's <code>title</code>,
+                        <code>image</code> and <code>tracks</code>. They are in
+                        <code>sonicframe/analysis</code> too, for servers.
+                    </p>
+                    <p>
+                        Most feeds can't be fetched from another site: their
+                        server doesn't allow it (CORS). Then read the feed on
+                        your server with <code>readFeed</code> and give the
+                        playlist its <code>tracks</code>.
+                    </p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>order</code></td>
+                                    <td><code>'newest'</code></td>
+                                    <td>
+                                        <code>'newest'</code> or
+                                        <code>'oldest'</code> first, by each
+                                        episode's date.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>limit</code></td>
+                                    <td>1000</td>
+                                    <td>
+                                        The most episodes kept, from 1 to
+                                        10,000.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSize</code></td>
+                                    <td>5242880 (5 MB)</td>
+                                    <td>
+                                        The largest feed, in bytes: from 1024 up
+                                        to 20 MB. Reading takes under 0.1 s for
+                                        each MB on a desktop computer, more on a
+                                        phone.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxDepth</code></td>
+                                    <td>100</td>
+                                    <td>The deepest nesting, from 1 to 256.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxElements</code></td>
+                                    <td>200000</td>
+                                    <td>
+                                        The most elements, from 1 to 1000000 (a
+                                        feed of 1000 episodes has about 30000).
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxAttributes</code></td>
+                                    <td>200</td>
+                                    <td>
+                                        The most attributes on one element, from
+                                        1 to 10000.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxNameLength</code></td>
+                                    <td>1000</td>
+                                    <td>
+                                        The longest name of an element or an
+                                        attribute, from 1 to 50000 characters.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        The defaults of the ceilings are the ones the most used
+                        XML readers settled on; your code may raise each up to
+                        the most open of them, never past it. A feed past one,
+                        or an option past its most or under its least, is
+                        refused with a <code>RangeError</code> that names the
+                        option. On the tag: <code>feed</code>,
+                        <code>feed-order</code>, <code>feed-limit</code>,
+                        <code>feed-max-size</code>, <code>feed-max-depth</code>,
+                        <code>feed-max-elements</code>,
+                        <code>feed-max-attributes</code> and
+                        <code>feed-max-name-length</code>. A page's content may
+                        come from anyone who writes in it, so the tag's ceilings
+                        only go down.
+                    </p>
+                    <p>
+                        The feed is read by SonicFrame's own small XML reader,
+                        not the browser's: no script runs, nothing is loaded
+                        from it, and it works under a strict Content Security
+                        Policy with Trusted Types, and in Node. A feed that
+                        declares entities is refused, and every address must be
+                        a web address.
+                    </p>
+                </section>
+
+                <section class="section">
                     <h2>On the tag</h2>
                     <div class="code">
                         <pre><code>&lt;sonic-playlist repeat="all" buttons="shuffle repeat" list-place="above"&gt;
@@ -433,8 +573,11 @@ ep1.mp3</code></pre>
                             the track out.
                         </li>
                         <li>
-                            A list keeps at most 1000 tracks; a list over 512 KB
-                            is refused, and names are cut to 120 characters.
+                            A list keeps at most 1000 tracks
+                            (<code>maxTracks</code>, up to 10,000); a list over
+                            512 KB is refused (<code>loadTracks</code>'s
+                            <code>maxBytes</code>, up to 5 MB), and names are
+                            cut to 120 characters.
                         </li>
                         <li>
                             What <code>remember</code> kept is read back as

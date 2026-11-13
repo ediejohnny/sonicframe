@@ -411,6 +411,9 @@ pickSound(
         byId('source').textContent =
             'That file could not be read as audio. Try an MP3, WAV, OGG or M4A file.';
     },
+    (text: string) => {
+        byId('source').textContent = text;
+    },
 );
 
 bundledSound().then(use, (error: unknown) => {

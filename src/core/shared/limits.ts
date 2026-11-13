@@ -1,0 +1,89 @@
+/**
+ * The ceilings on what comes from outside (sizes, counts, lengths of time), each an option: a safe
+ * default, which an app's code may raise up to a fixed most (the most open that mature projects and
+ * the browsers settled on) and lower down to a least. Past either end the option is refused with a
+ * `RangeError` that names it, never cut to a number the app did not ask for; an option that shipped
+ * before its most was fixed is kept within its ends instead, until 2.0 (`heldLimit`). A tag's
+ * attribute, which a page's author may write, only lowers the default.
+ */
+
+/** A ceiling: its default, the least and the most it may be set to, and whether it counts whole things. */
+export type Limit = {
+    readonly value: number;
+    readonly least: number;
+    readonly most: number;
+    /** A count (rounded down), not a length that may hold a fraction. */
+    readonly whole: boolean;
+};
+
+/**
+ * The longest title, name or label taken from outside, in characters (`maxText`): 120, up to 1000. It
+ * keeps a line readable and a page's layout whole; a longer one is cut where it ends.
+ */
+export const TEXT_LENGTH: Limit = {
+    value: 120,
+    least: 1,
+    most: 1000,
+    whole: true,
+};
+
+/**
+ * The ceiling the app asks for as `name`: its default when `given` is no finite number, the value
+ * asked for from the least to the most, and a `RangeError` past either end.
+ */
+export function limitOf(name: string, given: unknown, limit: Limit): number {
+    if (typeof given !== 'number' || !Number.isFinite(given)) {
+        return limit.value;
+    }
+
+    const value = limit.whole ? Math.floor(given) : given;
+
+    if (value > limit.most) {
+        throw new RangeError(
+            `sonicframe: ${name} goes past its most, ${limit.most} (${given})`,
+        );
+    }
+
+    if (value < limit.least) {
+        throw new RangeError(
+            `sonicframe: ${name} goes under its least, ${limit.least} (${given})`,
+        );
+    }
+
+    return value;
+}
+
+/**
+ * A ceiling of an option that shipped before its most was fixed: kept from the least to the most
+ * instead of refused, so an app that passes a larger value keeps working until 2.0, when it becomes
+ * `limitOf`. No finite number, or none above 0, is the default.
+ */
+export function heldLimit(given: unknown, limit: Limit): number {
+    if (typeof given !== 'number' || !Number.isFinite(given) || given <= 0) {
+        return limit.value;
+    }
+
+    const value = limit.whole ? Math.floor(given) : given;
+
+    return Math.min(limit.most, Math.max(limit.least, value));
+}
+
+/**
+ * A tag's attribute for a ceiling: the number it holds, kept from the least up to the default (a
+ * page's author may lower a ceiling, never raise it); undefined without the attribute or a number.
+ */
+export function tagLimit(
+    attribute: string | null,
+    limit: Limit,
+): number | undefined {
+    const text = attribute?.trim() ?? '';
+    const number = Number(text);
+
+    if (text === '' || !Number.isFinite(number)) {
+        return undefined;
+    }
+
+    const value = limit.whole ? Math.floor(number) : number;
+
+    return Math.min(limit.value, Math.max(limit.least, value));
+}

@@ -195,6 +195,28 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><code>artist</code></td>
+                                    <td>none</td>
+                                    <td>
+                                        Who made the sound, shown by the
+                                        <code>artist</code> part, and the media
+                                        controls' artist when
+                                        <code>mediaSession</code> names none.
+                                        Shown as text, one line, up to
+                                        <code>maxText</code> characters.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxText</code></td>
+                                    <td>120</td>
+                                    <td>
+                                        The longest name, artist, word or media
+                                        controls' detail shown, in characters,
+                                        from 1 to 1000. Past either end, a
+                                        <code>RangeError</code> names it.
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>decode</code></td>
                                     <td>see below</td>
                                     <td>
@@ -228,6 +250,24 @@
                                         Remember where each sound was left, the
                                         volume and the speed between visits:
                                         <code>true</code>, or the options below.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>loadError</code></td>
+                                    <td>on</td>
+                                    <td>
+                                        When the sound cannot load, a message
+                                        over the wave says why, in the player's
+                                        language: <code>false</code> or
+                                        <code>{ show: false }</code> turns it
+                                        off. The <code>error</code> event goes
+                                        out either way, with a
+                                        <code>SoundError</code> whose
+                                        <code>reason</code> is
+                                        <code>'network'</code>,
+                                        <code>'unsupported'</code>,
+                                        <code>'decode'</code> or
+                                        <code>'aborted'</code>.
                                     </td>
                                 </tr>
                                 <tr>
@@ -422,6 +462,29 @@
                                         play ("Resuming at 12:30").
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td><code>loadError.announce</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        Say why the sound cannot load ("Could
+                                        not load the sound"), so a person who
+                                        cannot see the player learns it too.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>sliderName</code></td>
+                                    <td><code>'position'</code></td>
+                                    <td>
+                                        What names the wave's slider: its word
+                                        ("Playback position"),
+                                        <code>'label'</code> the sound's name,
+                                        or <code>'both'</code> ("Little Elf,
+                                        Playback position"). The sound's name is
+                                        the one the <code>title</code> part
+                                        shows; without one, the slider keeps its
+                                        word. <code>frame.label</code> wins.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -435,16 +498,10 @@
                         sound left near its end, or one that ended, starts over;
                         one already under way stays where it is.
                     </p>
-                    <div class="code">
-                        <pre><code>const player = createPlayer({
-    container,
-    src: 'episode-12.mp3',
-    remember: { key: 'podcast', sound: 'episode-12' },
-});
-player.on('resume', (time) =&gt; console.log('resumed at', time));
-player.forget(); // clears what it kept</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div
+                        class="example"
+                        data-example="player-remember.js"
+                    ></div>
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -503,7 +560,7 @@ player.forget(); // clears what it kept</code></pre>
                                     <td><code>50</code></td>
                                     <td>
                                         How many sounds keep their position, the
-                                        oldest dropped first; from 1 to 500.
+                                        oldest dropped first; from 1 to 5000.
                                     </td>
                                 </tr>
                                 <tr>
@@ -557,20 +614,100 @@ player.forget(); // clears what it kept</code></pre>
                                     <td><code>maxSeconds</code></td>
                                     <td>30 minutes</td>
                                     <td>
-                                        Can only lower the decoder's ceiling; a
-                                        longer sound is read evenly through.
+                                        The longest sound read, in seconds, up
+                                        to 36,000 (10 hours); a longer one is
+                                        read evenly through. The browser decodes
+                                        the whole file first, so this saves no
+                                        memory.
                                     </td>
                                 </tr>
                                 <tr>
                                     <td><code>maxBytes</code></td>
-                                    <td>50 MB</td>
+                                    <td>50 MiB</td>
                                     <td>
-                                        Can only lower the download ceiling.
+                                        The largest file decoded, up to
+                                        268,435,456 bytes (256 MiB). A decoded
+                                        hour takes about 635 MB, and a browser
+                                        tab falls over past a few GB, sooner on
+                                        a phone: for long sounds, give the
+                                        player peaks made on a server, or turn
+                                        on <code>stream</code>.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>stream</code></td>
+                                    <td><code>false</code></td>
+                                    <td>
+                                        <code>true</code> or the options below:
+                                        the sound is read in pieces as it
+                                        downloads, keeping only its peaks, so
+                                        hours fit in a tab. A sound it cannot
+                                        read so is decoded whole as above. See
+                                        <a href="./peaks.html#long-sounds"
+                                            >Long sounds</a
+                                        >.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                    <h3>Reading in pieces, <code>decode.stream</code></h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Default</th>
+                                    <th>What it does</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>maxBytes</code></td>
+                                    <td>1 GiB</td>
+                                    <td>
+                                        The most bytes downloaded for the peaks,
+                                        from 1 to 4,294,967,296 (4 GiB); a
+                                        larger sound stops there, with the
+                                        player's <code>error</code> event.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>maxSeconds</code></td>
+                                    <td>10 hours</td>
+                                    <td>
+                                        The most seconds read, from 1 to 86,400
+                                        (24 hours); the rest of a longer sound
+                                        is drawn as silence. Past either end of
+                                        either ceiling, a
+                                        <code>RangeError</code> names the option
+                                        when the player is made.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>progressive</code></td>
+                                    <td><code>true</code></td>
+                                    <td>
+                                        The wave grows while the peaks come;
+                                        <code>false</code> draws it once, at the
+                                        end.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>webcodecs</code></td>
+                                    <td><code>'auto'</code></td>
+                                    <td>
+                                        <code>'auto'</code> uses the browser's
+                                        WebCodecs decoder where it has one;
+                                        <code>false</code> always decodes about
+                                        30 seconds at a time with
+                                        <code>decodeAudioData</code>.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="example" data-example="player-stream.js"></div>
                 </section>
             </div>
         </main>

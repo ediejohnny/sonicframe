@@ -14,7 +14,14 @@ const MARK = /\{(\w+)\}/g;
 
 /** The phrases added after 1.0, by group: a language may leave them out, and they are said in English. */
 const LATER: Readonly<Record<string, readonly string[]>> = {
-    player: ['previousTrack', 'nextTrack'],
+    player: [
+        'previousTrack',
+        'nextTrack',
+        'soundFailed',
+        'soundUnsupported',
+        'soundDecode',
+        'soundAborted',
+    ],
     playlist: [
         'playlist',
         'close',
@@ -25,6 +32,7 @@ const LATER: Readonly<Record<string, readonly string[]>> = {
         'playing',
         'untitled',
     ],
+    nowPlaying: ['bar', 'close', 'back'],
 };
 
 /** The marks of a phrase, each once, in order of name: `'{from} {to}'`. */

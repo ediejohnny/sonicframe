@@ -14,6 +14,7 @@ import {
     items,
     make,
     marked,
+    serveText,
     settle,
     titles,
 } from '../playlist/playlist-harness';
@@ -296,19 +297,7 @@ describe('remember', () => {
 
 describe('a list from an address', () => {
     it('fetches it, cookies only to the page’s own site, and plays its first track', async () => {
-        const asked: RequestInit[] = [];
-        vi.stubGlobal(
-            'fetch',
-            vi.fn((_url: string, init: RequestInit) => {
-                asked.push(init);
-
-                return serve(
-                    new TextEncoder().encode(
-                        '#EXTM3U\n#EXTINF:5,Far\nfar.mp3\n',
-                    ),
-                )('');
-            }),
-        );
+        const asked = serveText('#EXTM3U\n#EXTINF:5,Far\nfar.mp3\n');
         const { playlist, media } = make({
             tracks: undefined,
             src: 'https://lists.test/show/list.m3u',

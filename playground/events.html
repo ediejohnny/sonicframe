@@ -22,15 +22,7 @@
             <div class="doc">
                 <section class="section">
                     <h2>Listening</h2>
-                    <div class="code">
-                        <pre><code>const stop = frame.on('timeupdate', (time, ratio) =&gt; {
-    clock.textContent = formatPosition(time);
-});
-
-// Later:
-stop();</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div class="example" data-example="events-clock.js"></div>
                     <p>
                         The player has the same <code>on</code>, with every
                         frame event plus <code>description</code>; the

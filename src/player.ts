@@ -6,6 +6,8 @@
  */
 
 export { createPlayer, Player } from './player/player/player';
+export { currentPlayer } from './player/player/player-registry';
+export { SoundError, type SoundErrorReason } from './core/player/sound-error';
 export type {
     ChapterListLook,
     ChaptersPlugin,
@@ -14,6 +16,7 @@ export type {
     PlayerChapterListStyle,
     PlayerChapters,
     PlayerDecode,
+    PlayerDecodeStream,
     PlayerDescription,
     PlayerEvents,
     PlayerKeys,
@@ -27,6 +30,7 @@ export type {
     PlayerOptions,
     PlayerTracks,
     PlayerZoom,
+    SliderName,
 } from './player/player/player-options';
 export type {
     BarStyle,

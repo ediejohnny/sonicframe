@@ -180,6 +180,7 @@ export {
     type LoadPeaksOptions,
     type PeaksFetcher,
 } from './core/peaks/peaks';
+export { createPeakStream, type PeakStream } from './core/peaks/peak-stream';
 export type { FetchedResponse, Fetcher } from './core/shared/fetch';
 export {
     loadWaveform,
@@ -209,6 +210,7 @@ export {
     type LoadChaptersOptions,
 } from './core/chapters/chapters';
 export { safeUrl } from './core/shared/url';
+export { SONIC_TAGS, type SonicTag } from './core/tags/sonic-tags';
 export type { CssLength } from './core/shared/length';
 export { DEFAULT_WAVE, WAVE_NAMES } from './core/wave/shapes';
 export type { View, ViewState } from './core/view/view';
@@ -251,7 +253,7 @@ export type {
 } from './types';
 
 /** The version of this build of SonicFrame. */
-export const VERSION: string = '1.2.0';
+export const VERSION: string = '1.3.0';
 
 // Names kept until 2.0: each works as before, and its note says what to use instead.
 

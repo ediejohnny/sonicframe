@@ -10,6 +10,9 @@ import { clamp01 } from '../shared/math';
 /** The longest recording a track keeps levels for unless given, in seconds (one hour). */
 const MAX_SECONDS = 3600;
 
+/** The longest it may be given, in seconds: the most a recording may run (6 hours). */
+const MOST_SECONDS = 21_600;
+
 /** The level of a block of samples (from -1 to 1): its loudest one, either way from silence, at most 1. */
 export function levelOf(samples: ArrayLike<number>): number {
     let loudest = 0;
@@ -34,7 +37,7 @@ export class LevelTrack {
     constructor(rate: number = 20, maxSeconds: number = MAX_SECONDS) {
         this.rate = within(rate, 20, 1, 100);
         this.limit = Math.ceil(
-            within(maxSeconds, MAX_SECONDS, 0, MAX_SECONDS) * this.rate,
+            within(maxSeconds, MAX_SECONDS, 0, MOST_SECONDS) * this.rate,
         );
     }
 

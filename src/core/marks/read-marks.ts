@@ -10,6 +10,7 @@
  */
 
 import { isRecord, oneOf } from '../shared/checked';
+import { limitOf, TEXT_LENGTH, type Limit } from '../shared/limits';
 import { cleanText } from '../shared/text';
 import { isVtt, readVtt, textLines } from '../shared/vtt';
 import { csvRows, csvSeparator, unguardCell } from './csv';
@@ -22,16 +23,31 @@ export type MarksReadOptions = {
     format?: MarksFormat | 'auto';
     /** CSV: takes back the `'` that guards a cell a spreadsheet would run as a formula. On by default. */
     guardFormulas?: boolean;
+    /** The most regions or markers kept: 2000, from 1 to 20 000; past either end, a `RangeError`. */
+    maxItems?: number;
+    /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
+    maxSize?: number;
+    /** The longest label kept, in characters: 120, from 1 to 1000; past either end, a `RangeError`. */
+    maxText?: number;
 };
 
-/** The longest text read, in characters: 512 KB. */
-const MAX_TEXT = 524288;
+/** The longest text read, in characters: 512 KB, up to 5 MB. */
+const MARKS_TEXT: Limit = {
+    value: 524_288,
+    least: 1,
+    most: 5_242_880,
+    whole: true,
+};
 
-/** The most items read from one file. */
-const MAX_ITEMS = 2000;
+/** The most items read from one file: 2000, up to 20 000 (a mark every 2 s for 10 hours is 18 000). */
+export const MARKS_COUNT: Limit = {
+    value: 2000,
+    least: 1,
+    most: 20_000,
+    whole: true,
+};
 
-/** The longest label, color and id kept, in characters. */
-const MAX_LABEL = 120;
+/** The longest color and id kept, in characters (a label's is `maxText`). */
 const MAX_COLOR = 100;
 const MAX_ID = 200;
 
@@ -100,8 +116,8 @@ function formatOf(text: string): MarksFormat {
         : 'csv';
 }
 
-/** The rows of a JSON list, or of the list under `key`. */
-function jsonRows(text: string, key: string): Row[] {
+/** The rows of a JSON list, or of the list under `key`; twice `most` at the very most, as each format. */
+function jsonRows(text: string, key: string, most: number): Row[] {
     let parsed: unknown;
 
     try {
@@ -120,7 +136,7 @@ function jsonRows(text: string, key: string): Row[] {
         throw notMarks();
     }
 
-    return list.slice(0, MAX_ITEMS * 2).map((item: unknown) =>
+    return list.slice(0, most * 2).map((item: unknown) =>
         isRecord(item)
             ? {
                   start: numberOf(item.start ?? item.time),
@@ -137,7 +153,7 @@ function jsonRows(text: string, key: string): Row[] {
 }
 
 /** The rows of a CSV: by the header's column names, or in the written order without known names. */
-function csvRowsOf(text: string, guard: boolean): Row[] {
+function csvRowsOf(text: string, guard: boolean, most: number): Row[] {
     const separator = csvSeparator(text.split('\n', 1)[0]);
     const lines = csvRows(text, separator);
     const header = lines[0] ?? [];
@@ -166,7 +182,7 @@ function csvRowsOf(text: string, guard: boolean): Row[] {
         return written !== undefined && guard ? unguardCell(written) : written;
     };
 
-    return lines.slice(named ? 1 : 0, MAX_ITEMS * 2 + 1).map((line) => ({
+    return lines.slice(named ? 1 : 0, most * 2 + 1).map((line) => ({
         start: numberOf(cell(line, columns.start)),
         end: numberOf(cell(line, columns.end)),
         label: words(line, columns.label),
@@ -179,10 +195,10 @@ function csvRowsOf(text: string, guard: boolean): Row[] {
  * The rows of Audacity's labels: start, end and label by tabs. A frequency line (`\`) or an empty
  * one has no start, so it is left out with the other rows that have none.
  */
-function audacityRows(text: string): Row[] {
+function audacityRows(text: string, most: number): Row[] {
     return text
         .split('\n')
-        .slice(0, MAX_ITEMS * 2)
+        .slice(0, most * 2)
         .map((line) => {
             const [start, end, ...label] = line.split('\t');
 
@@ -194,14 +210,23 @@ function audacityRows(text: string): Row[] {
         });
 }
 
-/** The rows of a text, in its format. */
-function rowsOf(input: string, options: MarksReadOptions, key: string): Row[] {
+/** The rows of a text, in its format, read up to twice `most` of them. */
+function rowsOf(
+    input: string,
+    options: MarksReadOptions,
+    key: string,
+    most: number,
+): Row[] {
     if (typeof input !== 'string') {
         throw notMarks();
     }
 
-    if (input.length > MAX_TEXT) {
-        throw new RangeError('sonicframe: the text is over 512 KB');
+    const maxSize = limitOf('maxSize', options.maxSize, MARKS_TEXT);
+
+    if (input.length > maxSize) {
+        throw new RangeError(
+            `sonicframe: the text is over maxSize (${maxSize} characters)`,
+        );
     }
 
     const text = textLines(input);
@@ -209,7 +234,7 @@ function rowsOf(input: string, options: MarksReadOptions, key: string): Row[] {
 
     switch (asked === 'auto' ? formatOf(text) : asked) {
         case 'json':
-            return jsonRows(text, key);
+            return jsonRows(text, key, most);
         case 'vtt':
             return readVtt(text).map((cue) => ({
                 start: cue.start,
@@ -218,16 +243,19 @@ function rowsOf(input: string, options: MarksReadOptions, key: string): Row[] {
                 id: cue.id,
             }));
         case 'audacity':
-            return audacityRows(text);
+            return audacityRows(text, most);
         default:
-            return csvRowsOf(text, options.guardFormulas !== false);
+            return csvRowsOf(text, options.guardFormulas !== false, most);
     }
 }
 
 /** The texts a row carries: only those it has, each cleaned. */
-function textsOf(row: Row): { label?: string; color?: string; id?: string } {
+function textsOf(
+    row: Row,
+    longest: number,
+): { label?: string; color?: string; id?: string } {
     const texts: { label?: string; color?: string; id?: string } = {};
-    const label = textOf(row.label, MAX_LABEL);
+    const label = textOf(row.label, longest);
     const color = textOf(row.color, MAX_COLOR);
     const id = textOf(row.id, MAX_ID);
 
@@ -249,15 +277,17 @@ function textsOf(row: Row): { label?: string; color?: string; id?: string } {
 /**
  * Regions from a file of any format (see `MarksReadOptions`); a line without an end is a region of
  * no length, which the regions plugin keeps to its shortest. A text that is no such file throws a
- * `TypeError`, and one over 512 KB a `RangeError`.
+ * `TypeError`, and one over `maxSize` a `RangeError`.
  */
 export function readRegions(
     text: string,
     options: MarksReadOptions = {},
 ): RegionInput[] {
+    const most = limitOf('maxItems', options.maxItems, MARKS_COUNT);
+    const longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
     const regions: RegionInput[] = [];
 
-    for (const row of rowsOf(text, options, 'regions')) {
+    for (const row of rowsOf(text, options, 'regions', most)) {
         const end = row.end ?? row.start;
 
         if (
@@ -265,9 +295,9 @@ export function readRegions(
             end !== null &&
             row.start >= 0 &&
             end >= row.start &&
-            regions.length < MAX_ITEMS
+            regions.length < most
         ) {
-            regions.push({ start: row.start, end, ...textsOf(row) });
+            regions.push({ start: row.start, end, ...textsOf(row, longest) });
         }
     }
 
@@ -277,17 +307,19 @@ export function readRegions(
 /**
  * Markers from a file of any format, each at the start of its line (a region file gives its
  * starts); a plain moment in a JSON list counts too. A text that is no such file throws a
- * `TypeError`, and one over 512 KB a `RangeError`.
+ * `TypeError`, and one over `maxSize` a `RangeError`.
  */
 export function readMarkers(
     text: string,
     options: MarksReadOptions = {},
 ): Mark[] {
+    const most = limitOf('maxItems', options.maxItems, MARKS_COUNT);
+    const longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
     const marks: Mark[] = [];
 
-    for (const row of rowsOf(text, options, 'markers')) {
-        if (row.start !== null && row.start >= 0 && marks.length < MAX_ITEMS) {
-            marks.push({ time: row.start, ...textsOf(row) });
+    for (const row of rowsOf(text, options, 'markers', most)) {
+        if (row.start !== null && row.start >= 0 && marks.length < most) {
+            marks.push({ time: row.start, ...textsOf(row, longest) });
         }
     }
 

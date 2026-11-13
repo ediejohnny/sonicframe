@@ -75,7 +75,7 @@ export type MarkersOptions = {
     snap?: boolean;
     /** Show a tooltip on hover. */
     tooltip?: boolean;
-    /** The most markers kept. */
+    /** The most markers kept: 2000, up to 20 000 (past it, 20 000 until 2.0). */
     max?: number;
     /** M and Shift+M (or your own letter); true by default, false turns them off. */
     keys?: boolean | MarkersKeys;
@@ -99,7 +99,9 @@ export type MarkersPlugin = Plugin & {
     set(next: readonly number[] | readonly Mark[]): void;
 };
 
+/** The markers kept by default, and the most `max` may be (it shipped taking any, so past it, the most). */
 const MAX_MARKS = 2000;
+const MOST_MARKS = 20_000;
 const TOOLTIP_LINES = 5;
 
 /** The longest word taken from the app, in characters. */
@@ -114,7 +116,7 @@ export function markers(options: MarkersOptions = {}): MarkersPlugin {
     );
     const snap = options.snap ?? true;
     const withTooltip = options.tooltip ?? true;
-    const max = within(options.max, MAX_MARKS, 0, MAX_MARKS);
+    const max = within(options.max, MAX_MARKS, 0, MOST_MARKS);
     const own = typeof options.keys === 'object' ? options.keys : {};
     const { letter, backGrace } = letterKeys(
         options.keys === false

@@ -6,8 +6,10 @@
 import type { LanguageTag } from '../../core/languages/language';
 import type { PlaylistWords } from '../../core/languages/words';
 import type { RememberStore } from '../../core/player/remember';
+import type { ReadFeedOptions } from '../../core/playlist/feed';
 import type { Repeat } from '../../core/playlist/order';
 import type { Track, TrackInput } from '../../core/playlist/tracks';
+import type { NowPlayingOptions } from '../now-playing/now-playing-options';
 import { oneOf, within } from '../../core/shared/checked';
 import type {
     PlayerChapterList,
@@ -62,9 +64,26 @@ export type PlaylistOptions = {
     container: HTMLElement;
     /** The tracks: a list, or the text of a JSON or M3U list (see `readTracks`). */
     tracks?: readonly TrackInput[] | string;
+    /**
+     * The most tracks the list keeps, given, fetched from `src` or added: 1000, from 1 to 10 000; past
+     * either end, a `RangeError`. A feed keeps to its own `limit`.
+     */
+    maxTracks?: number;
+    /**
+     * The longest title, artist, album or id kept, in characters: 120, from 1 to 1000; past either
+     * end, a `RangeError`. A feed keeps to its own `maxText`.
+     */
+    maxText?: number;
     /** The address of a JSON or M3U list, fetched when `tracks` is left out. */
     src?: string;
-    /** How `src` is fetched: cookies only to the page's own site by default. */
+    /**
+     * The address of a podcast feed (RSS), fetched when `tracks` is left out: its episodes, newest first.
+     * Or `{ src, ...options }`, with the options of `readFeed`: `order` `'newest'` or `'oldest'`,
+     * `limit` (1000, up to 10 000), and the reader's ceilings (`maxSize`, `maxDepth`, `maxElements`,
+     * `maxAttributes`, `maxNameLength`).
+     */
+    feed?: string | ({ src: string } & Omit<ReadFeedOptions, 'base'>);
+    /** How `src` and `feed` are fetched: cookies only to the page's own site by default. */
     fetch?: {
         credentials?: RequestCredentials;
         referrerPolicy?: ReferrerPolicy;
@@ -95,6 +114,8 @@ export type PlaylistOptions = {
     list?: boolean | PlaylistList;
     /** The buttons over the list: shuffle and repeat by default; `[]` for none. */
     buttons?: readonly PlaylistButton[];
+    /** The now-playing bar for the playlist's player: true or its options. Off by default. */
+    nowPlaying?: boolean | NowPlayingOptions;
     /** Remembers the track, the shuffle and the repeat between visits. Off by default. */
     remember?: boolean | PlaylistRemember;
     a11y?: PlaylistA11y;

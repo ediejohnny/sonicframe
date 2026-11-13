@@ -74,6 +74,36 @@
                                     <td><code>normalize: true</code></td>
                                 </tr>
                                 <tr>
+                                    <td><code>decode-stream</code></td>
+                                    <td>
+                                        present; <code>false</code> leaves it
+                                        off
+                                    </td>
+                                    <td><code>decode.stream: true</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>decode-stream-max-bytes</code>
+                                    </td>
+                                    <td>
+                                        a number of bytes, only lower than the
+                                        default
+                                    </td>
+                                    <td><code>decode.stream.maxBytes</code></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <code>decode-stream-max-seconds</code>
+                                    </td>
+                                    <td>
+                                        a number of seconds, only lower than the
+                                        default
+                                    </td>
+                                    <td>
+                                        <code>decode.stream.maxSeconds</code>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><code>theme</code></td>
                                     <td>a theme's name</td>
                                     <td><code>theme</code></td>
@@ -108,6 +138,31 @@
                                     <td><code>label</code></td>
                                     <td>text</td>
                                     <td><code>a11y.label</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>artist</code></td>
+                                    <td>text</td>
+                                    <td>
+                                        <code>artist</code> (and the media
+                                        controls' artist without
+                                        <code>media-artist</code>)
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>line</code></td>
+                                    <td>
+                                        part names, by spaces:
+                                        <code>"play wave title"</code>
+                                    </td>
+                                    <td>
+                                        <code>look.line</code>; a word that
+                                        names no part is left out
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>meta</code></td>
+                                    <td>part names, by spaces</td>
+                                    <td><code>look.meta</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>volume</code></td>
@@ -311,6 +366,27 @@
                                     <td><code>a11y-remember</code></td>
                                     <td><code>announce</code></td>
                                     <td><code>a11y.remember.announce</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>load-error</code></td>
+                                    <td><code>false</code> (on without it)</td>
+                                    <td><code>loadError</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-load-error</code></td>
+                                    <td><code>false</code> (on without it)</td>
+                                    <td>
+                                        <code>a11y.loadError.announce</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>a11y-slider-name</code></td>
+                                    <td>
+                                        <code>position</code>,
+                                        <code>label</code> or
+                                        <code>both</code>
+                                    </td>
+                                    <td><code>a11y.sliderName</code></td>
                                 </tr>
                                 <tr>
                                     <td><code>background-color</code></td>

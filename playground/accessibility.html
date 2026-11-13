@@ -29,7 +29,10 @@
                             <code>role="slider"</code>, is reachable with
                             <kbd>Tab</kbd>, and says its position in words
                             ("0:12 of 0:45") through
-                            <code>aria-valuetext</code>.
+                            <code>aria-valuetext</code>. On a page of many
+                            players, <code>a11y.sliderName: 'both'</code> names
+                            each slider by its sound too ("Little Elf, Playback
+                            position").
                         </li>
                         <li>
                             <strong
@@ -73,21 +76,10 @@
                         <code>a11y</code>, arranged by place, and is off until
                         you turn it on:
                     </p>
-                    <div class="code">
-                        <pre><code>createPlayer({
-    container,
-    src,
-    a11y: {
-        lang: 'pt-BR', // the language of every word the player says
-        label: 'Nota de voz da Ana', // the player's accessible name
-        words: { play: 'Ouvir' }, // your own names, over the language's
-        description: { keys: true, button: true }, // the wave in words
-        zoom: { announce: true }, // say the new view after a zoom
-        minimap: { keys: true }, // the minimap as a keyboard slider
-    },
-});</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div
+                        class="example"
+                        data-example="accessibility-player.js"
+                    ></div>
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -186,10 +178,10 @@
                         with <code>a11y-</code>, from <code>a11y-label</code> to
                         <code>a11y-chapters</code>:
                     </p>
-                    <div class="code">
-                        <pre><code>&lt;sonic-player src="/note.ogg" a11y-lang="pt-BR" a11y-label="Nota de voz da Ana" a11y-description="keys button"&gt;&lt;/sonic-player&gt;</code></pre>
-                        <button class="button small" type="button">Copy</button>
-                    </div>
+                    <div
+                        class="example"
+                        data-example="accessibility-tag.html"
+                    ></div>
                 </section>
 
                 <section class="section">
