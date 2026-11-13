@@ -81,6 +81,20 @@
                             header are refused. Decoding a sound: 50 MiB by
                             default, up to 256 MiB.
                         </li>
+                        <li>
+                            Reading a sound in pieces
+                            (<code>decode.stream</code>): 1 GiB and 10 hours by
+                            default (your code may raise them up to 4 GiB and 24
+                            hours). The file's own bytes are read by our code,
+                            each read inside what arrived: tags, boxes, pages
+                            and frames have their own caps (a frame of at most
+                            16 MiB, an MP4 index of at most 64 MiB and
+                            16,777,216 frames), the search for the first frame
+                            gives up after 64 KiB, and damaged bytes are skipped
+                            or refused, never read in a loop. No worker, no
+                            <code>blob:</code> address, and nothing new for your
+                            Content-Security-Policy.
+                        </li>
                         <li>Captions and tooltips: text only, capped.</li>
                         <li>
                             Playlists: 1000 tracks, 512 KB of JSON or M3U (your
