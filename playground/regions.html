@@ -436,11 +436,12 @@ parts.set(readRegions(await file.text())); // any of the four formats</code></pr
                         <code>maxItems</code> (past either, a
                         <code>RangeError</code>). It leaves out one whose time
                         is not a number from zero or whose end comes before its
-                        start, and cleans each label to one line. A text that is
-                        no such file throws a <code>TypeError</code>; a file
-                        that holds no region gives an empty list, so check its
-                        length before <code>set()</code> replaces the regions
-                        you have. The same functions are on
+                        start, and cleans each label to one line of 120
+                        characters (<code>maxText</code>, up to 1000). A text
+                        that is no such file throws a <code>TypeError</code>; a
+                        file that holds no region gives an empty list, so check
+                        its length before <code>set()</code> replaces the
+                        regions you have. The same functions are on
                         <code>sonicframe/analysis</code>, for a server.
                     </p>
                 </section>

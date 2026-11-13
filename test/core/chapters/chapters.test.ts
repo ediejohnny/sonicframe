@@ -182,6 +182,28 @@ describe('readChapters: limits and other input', () => {
         expect(readChapters(many)).toHaveLength(1000);
     });
 
+    it('keeps a title of 120 characters, or maxText up to 1000, refusing one past it', () => {
+        const long = [{ start: 0, title: 'a'.repeat(2000) }];
+        const vtt = `WEBVTT\n\n00:00.000 --> 00:01.000\n${'b'.repeat(2000)}\n`;
+
+        expect(readChapters(long)[0].title).toHaveLength(120);
+        expect(readChapters(long, { maxText: 1000 })[0].title).toHaveLength(
+            1000,
+        );
+        expect(readChapters(vtt, { maxText: 500 })[0].title).toHaveLength(500);
+        expect(
+            readChapters(
+                { chapters: [{ startTime: 0, title: 'c'.repeat(900) }] },
+                { maxText: 800 },
+            )[0].title,
+        ).toHaveLength(800);
+        expect(() => readChapters(long, { maxText: 1001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxText goes past its most, 1000 (1001)',
+            ),
+        );
+    });
+
     it('keeps up to 10 000 chapters and reads up to 5 MB when asked, refusing past either by name', () => {
         const many = Array.from({ length: 10_001 }, (_, index) => ({
             start: index,

@@ -27,7 +27,7 @@ import {
     type TrackInput,
 } from '../../core/playlist/tracks';
 import { oneOf } from '../../core/shared/checked';
-import { limitOf } from '../../core/shared/limits';
+import { limitOf, TEXT_LENGTH } from '../../core/shared/limits';
 import { Emitter } from '../../core/shared/emitter';
 import { cleanText, fillTemplate } from '../../core/shared/text';
 import { announce } from '../../dom/a11y/announce';
@@ -62,8 +62,8 @@ export class Playlist {
     private readonly settings: PlaylistSettings;
     private readonly events = new Emitter<PlaylistEvents>();
     private readonly abort = new AbortController();
-    /** The most tracks the list keeps (`maxTracks`). */
-    private readonly most: number;
+    /** How the list's tracks are read: the most it keeps (`maxTracks`) and their longest names (`maxText`). */
+    private readonly reading: { maxTracks: number; maxText: number };
     private readonly words: PlaylistWords;
     private readonly store: PlaylistStore | null;
     /** The media the playlist made itself, taken off with it; null for the app's or a stack's. */
@@ -85,7 +85,10 @@ export class Playlist {
         }
 
         this.options = options;
-        this.most = limitOf('maxTracks', options.maxTracks, TRACK_COUNT);
+        this.reading = {
+            maxTracks: limitOf('maxTracks', options.maxTracks, TRACK_COUNT),
+            maxText: limitOf('maxText', options.maxText, TEXT_LENGTH),
+        };
         this.settings = playlistSettings(options);
         this.shuffleOn = this.settings.shuffle;
         this.repeatMode = this.settings.repeat;
@@ -247,14 +250,14 @@ export class Playlist {
 
     /** Adds tracks at `at` (the end by default); the track playing goes on. */
     add(tracks: readonly TrackInput[] | string, at?: number): void {
-        const added = readTracks(tracks, { maxTracks: this.most });
+        const added = readTracks(tracks, this.reading);
         const place =
             typeof at === 'number' && Number.isInteger(at)
                 ? Math.min(Math.max(0, at), this.trackList.length)
                 : this.trackList.length;
         const all = [...this.trackList];
         all.splice(place, 0, ...added);
-        this.change(all.slice(0, this.most));
+        this.change(all.slice(0, this.reading.maxTracks));
     }
 
     /** Takes track `index` out; when it is the current one, the track that takes its place is. */
@@ -294,7 +297,7 @@ export class Playlist {
 
     /** Takes a new list of tracks, its first one current. */
     setTracks(tracks: readonly TrackInput[] | string): void {
-        const all = readTracks(tracks, { maxTracks: this.most });
+        const all = readTracks(tracks, this.reading);
         this.change(all, all[0] ?? null);
         this.changed();
     }
@@ -338,7 +341,7 @@ export class Playlist {
     /** The first tracks, from the options or fetched from `src`, and where the list starts. */
     private start(options: PlaylistOptions): void {
         if (options.tracks !== undefined) {
-            this.first(readTracks(options.tracks, { maxTracks: this.most }));
+            this.first(readTracks(options.tracks, this.reading));
 
             return;
         }
@@ -363,7 +366,7 @@ export class Playlist {
         };
         const loading =
             feed === undefined
-                ? loadTracks(address, { ...load, maxTracks: this.most })
+                ? loadTracks(address, { ...load, ...this.reading })
                 : // The feed's own options (order, limit, ceilings); how it is fetched comes from `load`.
                   loadFeed(address, { ...feed, ...load }).then(
                       (read) => read.tracks,

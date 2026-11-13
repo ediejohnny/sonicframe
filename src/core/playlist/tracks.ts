@@ -5,7 +5,7 @@
  * line, and the counts are capped. A track without a usable address is left out.
  */
 
-import { limitOf, type Limit } from '../shared/limits';
+import { limitOf, TEXT_LENGTH, type Limit } from '../shared/limits';
 import { cleanText } from '../shared/text';
 import { safeUrl } from '../shared/url';
 import { textLines } from '../shared/vtt';
@@ -56,6 +56,11 @@ export type ReadTracksOptions = {
     maxTracks?: number;
     /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
     maxSize?: number;
+    /**
+     * The longest title, artist, album or id kept, in characters: 120, from 1 to 1000; past either
+     * end, a `RangeError`.
+     */
+    maxText?: number;
 };
 
 /** The formats `writeTracks` writes. */
@@ -80,9 +85,6 @@ export const TRACK_TEXT: Limit = {
     whole: true,
 };
 
-/** The longest title, artist, album or id, in characters. */
-const MAX_NAME = 120;
-
 /** The most peaks one track carries as numbers. */
 const MAX_PEAKS = 1_000_000;
 
@@ -94,9 +96,9 @@ function tooLarge(): RangeError {
     return new RangeError('sonicframe: list of tracks is too large');
 }
 
-/** A text field cleaned to one safe line, or empty. */
-function name(value: unknown): string {
-    return typeof value === 'string' ? cleanText(value, MAX_NAME) : '';
+/** A text field cleaned to one safe line of at most `longest` characters, or empty. */
+function name(value: unknown, longest: number): string {
+    return typeof value === 'string' ? cleanText(value, longest) : '';
 }
 
 /** An address that passes `safeUrl`, pointing beside `base` when it is relative and a base is given. */
@@ -161,7 +163,7 @@ function peaksOf(
  */
 function trackOf(
     fields: Readonly<Record<string, unknown>>,
-    base: string | undefined,
+    { base, longest }: Reading,
 ): Track | null {
     const src = address(fields.src, base);
 
@@ -171,23 +173,24 @@ function trackOf(
 
     return Object.freeze({
         src,
-        title: name(fields.title),
-        artist: name(fields.artist),
-        album: name(fields.album),
+        title: name(fields.title, longest),
+        artist: name(fields.artist, longest),
+        album: name(fields.album, longest),
         artwork: address(fields.artwork, base),
         peaks: peaksOf(fields.peaks, base),
         duration: seconds(fields.duration),
         chapters: address(fields.chapters, base),
         transcript: address(fields.transcript, base),
-        id: name(fields.id) || src,
+        id: name(fields.id, longest) || src,
     });
 }
 
 /** Where a list's tracks point, and how many are kept. */
-type Reading = { base: string | undefined; most: number };
+type Reading = { base: string | undefined; most: number; longest: number };
 
 /** Up to `most` usable tracks from a list, read item by item. */
-function collect(items: readonly unknown[], { base, most }: Reading): Track[] {
+function collect(items: readonly unknown[], reading: Reading): Track[] {
+    const { most } = reading;
     const tracks: Track[] = [];
 
     for (const item of items) {
@@ -196,7 +199,7 @@ function collect(items: readonly unknown[], { base, most }: Reading): Track[] {
         }
 
         if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
-            const track = trackOf(item as Record<string, unknown>, base);
+            const track = trackOf(item as Record<string, unknown>, reading);
 
             if (track !== null) {
                 tracks.push(track);
@@ -344,6 +347,7 @@ export function readTracks(
     const reading: Reading = {
         base: typeof options.base === 'string' ? options.base : undefined,
         most: limitOf('maxTracks', options.maxTracks, TRACK_COUNT),
+        longest: limitOf('maxText', options.maxText, TEXT_LENGTH),
     };
 
     if (typeof input !== 'string') {
@@ -442,7 +446,11 @@ export function writeTracks(
     tracks: readonly Track[],
     format: TracksFormat = 'json',
 ): string {
-    const clean = collect(tracks, { base: undefined, most: TRACK_COUNT.most });
+    const clean = collect(tracks, {
+        base: undefined,
+        most: TRACK_COUNT.most,
+        longest: TEXT_LENGTH.most,
+    });
 
     if (format === 'm3u') {
         return ['#EXTM3U', ...clean.flatMap(m3uTrack), ''].join('\n');

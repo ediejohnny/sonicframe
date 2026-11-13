@@ -17,6 +17,17 @@ export type Limit = {
 };
 
 /**
+ * The longest title, name or label taken from outside, in characters (`maxText`): 120, up to 1000. It
+ * keeps a line readable and a page's layout whole; a longer one is cut where it ends.
+ */
+export const TEXT_LENGTH: Limit = {
+    value: 120,
+    least: 1,
+    most: 1000,
+    whole: true,
+};
+
+/**
  * The ceiling the app asks for as `name`: its default when `given` is no finite number, the value
  * asked for from the least to the most, and a `RangeError` past either end.
  */

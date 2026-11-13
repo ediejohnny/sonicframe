@@ -162,6 +162,33 @@ describe('readTracks against a hostile list', () => {
         );
     });
 
+    it('keeps names of 120 characters, or maxText up to 1000, in JSON and M3U, refusing one past it', () => {
+        const long = 'n'.repeat(2000);
+        const tracks = [
+            { src: 'a.mp3', title: long, artist: long, album: long, id: long },
+        ];
+        const m3u = `#EXTM3U\n#EXTINF:1,${'a'.repeat(900)} - ${'t'.repeat(900)}\na.mp3`;
+        const [plain] = readTracks(tracks);
+        const [raised] = readTracks(tracks, { maxText: 1000 });
+
+        expect(
+            [plain.title, plain.artist, plain.album, plain.id].map(
+                (text) => text.length,
+            ),
+        ).toEqual([120, 120, 120, 120]);
+        expect(
+            [raised.title, raised.artist, raised.album, raised.id].map(
+                (text) => text.length,
+            ),
+        ).toEqual([1000, 1000, 1000, 1000]);
+        expect(readTracks(m3u, { maxText: 1000 })[0].artist).toHaveLength(900);
+        expect(() => readTracks(tracks, { maxText: 1001 })).toThrow(
+            new RangeError(
+                'sonicframe: maxText goes past its most, 1000 (1001)',
+            ),
+        );
+    });
+
     it('keeps up to 10 000 tracks and reads up to 5 MB when asked, in JSON and M3U, refusing past either by name', () => {
         const many = Array.from({ length: 10_001 }, (_, at) => ({
             src: `t${at}.mp3`,

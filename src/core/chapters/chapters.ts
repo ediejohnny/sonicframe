@@ -6,7 +6,7 @@
  * they are web or relative addresses. Nothing here touches the page.
  */
 
-import { heldLimit, limitOf, type Limit } from '../shared/limits';
+import { heldLimit, limitOf, TEXT_LENGTH, type Limit } from '../shared/limits';
 import {
     fetchOk,
     oncePerPage,
@@ -49,6 +49,8 @@ export type ReadChaptersOptions = {
     maxChapters?: number;
     /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
     maxSize?: number;
+    /** The longest title kept, in characters: 120, from 1 to 1000; past either end, a `RangeError`. */
+    maxText?: number;
 };
 
 export type LoadChaptersOptions = {
@@ -63,6 +65,8 @@ export type LoadChaptersOptions = {
     maxBytes?: number;
     /** The most chapters kept (see `ReadChaptersOptions`). */
     maxChapters?: number;
+    /** The longest title kept (see `ReadChaptersOptions`). */
+    maxText?: number;
 };
 
 /**
@@ -94,9 +98,6 @@ export const CHAPTER_TEXT: Limit = {
     whole: true,
 };
 
-/** The longest title, in characters. */
-const MAX_TITLE = 120;
-
 function notChapters(): TypeError {
     return new TypeError(
         'sonicframe: chapters must be WebVTT or JSON chapters',
@@ -118,15 +119,18 @@ function address(value: unknown): string | null {
     return typeof value === 'string' ? safeUrl(value) : null;
 }
 
-/** A chapter cleaned from loose fields, or null without a usable start. */
-function chapterOf(fields: {
-    start: unknown;
-    end: unknown;
-    title: unknown;
-    image: unknown;
-    url: unknown;
-    toc: unknown;
-}): Chapter | null {
+/** A chapter cleaned from loose fields, its title at most `longest` characters; null without a usable start. */
+function chapterOf(
+    fields: {
+        start: unknown;
+        end: unknown;
+        title: unknown;
+        image: unknown;
+        url: unknown;
+        toc: unknown;
+    },
+    longest: number,
+): Chapter | null {
     const start = startOf(fields.start);
 
     if (start === null) {
@@ -140,7 +144,7 @@ function chapterOf(fields: {
         end: end !== null && end > start ? end : null,
         title:
             typeof fields.title === 'string'
-                ? cleanText(fields.title, MAX_TITLE)
+                ? cleanText(fields.title, longest)
                 : '',
         image: address(fields.image),
         url: address(fields.url),
@@ -183,7 +187,7 @@ function collect<Item>(
 }
 
 /** The Podcasting 2.0 chapters: `{ chapters: [{ startTime, endTime, title, img, url, toc }] }`. */
-function readJson(value: unknown, most: number): Chapter[] {
+function readJson(value: unknown, most: number, longest: number): Chapter[] {
     const list: unknown =
         typeof value === 'object' && value !== null
             ? (value as { chapters?: unknown }).chapters
@@ -196,14 +200,17 @@ function readJson(value: unknown, most: number): Chapter[] {
     return collect(
         list as Record<string, unknown>[],
         (item) =>
-            chapterOf({
-                start: item.startTime,
-                end: item.endTime,
-                title: item.title,
-                image: item.img,
-                url: item.url,
-                toc: item.toc,
-            }),
+            chapterOf(
+                {
+                    start: item.startTime,
+                    end: item.endTime,
+                    title: item.title,
+                    image: item.img,
+                    url: item.url,
+                    toc: item.toc,
+                },
+                longest,
+            ),
         most,
     );
 }
@@ -220,25 +227,29 @@ export function readChapters(
 ): Chapter[] {
     const most = limitOf('maxChapters', options.maxChapters, CHAPTER_COUNT);
     const maxSize = limitOf('maxSize', options.maxSize, CHAPTER_TEXT);
+    const longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
 
     if (Array.isArray(input)) {
         return collect(
             input as ChapterInput[],
             (item) =>
-                chapterOf({
-                    start: item.start,
-                    end: item.end,
-                    title: item.title,
-                    image: item.image,
-                    url: item.url,
-                    toc: item.toc,
-                }),
+                chapterOf(
+                    {
+                        start: item.start,
+                        end: item.end,
+                        title: item.title,
+                        image: item.image,
+                        url: item.url,
+                        toc: item.toc,
+                    },
+                    longest,
+                ),
             most,
         );
     }
 
     if (typeof input !== 'string') {
-        return readJson(input, most);
+        return readJson(input, most, longest);
     }
 
     if (input.length > maxSize) {
@@ -250,7 +261,11 @@ export function readChapters(
     if (isVtt(text)) {
         return collect(
             readVtt(text),
-            (cue) => chapterOf({ ...cue, image: null, url: null, toc: true }),
+            (cue) =>
+                chapterOf(
+                    { ...cue, image: null, url: null, toc: true },
+                    longest,
+                ),
             most,
         );
     }
@@ -267,7 +282,7 @@ export function readChapters(
         throw notChapters();
     }
 
-    return readJson(parsed, most);
+    return readJson(parsed, most, longest);
 }
 
 /**
@@ -345,6 +360,7 @@ export function chapterLimits(
     return {
         maxChapters: limitOf('maxChapters', options.maxChapters, CHAPTER_COUNT),
         maxSize: heldLimit(options.maxBytes, CHAPTER_TEXT),
+        maxText: limitOf('maxText', options.maxText, TEXT_LENGTH),
     };
 }
 
@@ -372,7 +388,7 @@ export function loadChapters(
 
     return oncePerPage(
         loading,
-        JSON.stringify([url, read.maxSize, read.maxChapters]),
+        JSON.stringify([url, read.maxSize, read.maxChapters, read.maxText]),
         load,
     );
 }

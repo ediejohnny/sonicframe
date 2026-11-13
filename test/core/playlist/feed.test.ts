@@ -109,6 +109,16 @@ describe('readFeed', () => {
         expect(readFeed(feed(many), { limit: 1003 }).tracks).toHaveLength(1003);
     });
 
+    it('keeps the show’s and the episodes’ names to maxText', () => {
+        const read = readFeed(
+            `<rss><channel><title>${'s'.repeat(300)}</title><item><title>${'e'.repeat(300)}</title><enclosure url="https://cdn.test/1.mp3"/></item></channel></rss>`,
+            { maxText: 200 },
+        );
+
+        expect(read.title).toHaveLength(200);
+        expect(read.tracks[0].title).toHaveLength(200);
+    });
+
     it('keeps up to 10 000 episodes when asked; past that, 10 000', () => {
         const many = Array.from(
             { length: 10_002 },

@@ -9,7 +9,7 @@
  */
 
 import { within } from '../shared/checked';
-import { limitOf, type Limit } from '../shared/limits';
+import { limitOf, TEXT_LENGTH, type Limit } from '../shared/limits';
 import { loadText, type LoadTextOptions } from '../shared/load-text';
 import { cleanText } from '../shared/text';
 import {
@@ -29,6 +29,8 @@ export type ReadFeedOptions = ReadXmlOptions & {
     order?: 'newest' | 'oldest';
     /** The most episodes kept: 1000, from 1 to 10 000 (past either end, kept at it, as it shipped). */
     limit?: number;
+    /** The longest show name and episode name kept, in characters: 120, from 1 to 1000. */
+    maxText?: number;
     /**
      * The longest feed read, in characters, and the largest fetched, in bytes: 5242880 (5 MB), from
      * 1024 to 20971520 (20 MB). Reading takes under 0.1 s for each MB on a desktop computer (more on a
@@ -59,9 +61,6 @@ export const FEED_SIZE: Limit = {
 function maxSizeOf(options: ReadFeedOptions): number {
     return limitOf('maxSize', options.maxSize, FEED_SIZE);
 }
-
-/** The longest show name kept, in characters, as a track's. */
-const MAX_TITLE = 120;
 
 /** An episode's length: seconds, or minutes and seconds, or hours, minutes and seconds. */
 const DURATION = /^\d{1,7}(?::\d{1,2}){0,2}$/;
@@ -177,9 +176,16 @@ export function readFeed(text: string, options: ReadFeedOptions = {}): Feed {
     }
 
     return {
-        title: cleanText(show, MAX_TITLE),
+        title: cleanText(
+            show,
+            limitOf('maxText', options.maxText, TEXT_LENGTH),
+        ),
         image: address(showImage, options.base),
-        tracks: readTracks(inputs, { base: options.base, maxTracks: limit }),
+        tracks: readTracks(inputs, {
+            base: options.base,
+            maxTracks: limit,
+            maxText: options.maxText,
+        }),
     };
 }
 

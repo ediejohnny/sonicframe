@@ -317,6 +317,16 @@ describe('where the chapters come from', () => {
         };
     }
 
+    it('keeps a title to load.maxText', () => {
+        const own = chapters({
+            items: [{ start: 0, title: 'abcdef' }],
+            load: { maxText: 3 },
+        });
+        showFrame([own]);
+
+        expect(own.chapters[0].title).toBe('abc');
+    });
+
     it('keeps to load.maxChapters for chapters given as a list, a text or by set', () => {
         const own = chapters({
             items: [{ start: 0 }, { start: 5 }, { start: 9 }],

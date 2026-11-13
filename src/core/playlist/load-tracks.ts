@@ -16,6 +16,8 @@ export type LoadTracksOptions = LoadTextOptions & {
     base?: string;
     /** The most tracks kept: 1000, from 1 to 10 000 (see `readTracks`). */
     maxTracks?: number;
+    /** The longest name kept: 120, from 1 to 1000 (see `readTracks`). */
+    maxText?: number;
 };
 
 /**
@@ -36,5 +38,6 @@ export async function loadTracks(
             (/^https?:/i.test(loaded.url) ? loaded.url : undefined),
         maxTracks: options.maxTracks,
         maxSize: maxBytes,
+        maxText: options.maxText,
     });
 }

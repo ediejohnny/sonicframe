@@ -10,7 +10,7 @@
  */
 
 import { isRecord, oneOf } from '../shared/checked';
-import { limitOf, type Limit } from '../shared/limits';
+import { limitOf, TEXT_LENGTH, type Limit } from '../shared/limits';
 import { cleanText } from '../shared/text';
 import { isVtt, readVtt, textLines } from '../shared/vtt';
 import { csvRows, csvSeparator, unguardCell } from './csv';
@@ -27,6 +27,8 @@ export type MarksReadOptions = {
     maxItems?: number;
     /** The longest text read, in characters: 524 288 (512 KB), from 1 to 5 242 880 (5 MB). */
     maxSize?: number;
+    /** The longest label kept, in characters: 120, from 1 to 1000; past either end, a `RangeError`. */
+    maxText?: number;
 };
 
 /** The longest text read, in characters: 512 KB, up to 5 MB. */
@@ -45,8 +47,7 @@ export const MARKS_COUNT: Limit = {
     whole: true,
 };
 
-/** The longest label, color and id kept, in characters. */
-const MAX_LABEL = 120;
+/** The longest color and id kept, in characters (a label's is `maxText`). */
 const MAX_COLOR = 100;
 const MAX_ID = 200;
 
@@ -249,9 +250,12 @@ function rowsOf(
 }
 
 /** The texts a row carries: only those it has, each cleaned. */
-function textsOf(row: Row): { label?: string; color?: string; id?: string } {
+function textsOf(
+    row: Row,
+    longest: number,
+): { label?: string; color?: string; id?: string } {
     const texts: { label?: string; color?: string; id?: string } = {};
-    const label = textOf(row.label, MAX_LABEL);
+    const label = textOf(row.label, longest);
     const color = textOf(row.color, MAX_COLOR);
     const id = textOf(row.id, MAX_ID);
 
@@ -280,6 +284,7 @@ export function readRegions(
     options: MarksReadOptions = {},
 ): RegionInput[] {
     const most = limitOf('maxItems', options.maxItems, MARKS_COUNT);
+    const longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
     const regions: RegionInput[] = [];
 
     for (const row of rowsOf(text, options, 'regions', most)) {
@@ -292,7 +297,7 @@ export function readRegions(
             end >= row.start &&
             regions.length < most
         ) {
-            regions.push({ start: row.start, end, ...textsOf(row) });
+            regions.push({ start: row.start, end, ...textsOf(row, longest) });
         }
     }
 
@@ -309,11 +314,12 @@ export function readMarkers(
     options: MarksReadOptions = {},
 ): Mark[] {
     const most = limitOf('maxItems', options.maxItems, MARKS_COUNT);
+    const longest = limitOf('maxText', options.maxText, TEXT_LENGTH);
     const marks: Mark[] = [];
 
     for (const row of rowsOf(text, options, 'markers', most)) {
         if (row.start !== null && row.start >= 0 && marks.length < most) {
-            marks.push({ time: row.start, ...textsOf(row) });
+            marks.push({ time: row.start, ...textsOf(row, longest) });
         }
     }
 

@@ -185,6 +185,17 @@ describe('readRegions', () => {
         expect(readMarkers(many)).toHaveLength(2000);
     });
 
+    it('keeps labels of 120 characters, or maxText up to 1000, refusing one past it', () => {
+        const csv = `start,end,label\n1,2,${'l'.repeat(2000)}`;
+
+        expect(readRegions(csv)[0].label).toHaveLength(120);
+        expect(readRegions(csv, { maxText: 1000 })[0].label).toHaveLength(1000);
+        expect(readMarkers(csv, { maxText: 7 })[0].label).toHaveLength(7);
+        expect(() => readMarkers(csv, { maxText: 1001 })).toThrow(
+            'maxText goes past its most, 1000',
+        );
+    });
+
     it('keeps up to 20 000 items and reads up to 5 MB when asked, in every format, refusing past either by name', () => {
         const count = 20_001;
         const json = JSON.stringify(

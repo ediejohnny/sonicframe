@@ -69,6 +69,11 @@ export type PlaylistOptions = {
      * either end, a `RangeError`. A feed keeps to its own `limit`.
      */
     maxTracks?: number;
+    /**
+     * The longest title, artist, album or id kept, in characters: 120, from 1 to 1000; past either
+     * end, a `RangeError`. A feed keeps to its own `maxText`.
+     */
+    maxText?: number;
     /** The address of a JSON or M3U list, fetched when `tracks` is left out. */
     src?: string;
     /**

@@ -291,6 +291,17 @@ describe('changing the tracks', () => {
         );
     });
 
+    it('keeps the tracks’ names to maxText, given and added', () => {
+        const named = [{ src: 'https://site.test/1.mp3', title: 'abcdef' }];
+        const { playlist } = make({ tracks: named, maxText: 3 });
+        playlist.add([{ src: 'https://site.test/2.mp3', title: 'ghijkl' }]);
+
+        expect(playlist.tracks.map((track) => track.title)).toEqual([
+            'abc',
+            'ghi',
+        ]);
+    });
+
     it('keeps the track playing when tracks are added before it', () => {
         const { playlist, media } = make({ start: 1 });
         const changes: (readonly Track[])[] = [];
