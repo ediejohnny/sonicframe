@@ -18,6 +18,7 @@ export type PcmFormat = {
 
 /** A reader giving samples, not frames. */
 export type PcmReader = {
+    readonly kind: 'pcm';
     readonly format: PcmFormat | null;
     /** Takes the next bytes and gives the samples they complete, mixed to one channel. */
     push(bytes: Uint8Array): Float32Array;
@@ -169,6 +170,7 @@ export function createWavReader(): PcmReader {
     };
 
     return {
+        kind: 'pcm',
         get format(): PcmFormat | null {
             return format;
         },
