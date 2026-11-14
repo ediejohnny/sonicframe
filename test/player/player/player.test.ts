@@ -131,6 +131,55 @@ describe('the player', () => {
         expect(root().querySelector('.sonicframe-volume')).not.toBeNull();
     });
 
+    it('keeps the keyboard on the part it was on when it is built again', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            look: { line: ['play', 'wave', 'speed'] },
+        });
+        const speed = (): HTMLElement =>
+            root().querySelector('.sonicframe-speed') as HTMLElement;
+        const before = speed();
+        before.focus();
+
+        player.showVolume(true);
+
+        expect(speed()).not.toBe(before);
+        expect(document.activeElement).toBe(speed());
+    });
+
+    it('gives the keyboard to the play button when its part is gone', () => {
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+            volume: true,
+        });
+        (
+            root().querySelector('.sonicframe-volume-button') as HTMLElement
+        ).focus();
+
+        player.showVolume(false);
+
+        expect(document.activeElement).toBe(
+            root().querySelector('.sonicframe-play'),
+        );
+    });
+
+    it('leaves the focus alone when it was outside the player', () => {
+        const outside = document.createElement('button');
+        document.body.append(outside);
+        outside.focus();
+        player = createPlayer({
+            container: container(),
+            media: fakeMedia({ duration: 40 }),
+        });
+
+        player.showVolume(true);
+
+        expect(document.activeElement).toBe(outside);
+        outside.remove();
+    });
+
     it('changes its accessible name with setLabel, and gives its own back with none', () => {
         player = createPlayer({
             container: container(),
