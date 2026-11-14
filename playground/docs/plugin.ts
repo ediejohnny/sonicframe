@@ -21,8 +21,8 @@ const PROJECT = resolve(PLAYGROUND, '..');
 
 const REPOSITORY = 'https://github.com/ediejohnny/sonicframe';
 const NPM = 'https://www.npmjs.com/package/sonicframe';
-/** The project's donation campaign. */
-const SUPPORT = 'https://buymeacoffee.com/ediejohnny';
+/** The page with every way to support the project (GitHub Sponsors and Buy Me a Coffee). */
+const SUPPORT = './support.html';
 
 /** The largest peaks file the dev server writes, in bytes. */
 const MAX_PEAKS_FILE = 4_000_000;

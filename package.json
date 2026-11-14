@@ -21,10 +21,16 @@
         "type": "git",
         "url": "git+https://github.com/ediejohnny/sonicframe.git"
     },
-    "funding": {
-        "type": "individual",
-        "url": "https://buymeacoffee.com/ediejohnny"
-    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/ediejohnny"
+        },
+        {
+            "type": "individual",
+            "url": "https://buymeacoffee.com/ediejohnny"
+        }
+    ],
     "files": [
         "dist",
         "CHANGELOG.md"

@@ -10,6 +10,7 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 [![MIT license](https://img.shields.io/badge/license-MIT-1f4fbf)](LICENSE)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-1f4fbf)](package.json)
 [![Unpacked size](https://img.shields.io/npm/unpacked-size/sonicframe?color=1f4fbf)](https://www.npmjs.com/package/sonicframe)
+[![Sponsor SonicFrame on GitHub](https://img.shields.io/badge/sponsor-on%20github-1f4fbf?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/ediejohnny)
 [![Support SonicFrame: buy me a coffee][coffee-badge]](https://buymeacoffee.com/ediejohnny)
 
 **[Docs](https://ediejohnny.github.io/sonicframe/)** ·
@@ -212,9 +213,19 @@ repository's GitHub workflow, with npm provenance. More in
 
 ## Support SonicFrame
 
-SonicFrame is free, and it stays free. If it saves you time, you can
-[buy me a coffee](https://buymeacoffee.com/ediejohnny): every donation goes into the work behind new releases,
-their tests and the docs.
+SonicFrame is free, and it stays free. One person builds it. If it saves you time,
+[sponsor it on GitHub](https://github.com/sponsors/ediejohnny) or [buy me a coffee](https://buymeacoffee.com/ediejohnny):
+your support pays for new releases, their tests, the docs, and the accessibility work that lets people who can't see
+the screen play, seek and follow a sound too. See [every way to support it](https://ediejohnny.github.io/sonicframe/support.html).
+
+### Sponsors
+
+Your company's logo and link can be here and on the docs' home page, seen by the developers who choose an audio
+player: [sponsor at $100 a month](https://github.com/sponsors/ediejohnny), then open an issue titled "Sponsor logo".
+
+### Supporters
+
+The people who support SonicFrame, by the name they chose. The first names will be here; yours can be one of them.
 
 ## License
 
