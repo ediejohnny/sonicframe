@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-11-14
+
+### Changed
+
+- `npm fund` and the package page list GitHub Sponsors beside Buy Me a Coffee, and the README shows both, with a
+  sharper picture of the player.
+
 ## [1.3.1] - 2026-11-14
 
 ### Fixed
