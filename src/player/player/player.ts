@@ -53,6 +53,7 @@ import { cleanText } from '../../core/shared/text';
 import { MUTED, PROGRESS } from '../../core/shared/variables';
 import { resolveZoom } from '../../core/view/zoom';
 import { DEFAULT_WAVE } from '../../core/wave/shapes';
+import { focusClass, focusedClass } from '../../dom/a11y/kept-focus';
 import { pageLanguage } from '../../dom/a11y/page-language';
 import { canSpeak } from '../../dom/a11y/speak';
 import { SonicFrame } from '../../dom/frame/frame';
@@ -110,6 +111,9 @@ const ZOOM_PARTS: readonly Part[] = ['zoomOut', 'zoomReset', 'zoomIn'];
 
 /** The knob takes its own variable, so it can differ from the played color. */
 const KNOB = `var(--sonicframe-knob, ${PROGRESS})`;
+
+/** The part that takes the focus back when the focused one is not built again: the play button. */
+const PLAY_CLASS = 'sonicframe-play';
 
 /** Every frame event but `destroy`, which belongs to the player itself. */
 const FORWARDED = [
@@ -735,6 +739,7 @@ export class Player {
 
     private build(): void {
         const peaks = this.sound.peaksFor(this.frameRef, this.wave);
+        const focused = focusedClass(this.element, PLAY_CLASS);
         this.teardown();
 
         const look = this.look;
@@ -861,6 +866,11 @@ export class Player {
             frame.on('resize', () => outsideSizeReport(this.settle)),
         );
         this.alignToBars();
+
+        // A part built again takes back the keyboard focus its old self had.
+        if (focused !== null) {
+            focusClass(this.element, focused, PLAY_CLASS);
+        }
     }
 
     /** The small line under the wave, with the parts the look places there. */

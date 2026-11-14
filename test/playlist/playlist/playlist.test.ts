@@ -246,6 +246,52 @@ describe('the player’s track buttons', () => {
         expect(playlist.index).toBe(1);
         expect(button('previous').getAttribute('aria-disabled')).toBe('false');
     });
+
+    it('keep the keyboard on the button pressed, in the next track’s player', async () => {
+        const { playlist } = make({
+            player: { look: { line: ['previousTrack', 'play', 'nextTrack'] } },
+        });
+        const next = (): HTMLButtonElement =>
+            playlist.element.querySelector(
+                '.sonicframe-next-track',
+            ) as HTMLButtonElement;
+        const pressed = next();
+        pressed.focus();
+
+        pressed.click();
+        await settle();
+
+        expect(playlist.index).toBe(1);
+        expect(next()).not.toBe(pressed);
+        expect(document.activeElement).toBe(next());
+    });
+});
+
+describe('the keyboard across tracks', () => {
+    it('stays on the same part of the player when the track changes (the N key)', async () => {
+        const { playlist } = make();
+        const play = (): HTMLElement =>
+            playlist.element.querySelector('.sonicframe-play') as HTMLElement;
+        const before = play();
+        before.focus();
+
+        playlist.next();
+        await settle();
+
+        expect(play()).not.toBe(before);
+        expect(document.activeElement).toBe(play());
+    });
+
+    it('leaves the focus alone when it was outside the player', async () => {
+        const { playlist } = make();
+        const second = items()[1];
+        second.focus();
+
+        playlist.next();
+        await settle();
+
+        expect(document.activeElement).toBe(second);
+    });
 });
 
 describe('the shuffle', () => {

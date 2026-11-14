@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- The keyboard focus stays on its part when a player is built again (`setTracks`, `showVolume`) and when a
+  playlist changes track: the next and previous track buttons and the N key left the focus on the page's
+  body, so a keyboard or screen reader user lost their place and the next key press did nothing.
+
 ## [1.3.0] - 2026-11-13
 
 ### Added

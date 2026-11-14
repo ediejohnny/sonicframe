@@ -1,13 +1,18 @@
 /**
  * The `'one'` layout: one media element and one player, made anew for each track. The media keeps
  * its volume and mute from track to track; the speed is put back after `load()`, which the browser
- * resets to the default speed. The app's media stays the app's: the playlist never takes it off.
+ * resets to the default speed. The keyboard focus inside the player goes to the same part of the
+ * next one. The app's media stays the app's: the playlist never takes it off.
  */
 
 import type { Track } from '../../core/playlist/tracks';
+import { focusClass, focusedClass } from '../../dom/a11y/kept-focus';
 import { css } from '../../dom/shared/css';
 import { createPlayer, type Player } from '../../player/player/player';
 import { playedOf, start, type Stage, type StageHost } from './stage';
+
+/** The part that takes the focus when the focused one has no match: the play button. */
+const PLAY = 'sonicframe-play';
 
 export class OneStage implements Stage {
     readonly element: HTMLElement;
@@ -85,6 +90,10 @@ export class OneStage implements Stage {
         const media = this.media;
         const rate = media.playbackRate;
         const options = this.host.options(index);
+        const focused =
+            this.current === null
+                ? null
+                : focusedClass(this.current.element, PLAY);
         this.current?.destroy();
         this.loaded = this.tracks[index] ?? null;
         this.index = index;
@@ -98,5 +107,9 @@ export class OneStage implements Stage {
             container: this.element,
             media,
         });
+
+        if (focused !== null) {
+            focusClass(this.current.element, focused, PLAY);
+        }
     }
 }
