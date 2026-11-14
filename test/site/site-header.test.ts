@@ -33,7 +33,7 @@ describe('the docs header', () => {
                 '#search-open',
                 '.nav a[href*="github.com"]',
                 '.nav a[href*="npmjs.com"]',
-                '.nav a[href*="buymeacoffee.com/ediejohnny"]',
+                '.nav a[href="./support.html"]',
                 '#font-open',
                 '#scheme',
             ].map((selector) => nameOf(top.querySelector(selector))),

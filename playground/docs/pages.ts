@@ -23,6 +23,7 @@ export const PAGES: readonly DocsGroup[] = [
             { file: 'upgrade.html', name: 'Upgrade guide' },
             { file: 'versions.html', name: 'Versions and support' },
             { file: 'browsers.html', name: 'Browser support' },
+            { file: 'support.html', name: 'Support SonicFrame' },
         ],
     },
     {
