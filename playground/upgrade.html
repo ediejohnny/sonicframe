@@ -14,9 +14,9 @@
                 <h1>Upgrade guide</h1>
                 <p class="lede">
                     What changes from one version to the next, the newest first:
-                    from 1.2 to 1.3, then back to 0.6. Nothing breaks: every new
-                    feature is off until you turn it on (the one exception, a
-                    sound that cannot load now says so, is listed below), and
+                    from 1.3 to 1.3.1, then back to 0.6. Nothing breaks: every
+                    new feature is off until you turn it on (the one exception,
+                    a sound that cannot load now says so, is listed below), and
                     every old name keeps working until 2.0.
                 </p>
             </div>
@@ -28,6 +28,21 @@
                         <pre><code>npm install sonicframe@1</code></pre>
                         <button class="button small" type="button">Copy</button>
                     </div>
+                </section>
+
+                <section class="section">
+                    <h2>In 1.3.1: fixed</h2>
+                    <ul>
+                        <li>
+                            The keyboard focus stays where it was when a player
+                            is built again (<code>setTracks</code>,
+                            <code>showVolume</code>) and when a playlist changes
+                            track: after N or the next track button, the focus
+                            is on the same button of the new track's player, so
+                            Shift+N right after goes back. Nothing to change in
+                            your code.
+                        </li>
+                    </ul>
                 </section>
 
                 <section class="section">
