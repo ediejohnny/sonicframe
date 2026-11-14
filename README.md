@@ -19,7 +19,7 @@ Draw sound on the web: waveforms, ready-made players, spectrograms and more, wit
 [Examples](https://ediejohnny.github.io/sonicframe/guide-podcast.html) ·
 [Changelog](CHANGELOG.md)
 
-<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/player.png" alt="A SonicFrame player: a round play button, the waveform with the played part in blue, a time ruler and the time" width="720">
+<img src="https://raw.githubusercontent.com/ediejohnny/sonicframe/main/assets/screenshots/player.png" alt="A SonicFrame playlist: previous, play and next buttons, the waveform played up to 2:13 of 5:49, and a list of three tracks with their covers, lengths and artists" width="720">
 
 </div>
 
